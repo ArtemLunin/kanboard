@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="js/jquery-3.4.1.min.js"></script>
+	<script src="js/popper.min.js"></script>
+	<link rel="stylesheet" href="./css/bootstrap.min.css">
+	<script src="js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="css/style.css">
+	<script type="text/javascript" src="js/main.js" defer></script>
+	<title>Tickets</title>
+</head>
+<body>
+<!-- <div class="container">
+	<button id="btn_signIn" type="button" class="btn-signIn btn btn-primary">SignIn</button>
+</div> -->
+<div class="collapse border border-dark mt-2 p-2 modify-container">
+	<div class="row">
+		<div class="col-4 col-xl-3">
+			<div class="row">
+				<div class="col">Ticket title</div>
+			</div>
+			<div class="row">
+				<div class="col">
+					<input type="text" class="ticket-title" placeholder="Ticket title">
+				</div>
+			</div>
+			<div class="row">
+				<div class="col">Ticket creator</div>
+			</div>
+			<div class="row">
+				<div class="col">
+					<input type="text" class="ticket-creator" placeholder="Creator">
+				</div>
+			</div>
+		</div>
+		<div class="col-4 col-xl-6">
+			<div class="row">
+				<div class="col">Description</div>
+			</div>
+			<div class="row">
+				<div class="col">
+					<div class="ticket-description text-area border mr-1 mr-xl-2 rounded" contenteditable="true">
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row mt-2">
+		<div class="col">
+			<!-- <button type="button" class="btn btn-success btn-sm btn-apply-settings">Apply</button> -->
+			<button type="button" class="btn btn-primary btn-sm btn-add-task">Add</button>
+			<button type="button" class="btn btn-primary btn-sm btn-update-task d-none">Update</button>
+			<button type="button" class="btn btn-warning btn-sm btn-clear-settings">Clear</button>
+		</div>
+	</div>
+</div>
+<div class="divider-arrow">
+	<hr class="dotted">
+	<div class="triangle triangle-down"></div>
+</div>
+<div class="tickets-container">
+
+</div>
+<div class="modal fade" id="modal_signIn" tabindex="-1" role="dialog" aria-labelledby="modalSignIn" aria-hidden="true">
+	<div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="modalSignIn">Login to the protected area</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<form>
+				<div class="form-group">
+					<label for="signIn_username" class="col-form-label">username:</label>
+					<input type="text" required class="form-control" id="signIn_username">
+				</div>
+				<div class="form-group">
+					<label for="signIn_password" class="col-form-label">password:</label>
+					<input type="password" required class="form-control" id="signIn_password">
+				</div>
+				</form>
+				<div class="row mx-2 sign_in">
+					<div class="col-12 post-report">
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button id="btn_signIn" type="button" class="btn-signIn btn btn-primary">SignIn</button>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="newTaskDialog" class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="titleNewTask">New Task</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+	  <div class="modal-body">
+
+	  </div>
+	  <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="btnSaveTask">Save changes</button>
+      </div>
+</body>
+</html>

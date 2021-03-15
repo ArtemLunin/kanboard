@@ -1,0 +1,63 @@
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+}
+p {
+	margin: 0;
+}
+h6 {
+	font-weight: bold;
+}
+.tickets-container {
+	margin-left: 20px;
+	margin-top: 20px;
+	width: 400px;
+}
+.task-ticket {
+	background-color: rgb(245, 247, 196);
+	border: 1px solid rgb(223, 227, 45);
+	margin-bottom: 4px;
+	padding: 2px;
+	padding-left: 5px;
+	word-wrap: break-word;
+	font-size: .9em;
+	border-radius: 6px;
+}
+.task-date {
+	text-align: right;
+	font-size: 0.8em;
+}
+hr.dotted {
+	border-top: 3px dotted #bbb;
+	width: 100%;
+	cursor: pointer;
+}
+
+.triangle {
+	width: 0;
+	height: 0;
+	border-left: 5px solid transparent;
+	border-right: 5px solid transparent;
+	margin: auto;
+	cursor: pointer;
+}
+
+.triangle-down {
+	border-top: 10px solid #555;
+}
+
+.triangle-up {
+	border-bottom: 10px solid #555;
+}
+
+.divider-arrow {
+	display: flex;
+}
+
+.text-area {
+	height: 200px;
+	overflow-y: auto;
+}
