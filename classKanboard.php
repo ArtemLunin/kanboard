@@ -66,4 +66,13 @@ $response = curl_exec($curl);
 curl_close($curl);
 return $response;
 }
+
+$taskFilesMapper = function($fileItem) 
+{
+	return [
+		'file_id'	=> $fileItem['id'],
+		'file_name'	=> $fileItem['name'],
+		'file_size'	=> $fileItem['size'],
+	];
+}
 ?>

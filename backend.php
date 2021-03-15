@@ -32,6 +32,9 @@ if ($method !== 0)
 					((int)$task['date_completed'] !== 0)) {
 					continue;
 				}
+				$taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
+						'task_id'	=> $task['id'],
+						]);
 				$param_error_msg['answer'][] = [
 					'id'			=> (int)$task['id'],
 					'creator_id'	=> (int)$task['creator_id'],
@@ -39,6 +42,7 @@ if ($method !== 0)
 					'date_completed'=> (int)$task['date_completed'],
 					'description'	=> nl2br($task['description'], FALSE),
 					'title'			=> $task['title'],
+					'files'			=> array_map($taskFilesMapper, $taskFiles['result']),
 				];
 			}
 		}
@@ -60,6 +64,15 @@ if ($method !== 0)
 						'title'			=> trim($params['title']) ?? "",
 						'description'	=> (trim($params['description']) ?? "")."\nSubmitted by: ".(trim($params['creator']) ?? ""),
 						'id'	=> $params['id'],
+						]);
+	}
+	elseif ($method === 'createTaskFile' && $params !== 0)
+	{
+		$taskResult = $kanboard->callKanboardAPI($method, [
+						$projectID,
+						$params['id'],
+						"test_file.txt",
+						base64_encode('very easy text'),
 						]);
 	}
 }
