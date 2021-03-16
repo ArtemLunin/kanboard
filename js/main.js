@@ -148,7 +148,7 @@ const removeElement = (domElement) => {
 };
 
 const getAllTask = () => {
-	hideEditablePanel();
+	// hideEditablePanel();
 	clearEditableFields();
 	const body = {
 		method: 'getAllTasks',
