@@ -11,8 +11,15 @@ p {
 h6 {
 	font-weight: bold;
 }
+.app-container {
+	width: 40%;
+	min-width: 900px;
+	margin: auto;
+}
+.modify-container {
+	border-radius: 6px;
+}
 .tickets-container {
-	margin-left: 20px;
 	margin-top: 20px;
 	width: 400px;
 }
@@ -61,4 +68,14 @@ hr.dotted {
 .text-area {
 	height: 200px;
 	overflow-y: auto;
+}
+.attachments-header {
+	font-weight: bold;
+}
+.file-delete-container {
+	font-size: 14px;
+}
+.file-delete {
+	width: 18px;
+	cursor: pointer;
 }

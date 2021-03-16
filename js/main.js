@@ -1,12 +1,13 @@
 const requestURL = 'backend.php';
 const ticketsContainer = document.querySelector('.tickets-container');
 const modifyContainer = document.querySelector('.modify-container');
+const attachmentsArea = document.querySelector('.attachments-area');
 const attachmentsContainer = document.querySelector('.attachments-container');
 const dividerArrow = document.querySelector('.divider-arrow');
 const triangle = document.querySelector('.triangle');
 const btnAddTask = document.querySelector('.btn-add-task');
 const btnUpdateTask = document.querySelector('.btn-update-task');
-const btnCreateTaskFile = document.querySelector('.btn-add-file');
+const btnCreateTaskFile = document.querySelector('#attachFile');
 const btnClearSettings = document.querySelector('.btn-clear-settings');
 const ticketTitle = document.querySelector('.ticket-title');
 const ticketCreator = document.querySelector('.ticket-creator');
@@ -26,6 +27,11 @@ const entityMap = {
   '`': '&#x60;',
   '=': '&#x3D;'
 };
+
+let fileAttach;
+let fileDeleted = 0;
+
+btnCreateTaskFile.value = '';
 
 const timestampToDate = (timestampValue) => {
   const a = new Date(timestampValue * 1000);
@@ -51,14 +57,24 @@ async function sendRequest(method, url, body = null) {
 			headers: headers
 		});
 		const data = await response.json();
-		// console.log(data);
 		return data;
 	} catch (e) {
 		console.error(e);
 	}
-
-	
 }
+async function sendFile(method, url, body ) {
+	try {
+		const response = await fetch(url, {
+			method: method,
+			body: body,
+		});
+		const data = await response.json();
+		return data;
+	} catch (e) {
+		console.error(e);
+	}
+}
+
 function showAllTasks(data)
 {
 	ticketsContainer.textContent = '';
@@ -72,7 +88,7 @@ function showAllTasks(data)
 				<h6 class="task-title">${title}</h6>
 				<p class="task-description">${description}</p>
 				<div class="task-footer">
-					${filesAttached(files)}
+					<span id="task_id_${id}" class="file-attach">${filesAttached(files)}</span>
 					<span>${timestampToDate(date_creation)}</span>
 				</div>
 			</div>
@@ -86,17 +102,34 @@ function showAddedTask()
 	getAllTask();
 }
 
-function showAddedFile()
+function showAddedFile(resultFileList)
 {
-	console.log('file added!');
+	if (!!resultFileList.success.answer) {
+		const taskID = resultFileList.success.answer.id;
+		const fileTaskInfo = document.querySelector('#task_id_'+taskID);
+		fileTaskInfo.innerHTML = filesAttached(resultFileList.success.answer.files);
+		attachmentsContainer.textContent = '';
+		(resultFileList.success.answer.files).forEach(fileItem => fillFileInfo(JSON.stringify(fileItem)));
+	}
 }
+
+const removeFileFromList = (resultFileList) => {
+	if (!!resultFileList.success.answer) {
+		if (fileDeleted != 0) {
+			removeElement(fileDeleted);
+			fileDeleted = 0;
+			const taskID = resultFileList.success.answer.id;
+			const fileTaskInfo = document.querySelector('#task_id_'+taskID);
+			fileTaskInfo.innerHTML = filesAttached(resultFileList.success.answer.files);
+		}
+	}
+};
+
 const filesAttached = (filesArray) => {
 	if (filesArray.length) {
 		const filesAttachedView = `
-		<span class="file-attach">
 			<img class="files-list" src="img/attach_file-small.svg" alt="file attached" data-files_list="${escapeHTML(JSON.stringify(filesArray.map(file => JSON.stringify(file))))}"/>
-		</span>`;
-		// console.log(filesAttachedView);
+			`;
 		return filesAttachedView;
 	} else {
 		return '';
@@ -106,6 +139,12 @@ const filesAttached = (filesArray) => {
 
 const escapeHTML = (string) => {
 	return String(string).replace(/[&<>"'`=\/]/g, (s) => entityMap[s]);
+};
+
+const removeElement = (domElement) => {
+    if (!!domElement) {
+		return domElement.parentNode.removeChild(domElement);
+	}
 };
 
 const getAllTask = () => {
@@ -141,14 +180,32 @@ const updateTask = () => {
 	sendRequest('POST', requestURL, body).then(showAddedTask);
 };
 const createTaskFile = () => {
-	const body = {
-		method: 'createTaskFile',
-		params: {
-			id: btnUpdateTask.dataset['task_id'],
-		},
+	const formData = new FormData();
+	formData.append('file', btnCreateTaskFile.files[0]);
+	formData.append('method', 'createTaskFile');
+	formData.append('id', btnUpdateTask.dataset['task_id']);
+	sendFile('POST', requestURL, formData).then(showAddedFile);
+	btnCreateTaskFile.value = '';
+};
+
+const attachmentsAction = (event) => {
+	const target = event.target;
+	const fileAction = target.closest('.file-delete');
+	// const parentFileAction = target.closest('.file-delete-container');
+	if (!!fileAction)
+	{
+		fileDeleted = target.closest('.file-delete-container');
+		const body = {
+			method: 'removeTaskFile',
+			params: {
+				id: fileAction.dataset['file_id'],
+			},
+		}
+		sendRequest('POST', requestURL, body).then(removeFileFromList);
 	}
-	sendRequest('POST', requestURL, body).then(showAddedFile);
-}
+};
+
+
 const triangleToggle = (event) => {
 	const target = event.target;
 	if (target.classList.contains('triangle-down'))
@@ -178,9 +235,18 @@ const clearEditableFields = () => {
 	ticketDescription.textContent = '';
 	btnUpdateTask.classList.add('d-none');
 	btnAddTask.classList.remove('d-none');
+	attachmentsArea.classList.add('invisible');
 	btnUpdateTask.dataset['task_id'] = 0;
 };
 
+const fillFileInfo = (fileInfo) => {
+	let { file_id, file_name, file_size } = JSON.parse(fileInfo);
+	attachmentsContainer.insertAdjacentHTML('beforeend', `
+		<p class="file-delete-container">File name: ${file_name}, Size: ${file_size}
+			<img class="file-delete" src="img/delete.svg" atl="Delete file" data-file_id="${file_id}" title="Delete file"/>
+		</p>
+	`);
+}
 const actionTask = (event) => {
 	const target = event.target;
 	const hrefAction = target.closest('.task-ticket');
@@ -191,6 +257,7 @@ const actionTask = (event) => {
 		const taskID = hrefAction.dataset['task_id'];
 		const positionCreator = taskDescription.innerText.lastIndexOf(textCreatorHeader);
 		const filesList = hrefAction.querySelector('.files-list');
+		fileAttach = hrefAction.querySelector('.file-attach');
 		
 		if (positionCreator !== -1) {
 			ticketCreator.value = taskDescription.innerText.substring(positionCreator + textCreatorHeader.length);
@@ -202,19 +269,16 @@ const actionTask = (event) => {
 		}
 		attachmentsContainer.textContent = '';
 		if (!!filesList) {
-			JSON.parse(filesList.dataset['files_list']).forEach(function (fileInfo) 
-			{
-				let { file_name, file_size } = JSON.parse(fileInfo);
-				// console.log(JSON.parse(fileInfo));
-				attachmentsContainer.insertAdjacentHTML('beforeend', `
-					<p>File name: ${file_name}, file size: ${file_size}</p>
-				`);
-			});
-		}	
+			JSON.parse(filesList.dataset['files_list']).forEach(fillFileInfo);
+		}
+		// else {
+		// 	attachmentsContainer.dataset['files_count'] = 0;
+		// }
 		ticketTitle.value = taskTitle.textContent;
 		btnUpdateTask.dataset['task_id'] = taskID;
 		btnUpdateTask.classList.remove('d-none');
 		btnAddTask.classList.add('d-none');
+		attachmentsArea.classList.remove('invisible');
 		viewEditablePanel();
 	}
 };
@@ -223,8 +287,11 @@ triangle.addEventListener('click', triangleToggle);
 btnAddTask.addEventListener('click', createTask);
 btnUpdateTask.addEventListener('click', updateTask);
 btnClearSettings.addEventListener('click', clearEditableFields);
-btnCreateTaskFile.addEventListener('click', createTaskFile);
+attachmentsContainer.addEventListener('click', attachmentsAction);
+
+btnCreateTaskFile.addEventListener('change', createTaskFile);
 
 
 getAllTask();
+viewEditablePanel();
 

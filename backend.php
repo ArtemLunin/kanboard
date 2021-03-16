@@ -6,8 +6,8 @@ $out_res = [];
 $param_error_msg['answer'] = [];
 
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
-$method = $paramJSON['method'] ?? 0;
-$params = $paramJSON['params'] ?? 0;
+$method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
+$params = $paramJSON['params'] ?? $_REQUEST ?? 0;
 if ($method !== 0)
 {
 	try
@@ -46,7 +46,7 @@ if ($method !== 0)
 				];
 			}
 		}
-		$out_res=['success' => $param_error_msg];
+		$out_res = ['success' => $param_error_msg];
 	}
 	elseif($method === 'createTask' && $params !== 0)
 	{
@@ -66,18 +66,63 @@ if ($method !== 0)
 						'id'	=> $params['id'],
 						]);
 	}
-	elseif ($method === 'createTaskFile' && $params !== 0)
+	elseif ($method === 'createTaskFile' && $params !== 0 && $params['id'] != 0)
 	{
-		$taskResult = $kanboard->callKanboardAPI($method, [
+		$tmp = $_FILES['file']['tmp_name'];
+		if (($tmp!='') && is_uploaded_file($tmp)) 
+		{   
+			$taskResult = $kanboard->callKanboardAPI($method, [
 						$projectID,
 						$params['id'],
-						"test_file.txt",
-						base64_encode('very easy text'),
+						$_FILES['file']['name'],
+						base64_encode(file_get_contents($tmp)),
+						]);	
+			if (isset($taskResult['result']))
+			{
+				$taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
+						'task_id'	=> $params['id'],
 						]);
+				$param_error_msg['answer'] = [
+					'id'			=> (int)$params['id'],
+					'files'			=> array_map($taskFilesMapper, $taskFiles['result']),
+				];
+				// $param_error_msg['answer'] = [
+				// 	'file_id'	=> $taskResult['result'],
+				// 	'file_name'	=> $_FILES['file']['name'],
+				// 	'file_size'	=> $_FILES['file']['size'],
+				// ];
+			}
+		}
+		$out_res = ['success' => $param_error_msg];
 	}
+	elseif ($method === 'removeTaskFile' && $params !== 0 && $params['id'] != 0)
+	{
+		$taskResult = $kanboard->callKanboardAPI('getTaskFile', [
+						$params['id'],
+						]);
+		$taskID = $taskResult['result']['task_id'] ?? 0;
+		$userTaskID = $taskResult['result']['user_id'] ?? 0;
+		if ($taskID != 0)
+		{
+			$taskResult = $kanboard->callKanboardAPI($method, [
+						$params['id'],
+						]);
+			// $resultDelete = $taskResult['result'] ?? 0;
+			// if ($resultDelete == TRUE) {
+				$taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
+						'task_id'	=> $taskID,
+						]);
+				$param_error_msg['answer'] = [
+					'id'			=> (int)$taskID,
+					'files'			=> array_map($taskFilesMapper, $taskFiles['result']),
+				];
+			// }
+		}
+		$out_res = ['success' => $param_error_msg];
+	}
+		
+	
 }
-
-
 
 header('Content-type: application/json');
 echo json_encode($out_res);
