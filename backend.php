@@ -28,7 +28,7 @@ if ($method !== 0)
 		if (isset($taskResult['result']) && count($taskResult['result'])) {
 			foreach ($taskResult['result'] as $key => $task) {
 				if (($task['creator_id'] != $userID) ||
-					($task['date_moved'] - $task['date_creation'] > 5) ||
+					// ($task['date_moved'] - $task['date_creation'] > 5) ||
 					((int)$task['date_completed'] !== 0)) {
 					continue;
 				}
@@ -46,7 +46,7 @@ if ($method !== 0)
 				];
 			}
 		}
-		$out_res = ['success' => $param_error_msg];
+		// $out_res = ['success' => $param_error_msg];
 	}
 	elseif($method === 'createTask' && $params !== 0)
 	{
@@ -57,6 +57,12 @@ if ($method !== 0)
 						'date_started'	=> date('Y-m-d H:i'),
 						'creator_id'	=> $userID,
 						]);
+		if (isset($taskResult['result']))
+		{
+			$param_error_msg['answer'] = [
+				'id'	=> (int)$taskResult['result'],
+			];
+		}
 	}
 	elseif ($method === 'updateTask' && $params !== 0 && $params['id'] != 0)
 	{
@@ -65,6 +71,12 @@ if ($method !== 0)
 						'description'	=> (trim($params['description']) ?? "")."\nSubmitted by: ".(trim($params['creator']) ?? ""),
 						'id'	=> $params['id'],
 						]);
+		if (isset($taskResult['result']))
+		{
+			$param_error_msg['answer'] = [
+				'id'	=> (int)$params['id'],
+			];
+		}
 	}
 	elseif ($method === 'createTaskFile' && $params !== 0 && $params['id'] != 0)
 	{
@@ -86,14 +98,9 @@ if ($method !== 0)
 					'id'			=> (int)$params['id'],
 					'files'			=> array_map($taskFilesMapper, $taskFiles['result']),
 				];
-				// $param_error_msg['answer'] = [
-				// 	'file_id'	=> $taskResult['result'],
-				// 	'file_name'	=> $_FILES['file']['name'],
-				// 	'file_size'	=> $_FILES['file']['size'],
-				// ];
 			}
 		}
-		$out_res = ['success' => $param_error_msg];
+		// $out_res = ['success' => $param_error_msg];
 	}
 	elseif ($method === 'removeTaskFile' && $params !== 0 && $params['id'] != 0)
 	{
@@ -107,8 +114,6 @@ if ($method !== 0)
 			$taskResult = $kanboard->callKanboardAPI($method, [
 						$params['id'],
 						]);
-			// $resultDelete = $taskResult['result'] ?? 0;
-			// if ($resultDelete == TRUE) {
 				$taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
 						'task_id'	=> $taskID,
 						]);
@@ -118,11 +123,11 @@ if ($method !== 0)
 				];
 			// }
 		}
-		$out_res = ['success' => $param_error_msg];
+		// $out_res = ['success' => $param_error_msg];
 	}
-		
 	
 }
+$out_res = ['success' => $param_error_msg];	
 
 header('Content-type: application/json');
 echo json_encode($out_res);

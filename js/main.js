@@ -97,10 +97,19 @@ function showAllTasks(data)
 	ticketsContainer.addEventListener('click', actionTask);
 }
 
-function showAddedTask()
+function showAddedTask(taskCreateResult)
 {
+	btnUpdateTask.dataset['task_id'] = taskCreateResult.success.answer.id;
+	attachmentsContainer.textContent = '';
+	toggleToUpdateMode();
 	getAllTask();
-}
+};
+
+function showUpdatedTask(taskCreateResult)
+{
+	clearEditableFields();
+	getAllTask();
+};
 
 function showAddedFile(resultFileList)
 {
@@ -148,14 +157,16 @@ const removeElement = (domElement) => {
 };
 
 const getAllTask = () => {
-	// hideEditablePanel();
-	clearEditableFields();
 	const body = {
 		method: 'getAllTasks',
 	}
 	sendRequest('POST', requestURL, body).then(showAllTasks);
 };
 const createTask = () => {
+	if (ticketTitle.value.trim().length == 0 || ticketCreator.value.trim().length == 0 || ticketDescription.innerText.trim().length == 0)
+	{
+		return false;
+	}
 	const body = {
 		method: 'createTask',
 		params: {
@@ -177,7 +188,7 @@ const updateTask = () => {
 			id: btnUpdateTask.dataset['task_id'],
 		},
 	}
-	sendRequest('POST', requestURL, body).then(showAddedTask);
+	sendRequest('POST', requestURL, body).then(showUpdatedTask);
 };
 const createTaskFile = () => {
 	const formData = new FormData();
@@ -228,6 +239,11 @@ const hideEditablePanel = () => {
 	triangle.classList.remove('triangle-up');
 	$('.collapse').collapse('hide');
 };
+const toggleToUpdateMode = () => {
+	btnUpdateTask.classList.remove('d-none');
+	btnAddTask.classList.add('d-none');
+	attachmentsArea.classList.remove('invisible');
+};
 
 const clearEditableFields = () => {
 	ticketTitle.value = '';
@@ -271,14 +287,12 @@ const actionTask = (event) => {
 		if (!!filesList) {
 			JSON.parse(filesList.dataset['files_list']).forEach(fillFileInfo);
 		}
-		// else {
-		// 	attachmentsContainer.dataset['files_count'] = 0;
-		// }
 		ticketTitle.value = taskTitle.textContent;
 		btnUpdateTask.dataset['task_id'] = taskID;
-		btnUpdateTask.classList.remove('d-none');
-		btnAddTask.classList.add('d-none');
-		attachmentsArea.classList.remove('invisible');
+		toggleToUpdateMode();
+		// btnUpdateTask.classList.remove('d-none');
+		// btnAddTask.classList.add('d-none');
+		// attachmentsArea.classList.remove('invisible');
 		viewEditablePanel();
 	}
 };
@@ -291,7 +305,9 @@ attachmentsContainer.addEventListener('click', attachmentsAction);
 
 btnCreateTaskFile.addEventListener('change', createTaskFile);
 
-
+clearEditableFields();
 getAllTask();
 viewEditablePanel();
+
+
 
