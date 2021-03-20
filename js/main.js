@@ -1,5 +1,6 @@
 const requestURL = 'backend.php';
 const ticketsContainer = document.querySelector('.tickets-container');
+const containerError = document.querySelector('.container-error');
 const modifyContainer = document.querySelector('.modify-container');
 const attachmentsArea = document.querySelector('.attachments-area');
 const attachmentsContainer = document.querySelector('.attachments-container');
@@ -77,24 +78,30 @@ async function sendFile(method, url, body ) {
 
 function showAllTasks(data)
 {
-	ticketsContainer.textContent = '';
-	data.success.answer.forEach(function ({
-		id, creator_id, date_completed, date_creation, description, title, files
-	}) 
-	{
-		ticketsContainer.insertAdjacentHTML('beforeend', `
-			<div class="task-ticket" data-task_id="${id}">
-				<a href="#" class="task-action" data-task_id="${id}">#${id}</a>
-				<h6 class="task-title">${title}</h6>
-				<p class="task-description">${description}</p>
-				<div class="task-footer">
-					<span id="task_id_${id}" class="file-attach">${filesAttached(files)}</span>
-					<span>${timestampToDate(date_creation)}</span>
+	if(!!data.success) {
+		ticketsContainer.textContent = '';
+		data.success.answer.forEach(function ({
+			id, creator_id, date_completed, date_creation, description, title, files
+		}) 
+		{
+			ticketsContainer.insertAdjacentHTML('beforeend', `
+				<div class="task-ticket" data-task_id="${id}">
+					<a href="#" class="task-action" data-task_id="${id}">#${id}</a>
+					<h6 class="task-title">${title}</h6>
+					<p class="task-description">${description}</p>
+					<div class="task-footer">
+						<span id="task_id_${id}" class="file-attach">${filesAttached(files)}</span>
+						<span>${timestampToDate(date_creation)}</span>
+					</div>
 				</div>
-			</div>
-		`);
-	});
-	ticketsContainer.addEventListener('click', actionTask);
+			`);
+		});
+		ticketsContainer.addEventListener('click', actionTask);
+	}
+	else if (!!data.error) {
+		containerError.innerText = data.error.error;
+		containerError.classList.remove('d-none');
+	}
 }
 
 function showAddedTask(taskCreateResult)

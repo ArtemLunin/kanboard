@@ -14,10 +14,11 @@ class Kanboard {
 		$this->kanboardRequest['method'] = $method;
 		list($paramName, $paramValue) = $paramObj;
 		$this->kanboardRequest['params'] = [$paramName => $paramValue];
-		$result = json_decode(callKanboardAPI(json_encode($this->kanboardRequest)), TRUE);
+		$raw_result = callKanboardAPI(json_encode($this->kanboardRequest));
+		$result = json_decode($raw_result, TRUE);
 		$resultID = $result['result']['id'] ?? 0;
 		if ($resultID == 0) {
-			throw new Exception('Error getting '.$paramName. ' with id '.$paramValue);
+			throw new Exception('Error getting '.$paramName. ' with id '.$paramValue."\nNetwork result:".$raw_result);
 		}
 		return $resultID;
 	}
@@ -38,7 +39,6 @@ class Kanboard {
   		"method"    => "",
   		"id"        => "autoRequest",
 	];
-	// private $kanboardRequsetParams = [];
 	private $projectID = 0;
 	private $userID = 0;
 }
