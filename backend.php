@@ -15,6 +15,7 @@ if ($method !== 0)
 		$kanboard = new Kanboard;
 		$projectID = $kanboard->projectID;
 		$userID = $kanboard->userID;
+		$shownedColumnID = $kanboard->shownedColumnID;
 	}
 	catch (Exception $e) {
 		$projectID = FALSE;
@@ -34,6 +35,7 @@ if ($method !== 0)
 				foreach ($taskResult['result'] as $key => $task) {
 					if (($task['creator_id'] != $userID) ||
 						// ($task['date_moved'] - $task['date_creation'] > 5) ||
+						($shownedColumnID != $task['column_id']) || 
 						((int)$task['date_completed'] !== 0)) {
 						continue;
 					}

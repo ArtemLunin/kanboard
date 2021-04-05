@@ -6,19 +6,34 @@ class Kanboard {
 		'getAllTasks',
 	];
 	function __construct () {
-		$this->projectID = $this->getInitialParams('getProjectByIdentifier', ['identifier', KANBOARD_PROJECT_IDENTIFIER]);
-		$this->userID = $this->getInitialParams('getUserByName', ['username', KANBOARD_USER_CREATE_TICKETS]);
+		$this->projectID = $this->getInitialParams('getProjectByIdentifier', ['identifier' => KANBOARD_PROJECT_IDENTIFIER]);
+		$this->userID = $this->getInitialParams('getUserByName', ['username' => KANBOARD_USER_CREATE_TICKETS]);
+		$this->shownedColumnID = $this->getInitialParams('getColumns', [$this->projectID], KANBOARD_SHOW_COLUMN_NAME);
 	}
-	function getInitialParams($method, $paramObj)
+	function getInitialParams($method, $paramObj, $additionalParam = NULL)
 	{
+		$resultID = 0;
 		$this->kanboardRequest['method'] = $method;
-		list($paramName, $paramValue) = $paramObj;
-		$this->kanboardRequest['params'] = [$paramName => $paramValue];
+		$this->kanboardRequest['params'] = $paramObj;
 		$raw_result = callKanboardAPI(json_encode($this->kanboardRequest));
 		$result = json_decode($raw_result, TRUE);
-		$resultID = $result['result']['id'] ?? 0;
-		if ($resultID == 0) {
-			throw new Exception('Error getting '.$paramName. ' with id '.$paramValue."\nNetwork result:".$raw_result);
+		if ($method === 'getColumns' && isset($additionalParam)) {
+			$arr_columns = $result['result'] ?? [];
+			if (count($arr_columns) != 0) {
+				$arr_columns_id = array_map('strtolower', array_column($arr_columns, 'title', 'id'));
+				$resultID = array_search(strtolower($additionalParam), $arr_columns_id);
+				if ($resultID === FALSE) {
+					$resultID = 0;
+				}
+			}
+			else {
+				$resultID = 0;
+			}
+		} else {
+			$resultID = $result['result']['id'] ?? 0;
+			if ($resultID == 0) {
+				throw new Exception('Error getting '.json_encode($paramObj)."\nNetwork result:".$raw_result."\nRequest:".json_encode($this->kanboardRequest));
+			}
 		}
 		return $resultID;
 	}
@@ -41,6 +56,7 @@ class Kanboard {
 	];
 	private $projectID = 0;
 	private $userID = 0;
+	private $shownedColumnID = 0;
 }
 
 function callKanboardAPI($kanbanJSONParams)
@@ -54,7 +70,6 @@ curl_setopt_array($curl, [
   CURLOPT_MAXREDIRS => 10,
   CURLOPT_TIMEOUT => 5,
   CURLOPT_FOLLOWLOCATION => TRUE,
-//   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
   CURLOPT_CUSTOMREQUEST => 'POST',
   CURLOPT_POSTFIELDS => $kanbanJSONParams,
   CURLOPT_HTTPHEADER => [
@@ -64,6 +79,7 @@ curl_setopt_array($curl, [
 
 $response = curl_exec($curl);
 curl_close($curl);
+// return $kanbanJSONParams;
 return $response;
 }
 
