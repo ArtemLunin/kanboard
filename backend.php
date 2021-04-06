@@ -59,7 +59,7 @@ if ($method !== 0)
 			$taskResult = $kanboard->callKanboardAPI($method, [
 							'project_id'	=> $projectID,
 							'title'			=> trim($params['title']) ?? "",
-							'description'	=> (trim($params['description']) ?? "")."\nSubmitted by: ".(trim($params['creator']) ?? ""),
+							'description'	=> (trim($params['description']) ?? "")."\nSubmitted by: ".(trim($params['creator']) ?? "")."\nOTL: ".(trim($params['OTL']) ?? ""),
 							'date_started'	=> date('Y-m-d H:i'),
 							'creator_id'	=> $userID,
 							]);
@@ -74,7 +74,7 @@ if ($method !== 0)
 		{
 			$taskResult = $kanboard->callKanboardAPI($method, [
 							'title'			=> trim($params['title']) ?? "",
-							'description'	=> (trim($params['description']) ?? "")."\nSubmitted by: ".(trim($params['creator']) ?? ""),
+							'description'	=> (trim($params['description']) ?? "")."\nSubmitted by: ".(trim($params['creator']) ?? "")."\nOTL: ".(trim($params['OTL']) ?? ""),
 							'id'	=> $params['id'],
 							]);
 			if (isset($taskResult['result']))

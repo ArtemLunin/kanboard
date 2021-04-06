@@ -13,8 +13,10 @@ const btnClearSettings = document.querySelector('.btn-clear-settings');
 const ticketTitle = document.querySelector('.ticket-title');
 const ticketCreator = document.querySelector('.ticket-creator');
 const ticketDescription = document.querySelector('.ticket-description');
+const ticketOTL = document.querySelector('.ticket-OTL');
 
-const textCreatorHeader = 'Submitted by: ';
+const textCreatorHeader = 'Submitted by:';
+const textOTLHeader = 'OTL:';
 
 const taskAttachments = [];
 
@@ -33,6 +35,11 @@ let fileAttach;
 let fileDeleted = 0;
 
 btnCreateTaskFile.value = '';
+
+// for sort in ORDER DESC
+const byField = (field) => {
+	return (a, b) => a[field] > b[field] ? -1 : 1;
+}
 
 const timestampToDate = (timestampValue) => {
   const a = new Date(timestampValue * 1000);
@@ -80,6 +87,7 @@ function showAllTasks(data)
 {
 	if(!!data.success) {
 		ticketsContainer.textContent = '';
+		data.success.answer.sort(byField('date_creation'));
 		data.success.answer.forEach(function ({
 			id, creator_id, date_completed, date_creation, description, title, files
 		}) 
@@ -179,7 +187,8 @@ const createTask = () => {
 		params: {
 			title: ticketTitle.value,
 			description: ticketDescription.innerText,
-			creator:ticketCreator.value,
+			creator: ticketCreator.value,
+			OTL: ticketOTL.value,
 		},
 	}
 	sendRequest('POST', requestURL, body).then(showAddedTask);
@@ -192,6 +201,7 @@ const updateTask = () => {
 			title: ticketTitle.value,
 			description: ticketDescription.innerText,
 			creator:ticketCreator.value,
+			OTL: ticketOTL.value,
 			id: btnUpdateTask.dataset['task_id'],
 		},
 	}
@@ -255,6 +265,7 @@ const toggleToUpdateMode = () => {
 const clearEditableFields = () => {
 	ticketTitle.value = '';
 	ticketCreator.value = '';
+	ticketOTL.value = '';
 	ticketDescription.textContent = '';
 	btnUpdateTask.classList.add('d-none');
 	btnAddTask.classList.remove('d-none');
@@ -279,16 +290,43 @@ const actionTask = (event) => {
 		const taskDescription = hrefAction.querySelector('.task-description');
 		const taskID = hrefAction.dataset['task_id'];
 		const positionCreator = taskDescription.innerText.lastIndexOf(textCreatorHeader);
+		const positionOTL = taskDescription.innerText.lastIndexOf(textOTLHeader);
 		const filesList = hrefAction.querySelector('.files-list');
+		let extDescriptionPosition = 0;
+		let endPositionOTL = endPositionCreator = 0;
+		// console.log("positionCreator:" + taskDescription.innerText);
 		fileAttach = hrefAction.querySelector('.file-attach');
-		
-		if (positionCreator !== -1) {
-			ticketCreator.value = taskDescription.innerText.substring(positionCreator + textCreatorHeader.length);
-			ticketDescription.innerText = taskDescription.innerText.substring(0, positionCreator);
+		if (positionOTL !== -1) {
+			extDescriptionPosition = positionOTL;
+		} else {
+			ticketOTL.value = '';
 		}
-		else {
+		if (positionCreator !== -1) {
+			// console.log("extDescriptionPosition:"+extDescriptionPosition);
+			if (!extDescriptionPosition || (extDescriptionPosition > positionCreator)) {
+				extDescriptionPosition = positionCreator;
+				// console.log("extDescriptionPosition:"+extDescriptionPosition);
+			}
+		} else {
 			ticketCreator.value = '';
-			ticketDescription.innerText = taskDescription.innerText;
+		}
+		if (extDescriptionPosition) {
+			ticketDescription.innerText = taskDescription.innerText.substring(0, extDescriptionPosition).trim();
+			if (positionOTL < positionCreator) {
+				endPositionOTL = positionCreator;
+				endPositionCreator = taskDescription.innerText.length;
+			} else {
+				endPositionCreator = positionOTL;
+				endPositionOTL = taskDescription.innerText.length;
+			}
+			if (positionOTL !== -1) {
+				ticketOTL.value = taskDescription.innerText.substring(positionOTL + textOTLHeader.length, endPositionOTL).trim();
+			}
+			if (positionCreator !== -1) {
+				ticketCreator.value = taskDescription.innerText.substring(positionCreator + textCreatorHeader.length, endPositionCreator).trim();	
+			}
+		} else {
+			ticketDescription.innerText = taskDescription.innerText.trim();
 		}
 		attachmentsContainer.textContent = '';
 		if (!!filesList) {
@@ -297,9 +335,6 @@ const actionTask = (event) => {
 		ticketTitle.value = taskTitle.textContent;
 		btnUpdateTask.dataset['task_id'] = taskID;
 		toggleToUpdateMode();
-		// btnUpdateTask.classList.remove('d-none');
-		// btnAddTask.classList.add('d-none');
-		// attachmentsArea.classList.remove('invisible');
 		viewEditablePanel();
 	}
 };
