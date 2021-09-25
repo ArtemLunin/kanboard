@@ -128,6 +128,30 @@ if ($method !== 0)
 					];
 			}
 		}
+		elseif($method === 'getBoard')
+		{
+			$taskResult = $kanboard->callKanboardAPI('getBoard', [
+				$projectID,
+			]);
+			if (isset($taskResult['result']) && count($taskResult['result'])) {
+				foreach ($taskResult['result'][0]['columns'] as $key => $column) {
+					if($shownedColumnID == $column['id']) {
+						foreach ($column['tasks'] as $key => $task) {
+							if($task['is_active'] == 1) {
+								$param_error_msg['answer'][] = [
+									'id'			=> (int)$task['id'],
+									'date_due'		=> (int)$task['date_due'],
+									'title'			=> $task['title'],
+									'description'	=> $task['description'],
+									'assignee_name'	=> $task['assignee_name'],
+								];
+							}
+						}
+						break;
+					}
+				}
+			}
+		}
 	}
 	
 }

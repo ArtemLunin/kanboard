@@ -5,11 +5,17 @@
 body {
 	margin: 0;
 }
+/* table {
+	width: 90%;
+} */
 p {
 	margin: 0;
 }
 h6 {
 	font-weight: bold;
+}
+.d-none {
+	display: none;
 }
 .app-container {
 	/* width: 40%;

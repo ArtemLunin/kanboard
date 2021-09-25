@@ -15,6 +15,10 @@ const ticketCreator = document.querySelector('.ticket-creator');
 const ticketDescription = document.querySelector('.ticket-description');
 const ticketOTL = document.querySelector('.ticket-OTL');
 
+//excel DOM
+const pageData = document.querySelector('.page-data');
+const tableExcel = document.querySelector('.table-excel');
+
 const textCreatorHeader = 'Submitted by:';
 const textOTLHeader = 'OTL:';
 
@@ -34,7 +38,6 @@ const entityMap = {
 let fileAttach;
 let fileDeleted = 0;
 
-btnCreateTaskFile.value = '';
 
 // for sort in ORDER DESC
 const byField = (field) => {
@@ -42,6 +45,9 @@ const byField = (field) => {
 }
 
 const timestampToDate = (timestampValue) => {
+	if(!timestampValue) {
+		return '&nbsp;';
+	}
   const a = new Date(timestampValue * 1000);
   const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
   return `${a.getFullYear()}-${months[a.getMonth()]}-${addZero(a.getDate())} ${addZero(a.getHours())}:${addZero(a.getMinutes())}:${addZero(a.getSeconds())}`;
@@ -160,6 +166,28 @@ const filesAttached = (filesArray) => {
 	}
 };
 
+const showBoardTable = (data) => {
+	if(!!data.success) {
+		console.log(data.success.answer);
+		tableExcel.textContent = '';
+		// data.success.answer.sort(byField('date_creation'));
+		data.success.answer.forEach(function ({
+			id, date_due, description, title, assignee_name
+		}) 
+		{
+			tableExcel.insertAdjacentHTML('beforeend', `
+				<tr class="task-ticket" data-task_id="${id}">
+					<td>${timestampToDate(date_due)}</td>
+					<td>${assignee_name ?? '&nbsp;'}</td>
+					<td>${description} Task #${id}</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+					<td>&nbsp;</td>
+				</tr>
+			`);
+		});
+	}
+};
 
 const escapeHTML = (string) => {
 	return String(string).replace(/[&<>"'`=\/]/g, (s) => entityMap[s]);
@@ -177,6 +205,14 @@ const getAllTask = () => {
 	}
 	sendRequest('POST', requestURL, body).then(showAllTasks);
 };
+
+const getBoard = () => {
+	const body = {
+		method: 'getBoard',
+	}
+	sendRequest('POST', requestURL, body).then(showBoardTable);
+};
+
 const createTask = () => {
 	if (ticketTitle.value.trim().length == 0 || ticketCreator.value.trim().length == 0 || ticketDescription.innerText.trim().length == 0)
 	{
@@ -339,17 +375,26 @@ const actionTask = (event) => {
 	}
 };
 
-triangle.addEventListener('click', triangleToggle);
-btnAddTask.addEventListener('click', createTask);
-btnUpdateTask.addEventListener('click', updateTask);
-btnClearSettings.addEventListener('click', clearEditableFields);
-attachmentsContainer.addEventListener('click', attachmentsAction);
 
-btnCreateTaskFile.addEventListener('change', createTaskFile);
 
-clearEditableFields();
-getAllTask();
-viewEditablePanel();
+if(pageData && pageData.dataset['excel'] == '1') {
+	getBoard();
+} else {
+	btnCreateTaskFile.value = '';
+	triangle.addEventListener('click', triangleToggle);
+	btnAddTask.addEventListener('click', createTask);
+	btnUpdateTask.addEventListener('click', updateTask);
+	btnClearSettings.addEventListener('click', clearEditableFields);
+	attachmentsContainer.addEventListener('click', attachmentsAction);
+
+	btnCreateTaskFile.addEventListener('change', createTaskFile);
+
+	clearEditableFields();
+	getAllTask();
+	viewEditablePanel();
+}
+
+
 
 
 
