@@ -15,6 +15,40 @@
 <body>
 	<div class="page-data d-none" data-excel="1"></div>
 	<div class="container-fluid">
+		<form action="backend.php" class="py-2" id="ticketEditForm">
+			<div class="form-row py-2">
+				<div class="col-2">
+					<label for="inputDate">Date</label>
+					<input class="form-control" type="date" name="inputDate" id="inputDate">
+				</div>
+				<div class="col-2">
+					<label for="inputName">Name</label>
+					<select id="inputName" class="form-control">
+					</select>
+				</div>
+				<div class="col-4">
+					<label for="inputDescr">Description</label>
+					<input class="form-control" type="text" name="inputDescr" id="inputDescr">
+				</div>
+				<div class="col-2">
+					<label for="inputTicket">Ticket</label>
+					<input class="form-control" type="text" name="inputTicket" id="inputTicket">
+				</div>
+				<div class="col-1">
+					<label for="inputCapOp">Capex/Opex</label>
+					<input class="form-control" type="text" name="inputCapOp" id="inputCapOp">
+				</div>
+				<div class="col-1">
+					<label for="inputOracle">Oracle</label>
+					<input class="form-control" type="text" name="inputOracle" id="inputOracle">
+				</div>
+			</div>
+			<div class="form-row py-2">
+				<div class="col-12 text-right">
+					<button type="button" class="btn btn-primary btn-sm btn-update-ticket">Update</button>
+				</div>
+			</div>
+		</form>
 		<table class="table table-bordered table-sm">
 		<thead class="thead-light">
 			<tr>
@@ -23,7 +57,9 @@
 				<th>Description</th>
 				<th>Ticket</th>
 				<th>Capex/Opex</th>
-				<th>Oracle#</th>
+				<th>Oracle</th>
+				<th>Edit</th>
+				<th>Remove</th>
 			</tr>
 		</thead>
 		<tbody class="table-excel">

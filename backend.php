@@ -138,17 +138,30 @@ if ($method !== 0)
 					if($shownedColumnID == $column['id']) {
 						foreach ($column['tasks'] as $key => $task) {
 							if($task['is_active'] == 1) {
+								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
 								$param_error_msg['answer'][] = [
 									'id'			=> (int)$task['id'],
 									'date_due'		=> (int)$task['date_due'],
 									'title'			=> $task['title'],
 									'description'	=> $task['description'],
 									'assignee_name'	=> $task['assignee_name'],
+									'fields'		=> $kanboard->getMetadataFields($taskMetadata['result']),
 								];
 							}
 						}
 						break;
 					}
+				}
+			}
+		}
+		elseif($method === 'getAssignableUsers')
+		{
+			$taskResult = $kanboard->callKanboardAPI('getAssignableUsers', [$projectID, false]);
+			if (isset($taskResult['result']) && count($taskResult['result'])) {
+				foreach($taskResult['result'] as $user_name) {
+					$param_error_msg['answer'][] = [
+						'user_name' => $user_name,
+					];
 				}
 			}
 		}

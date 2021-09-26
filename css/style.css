@@ -14,9 +14,9 @@ p {
 h6 {
 	font-weight: bold;
 }
-.d-none {
+/* .d-none {
 	display: none;
-}
+} */
 .app-container {
 	/* width: 40%;
 	min-width: 900px; */
@@ -84,4 +84,7 @@ hr.dotted {
 .file-delete {
 	width: 18px;
 	cursor: pointer;
+}
+.icon-edit {
+	width: 20px;
 }

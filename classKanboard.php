@@ -5,6 +5,9 @@ class Kanboard {
 		'createTask',
 		'getAllTasks',
 	];
+	private $metadataFields = [
+		"capop", "oracle", "ticket"
+	];
 	function __construct () {
 		$this->projectID = $this->getInitialParams('getProjectByIdentifier', ['identifier' => KANBOARD_PROJECT_IDENTIFIER]);
 		$this->userID = $this->getInitialParams('getUserByName', ['username' => KANBOARD_USER_CREATE_TICKETS]);
@@ -48,6 +51,19 @@ class Kanboard {
 		$this->kanboardRequest['params'] = $kanboardAPIParams;
 		$resultCall = json_decode(callKanboardAPI(json_encode($this->kanboardRequest)), TRUE);
 		return $resultCall;
+	}
+	function getMetadataFields($metadata) {
+		$metadata_arr = [];
+		foreach($this->metadataFields as $value) {
+			$metadata_arr[$value] = '';
+		}
+		foreach($metadata as $key => $value) {
+			$key = strtolower($key);
+			if(in_array($key, $this->metadataFields)) {
+				$metadata_arr[$key] = $value;
+			}
+		}
+		return $metadata_arr;
 	}
 	private $kanboardRequest = [
 		"jsonrpc"   => "2.0",

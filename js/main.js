@@ -18,6 +18,10 @@ const ticketOTL = document.querySelector('.ticket-OTL');
 //excel DOM
 const pageData = document.querySelector('.page-data');
 const tableExcel = document.querySelector('.table-excel');
+const btnUpdateTicket = document.querySelector('.btn-update-ticket');
+const ticketEditForm = document.querySelector('#ticketEditForm');
+// const inputDate = document.querySelector('#inputDate');
+const inputName = document.querySelector('#inputName');
 
 const textCreatorHeader = 'Submitted by:';
 const textOTLHeader = 'OTL:';
@@ -44,17 +48,21 @@ const byField = (field) => {
 	return (a, b) => a[field] > b[field] ? -1 : 1;
 }
 
-const timestampToDate = (timestampValue) => {
+const timestampToDate = (timestampValue, timeOut = true) => {
 	if(!timestampValue) {
 		return '&nbsp;';
 	}
   const a = new Date(timestampValue * 1000);
   const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
-  return `${a.getFullYear()}-${months[a.getMonth()]}-${addZero(a.getDate())} ${addZero(a.getHours())}:${addZero(a.getMinutes())}:${addZero(a.getSeconds())}`;
+  let dateOut = `${a.getFullYear()}-${months[a.getMonth()]}-${addZero(a.getDate())}`;
+  if(timeOut) {
+	dateOut = `${dateOut} ${addZero(a.getHours())}:${addZero(a.getMinutes())}:${addZero(a.getSeconds())}`;
+  }
+  return  dateOut;
 }
 
-const addZero = (i) => {
-	if (i < 10) {
+const addZero = i => {
+	if(i < 10) {
     i = "0" + i;
   }
   return i;
@@ -168,24 +176,60 @@ const filesAttached = (filesArray) => {
 
 const showBoardTable = (data) => {
 	if(!!data.success) {
-		console.log(data.success.answer);
 		tableExcel.textContent = '';
-		// data.success.answer.sort(byField('date_creation'));
 		data.success.answer.forEach(function ({
-			id, date_due, description, title, assignee_name
+			id, date_due, description, fields, assignee_name
 		}) 
 		{
 			tableExcel.insertAdjacentHTML('beforeend', `
 				<tr class="task-ticket" data-task_id="${id}">
-					<td>${timestampToDate(date_due)}</td>
-					<td>${assignee_name ?? '&nbsp;'}</td>
-					<td>${description} Task #${id}</td>
-					<td>&nbsp;</td>
-					<td>&nbsp;</td>
-					<td>&nbsp;</td>
+					<td class="ticket-date" data-item_value="${timestampToDate(date_due, false)}" data-item_id="inputDate">${timestampToDate(date_due, false)}</td>
+					<td class="ticket-name" data-item_value="${assignee_name ?? '&nbsp;'}" data-item_id="inputName">${assignee_name ?? '&nbsp;'}</td>
+					<td class="ticket-descr" data-item_value="${description} Task #${id}" data-item_id="inputDescr">${description} Task #${id}</td>
+					<td class="ticket-ticket" data-item_value="${fields['ticket']}" data-item_id="inputTicket">${fields['ticket']}</td>
+					<td class="ticket-capop" data-item_value="${fields['capop']}" data-item_id="inputCapOp">${fields['capop']}</td>
+					<td class="ticket-oracle" data-item_value="${fields['oracle']}" data-item_id="inputOracle">${fields['oracle']}</td>
+					<td class="text-center">
+						<a href="#"><img class="icon-edit" src="img/edit.svg"></a>
+					</td>
+					<td class="text-center">
+						<a href="#"><img class="icon-delete" src="img/delete.svg"></a>
+					</td>
 				</tr>
 			`);
 		});
+		tableExcel.addEventListener('click', editTask);
+	}
+};
+
+const fillUsersList = (data) => {
+	if(!!data.success) {
+		inputName.textContent = '';
+		data.success.answer.forEach(function ({user_name}) {
+			inputName.insertAdjacentHTML('beforeend', `
+				<option value="${user_name}">${user_name}</option>
+			`);
+		});
+	}
+	inputName.value = "";
+};
+
+const editTask = (e) => {
+	e.preventDefault();
+	const target = e.target;
+	if(target.classList.contains('icon-edit')) {
+		const taskTicket = target.closest('.task-ticket');
+		if(!!taskTicket) {
+			clearTicketFields();
+			for(const item of taskTicket.children)
+			{
+				const itemValue = item.dataset['item_value'];
+				const inputID = item.dataset['item_id'];
+				if(!itemValue || !inputID) continue;
+				document.querySelector(`#${inputID}`).value = itemValue;
+			}
+		}
+	} else if(target.classList.contains('icon-delete')) {
 	}
 };
 
@@ -211,6 +255,13 @@ const getBoard = () => {
 		method: 'getBoard',
 	}
 	sendRequest('POST', requestURL, body).then(showBoardTable);
+};
+
+const getUsers = () => {
+	const body = {
+		method: 'getAssignableUsers',
+	}
+	sendRequest('POST', requestURL, body).then(fillUsersList);
 };
 
 const createTask = () => {
@@ -309,6 +360,10 @@ const clearEditableFields = () => {
 	btnUpdateTask.dataset['task_id'] = 0;
 };
 
+const clearTicketFields = () => {
+	ticketEditForm.reset();
+};
+
 const fillFileInfo = (fileInfo) => {
 	let { file_id, file_name, file_size } = JSON.parse(fileInfo);
 	attachmentsContainer.insertAdjacentHTML('beforeend', `
@@ -330,7 +385,6 @@ const actionTask = (event) => {
 		const filesList = hrefAction.querySelector('.files-list');
 		let extDescriptionPosition = 0;
 		let endPositionOTL = endPositionCreator = 0;
-		// console.log("positionCreator:" + taskDescription.innerText);
 		fileAttach = hrefAction.querySelector('.file-attach');
 		if (positionOTL !== -1) {
 			extDescriptionPosition = positionOTL;
@@ -338,10 +392,8 @@ const actionTask = (event) => {
 			ticketOTL.value = '';
 		}
 		if (positionCreator !== -1) {
-			// console.log("extDescriptionPosition:"+extDescriptionPosition);
 			if (!extDescriptionPosition || (extDescriptionPosition > positionCreator)) {
 				extDescriptionPosition = positionCreator;
-				// console.log("extDescriptionPosition:"+extDescriptionPosition);
 			}
 		} else {
 			ticketCreator.value = '';
@@ -378,6 +430,8 @@ const actionTask = (event) => {
 
 
 if(pageData && pageData.dataset['excel'] == '1') {
+	clearTicketFields();
+	getUsers();
 	getBoard();
 } else {
 	btnCreateTaskFile.value = '';
