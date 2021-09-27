@@ -70,6 +70,18 @@ if ($method !== 0)
 				];
 			}
 		}
+		elseif ($method === 'removeTask' && $params !== 0 && $params['id'] != 0)
+		{
+			$taskResult = $kanboard->callKanboardAPI($method, [
+				'task_id'	=> $params['id'],
+			]);
+			if (isset($taskResult['result']))
+			{
+				$param_error_msg['answer'] = [
+					'id'	=> 0,
+				];
+			}
+		}
 		elseif ($method === 'updateTask' && $params !== 0 && $params['id'] != 0)
 		{
 			$taskResult = $kanboard->callKanboardAPI($method, [
@@ -82,6 +94,30 @@ if ($method !== 0)
 				$param_error_msg['answer'] = [
 					'id'	=> (int)$params['id'],
 				];
+			}
+		}
+		elseif($method === 'updateTaskFull' && $params !== 0 && $params['id'] != 0)
+		{
+			$taskResult = $kanboard->callKanboardAPI('updateTask', [
+				'id'	=> $params['id'],
+				'description'	=> (trim($params['description']) ?? ""),
+				'date_due'		=> $params['date_due'],
+			]);
+			// error_log(json_encode($taskResult));
+			if (isset($taskResult['result']) && $taskResult['result']) {
+				$taskResult = $kanboard->callKanboardAPI('saveTaskMetadata', [
+              		$params['id'], [
+                		"ticket"	=> (trim($params['ticket']) ?? ""),
+               			"capop"		=> (trim($params['capop']) ?? ""),
+                		"oracle"	=> (trim($params['oracle']) ?? ""),
+              		]
+            	]);
+				if (isset($taskResult['result']))
+				{
+					$param_error_msg['answer'] = [
+						'id'	=> (int)$params['id'],
+					];
+				}
 			}
 		}
 		elseif ($method === 'createTaskFile' && $params !== 0 && $params['id'] != 0)
@@ -144,7 +180,7 @@ if ($method !== 0)
 									'date_due'		=> (int)$task['date_due'],
 									'title'			=> $task['title'],
 									'description'	=> $task['description'],
-									'assignee_name'	=> $task['assignee_name'],
+									'assignee_name'	=> $task['assignee_username'],
 									'fields'		=> $kanboard->getMetadataFields($taskMetadata['result']),
 								];
 							}

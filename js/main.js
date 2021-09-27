@@ -16,12 +16,20 @@ const ticketDescription = document.querySelector('.ticket-description');
 const ticketOTL = document.querySelector('.ticket-OTL');
 
 //excel DOM
+const periodSelect = document.querySelector('.period-select');
 const pageData = document.querySelector('.page-data');
 const tableExcel = document.querySelector('.table-excel');
 const btnUpdateTicket = document.querySelector('.btn-update-ticket');
+const ticketDescr = document.querySelector('.ticket-descr');
+const btnRemove = document.querySelector('.btn-remove');
 const ticketEditForm = document.querySelector('#ticketEditForm');
-// const inputDate = document.querySelector('#inputDate');
+
 const inputName = document.querySelector('#inputName');
+const inputDate = document.querySelector('#inputDate');
+const inputDescr = document.querySelector('#inputDescr');
+const inputTicket = document.querySelector('#inputTicket');
+const inputCapOp = document.querySelector('#inputCapOp');
+const inputOracle = document.querySelector('#inputOracle');
 
 const textCreatorHeader = 'Submitted by:';
 const textOTLHeader = 'OTL:';
@@ -41,6 +49,7 @@ const entityMap = {
 
 let fileAttach;
 let fileDeleted = 0;
+let periodDays = 1;
 
 
 // for sort in ORDER DESC
@@ -58,8 +67,47 @@ const timestampToDate = (timestampValue, timeOut = true) => {
   if(timeOut) {
 	dateOut = `${dateOut} ${addZero(a.getHours())}:${addZero(a.getMinutes())}:${addZero(a.getSeconds())}`;
   }
-  return  dateOut;
+  return dateOut;
 }
+
+const dateToTimestamp = date_str => {
+	const date = new Date(date_str);
+	const ts = date.valueOf() / 1000;
+	if (!isNaN(ts)) {
+		return ts;
+	}
+	return 0;
+};
+
+const tsPeriod = () => {
+	const today = new Date();
+	const nextDay = new Date();
+	nextDay.setDate(nextDay.getDate() + periodDays - 1);
+	const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+	const dayEnd = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), 23, 59, 59);
+	return {
+		dayStart: dayStart.valueOf() / 1000,
+		dayEnd: dayEnd.valueOf() / 1000,
+	}
+};
+
+const hideTask = (date_due) => {
+	let {dayStart, dayEnd} = tsPeriod();
+	let hideTaskClass = 'd-none';
+	
+	if(!date_due || (date_due > dayStart && date_due < dayEnd)) {
+		hideTaskClass = '';
+	}
+	return hideTaskClass;
+};
+
+const cr2spaces = data_str => {
+	return String(data_str).replace(/\n/g, '  ');
+};
+
+const spaces2cr = data_str => {
+	return String(data_str).replace(/\s\s/g, '\n');
+};
 
 const addZero = i => {
 	if(i < 10) {
@@ -68,10 +116,13 @@ const addZero = i => {
   return i;
 }
 
-async function sendRequest(method, url, body = null) {
+async function sendRequest(method, url, body, showWait = false) {
 	const headers = {
 		'Content-Type': 'application/json'
 	};
+	if(showWait) {
+		$('#waitModal').modal('show');
+	}
 	try {
 		const response = await fetch(url, {
 			method: method,
@@ -82,6 +133,9 @@ async function sendRequest(method, url, body = null) {
 		return data;
 	} catch (e) {
 		console.error(e);
+		if(showWait) {
+			$('#waitModal').modal('hide');
+		}
 	}
 }
 async function sendFile(method, url, body ) {
@@ -132,13 +186,19 @@ function showAddedTask(taskCreateResult)
 	attachmentsContainer.textContent = '';
 	toggleToUpdateMode();
 	getAllTask();
-};
+}
 
 function showUpdatedTask(taskCreateResult)
 {
 	clearEditableFields();
 	getAllTask();
-};
+}
+
+function showUpdatedTaskFull()
+{
+	clearTicketFields();
+	getBoard();
+}
 
 function showAddedFile(resultFileList)
 {
@@ -177,15 +237,21 @@ const filesAttached = (filesArray) => {
 const showBoardTable = (data) => {
 	if(!!data.success) {
 		tableExcel.textContent = '';
+		// const today = new Date();
+		// const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+		// const dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+		// const tomorrow = new Date(today);
+		// tomorrow.setDate(tomorrow.getDate() + 1);
 		data.success.answer.forEach(function ({
 			id, date_due, description, fields, assignee_name
 		}) 
 		{
+			const descr_spaces = cr2spaces(description);
 			tableExcel.insertAdjacentHTML('beforeend', `
-				<tr class="task-ticket" data-task_id="${id}">
+				<tr class="task-ticket ${hideTask(date_due)}" data-task_id="${id}" data-date_due="${date_due}">
 					<td class="ticket-date" data-item_value="${timestampToDate(date_due, false)}" data-item_id="inputDate">${timestampToDate(date_due, false)}</td>
 					<td class="ticket-name" data-item_value="${assignee_name ?? '&nbsp;'}" data-item_id="inputName">${assignee_name ?? '&nbsp;'}</td>
-					<td class="ticket-descr" data-item_value="${description} Task #${id}" data-item_id="inputDescr">${description} Task #${id}</td>
+					<td class="ticket-descr" data-item_value="${descr_spaces}" data-item_id="inputDescr">${descr_spaces}</td>
 					<td class="ticket-ticket" data-item_value="${fields['ticket']}" data-item_id="inputTicket">${fields['ticket']}</td>
 					<td class="ticket-capop" data-item_value="${fields['capop']}" data-item_id="inputCapOp">${fields['capop']}</td>
 					<td class="ticket-oracle" data-item_value="${fields['oracle']}" data-item_id="inputOracle">${fields['oracle']}</td>
@@ -200,6 +266,7 @@ const showBoardTable = (data) => {
 		});
 		tableExcel.addEventListener('click', editTask);
 	}
+	$('#waitModal').modal('hide');
 };
 
 const fillUsersList = (data) => {
@@ -221,6 +288,8 @@ const editTask = (e) => {
 		const taskTicket = target.closest('.task-ticket');
 		if(!!taskTicket) {
 			clearTicketFields();
+			selectTicketRow(taskTicket);
+			const taskID = taskTicket.dataset['task_id'];
 			for(const item of taskTicket.children)
 			{
 				const itemValue = item.dataset['item_value'];
@@ -228,8 +297,16 @@ const editTask = (e) => {
 				if(!itemValue || !inputID) continue;
 				document.querySelector(`#${inputID}`).value = itemValue;
 			}
+			btnUpdateTicket.dataset['task_id'] = taskID;
 		}
 	} else if(target.classList.contains('icon-delete')) {
+		const taskTicket = target.closest('.task-ticket');
+		if(!!taskTicket) {
+			const taskID = taskTicket.dataset['task_id'];
+			btnRemove.dataset['task_id'] = taskID;
+			ticketDescr.textContent = taskTicket.querySelector('.ticket-descr').dataset['item_value'];
+			$('#modalRemoveDialog').modal('show');
+		}
 	}
 };
 
@@ -254,7 +331,7 @@ const getBoard = () => {
 	const body = {
 		method: 'getBoard',
 	}
-	sendRequest('POST', requestURL, body).then(showBoardTable);
+	sendRequest('POST', requestURL, body, true).then(showBoardTable);
 };
 
 const getUsers = () => {
@@ -294,6 +371,33 @@ const updateTask = () => {
 	}
 	sendRequest('POST', requestURL, body).then(showUpdatedTask);
 };
+
+const updateTaskFull = () => {
+	const body = {
+		method: 'updateTaskFull',
+		params: {
+			description: spaces2cr(inputDescr.value),
+			id: btnUpdateTicket.dataset['task_id'],
+			date_due: inputDate.value.trim(),
+			ticket: inputTicket.value.trim(),
+			capop: inputCapOp.value.trim(),
+			oracle: inputOracle.value.trim(),
+		},
+	}
+	sendRequest('POST', requestURL, body, true).then(showUpdatedTaskFull);
+};
+
+const removeTask = () => {
+	$('#modalRemoveDialog').modal('hide');
+	const body = {
+		method: 'removeTask',
+		params: {
+			id: btnRemove.dataset['task_id'],
+		},
+	}
+	sendRequest('POST', requestURL, body, true).then(showUpdatedTaskFull);
+};
+
 const createTaskFile = () => {
 	const formData = new FormData();
 	formData.append('file', btnCreateTaskFile.files[0]);
@@ -362,6 +466,44 @@ const clearEditableFields = () => {
 
 const clearTicketFields = () => {
 	ticketEditForm.reset();
+	inputCapOp.value = "";
+};
+
+const selectTicketRow = (taskTicket)=> {
+	const taskTickets = document.querySelectorAll('.task-ticket');
+	taskTickets.forEach(item => {
+		item.classList.remove('table-primary');
+	});
+	taskTicket.classList.add('table-primary');
+};
+
+const periodChange = (e) => {
+	const target = e.target;
+	if(target.classList.contains('btn')) {
+		for(const item of periodSelect.children)
+		{
+			item.classList.remove('btn-primary');
+			item.classList.add('btn-secondary');
+		}
+		target.classList.remove('btn-secondary');
+		target.classList.add('btn-primary');
+		periodDays = parseInt(target.dataset['days'], 10);
+		if(isNaN(periodDays) || periodDays > 365 || periodDays < 1) {
+			periodDays = 1;
+		}
+		refreshBoardTable();
+	}
+};
+
+const refreshBoardTable = () => {
+	const taskTickets = document.querySelectorAll('.task-ticket');
+	taskTickets.forEach(item => {
+		if(hideTask(parseInt(item.dataset['date_due'], 10)) === 'd-none') {
+			item.classList.add('d-none');
+		} else {
+			item.classList.remove('d-none');
+		}
+	});
 };
 
 const fillFileInfo = (fileInfo) => {
@@ -371,7 +513,8 @@ const fillFileInfo = (fileInfo) => {
 			<img class="file-delete" src="img/delete.svg" atl="Delete file" data-file_id="${file_id}" title="Delete file"/>
 		</p>
 	`);
-}
+};
+
 const actionTask = (event) => {
 	const target = event.target;
 	const hrefAction = target.closest('.task-ticket');
@@ -430,8 +573,11 @@ const actionTask = (event) => {
 
 
 if(pageData && pageData.dataset['excel'] == '1') {
+	btnUpdateTicket.addEventListener('click', updateTaskFull);
+	btnRemove.addEventListener('click', removeTask);
+	periodSelect.addEventListener('click', periodChange);
 	clearTicketFields();
-	getUsers();
+	// getUsers();
 	getBoard();
 } else {
 	btnCreateTaskFile.value = '';
