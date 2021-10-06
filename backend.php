@@ -103,8 +103,7 @@ if ($method !== 0)
 				'description'	=> (trim($params['description']) ?? ""),
 				'date_due'		=> $params['date_due'],
 			]);
-			// error_log(json_encode($taskResult));
-			if (isset($taskResult['result']) && $taskResult['result']) {
+			if(isset($taskResult['result']) && $taskResult['result']) {
 				$taskResult = $kanboard->callKanboardAPI('saveTaskMetadata', [
               		$params['id'], [
                 		"ticket"	=> (trim($params['ticket']) ?? ""),
@@ -118,6 +117,13 @@ if ($method !== 0)
 						'id'	=> (int)$params['id'],
 					];
 				}
+			}
+			if(isset($params['user_name']) && trim($params['user_name']) !== '') {
+				$taskResult = $kanboard->callKanboardAPI('setTaskTags', [
+					$projectID,
+					$params['id'],
+					[trim($params['user_name'])],
+				]);
 			}
 		}
 		elseif ($method === 'createTaskFile' && $params !== 0 && $params['id'] != 0)
@@ -170,19 +176,28 @@ if ($method !== 0)
 				$projectID,
 			]);
 			if (isset($taskResult['result']) && count($taskResult['result'])) {
+				$assignee_name = '';
 				foreach ($taskResult['result'][0]['columns'] as $key => $column) {
 					if($shownedColumnID == $column['id']) {
 						foreach ($column['tasks'] as $key => $task) {
 							if($task['is_active'] == 1) {
 								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
+								$taskTags = $kanboard->callKanboardAPI('getTaskTags', [$task['id']]);
+								if (isset($taskTags['result']) && count($taskTags['result'])) {
+									$assignee_name = $kanboard->getUserNameFromTag($taskTags['result']);
+								}
+								if($assignee_name === '') {
+									$assignee_name = $task['assignee_username'];
+								}
 								$param_error_msg['answer'][] = [
 									'id'			=> (int)$task['id'],
 									'date_due'		=> (int)$task['date_due'],
 									'title'			=> $task['title'],
 									'description'	=> $task['description'],
-									'assignee_name'	=> $task['assignee_username'],
+									'assignee_name'	=> $assignee_name,
 									'fields'		=> $kanboard->getMetadataFields($taskMetadata['result']),
 								];
+								$assignee_name = '';
 							}
 						}
 						break;
@@ -192,12 +207,25 @@ if ($method !== 0)
 		}
 		elseif($method === 'getAssignableUsers')
 		{
-			$taskResult = $kanboard->callKanboardAPI('getAssignableUsers', [$projectID, false]);
+			$taskResult = $kanboard->callKanboardAPI($method, [$projectID, false]);
 			if (isset($taskResult['result']) && count($taskResult['result'])) {
 				foreach($taskResult['result'] as $user_name) {
 					$param_error_msg['answer'][] = [
 						'user_name' => $user_name,
 					];
+				}
+			}
+		}
+		elseif($method === 'getTaskTags' && $params !== 0 && $params['id'] != 0)
+		{
+			$taskResult = $kanboard->callKanboardAPI($method, [$params['id']]);
+			if (isset($taskResult['result']) && count($taskResult['result'])) {
+				foreach($taskResult['result'] as $user_name) {
+					$param_error_msg['answer'][] = [
+						'user_name' => $user_name,
+					];
+					// onfy first tag - aka username
+					break;
 				}
 			}
 		}

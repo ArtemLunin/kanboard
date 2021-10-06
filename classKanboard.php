@@ -65,6 +65,9 @@ class Kanboard {
 		}
 		return $metadata_arr;
 	}
+	function getUserNameFromTag($tags_arr) {
+		return array_values($tags_arr)[0];
+	}
 	private $kanboardRequest = [
 		"jsonrpc"   => "2.0",
   		"method"    => "",

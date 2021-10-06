@@ -237,11 +237,6 @@ const filesAttached = (filesArray) => {
 const showBoardTable = (data) => {
 	if(!!data.success) {
 		tableExcel.textContent = '';
-		// const today = new Date();
-		// const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-		// const dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-		// const tomorrow = new Date(today);
-		// tomorrow.setDate(tomorrow.getDate() + 1);
 		data.success.answer.forEach(function ({
 			id, date_due, description, fields, assignee_name
 		}) 
@@ -298,6 +293,7 @@ const editTask = (e) => {
 				document.querySelector(`#${inputID}`).value = itemValue;
 			}
 			btnUpdateTicket.dataset['task_id'] = taskID;
+			btnUpdateTicket.disabled = false;
 		}
 	} else if(target.classList.contains('icon-delete')) {
 		const taskTicket = target.closest('.task-ticket');
@@ -373,18 +369,21 @@ const updateTask = () => {
 };
 
 const updateTaskFull = () => {
-	const body = {
-		method: 'updateTaskFull',
-		params: {
-			description: spaces2cr(inputDescr.value),
-			id: btnUpdateTicket.dataset['task_id'],
-			date_due: inputDate.value.trim(),
-			ticket: inputTicket.value.trim(),
-			capop: inputCapOp.value.trim(),
-			oracle: inputOracle.value.trim(),
-		},
+	if(btnUpdateTicket.dataset['task_id'] != 0) {
+		const body = {
+			method: 'updateTaskFull',
+			params: {
+				description: spaces2cr(inputDescr.value),
+				id: btnUpdateTicket.dataset['task_id'],
+				user_name: inputName.value,
+				date_due: inputDate.value.trim(),
+				ticket: inputTicket.value.trim(),
+				capop: inputCapOp.value.trim(),
+				oracle: inputOracle.value.trim(),
+			},
+		}
+		sendRequest('POST', requestURL, body, true).then(showUpdatedTaskFull);
 	}
-	sendRequest('POST', requestURL, body, true).then(showUpdatedTaskFull);
 };
 
 const removeTask = () => {
@@ -467,6 +466,9 @@ const clearEditableFields = () => {
 const clearTicketFields = () => {
 	ticketEditForm.reset();
 	inputCapOp.value = "";
+	inputName.value = "";
+	btnUpdateTicket.dataset['task_id'] = 0;
+	btnUpdateTicket.disabled = true;
 };
 
 const selectTicketRow = (taskTicket)=> {
@@ -573,11 +575,13 @@ const actionTask = (event) => {
 
 
 if(pageData && pageData.dataset['excel'] == '1') {
+	btnUpdateTicket.dataset['task_id'] = 0;
+	btnUpdateTicket.disabled = true;
 	btnUpdateTicket.addEventListener('click', updateTaskFull);
 	btnRemove.addEventListener('click', removeTask);
 	periodSelect.addEventListener('click', periodChange);
 	clearTicketFields();
-	// getUsers();
+	getUsers();
 	getBoard();
 } else {
 	btnCreateTaskFile.value = '';
