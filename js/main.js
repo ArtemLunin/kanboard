@@ -14,6 +14,7 @@ const ticketTitle = document.querySelector('.ticket-title');
 const ticketCreator = document.querySelector('.ticket-creator');
 const ticketDescription = document.querySelector('.ticket-description');
 const ticketOTL = document.querySelector('.ticket-OTL');
+const ticketProjectName = document.querySelector('.ticket-project');
 
 //excel DOM
 const periodSelect = document.querySelector('.period-select');
@@ -23,6 +24,12 @@ const btnUpdateTicket = document.querySelector('.btn-update-ticket');
 const ticketDescr = document.querySelector('.ticket-descr');
 const btnRemove = document.querySelector('.btn-remove');
 const ticketEditForm = document.querySelector('#ticketEditForm');
+
+//status DOM
+const tableStatus = document.querySelector('.table-status');
+
+//statistics DOM
+const tableStatistics = document.querySelector('.table-statistics');
 
 const inputName = document.querySelector('#inputName');
 const inputDate = document.querySelector('#inputDate');
@@ -51,6 +58,7 @@ let fileAttach;
 let fileDeleted = 0;
 let periodDays = 1;
 
+let dataTableObj;
 
 // for sort in ORDER DESC
 const byField = (field) => {
@@ -157,7 +165,7 @@ function showAllTasks(data)
 		ticketsContainer.textContent = '';
 		data.success.answer.sort(byField('date_creation'));
 		data.success.answer.forEach(function ({
-			id, creator_id, date_completed, date_creation, description, title, files
+			id, creator_id, date_completed, date_creation, description, title, project_name, files
 		}) 
 		{
 			ticketsContainer.insertAdjacentHTML('beforeend', `
@@ -165,6 +173,7 @@ function showAllTasks(data)
 					<a href="#" class="task-action" data-task_id="${id}">#${id}</a>
 					<h6 class="task-title">${title}</h6>
 					<p class="task-description">${description}</p>
+					<p class="task-project">Project: <span class="task-project-name">${project_name}</span></p>
 					<div class="task-footer">
 						<span id="task_id_${id}" class="file-attach">${filesAttached(files)}</span>
 						<span>${timestampToDate(date_creation)}</span>
@@ -264,6 +273,56 @@ const showBoardTable = (data) => {
 	$('#waitModal').modal('hide');
 };
 
+const showStatusTable = (data) => {
+	if (!!data.success) {
+		tableStatus.textContent = '';
+		data.success.answer.forEach(function ({id, title, assignee_name, status, date_creation, reference}) {
+			tableStatus.insertAdjacentHTML('beforeend', `
+				<td>${id}</td>
+				<td>${title}</td>
+				<td>${assignee_name}</td>
+				<td>${status}</td>
+				<td>${timestampToDate(date_creation, false)}</td>
+				<td>${reference}</td>
+			`);
+		});
+	}
+	$('#waitModal').modal('hide');
+};
+
+const showStatisticsTable = data => {
+	if (!!dataTableObj) {
+		dataTableObj.clear().destroy();
+	}
+	if (!!data.success) {
+		tableStatistics.textContent = '';
+		data.success.answer.forEach(function ({project_name, title, date_creation, fields}) {
+			tableStatistics.insertAdjacentHTML('beforeend', `
+				<td>${project_name}</td>
+				<td>${timestampToDate(date_creation, false)}</td>
+				<td>${fields.otl}</td>
+				<td>${title}</td>
+				<td>${fields.creator}</td>
+			`);
+		});
+	}
+	dataTableObj = $('#table_statistics').DataTable({
+	"columnDefs": [
+		{ "orderable": false, "targets": [2, 3] },
+		// { "searchable": false, "targets": [0, 1, 2, 3, 4]},
+	// 	{ "width": "15%", "targets": [1, 2, 3] },
+	],
+	"order": [
+		[0, 'asc'],
+		[1, 'asc']
+	],
+	"autoWidth": true,
+	"paging": false,
+	"searching": false,
+	});
+	$('#waitModal').modal('hide');
+};
+
 const fillUsersList = (data) => {
 	if(!!data.success) {
 		inputName.textContent = '';
@@ -323,11 +382,20 @@ const getAllTask = () => {
 	sendRequest('POST', requestURL, body).then(showAllTasks);
 };
 
-const getBoard = () => {
+const getBoard = (action = 0) => {
 	const body = {
 		method: 'getBoard',
+		params: {
+			status: 'all',
+		},
 	}
-	sendRequest('POST', requestURL, body, true).then(showBoardTable);
+	if (action == 'status') {
+		sendRequest('POST', requestURL, body, true).then(showStatusTable);
+	} else if (action == 'statistics') {
+		sendRequest('POST', requestURL, body, true).then(showStatisticsTable);
+	}else {
+		sendRequest('POST', requestURL, body, true).then(showBoardTable);
+	}
 };
 
 const getUsers = () => {
@@ -349,6 +417,7 @@ const createTask = () => {
 			description: ticketDescription.innerText,
 			creator: ticketCreator.value,
 			OTL: ticketOTL.value,
+			projectName: ticketProjectName.value,
 		},
 	}
 	sendRequest('POST', requestURL, body).then(showAddedTask);
@@ -362,6 +431,7 @@ const updateTask = () => {
 			description: ticketDescription.innerText,
 			creator:ticketCreator.value,
 			OTL: ticketOTL.value,
+			projectName: ticketProjectName.value,
 			id: btnUpdateTask.dataset['task_id'],
 		},
 	}
@@ -456,6 +526,7 @@ const clearEditableFields = () => {
 	ticketTitle.value = '';
 	ticketCreator.value = '';
 	ticketOTL.value = '';
+	ticketProjectName.value = '';
 	ticketDescription.textContent = '';
 	btnUpdateTask.classList.add('d-none');
 	btnAddTask.classList.remove('d-none');
@@ -524,6 +595,7 @@ const actionTask = (event) => {
 	{
 		const taskTitle = hrefAction.querySelector('.task-title');
 		const taskDescription = hrefAction.querySelector('.task-description');
+		const taskProjectName = hrefAction.querySelector('.task-project-name');
 		const taskID = hrefAction.dataset['task_id'];
 		const positionCreator = taskDescription.innerText.lastIndexOf(textCreatorHeader);
 		const positionOTL = taskDescription.innerText.lastIndexOf(textOTLHeader);
@@ -566,6 +638,7 @@ const actionTask = (event) => {
 			JSON.parse(filesList.dataset['files_list']).forEach(fillFileInfo);
 		}
 		ticketTitle.value = taskTitle.textContent;
+		ticketProjectName.value = taskProjectName.textContent;
 		btnUpdateTask.dataset['task_id'] = taskID;
 		toggleToUpdateMode();
 		viewEditablePanel();
@@ -583,6 +656,10 @@ if(pageData && pageData.dataset['excel'] == '1') {
 	clearTicketFields();
 	getUsers();
 	getBoard();
+} else if (pageData && pageData.dataset['status'] == '1') {
+	getBoard('status');
+} else if (pageData && pageData.dataset['statistics'] == '1') {
+	getBoard('statistics');
 } else {
 	btnCreateTaskFile.value = '';
 	triangle.addEventListener('click', triangleToggle);

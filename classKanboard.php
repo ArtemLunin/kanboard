@@ -6,7 +6,7 @@ class Kanboard {
 		'getAllTasks',
 	];
 	private $metadataFields = [
-		"capop", "oracle", "ticket"
+		"capop", "oracle", "ticket", "otl", "creator"
 	];
 	function __construct () {
 		$this->projectID = $this->getInitialParams('getProjectByIdentifier', ['identifier' => KANBOARD_PROJECT_IDENTIFIER]);
@@ -65,7 +65,28 @@ class Kanboard {
 		}
 		return $metadata_arr;
 	}
+	function setTaskProjectName($task_id, $projectName) {
+		$this->callKanboardAPI('setTaskTags', [
+			$this->projectID,
+			$task_id,
+			[$projectName]
+		]);
+	}
+	function getTaskProjectName($task_id) {
+		$projectName = '';
+		$taskTags = $this->callKanboardAPI('getTaskTags', [$task_id]);
+		if (isset($taskTags['result']) && count($taskTags['result'])) {
+			$projectName = $this->getProjectNameFromTag($taskTags['result']);
+		}
+		return $projectName;
+	}
+	function setTaskMetadata($task_id, $metadataFields) {
+		$this->callKanboardAPI('saveTaskMetadata', [$task_id, $metadataFields]);
+	}
 	function getUserNameFromTag($tags_arr) {
+		return array_values($tags_arr)[0];
+	}
+	function getProjectNameFromTag($tags_arr) {
 		return array_values($tags_arr)[0];
 	}
 	private $kanboardRequest = [

@@ -14,12 +14,7 @@ p {
 h6 {
 	font-weight: bold;
 }
-/* .d-none {
-	display: none;
-} */
 .app-container {
-	/* width: 40%;
-	min-width: 900px; */
 	margin: auto;
 }
 .modify-container {
@@ -27,7 +22,6 @@ h6 {
 }
 .tickets-container {
 	margin-top: 20px;
-	/* width: 400px; */
 }
 .task-ticket {
 	background-color: rgb(245, 247, 196);
@@ -38,6 +32,10 @@ h6 {
 	word-wrap: break-word;
 	font-size: .9em;
 	border-radius: 6px;
+}
+.task-project {
+	display: inline;
+	font-weight: bold;
 }
 .task-footer {
 	text-align: right;

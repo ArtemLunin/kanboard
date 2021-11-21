@@ -34,11 +34,16 @@ if ($method !== 0)
 			if (isset($taskResult['result']) && count($taskResult['result'])) {
 				foreach ($taskResult['result'] as $key => $task) {
 					if (($task['creator_id'] != $userID) ||
-						// ($task['date_moved'] - $task['date_creation'] > 5) ||
 						($shownedColumnID != $task['column_id']) || 
 						((int)$task['date_completed'] !== 0)) {
 						continue;
 					}
+					// $projectName = '';
+					// $taskTags = $kanboard->callKanboardAPI('getTaskTags', [$task['id']]);
+					// if (isset($taskTags['result']) && count($taskTags['result'])) {
+					// 	$projectName = $kanboard->getProjectNameFromTag($taskTags['result']);
+					// }
+					$projectName = $kanboard->getTaskProjectName($task['id']);
 					$taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
 							'task_id'	=> $task['id'],
 							]);
@@ -49,6 +54,7 @@ if ($method !== 0)
 						'date_completed'=> (int)$task['date_completed'],
 						'description'	=> nl2br($task['description'], FALSE),
 						'title'			=> $task['title'],
+						'project_name'	=> $projectName,
 						'files'			=> array_map($taskFilesMapper, $taskFiles['result']),
 					];
 				}
@@ -57,14 +63,22 @@ if ($method !== 0)
 		elseif($method === 'createTask' && $params !== 0)
 		{
 			$taskResult = $kanboard->callKanboardAPI($method, [
-							'project_id'	=> $projectID,
-							'title'			=> trim($params['title']) ?? "",
-							'description'	=> (trim($params['description']) ?? "")."\nSubmitted by: ".(trim($params['creator']) ?? "")."\nOTL: ".(trim($params['OTL']) ?? ""),
-							'date_started'	=> date('Y-m-d H:i'),
-							'creator_id'	=> $userID,
-							]);
+				'project_id'	=> $projectID,
+				'title'			=> trim($params['title']) ?? "",
+				'description'	=> (trim($params['description']) ?? "")."\nSubmitted by: ".(trim($params['creator']) ?? "")."\nOTL: ".(trim($params['OTL']) ?? ""),
+				'date_started'	=> date('Y-m-d H:i'),
+				'creator_id'	=> $userID,
+				]);
 			if (isset($taskResult['result']))
 			{
+				if(isset($params['projectName']) && trim($params['projectName']) !== '') {
+					$kanboard->setTaskProjectName((int)$taskResult['result'], trim($params['projectName']));
+					$kanboard->setTaskMetadata((int)$taskResult['result'], 
+						[
+							"otl"		=> (trim($params['OTL']) ?? ""),
+							"creator"	=> (trim($params['creator']) ?? ""),
+						]);
+				}
 				$param_error_msg['answer'] = [
 					'id'	=> (int)$taskResult['result'],
 				];
@@ -91,6 +105,14 @@ if ($method !== 0)
 							]);
 			if (isset($taskResult['result']))
 			{
+				if(isset($params['projectName']) && trim($params['projectName']) !== '') {
+					$kanboard->setTaskProjectName((int)$params['id'], trim($params['projectName']));
+					$kanboard->setTaskMetadata((int)$params['id'], 
+					[
+						"otl"		=> (trim($params['OTL']) ?? ""),
+						"creator"	=> (trim($params['creator']) ?? ""),
+					]);
+				}
 				$param_error_msg['answer'] = [
 					'id'	=> (int)$params['id'],
 				];
@@ -109,6 +131,7 @@ if ($method !== 0)
                 		"ticket"	=> (trim($params['ticket']) ?? ""),
                			"capop"		=> (trim($params['capop']) ?? ""),
                 		"oracle"	=> (trim($params['oracle']) ?? ""),
+						"user_name" => (trim($params['user_name']) ?? ""),
               		]
             	]);
 				if (isset($taskResult['result']))
@@ -118,13 +141,13 @@ if ($method !== 0)
 					];
 				}
 			}
-			if(isset($params['user_name']) && trim($params['user_name']) !== '') {
-				$taskResult = $kanboard->callKanboardAPI('setTaskTags', [
-					$projectID,
-					$params['id'],
-					[trim($params['user_name'])],
-				]);
-			}
+			// if(isset($params['user_name']) && trim($params['user_name']) !== '') {
+			// 	$taskResult = $kanboard->callKanboardAPI('setTaskTags', [
+			// 		$projectID,
+			// 		$params['id'],
+			// 		[trim($params['user_name'])],
+			// 	]);
+			// }
 		}
 		elseif ($method === 'createTaskFile' && $params !== 0 && $params['id'] != 0)
 		{
@@ -176,32 +199,48 @@ if ($method !== 0)
 				$projectID,
 			]);
 			if (isset($taskResult['result']) && count($taskResult['result'])) {
+				$column_names = [];
+				$columns = $kanboard->callKanboardAPI('getColumns', [
+					$projectID,
+				]);
+				if (isset($columns['result'])) {
+					foreach ($columns['result'] as $column) {
+						$column_names[$column['id']] = $column['title'];
+					}
+				}
 				$assignee_name = '';
+				$all_column = false;
+				if ($params !== 0 && $params['status'] == 'all') {
+					$all_column = true;
+				}
 				foreach ($taskResult['result'][0]['columns'] as $key => $column) {
-					if($shownedColumnID == $column['id']) {
+					if($shownedColumnID != $column['id'] && !$all_column) next;
 						foreach ($column['tasks'] as $key => $task) {
 							if($task['is_active'] == 1) {
 								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
 								$taskTags = $kanboard->callKanboardAPI('getTaskTags', [$task['id']]);
-								if (isset($taskTags['result']) && count($taskTags['result'])) {
-									$assignee_name = $kanboard->getUserNameFromTag($taskTags['result']);
-								}
+								// if (isset($taskTags['result']) && count($taskTags['result'])) {
+								// 	$assignee_name = $kanboard->getUserNameFromTag($taskTags['result']);
+								// }
+								$projectName = $kanboard->getTaskProjectName($task['id']);
 								if($assignee_name === '') {
-									$assignee_name = $task['assignee_username'];
+									$assignee_name = $task['assignee_username'] ?? 'not assigned';
 								}
 								$param_error_msg['answer'][] = [
 									'id'			=> (int)$task['id'],
 									'date_due'		=> (int)$task['date_due'],
+									'date_creation'	=> (int)$task['date_creation'],
 									'title'			=> $task['title'],
+									'status'		=> $column_names[$column['id']] ?? 'undefined',
+									'reference'		=> $task['reference'],
 									'description'	=> $task['description'],
+									'project_name'	=> $projectName,
 									'assignee_name'	=> $assignee_name,
 									'fields'		=> $kanboard->getMetadataFields($taskMetadata['result']),
 								];
 								$assignee_name = '';
 							}
 						}
-						break;
-					}
 				}
 			}
 		}
