@@ -657,6 +657,7 @@ if(pageData && pageData.dataset['excel'] == '1') {
 	getUsers();
 	getBoard();
 } else if (pageData && pageData.dataset['status'] == '1') {
+	// viewEditablePanel();
 	getBoard('status');
 } else if (pageData && pageData.dataset['statistics'] == '1') {
 	getBoard('statistics');

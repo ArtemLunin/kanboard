@@ -15,6 +15,83 @@
 <body>
 	<div class="page-data d-none" data-status="1"></div>
 	<div class="container-fluid">
+
+		<div class="border border-dark mt-2 p-2 modify-container">
+			<div class="row mx-0">
+				<div class="col-lg-4 col-sm-6 px-0">
+					<div class="row">
+						<div class="col">Ticket title</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<input type="text" class="ticket-title" placeholder="Ticket title" required>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">Ticket creator</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<input type="text" class="ticket-creator" placeholder="Creator" required>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">OTL</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<input type="text" class="ticket-OTL" placeholder="OTL" maxlength="10" size="10">
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">Project</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<input type="text" class="ticket-project" placeholder="Project name" maxlength="10" size="10">
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-4 col-sm-6 px-0">
+					<div class="row">
+						<div class="col">Description</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<div class="ticket-description text-area border mr-1 mr-xl-2 rounded" contenteditable="true">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-4 px-0 attachments-area">
+					<div class="row">
+						<div class="col">
+							<form>
+								<div class="form-group">
+									<label for="attachFile">Attach new file</label>
+									<input type="file" class="form-control-file" id="attachFile">
+								</div>
+							</form>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col">
+							<div class="attachments-header">Attachments</div>
+							<div class="attachments-container"></div>
+						</div>
+						
+					</div>
+				</div>
+			</div>
+			<div class="row mt-2">
+				<div class="col">
+					<button type="button" class="btn btn-primary btn-sm btn-add-task">Add</button>
+					<button type="button" class="btn btn-primary btn-sm btn-update-task d-none">Update</button>
+					<button type="button" class="btn btn-warning btn-sm btn-clear-settings">Clear</button>
+				</div>
+			</div>
+		</div>
+
 		<table class="table table-bordered table-sm mt-2">
 			<thead class="thead-light">
 				<tr>
