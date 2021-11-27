@@ -20,6 +20,10 @@ h6 {
 .modify-container {
 	border-radius: 6px;
 }
+#inputProject {
+	min-width: 60%;
+	height: 32px;
+}
 .tickets-container {
 	margin-top: 20px;
 }
@@ -70,7 +74,7 @@ hr.dotted {
 }
 
 .text-area {
-	height: 200px;
+	height: 100px;
 	overflow-y: auto;
 }
 .attachments-header {

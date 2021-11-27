@@ -255,6 +255,17 @@ if ($method !== 0)
 				}
 			}
 		}
+		elseif($method === 'getTagsByProject')
+		{
+			$taskResult = $kanboard->callKanboardAPI($method, [$projectID]);
+			if (isset($taskResult['result']) && count($taskResult['result'])) {
+				foreach($taskResult['result'] as $project) {
+					$param_error_msg['answer'][] = [
+						'project_name' => $project['name'],
+					];
+				}
+			}
+		}
 		elseif($method === 'getTaskTags' && $params !== 0 && $params['id'] != 0)
 		{
 			$taskResult = $kanboard->callKanboardAPI($method, [$params['id']]);

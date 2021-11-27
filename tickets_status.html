@@ -32,7 +32,7 @@
 					</div>
 					<div class="row">
 						<div class="col">
-							<input type="text" class="ticket-creator" placeholder="Creator" required>
+							<input type="text" class="ticket-creator" placeholder="Creator" autocomplete="on" required>
 						</div>
 					</div>
 					<div class="row">
@@ -48,11 +48,11 @@
 					</div>
 					<div class="row">
 						<div class="col">
-							<input type="text" class="ticket-project" placeholder="Project name" maxlength="10" size="10">
+							<select name="inputProject" id="inputProject"></select>
 						</div>
 					</div>
 				</div>
-				<div class="col-lg-4 col-sm-6 px-0">
+				<div class="col-lg-8 col-sm-6 px-0">
 					<div class="row">
 						<div class="col">Description</div>
 					</div>
@@ -62,24 +62,26 @@
 							</div>
 						</div>
 					</div>
-				</div>
-				<div class="col-lg-4 px-0 attachments-area">
 					<div class="row">
-						<div class="col">
-							<form>
-								<div class="form-group">
-									<label for="attachFile">Attach new file</label>
-									<input type="file" class="form-control-file" id="attachFile">
+						<div class="col attachments-area">
+							<div class="row">
+								<div class="col">
+									<form>
+										<div class="form-group">
+											<label for="attachFile">Attach new file</label>
+											<input type="file" class="form-control-file" id="attachFile">
+										</div>
+									</form>
 								</div>
-							</form>
+							</div>
+							<div class="row">
+								<div class="col">
+									<div class="attachments-header">Attachments</div>
+									<div class="attachments-container"></div>
+								</div>
+								
+							</div>
 						</div>
-					</div>
-					<div class="row">
-						<div class="col">
-							<div class="attachments-header">Attachments</div>
-							<div class="attachments-container"></div>
-						</div>
-						
 					</div>
 				</div>
 			</div>
@@ -96,11 +98,12 @@
 			<thead class="thead-light">
 				<tr>
 					<th>Ticket #</th>
-					<th>Title</th>
-					<th>User</th>
-					<th>Status</th>
+					<th>Ticket info</th>
+					<th>Submited by</th>
+					<th>Assigned to</th>
 					<th>Date</th>
 					<th>Reference</th>
+					<th>Status</th>
 				</tr>
 			</thead>
 			<tbody class="table-status">

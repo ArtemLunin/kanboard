@@ -14,7 +14,7 @@ const ticketTitle = document.querySelector('.ticket-title');
 const ticketCreator = document.querySelector('.ticket-creator');
 const ticketDescription = document.querySelector('.ticket-description');
 const ticketOTL = document.querySelector('.ticket-OTL');
-const ticketProjectName = document.querySelector('.ticket-project');
+// const ticketProjectName = document.querySelector('.ticket-project');
 
 //excel DOM
 const periodSelect = document.querySelector('.period-select');
@@ -32,6 +32,7 @@ const tableStatus = document.querySelector('.table-status');
 const tableStatistics = document.querySelector('.table-statistics');
 
 const inputName = document.querySelector('#inputName');
+const ticketProjectName = document.querySelector('#inputProject');
 const inputDate = document.querySelector('#inputDate');
 const inputDescr = document.querySelector('#inputDescr');
 const inputTicket = document.querySelector('#inputTicket');
@@ -54,9 +55,16 @@ const entityMap = {
   '=': '&#x3D;'
 };
 
+const apiCallbackProps = {
+	'getTagsByProject': function (data, container) {
+		fillProjectsList(data, container);
+	},
+};
+
 let fileAttach;
 let fileDeleted = 0;
 let periodDays = 1;
+let pageStatus = 0;
 
 let dataTableObj;
 
@@ -197,6 +205,14 @@ function showAddedTask(taskCreateResult)
 	getAllTask();
 }
 
+function showAddedTaskFromStatus(taskCreateResult)
+{
+	btnUpdateTask.dataset['task_id'] = taskCreateResult.success.answer.id;
+	attachmentsContainer.textContent = '';
+	toggleToUpdateMode();
+	getBoard('status');
+}
+
 function showUpdatedTask(taskCreateResult)
 {
 	clearEditableFields();
@@ -213,8 +229,7 @@ function showAddedFile(resultFileList)
 {
 	if (!!resultFileList.success.answer) {
 		const taskID = resultFileList.success.answer.id;
-		const fileTaskInfo = document.querySelector('#task_id_'+taskID);
-		fileTaskInfo.innerHTML = filesAttached(resultFileList.success.answer.files);
+		fillFileTaskInfo(taskID);
 		attachmentsContainer.textContent = '';
 		(resultFileList.success.answer.files).forEach(fileItem => fillFileInfo(JSON.stringify(fileItem)));
 	}
@@ -226,8 +241,7 @@ const removeFileFromList = (resultFileList) => {
 			removeElement(fileDeleted);
 			fileDeleted = 0;
 			const taskID = resultFileList.success.answer.id;
-			const fileTaskInfo = document.querySelector('#task_id_'+taskID);
-			fileTaskInfo.innerHTML = filesAttached(resultFileList.success.answer.files);
+			fillFileTaskInfo(taskID);
 		}
 	}
 };
@@ -276,14 +290,19 @@ const showBoardTable = (data) => {
 const showStatusTable = (data) => {
 	if (!!data.success) {
 		tableStatus.textContent = '';
-		data.success.answer.forEach(function ({id, title, assignee_name, status, date_creation, reference}) {
+		data.success.answer.forEach(function ({id, title, assignee_name, status, date_creation, reference, fields}) {
+			let submitted_name = '&nbsp;';
+			if (!!fields['creator'] && fields['creator'] !== '') {
+				submitted_name = fields['creator'];
+			}
 			tableStatus.insertAdjacentHTML('beforeend', `
 				<td>${id}</td>
 				<td>${title}</td>
+				<td>${submitted_name}</td>
 				<td>${assignee_name}</td>
-				<td>${status}</td>
 				<td>${timestampToDate(date_creation, false)}</td>
 				<td>${reference}</td>
+				<td>${status}</td>
 			`);
 		});
 	}
@@ -332,7 +351,19 @@ const fillUsersList = (data) => {
 			`);
 		});
 	}
-	inputName.value = "";
+	inputName.value = '';
+};
+
+const fillProjectsList = (data, elemProjectList) => {
+	if(!!data.success) {
+		elemProjectList.textContent = '';
+		data.success.answer.forEach(function ({project_name}) {
+			elemProjectList.insertAdjacentHTML('beforeend', `
+				<option value="${project_name}">${project_name}</option>
+			`);
+		});
+	}
+	elemProjectList.value = '';
 };
 
 const editTask = (e) => {
@@ -405,7 +436,16 @@ const getUsers = () => {
 	sendRequest('POST', requestURL, body).then(fillUsersList);
 };
 
-const createTask = () => {
+const getDataFromKanboard = (apiName, apiProps, container) => {
+	const body = {
+		method: apiName,
+	}
+	sendRequest('POST', requestURL, body).then((data) => {
+		apiProps[apiName](data, container);
+	});
+};
+
+const createTask = (callback) => {
 	if (ticketTitle.value.trim().length == 0 || ticketCreator.value.trim().length == 0 || ticketDescription.innerText.trim().length == 0)
 	{
 		return false;
@@ -420,7 +460,8 @@ const createTask = () => {
 			projectName: ticketProjectName.value,
 		},
 	}
-	sendRequest('POST', requestURL, body).then(showAddedTask);
+	sendRequest('POST', requestURL, body).then(callback);
+	// showAddedTask
 };
 
 const updateTask = () => {
@@ -479,7 +520,6 @@ const createTaskFile = () => {
 const attachmentsAction = (event) => {
 	const target = event.target;
 	const fileAction = target.closest('.file-delete');
-	// const parentFileAction = target.closest('.file-delete-container');
 	if (!!fileAction)
 	{
 		fileDeleted = target.closest('.file-delete-container');
@@ -516,6 +556,7 @@ const hideEditablePanel = () => {
 	triangle.classList.remove('triangle-up');
 	$('.collapse').collapse('hide');
 };
+
 const toggleToUpdateMode = () => {
 	btnUpdateTask.classList.remove('d-none');
 	btnAddTask.classList.add('d-none');
@@ -588,6 +629,14 @@ const fillFileInfo = (fileInfo) => {
 	`);
 };
 
+const fillFileTaskInfo = taskID => {
+	try {
+		const fileTaskInfo = document.querySelector('#task_id_' + taskID);
+		fileTaskInfo.innerHTML = filesAttached(resultFileList.success.answer.files);
+	}
+	catch (e) {}
+};
+
 const actionTask = (event) => {
 	const target = event.target;
 	const hrefAction = target.closest('.task-ticket');
@@ -646,7 +695,6 @@ const actionTask = (event) => {
 };
 
 
-
 if(pageData && pageData.dataset['excel'] == '1') {
 	btnUpdateTicket.dataset['task_id'] = 0;
 	btnUpdateTicket.disabled = true;
@@ -657,26 +705,37 @@ if(pageData && pageData.dataset['excel'] == '1') {
 	getUsers();
 	getBoard();
 } else if (pageData && pageData.dataset['status'] == '1') {
-	// viewEditablePanel();
+	pageStatus = 1;
 	getBoard('status');
+	getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectName);
 } else if (pageData && pageData.dataset['statistics'] == '1') {
 	getBoard('statistics');
 } else {
-	btnCreateTaskFile.value = '';
 	triangle.addEventListener('click', triangleToggle);
-	btnAddTask.addEventListener('click', createTask);
 	btnUpdateTask.addEventListener('click', updateTask);
-	btnClearSettings.addEventListener('click', clearEditableFields);
-	attachmentsContainer.addEventListener('click', attachmentsAction);
-
-	btnCreateTaskFile.addEventListener('change', createTaskFile);
-
-	clearEditableFields();
 	getAllTask();
+	getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectName);
 	viewEditablePanel();
 }
 
 
+if (!!btnAddTask) {
+	btnAddTask.addEventListener('click', () => {
+		if (pageStatus === 1) {
+			createTask(showAddedTaskFromStatus);
+		} else {
+			createTask(showAddedTask);
+		}
+	});
+	clearEditableFields();
+}
+if (!!btnCreateTaskFile) {
+	btnCreateTaskFile.value = '';
+	btnCreateTaskFile.addEventListener('change', createTaskFile);
+	attachmentsContainer.addEventListener('click', attachmentsAction);
+}
 
-
+if (!!btnClearSettings) {
+	btnClearSettings.addEventListener('click', clearEditableFields);
+}
 
