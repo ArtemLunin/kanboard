@@ -8,6 +8,7 @@ const dividerArrow = document.querySelector('.divider-arrow');
 const triangle = document.querySelector('.triangle');
 const btnAddTask = document.querySelector('.btn-add-task');
 const btnUpdateTask = document.querySelector('.btn-update-task');
+const formNewTask = document.querySelector('#formNewTask');
 const btnCreateTaskFile = document.querySelector('#attachFile');
 const btnClearSettings = document.querySelector('.btn-clear-settings');
 const ticketTitle = document.querySelector('.ticket-title');
@@ -209,7 +210,8 @@ function showAddedTaskFromStatus(taskCreateResult)
 {
 	btnUpdateTask.dataset['task_id'] = taskCreateResult.success.answer.id;
 	attachmentsContainer.textContent = '';
-	toggleToUpdateMode();
+	// toggleToUpdateMode();
+	attachmentsArea.classList.remove('invisible');
 	getBoard('status');
 }
 
@@ -356,7 +358,7 @@ const fillUsersList = (data) => {
 
 const fillProjectsList = (data, elemProjectList) => {
 	if(!!data.success) {
-		elemProjectList.textContent = '';
+		elemProjectList.innerHTML = '<option value="" selected disabled hidden>Choose project</option>';
 		data.success.answer.forEach(function ({project_name}) {
 			elemProjectList.insertAdjacentHTML('beforeend', `
 				<option value="${project_name}">${project_name}</option>
@@ -446,7 +448,7 @@ const getDataFromKanboard = (apiName, apiProps, container) => {
 };
 
 const createTask = (callback) => {
-	if (ticketTitle.value.trim().length == 0 || ticketCreator.value.trim().length == 0 || ticketDescription.innerText.trim().length == 0)
+	if (ticketTitle.value.trim().length == 0 || ticketCreator.value.trim().length == 0 || ticketProjectName.value == '' || ticketDescription.innerText.trim().length == 0)
 	{
 		return false;
 	}
@@ -461,7 +463,6 @@ const createTask = (callback) => {
 		},
 	}
 	sendRequest('POST', requestURL, body).then(callback);
-	// showAddedTask
 };
 
 const updateTask = () => {
@@ -718,9 +719,16 @@ if(pageData && pageData.dataset['excel'] == '1') {
 	viewEditablePanel();
 }
 
-
+if (!!formNewTask) {
+	formNewTask.addEventListener('submit', (e) => {
+		e.preventDefault();
+	});
+	formNewTask.addEventListener('reset', (e) => {
+		e.preventDefault();
+	});
+}
 if (!!btnAddTask) {
-	btnAddTask.addEventListener('click', () => {
+	btnAddTask.addEventListener('click', function (e) {
 		if (pageStatus === 1) {
 			createTask(showAddedTaskFromStatus);
 		} else {
