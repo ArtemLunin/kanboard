@@ -3,11 +3,52 @@
 }
 
 body {
-	margin: 0;
+	/* background:#ffea92; */
+	margin:0;
+	/* color:#fff; */
+	padding-left:120px;
 }
 /* table {
 	width: 90%;
 } */
+.menu {
+	background:#82a9bc;;
+	height:100vh;
+	width:120px;
+	position:fixed;
+	top:0;
+	left:0;
+	z-index:5;
+	outline:none;
+}
+.menu ul{
+	list-style:none;
+	padding:0.5em 0;
+	margin:0;
+}
+.menu li{
+	padding:0.5em 1em 0.5em 1em;
+	font-size:0.95em;
+	font-weight:regular;
+	background-repeat:no-repeat;
+	background-position:left 15px center;
+	background-size:auto 20px;
+	transition:all 0.15s linear;
+	cursor:pointer;
+}
+.menu li:hover {
+background-color:rgba(0,0,0,0.1);
+}
+
+main {
+  	position:relative;
+	height:100vh;
+	padding: 20px;
+}
+.section {
+	display: none;
+}
+
 p {
 	margin: 0;
 }

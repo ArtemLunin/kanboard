@@ -1,29 +1,80 @@
 <?php
+session_start();
 require_once 'config.php';
+require_once 'db_conf.php';
+require_once 'classDatabase.php';
 require_once 'classKanboard.php';
 
 $out_res = [];
 $param_error_msg['answer'] = [];
 
+
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
 $params = $paramJSON['params'] ?? $_REQUEST ?? 0;
+
+$db_object = new mySQLDatabaseUtils\databaseUtils();
+
+try
+{
+	$kanboard = new Kanboard;
+	$projectID = $kanboard->projectID;
+	$userID = $kanboard->userID;
+	$shownedColumnID = $kanboard->shownedColumnID;
+	$rights = $db_object->initialRights;
+	$currentUser = 'defaultUser';
+}
+catch (Exception $e) {
+	$projectID = FALSE;
+	unset($param_error_msg['answer']);
+	error_log('Exception: ' . $e->getMessage());
+	$param_error_msg['error'] = $e->getMessage();
+}
+
+if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
+	$currentUser = $_SESSION['logged_user'];
+	$rights = $db_object->getRigths($_SESSION['logged_user'], 'dummypass', true);
+}
+
 if ($method !== 0)
 {
-	try
-	{
-		$kanboard = new Kanboard;
-		$projectID = $kanboard->projectID;
-		$userID = $kanboard->userID;
-		$shownedColumnID = $kanboard->shownedColumnID;
+	if ($method === 'signIn') {
+		$kanboardUserName = trim($params['userName'] ?? 'defaultUser');
+		$kanboardUserPass = trim($params['password'] ?? '');
+		if (strlen($kanboardUserName) && strlen($kanboardUserPass)) {
+			$rights = $db_object->getRigths($kanboardUserName, $kanboardUserPass);
+			if ($rights) {
+				$_SESSION['logged_user'] = $kanboardUserName;
+				$currentUser = $kanboardUserName;
+			}
+		}
+		$param_error_msg['answer'] = [
+			'user' => $kanboardUserName,
+			'rights' => $rights,
+		];
+	} elseif ($method === 'logout') {
+		$_SESSION = array();
+		$param_error_msg['answer'] = [
+			'logout' => true,
+		];
+	} elseif ($method === 'getRights') {
+		$param_error_msg['answer'] = [
+			'user'	 => $currentUser,
+			'rights' => $rights,
+		];
+	} elseif ($method === 'addUser' && $params !== 0 && strlen(trim($params['userName'])) > 2 && strlen($params['password']) > 2) {
+		$param_error_msg['answer'] = $db_object->addUser(trim($params['userName']), $params['password']);
+	} elseif ($method === 'delUser' && $params !== 0 && strlen(trim($params['userName'])) > 2) {
+		$param_error_msg['answer'] = $db_object->delUser(trim($params['userName']));
+	} elseif ($method === 'setRights' && $params !== 0 && strlen(trim($params['userName'])) > 2 && $params['rights']) {
+		// $new_rights = json_decode($params['rights'], true);
+		if (isset($params['rights'][0]['pageName'])) {
+			$param_error_msg['answer'] = $db_object->setRights(trim($params['userName']), $params['rights']);
+		}
+	} elseif ($method === 'getKanboardUsers') {
+		$param_error_msg['answer'] = $db_object->getKanboardUsers();
 	}
-	catch (Exception $e) {
-		$projectID = FALSE;
-		unset($param_error_msg['answer']);
-		error_log('Exception: ' . $e->getMessage());
-		$param_error_msg['error'] = $e->getMessage();
-	}
-	if ($projectID) 
+	elseif ($projectID) 
 	{
 		if ($method === 'getAllTasks')
 		{
@@ -38,11 +89,6 @@ if ($method !== 0)
 						((int)$task['date_completed'] !== 0)) {
 						continue;
 					}
-					// $projectName = '';
-					// $taskTags = $kanboard->callKanboardAPI('getTaskTags', [$task['id']]);
-					// if (isset($taskTags['result']) && count($taskTags['result'])) {
-					// 	$projectName = $kanboard->getProjectNameFromTag($taskTags['result']);
-					// }
 					$projectName = $kanboard->getTaskProjectName($task['id']);
 					$taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
 							'task_id'	=> $task['id'],
@@ -79,9 +125,9 @@ if ($method !== 0)
 							"creator"	=> (trim($params['creator']) ?? ""),
 						]);
 				}
-				$param_error_msg['answer'] = [
-					'id'	=> (int)$taskResult['result'],
-				];
+				$task_out = $kanboard->fieldsTask($taskResult['result']);
+				$projectName = $kanboard->getTaskProjectName($taskResult['result']);
+				$param_error_msg['answer'] = $task_out + ['project_name'	=> $projectName];
 			}
 		}
 		elseif ($method === 'removeTask' && $params !== 0 && $params['id'] != 0)
@@ -113,10 +159,13 @@ if ($method !== 0)
 						"creator"	=> (trim($params['creator']) ?? ""),
 					]);
 				}
-				$param_error_msg['answer'] = [
-					'id'	=> (int)$params['id'],
-				];
+				// getTask
+				$task_out = $kanboard->fieldsTask($params['id']);
+				$projectName = $kanboard->getTaskProjectName($params['id']);
+				$param_error_msg['answer'] = $task_out + ['project_name'	=> $projectName];
 			}
+		} elseif ($method === 'getTask' && $params !== 0 && $params['id'] != 0) {
+
 		}
 		elseif($method === 'updateTaskFull' && $params !== 0 && $params['id'] != 0)
 		{

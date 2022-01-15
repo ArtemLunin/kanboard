@@ -9,100 +9,200 @@
 	<link rel="stylesheet" href="./css/bootstrap.min.css">
 	<script src="js/bootstrap.min.js"></script>
 	<link rel="stylesheet" href="css/style.css">
-	<script type="text/javascript" src="js/main.js" defer></script>
-	<title>Tickets</title>
+	<script type="text/javascript" src="js/script.js" defer></script>
+	<title>Kanboard tickets</title>
 </head>
 <body>
-	<div class="contaner container-error d-none bg-danger text-white"></div>
-	<div class="row">
-		<div class="col-lg-1 col-xl-2 px-0"></div>
-		<div class="col-lg-10 col-xl-8">
-			<div class="collapse border border-dark mt-2 p-2 modify-container">
-				<form method="POST" action="#" id="formNewTask">
-					<div class="row mx-0">
-						<div class="col-lg-4 col-sm-6 px-0">
-								<div class="row">
-									<div class="col">Ticket title</div>
-								</div>
-								<div class="row">
-									<div class="col">
-										<input type="text" class="ticket-title" placeholder="Ticket title" required>
+	<nav class="menu" tabindex="0">
+		<ul>
+		</ul>
+	</nav>
+	<main>
+		<container class="sections">
+			<section class="section main">
+				<div class="contaner container-error d-none bg-danger text-white"></div>
+				<div class="row">
+					<div class="col-lg-1 col-xl-2 px-0"></div>
+					<div class="col-lg-10 col-xl-8">
+						<div class="border border-dark mt-2 p-2 modify-container">
+							<form method="POST" action="#" id="formNewTask">
+								<div class="row mx-0">
+									<div class="col-lg-4 col-sm-6 px-0">
+										<div class="row">
+											<div class="col">Ticket title</div>
+										</div>
+										<div class="row">
+											<div class="col">
+												<input type="text" class="ticket-title" placeholder="Ticket title" required>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col">Ticket creator</div>
+										</div>
+										<div class="row">
+											<div class="col">
+												<input type="text" class="ticket-creator" name="ticketCreator" placeholder="Creator"
+													required>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col">OTL</div>
+										</div>
+										<div class="row">
+											<div class="col">
+												<input type="text" class="ticket-OTL" name="OTL" placeholder="OTL" maxlength="10"
+													size="10">
+											</div>
+										</div>
+										<div class="row">
+											<div class="col">Project</div>
+										</div>
+										<div class="row">
+											<div class="col">
+												<select name="inputProject" id="inputProject" required></select>
+											</div>
+										</div>
 									</div>
-								</div>
-								<div class="row">
-									<div class="col">Ticket creator</div>
-								</div>
-								<div class="row">
-									<div class="col">
-										<input type="text" class="ticket-creator" name="ticketCreator" placeholder="Creator" required>
-									</div>
-								</div>
-								<div class="row">
-									<div class="col">OTL</div>
-								</div>
-								<div class="row">
-									<div class="col">
-										<input type="text" class="ticket-OTL" name="OTL" placeholder="OTL" maxlength="10" size="10">
-									</div>
-								</div>
-								<div class="row">
-									<div class="col">Project</div>
-								</div>
-								<div class="row">
-									<div class="col">
-										<select name="inputProject" id="inputProject" required></select>
-									</div>
-								</div>
-						</div>
-						<div class="col-lg-8 col-sm-6 px-0">
-							<div class="row">
-								<div class="col">Description</div>
-							</div>
-							<div class="row">
-								<div class="col">
-									<div class="ticket-description text-area border mr-1 mr-xl-2 rounded" contenteditable="true">
-									</div>
-								</div>
-							</div>
-							<div class="row">
-								<div class="col attachments-area">
-									<div class="row">
-										<div class="col">
-												<div class="form-group">
-													<label for="attachFile">Attach new file</label>
-													<input type="file" class="form-control-file" id="attachFile">
+									<div class="col-lg-8 col-sm-6 px-0">
+										<div class="row">
+											<div class="col">Description</div>
+										</div>
+										<div class="row">
+											<div class="col">
+												<div class="ticket-description text-area border mr-1 mr-xl-2 rounded"
+													contenteditable="true">
 												</div>
+											</div>
 										</div>
-									</div>
-									<div class="row">
-										<div class="col">
-											<div class="attachments-header">Attachments</div>
-											<div class="attachments-container"></div>
+										<div class="row">
+											<div class="col attachments-area">
+												<div class="row">
+													<div class="col">
+														<div class="form-group">
+															<label for="attachFile">Attach new file</label>
+															<input type="file" class="form-control-file" id="attachFile">
+														</div>
+													</div>
+												</div>
+												<div class="row">
+													<div class="col">
+														<div class="attachments-header">Attachments</div>
+														<div class="attachments-container"></div>
+													</div>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
-							</div>
+								<div class="row mt-2">
+									<div class="col">
+										<button type="submit" class="btn btn-primary btn-sm btn-add-task">Add</button>
+										<button type="submit" class="btn btn-primary btn-sm btn-update-task d-none">Update</button>
+										<button type="reset" class="btn btn-warning btn-sm btn-clear-settings">Clear</button>
+									</div>
+								</div>
+							</form>
+						</div>
+						<div class="divider-arrow d-none">
+							<hr class="dotted">
+							<div class="triangle triangle-up"></div>
+						</div>
+						<div class="tickets-container">
 						</div>
 					</div>
-					<div class="row mt-2">
-						<div class="col">
-							<button type="submit" class="btn btn-primary btn-sm btn-add-task">Add</button>
-							<button type="submit" class="btn btn-primary btn-sm btn-update-task d-none">Update</button>
-							<button type="reset" class="btn btn-warning btn-sm btn-clear-settings">Clear</button>
+					<div class="col-lg-1 col-xl-2 px-0"></div>
+				</div>
+			</section>
+			<section class="section status">
+				<div>status</div>
+			</section>
+			<section class="section statistics">
+				<div>statistics</div>
+			</section>
+			<section class="section excel">
+				<div>excel</div>
+			</section>
+			<section class="section settings">
+				<div class="row">
+					<div class="col-lg-1 col-xl-2 px-0"></div>
+					<div class="col-lg-10 col-xl-8">
+						<table class="table table-bordered table-hover table-users">
+							<thead>
+								<tr>
+									<th>User</th>
+									<th>Main</th>
+									<th>Status</th>
+									<th>Excel</th>
+									<th>Statistics</th>
+									<th>Action</th>
+								</tr>
+							</thead>
+							<tbody class="users-list">
+							</tbody>
+						</table>
+						<div class="new-user">
+							<form class="form-inline form-auth" method="POST" action="#" id="new-user-form" data-method="addUser">
+								<!-- <div class="form-row"> -->
+									<!-- <div class="col-auto"> -->
+										<label class="my-1 mr-2" for="newUsername">Name</label>
+										<input type="text" class="form-control my-1 mr-2" id="newUsername" name="userName">
+									<!-- </div> -->
+									<!-- <div class="col-auto"> -->
+										<label class="my-1 mr-2" for="newPassword">Password</label>
+										<input type="password" class="form-control my-1 mr-2" id="newPassword" name="password">
+									<!-- </div> -->
+									<!-- <div class="col-auto"> -->
+										<button type="submit" class="btn btn-primary my-1 mr-2">Add</button>
+									<!-- </div> -->
+								<!-- </div> -->
+							</form>
 						</div>
 					</div>
-				</form>
-			</div>
-			<div class="divider-arrow d-none">
-				<hr class="dotted">
-				<div class="triangle triangle-down"></div>
-			</div>
-			<div class="tickets-container">
+					<div class="col-lg-1 col-xl-2 px-0"></div>
+				</div>
+			</section>
+		</container>
+	</main>
+
+	<div class="modal fade" id="waitModal" data-backdrop="static" tabindex="-1" role="dialog"
+		aria-labelledby="staticBackdropLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3 class="modal-title" id="staticBackdropLabel">Data update</h3>
+				</div>
+				<div class="modal-body">
+					Wait for the process to finish...
+				</div>
 			</div>
 		</div>
-		<div class="col-lg-1 col-xl-2 px-0"></div>
 	</div>
-
-
+	<div class="modal fade login" tabindex="-1" id="login-dialog" role="dialog">
+		<div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Signin</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<form class="form-auth" method="POST" action="#" id="login-form"  data-method="signIn">
+						<div class="form-group">
+							<label for="username">Name</label>
+							<input type="text" class="form-control" id="username" name="userName">
+						</div>
+						<div class="form-group">
+							<label for="password">Password</label>
+							<input type="password" class="form-control" id="password" name="password">
+						</div>
+						<div class="form-group d-flex justify-content-center">
+							<button type="submit" class="btn btn-primary">Submit</button>
+						</div>
+					</form>
+				</div>		
+			</div>
+		</div>
+	</div>
 </body>
 </html>

@@ -8,6 +8,7 @@ class Kanboard {
 	private $metadataFields = [
 		"capop", "oracle", "ticket", "otl", "creator"
 	];
+
 	function __construct () {
 		$this->projectID = $this->getInitialParams('getProjectByIdentifier', ['identifier' => KANBOARD_PROJECT_IDENTIFIER]);
 		$this->userID = $this->getInitialParams('getUserByName', ['username' => KANBOARD_USER_CREATE_TICKETS]);
@@ -79,6 +80,26 @@ class Kanboard {
 			$projectName = $this->getProjectNameFromTag($taskTags['result']);
 		}
 		return $projectName;
+	}
+	function getTask($task_id) {
+		$task = $this->callKanboardAPI('getTask', ['task_id' => $task_id]);
+		return $task;
+	}
+	function fieldsTask($task_id) {
+		$task = $this->callKanboardAPI('getTask', ['task_id' => $task_id]);
+		if (isset($task['result'])) {
+			$task = [
+				'id'			=> (int)$task['result']['id'],
+				'creator_id'	=> (int)$task['result']['creator_id'],
+				'date_creation'	=> (int)$task['result']['date_creation'],
+				'date_completed'=> (int)$task['result']['date_completed'],
+				'description'	=> nl2br($task['result']['description'], FALSE),
+				'title'			=> $task['result']['title'],
+			];
+		} else {
+			$task = null;
+		}
+		return $task;
 	}
 	function setTaskMetadata($task_id, $metadataFields) {
 		$this->callKanboardAPI('saveTaskMetadata', [$task_id, $metadataFields]);
