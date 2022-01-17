@@ -45,7 +45,7 @@ main {
 	height:100vh;
 	padding: 20px;
 }
-.section {
+.section, .set-rights {
 	display: none;
 }
 

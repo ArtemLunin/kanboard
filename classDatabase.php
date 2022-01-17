@@ -11,7 +11,6 @@ class databaseUtils {
 		'sectionName' => 'main',
 		'sectionAttr'	=> 'main',
 		'accessType'	=> 'admin',
-		'defaultView'	=> 1,
 	]];
 	private $superRights = [[
 		'pageName' => 'Settings',
@@ -81,6 +80,20 @@ class databaseUtils {
 				return [
 					'user'	=> $user,
 					'rights'	=> $this->initialRights,
+				];
+			}
+		}
+		return false;
+	}
+	function modUser($user, $password) {
+		if ($this->root_access === true) {
+			$sql = "UPDATE users set password=:password WHERE user_name=:user";
+			if ($this->modSQL($sql, [
+				'user'		=> $user,
+				'password'	=> password_hash($password, PASSWORD_DEFAULT),
+			], true)) {	
+				return [
+					'user'	=> $user,
 				];
 			}
 		}

@@ -140,22 +140,41 @@
 							<tbody class="users-list">
 							</tbody>
 						</table>
-						<div class="new-user">
+						<div class="new-user my-2 p-2 border">
+							<h5>User management</h5>
 							<form class="form-inline form-auth" method="POST" action="#" id="new-user-form" data-method="addUser">
-								<!-- <div class="form-row"> -->
-									<!-- <div class="col-auto"> -->
-										<label class="my-1 mr-2" for="newUsername">Name</label>
-										<input type="text" class="form-control my-1 mr-2" id="newUsername" name="userName">
-									<!-- </div> -->
-									<!-- <div class="col-auto"> -->
-										<label class="my-1 mr-2" for="newPassword">Password</label>
-										<input type="password" class="form-control my-1 mr-2" id="newPassword" name="password">
-									<!-- </div> -->
-									<!-- <div class="col-auto"> -->
-										<button type="submit" class="btn btn-primary my-1 mr-2">Add</button>
-									<!-- </div> -->
-								<!-- </div> -->
+								<label class="my-1 mr-2" for="newUsername">Name</label>
+								<input type="text" class="form-control my-1 mr-2" id="newUsername" name="userName" size="12" required>
+								<label class="my-1 mr-2" for="newPassword">Password</label>
+								<input type="password" class="form-control my-1 mr-2" id="newPassword" name="password" size="12" required>
+								<button type="submit" id="btnAddUser" class="btn btn-primary my-1 mr-2">Add</button>
+								<input class="btn btn-warning" type="reset" value="Reset">
 							</form>
+							<div class="set-rights">
+								<h5>Assign rights</h5>
+								<form class="form-inline" method="POST" action="#" id="rights-form" data-method="setRights">
+									<input type="hidden" id="rightsUserName" name="userName">
+									<label class="input-group-text" for="statusPage">Status</label>
+									<select class="custom-select mr-2" name="status" id="statusPage" data-selectname="status">
+										<option value=""></option>
+										<option value="admin">admin</option>
+										<option value="user">user</option>
+									</select>
+									<label class="input-group-text" for="excelPage">Excel</label>
+									<select class="custom-select mr-2" name="excel" id="excelPage" data-selectname="excel">
+										<option value=""></option>
+										<option value="admin">admin</option>
+										<option value="user">user</option>
+									</select>
+									<label class="input-group-text" for="statisticsPage">Statistics</label>
+									<select class="custom-select mr-2" name="statistics" id="statisticsPage" data-selectname="statistics">
+										<option value=""></option>
+										<option value="admin">admin</option>
+										<option value="user">user</option>
+									</select>
+									<button type="submit" class="btn btn-primary my-1 mr-2">Set</button>
+								</form>
+							</div>
 						</div>
 					</div>
 					<div class="col-lg-1 col-xl-2 px-0"></div>

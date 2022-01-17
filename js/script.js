@@ -20,11 +20,25 @@ const sections = [
 	'action',
 ];
 
+const sections2 = {
+	'user': {show : 1},
+	'main': {show : 1, rights: ['admin']},
+	'status': {show: 0, rights: ['user', 'admin']},
+	'excel': {show: 0, rights: ['user', 'admin']},
+	'statistics': {show: 0, rights: ['user', 'admin']},
+	'action': {show: 0, rights: ['user', 'admin']},
+};
+
 const defaultUserRights = [];
+const defaultUserRights2 = [];
 
 sections.forEach((item, idx) => {
 	defaultUserRights[idx] = `<td data-${item}>&nbsp</td>`;
 });
+
+// Object.keys(sections2).forEach(item => {
+// 	console.log(item);
+// });
 
 const textCreatorHeader = 'Submitted by:';
 const textOTLHeader = 'OTL:';
@@ -104,15 +118,22 @@ const escapeHTML = (string) => {
 	return String(string).replace(/[&<>"'`=\/]/g, (s) => entityMap[s]);
 };
 
+const capitalize = (string) => string.charAt(0).toUpperCase() + string.slice(1);
+
 window.addEventListener('DOMContentLoaded', () => {
 	const requestURL = 'backend.php';
 	const menu = document.querySelector('.menu ul'),
 		section = document.querySelectorAll('.section');
-	const loginForm = document.querySelector('#login-form');
+	const loginForm = document.querySelector('#login-form'),
+		newUserForm = document.querySelector('#new-user-form'),
+		btnAddUser = document.querySelector('#btnAddUser'),
+		newUsernameInput = document.querySelector('#newUsername'),
+		newPasswordInput = document.querySelector('#newPassword'),
+		rightsUserName = document.querySelector('#rightsUserName'),
+		rightsForm = document.querySelector('#rights-form');
 	const formsAuth = document.querySelectorAll('.form-auth');
 	// main elements
 	const ticketsContainer = document.querySelector('.tickets-container'),
-		// triangle = document.querySelector('.triangle'),
 		btnUpdateTask = document.querySelector('.btn-update-task'),
 		btnAddTask = document.querySelector('.btn-add-task'),
 		btnCreateTaskFile = document.querySelector('#attachFile'),
@@ -127,7 +148,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		formNewTask = document.querySelector('#formNewTask'),
 		containerError = document.querySelector('.container-error'),
 		usersList = document.querySelector('.users-list'),
-		tableUsers = document.querySelector('.table-users');
+		tableUsers = document.querySelector('.table-users'),
+		setRightsContainer = document.querySelector('.set-rights');
 	
 	async function sendRequest(method, url, body, showWait = false) {
 		const headers = {
@@ -174,7 +196,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const toggleSignIn = (mode) => {
-		loginForm.reset();
+		clearInputsForms();
 		errorMsg.remove();
 		$('#login-dialog').modal(mode);
 	};
@@ -243,17 +265,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				toggleSignIn('show');
 				// $('#login-dialog').modal('show');
 				// iniInterface(true);
-			} else if (target.dataset['section'] === 'rights') {
-				let newRights = {
-					"pageName":"Excel",
-					"sectionName": "excel",
-					"sectionAttr": "excel",
-					"accessType": "user",
-				};
-				modRights('test', [newRights]);
-			}
-			
-			else {
+			} else {
 				Array.from(target.parentNode.children).forEach(item => {
 					item.style.backgroundColor = '';
 				});
@@ -270,17 +282,16 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (data.success.answer.user === 'defaultUser') {
 				loginAction = 'login'
 			}
-			data.success.answer.rights.forEach(({pageName, sectionAttr, sectionName}) => {
-				menu.insertAdjacentHTML('beforeend', `
+			data.success.answer.rights.forEach(({pageName, sectionAttr, sectionName, accessType}) => {
+				if (accessType != '') {			
+					menu.insertAdjacentHTML('beforeend', `
 					<li data-section="${sectionAttr}">${pageName}</li>
-				`);
+					`);
+				}
 			});
 		}
 		menu.insertAdjacentHTML('beforeend', `
-			<li data-section="${loginAction}">${loginAction.charAt(0).toUpperCase() + loginAction.slice(1)}</li>
-		`);
-		menu.insertAdjacentHTML('beforeend', `
-			<li data-section="rights">Set rights</li>
+			<li data-section="${loginAction}">${capitalize(loginAction)}</li>
 		`);
 		$('#waitModal').modal('hide');
 		menu.children[0].style.backgroundColor = 'rgba(0,0,0,0.1)';
@@ -329,7 +340,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		if (method === 'signIn') {
 			sendRequest('POST', requestURL, body).then(checkSignIn);	
-		} else if (method === 'addUser') {
+		} else if (method === 'addUser' || method === 'modUser') {
 			sendRequest('POST', requestURL, body).then(showAddedUser);	
 		}
 	};
@@ -435,7 +446,10 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const showAddedUser = (data) => {
-		getKanboardUsers();
+		console.log(Object.keys(data.success.answer).length);
+		if (data.success.answer && (data.success.answer.length > 0 || Object.keys(data.success.answer).length > 0)) {
+			getKanboardUsers();
+		}
 	};
 
 	const removeFileFromList = (resultFileList) => {
@@ -562,24 +576,52 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const showModifiedUser = (data) => {
-		console.log(data);
-	};
 	const showModifiedRights = (data) => {
-		console.log(data);
+		getKanboardUsers();
+	};
+
+	const clearInputsForms = () => {
+		formsAuth.forEach(form => {
+			form.reset();
+		});
 	};
 
 	const actionForUsers = (e) => {
 		e.preventDefault();
-		const target = e.target.closest('a');
-		if (!!target) {
-			const userName = target.dataset['username'];
-			if (!!userName) {
-				const action = target.dataset['action'];
-				if (action === 'delUser') {
-					modUser('delUser', userName);
+		const target = e.target.closest('tr');
+		const href = e.target.closest('a');
+		target.querySelectorAll('a').forEach(item => {
+			if (item == href) {
+				const userName = target.dataset['username'];
+				if (!!userName) {
+					const action = href.dataset['action'];
+					if (action === 'delUser') {
+						modUser('delUser', userName);
+					} else if (action === 'setRights') {
+						target.childNodes.forEach(td => {
+							if (td.nodeName === 'TD' && td.dataset['select']) {
+								setSelectMode(td.dataset['mode'], td.dataset['select']); 
+							}
+						});
+						newUsernameInput.value = userName;
+						rightsUserName.value = userName;
+						btnAddUser.textContent = 'Change password';
+						newUserForm.dataset['method'] = 'modUser';
+						newUsernameInput.readOnly = true;
+						newPasswordInput.value = '';
+						setRightsContainer.style.display = 'block';
+					}
 				}
+				
 			}
+		});
+		
+	};
+
+	const setSelectMode = (selectName, selectMode) => {
+		const select = document.querySelector(`select[data-selectname="${selectName}"]`);
+		if (!!select) {
+			select.value = selectMode;
 		}
 	};
 
@@ -614,7 +656,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		if(!!data.success) {
 			let {id, creator_id, date_completed, date_creation, description, title, project_name} = data.success.answer;
 			const hrefAction = document.querySelector(`.task-ticket[data-task_id="${id}"]`);
-			// console.log(hrefAction);
 			const taskTitle = hrefAction.querySelector('.task-title');
 			const taskDescription = hrefAction.querySelector('.task-description');
 			const taskProjectName = hrefAction.querySelector('.task-project-name');
@@ -659,12 +700,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	function showUsers(data) {
 		if(!!data.success) {
+			clearInputsForms();
 			usersList.textContent = '';
 			data.success.answer.forEach((item) => {
 				usersList.insertAdjacentHTML('beforeend', `
-					<tr>
 						${fillUserRights(item)}
-					</tr>
 				`);
 			}) ;
 		}
@@ -673,6 +713,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	function fillUserRights(userRights) {
 		let userName = '';
 		let oneUserRights = defaultUserRights.slice();
+		// 
 		for (const [key, value] of Object.entries(userRights)) {
 			if (key === 'user') {
 				let idx = sections.indexOf(key);
@@ -684,22 +725,25 @@ window.addEventListener('DOMContentLoaded', () => {
 				value.forEach((right) => {
 					let idx = sections.indexOf(right.sectionName);
 					if (idx >= 0) {
-						oneUserRights[idx] = `<td data-${right.sectionName}>${right.accessType}</td>`;
+						oneUserRights[idx] = `<td data-mode="${right.sectionName}" data-select="${right.accessType}">${right.accessType}</td>`;
 					}
 				});
 				let idx = sections.indexOf('action');
 				if (idx >= 0) {
 					oneUserRights[idx] = `<td>
 						<a href="#" data-userName="${userName}" data-action="delUser" title="Delete user"><img class="icon-delete" src="img/delete.svg"></a>
+						<a href="#" data-userName="${userName}" data-action="setRights"><img class="icon-edit" src="img/edit.svg"></a>
 					</td>`;
 				}
 			}
 		}
-		return oneUserRights.reduce((res, current) => res + current, '');
+		return `
+			<tr data-userName="${userName}">
+				${oneUserRights.reduce((res, current) => res + current, '')}
+			</tr>`;
 	}
 
 	//init main
-	// triangle.addEventListener('click', triangleToggle);
 	btnClearSettings.addEventListener('click', clearEditableFields);
 	btnUpdateTask.addEventListener('click', updateTask);
 	formNewTask.addEventListener('submit', (e) => {
@@ -715,15 +759,39 @@ window.addEventListener('DOMContentLoaded', () => {
 	btnCreateTaskFile.addEventListener('change', createTaskFile);
 	attachmentsContainer.addEventListener('click', attachmentsAction);
 	tableUsers.addEventListener('click', actionForUsers);
-	// loginForm.addEventListener('submit', (e) => {
-	// 	e.preventDefault();
-	// 	const formData = new FormData(loginForm);
-	// 	const signData = {};
-	// 	for (let [key, value] of formData.entries()) {
-	// 		signData[key] = value.trim();
-	// 	}
-	// 	signIn(signData);
-	// });
+	rightsForm.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const formData = new FormData(e.target);
+		let newRights = [];
+		let userName = '';
+		for (let [key, value] of formData.entries()) {
+			if (key === 'userName') {
+				userName = value;
+				continue;
+			}
+			newRights.push({
+				pageName: capitalize(key),
+				sectionName: key,
+				sectionAttr: key,
+				accessType: value,
+			});
+		}
+		if (userName != '') {
+			modRights(userName, newRights);
+		}
+	});
+
+	newUserForm.addEventListener('reset', (e) => {
+		btnAddUser.textContent = 'Add';
+		newUserForm.dataset['method'] = 'addUser';
+		newUsernameInput.readOnly = false;
+		rightsForm.reset();
+	});
+
+	rightsForm.addEventListener('reset', (e) => {
+		setRightsContainer.style.display = 'none';
+	});
+
 	formsAuth.forEach(form => {
 		form.addEventListener('submit', (e) => {
 			e.preventDefault();
@@ -740,6 +808,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
+	clearInputsForms();
 	iniInterface();
 
 

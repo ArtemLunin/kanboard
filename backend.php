@@ -64,6 +64,8 @@ if ($method !== 0)
 		];
 	} elseif ($method === 'addUser' && $params !== 0 && strlen(trim($params['userName'])) > 2 && strlen($params['password']) > 2) {
 		$param_error_msg['answer'] = $db_object->addUser(trim($params['userName']), $params['password']);
+	} elseif ($method === 'modUser' && $params !== 0 && strlen(trim($params['userName'])) > 2 && strlen($params['password']) > 2) {
+		$param_error_msg['answer'] = $db_object->modUser(trim($params['userName']), $params['password']);
 	} elseif ($method === 'delUser' && $params !== 0 && strlen(trim($params['userName'])) > 2) {
 		$param_error_msg['answer'] = $db_object->delUser(trim($params['userName']));
 	} elseif ($method === 'setRights' && $params !== 0 && strlen(trim($params['userName'])) > 2 && $params['rights']) {
