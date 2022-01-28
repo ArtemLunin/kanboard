@@ -5,6 +5,7 @@ class databaseUtils {
 	private $unauthorized = true;
 	private $root_access = false;
 	private $pdo = null;
+	// private $user = '';
 	// private $rights = [];
 	private $initialRights = [[
 		'pageName' => 'Main',
@@ -119,7 +120,11 @@ class databaseUtils {
 		if (isset($result['id']) && 
 			(password_verify($password, $result['password']) || $storedSession === true))
 		{
+			// $this->user = $result['user_name'];
 			$rights = json_decode($result['user_rights'], true);
+			if ($rights) {
+				$rights = array_filter($rights, array($this, 'hideNoAccessRights'));
+			}
 			$this->unauthorized = false;
 			if ($result['user_name'] === SUPER_USER) {
 				$this->root_access = true;
@@ -129,6 +134,14 @@ class databaseUtils {
 			$rights = false;
 		}
 		return $rights;
+	}
+	function getAccessType($rights, $section) {
+		foreach ($rights as $item) {
+			if (isset($item['sectionName']) && $item['sectionName'] == $section) {
+				return $item['accessType'] ?? false;
+			}
+		}
+		return false;
 	}
 	function setRights($user, $rights) {
 		if ($this->root_access === true) {
@@ -145,6 +158,10 @@ class databaseUtils {
 			// }	
 		}
 		return false;
+	}
+	function hideNoAccessRights($user_rights) {
+		// if ($user_rights['accessType'] != '')
+			return $user_rights['accessType'] != '';
 	}
 	function setSQLError($pdo_exception, $error_text)
 	{

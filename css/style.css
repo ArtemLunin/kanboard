@@ -61,14 +61,17 @@ h6 {
 .modify-container {
 	border-radius: 6px;
 }
-#inputProject {
+#inputProject, inputProjectStatus {
 	min-width: 60%;
 	height: 32px;
+}
+#inputProjectStatus {
+	max-width: 70%;
 }
 .tickets-container {
 	margin-top: 20px;
 }
-.task-ticket {
+.task-ticket, .task-ticket-excel {
 	background-color: rgb(245, 247, 196);
 	border: 1px solid rgb(223, 227, 45);
 	margin-bottom: 4px;

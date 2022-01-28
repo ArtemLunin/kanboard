@@ -6,7 +6,7 @@ class Kanboard {
 		'getAllTasks',
 	];
 	private $metadataFields = [
-		"capop", "oracle", "ticket", "otl", "creator"
+		"capop", "oracle", "ticket", "otl", "creator", "version", "origintask"
 	];
 
 	function __construct () {
@@ -66,6 +66,10 @@ class Kanboard {
 		}
 		return $metadata_arr;
 	}
+	function getMetadataField($task_id, $field_name) {
+		$taskMetadata = $this->callKanboardAPI('getTaskMetadata', [$task_id]);
+		return $taskMetadata['result'][$field_name] ?? false;
+	}
 	function setTaskProjectName($task_id, $projectName) {
 		$this->callKanboardAPI('setTaskTags', [
 			$this->projectID,
@@ -85,24 +89,41 @@ class Kanboard {
 		$task = $this->callKanboardAPI('getTask', ['task_id' => $task_id]);
 		return $task;
 	}
-	function fieldsTask($task_id) {
+	function fieldsTask($task_id, $convert_nl = true, $task_version = false) {
 		$task = $this->callKanboardAPI('getTask', ['task_id' => $task_id]);
 		if (isset($task['result'])) {
+			$column_names = $this->getColumnsNames();
 			$task = [
 				'id'			=> (int)$task['result']['id'],
 				'creator_id'	=> (int)$task['result']['creator_id'],
 				'date_creation'	=> (int)$task['result']['date_creation'],
 				'date_completed'=> (int)$task['result']['date_completed'],
-				'description'	=> nl2br($task['result']['description'], FALSE),
-				'title'			=> $task['result']['title'],
+				'date_due'		=> (int)$task['result']['date_due'],
+				'reference'		=> $task['result']['reference'],
+				'description'	=> $convert_nl ? nl2br($task['result']['description'], FALSE) : $task['result']['description'],
+				'title'			=> $task['result']['title'] . (($task_version !== false) ? '_v'.$task_version : ''),
+				'status'		=> $column_names[(int)$task['result']['column_id']] ?? 'undefined',
+				'assignee_name'	=> 'not assigned',
 			];
 		} else {
 			$task = null;
 		}
 		return $task;
 	}
+	function getColumnsNames() {
+		$column_names = [];
+		$columns = $this->callKanboardAPI('getColumns', [
+			$this->projectID,
+		]);
+		if (isset($columns['result'])) {
+			foreach ($columns['result'] as $column) {
+				$column_names[$column['id']] = $column['title'];
+			}
+		}
+		return $column_names;
+	}
 	function setTaskMetadata($task_id, $metadataFields) {
-		$this->callKanboardAPI('saveTaskMetadata', [$task_id, $metadataFields]);
+		return $this->callKanboardAPI('saveTaskMetadata', [$task_id, $metadataFields]);
 	}
 	function getUserNameFromTag($tags_arr) {
 		return array_values($tags_arr)[0];
