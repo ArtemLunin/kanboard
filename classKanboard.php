@@ -97,6 +97,7 @@ class Kanboard {
 				'id'			=> (int)$task['result']['id'],
 				'creator_id'	=> (int)$task['result']['creator_id'],
 				'date_creation'	=> (int)$task['result']['date_creation'],
+				'date_started'	=> (int)$task['result']['date_started'],
 				'date_completed'=> (int)$task['result']['date_completed'],
 				'date_due'		=> (int)$task['result']['date_due'],
 				'reference'		=> $task['result']['reference'],
@@ -130,6 +131,18 @@ class Kanboard {
 	}
 	function getProjectNameFromTag($tags_arr) {
 		return array_values($tags_arr)[0];
+	}
+	function getAllTaskFiles($task_id) {
+		if (is_numeric($task_id)) {
+			$taskFiles = $this->callKanboardAPI('getAllTaskFiles', [
+				'task_id'	=> $task_id,
+			]);
+			return [
+				'id'	=> (int)$task_id,
+				'files'	=> array_map("taskFilesMapper", $taskFiles['result']),
+			];
+		}
+		return [];
 	}
 	private $kanboardRequest = [
 		"jsonrpc"   => "2.0",
@@ -165,7 +178,7 @@ curl_close($curl);
 return $response;
 }
 
-$taskFilesMapper = function($fileItem) 
+function taskFilesMapper($fileItem) 
 {
 	return [
 		'file_id'	=> $fileItem['id'],

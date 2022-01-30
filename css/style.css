@@ -90,6 +90,12 @@ h6 {
 	font-size: 0.8em;
 	padding-right: 1em;
 }
+.file-input-hidden {
+	display: none;
+}
+.file-input-show {
+	cursor: pointer;
+}
 hr.dotted {
 	border-top: 3px dotted #bbb;
 	width: 100%;

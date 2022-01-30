@@ -20,17 +20,7 @@ const sections = [
 	'action',
 ];
 
-const sections2 = {
-	'user': {show : 1},
-	'main': {show : 1, rights: ['admin']},
-	'status': {show: 0, rights: ['user', 'admin']},
-	'excel': {show: 0, rights: ['user', 'admin']},
-	'statistics': {show: 0, rights: ['user', 'admin']},
-	'action': {show: 0, rights: ['user', 'admin']},
-};
-
 const defaultUserRights = [];
-const defaultUserRights2 = [];
 
 sections.forEach((item, idx) => {
 	defaultUserRights[idx] = `<td data-${item}>&nbsp</td>`;
@@ -42,6 +32,7 @@ const textOTLHeader = 'OTL:';
 let fileAttach;
 let pageStatus = 0, fileDeleted = 0, totalWaits = 0, periodDays = 0;
 let currentUser = '';
+let previousElem = null;
 
 let dataTableObj;
 
@@ -67,6 +58,14 @@ const timestampToDate = (timestampValue, timeOut = true) => {
   }
   return dateOut;
 }
+
+const timestampToTime = (timestampValue) => {
+	if(!timestampValue) {
+		return '';
+	}
+	const a = new Date(timestampValue * 1000);
+	return `${addZero(a.getHours())}:${addZero(a.getMinutes())}`;
+};
 
 const dateToTimestamp = date_str => {
 	const date = new Date(date_str);
@@ -161,6 +160,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		containerError = document.querySelector('.container-error'),
 		usersList = document.querySelector('.users-list'),
 		tableUsers = document.querySelector('.table-users'),
+		taskMain_id = document.querySelector('#task_id'),
 		setRightsContainer = document.querySelector('.set-rights');
 	// excel elements
 	const btnUpdateTicket = document.querySelector('.btn-update-ticket'),
@@ -169,6 +169,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		btnRemove = document.querySelector('.btn-remove'),
 		inputName = document.querySelector('#inputName'),
 		inputDate = document.querySelector('#inputDate'),
+		inputTime = document.querySelector('#inputTime'),
 		inputDescr = document.querySelector('#inputDescr'),
 		inputTicket = document.querySelector('#inputTicket'),
 		inputCapOp = document.querySelector('#inputCapOp'),
@@ -182,6 +183,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			btnUpdateTaskStatus = document.querySelector('.btn-update-task-status'),
 			btnAddTaskStatus = document.querySelector('.btn-add-task-status'),
 			ticketDescriptionStatus = document.querySelector('#ticketDescriptionStatus'),
+			btnCreateTaskFileStatus = document.querySelector('#attachFileStatus'),
 			attachmentsContainerStatus = document.querySelector('.attachments-container-status'),
 			ticketProjectNameStatus = document.querySelector('#inputProjectStatus'),
 			taskStatus_id = document.querySelector('#taskStatus_id'),
@@ -190,7 +192,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			ticketCreatorStatus = document.querySelector('#creatorStatus'),
 			ticketOTLStatus = document.querySelector('#OTLStatus');
 		// statistics elements
-		const tableStatistics = document.querySelector('.table-statistics');
+		const tableStatistics = document.querySelector('.table-statistics'),
+			exportStatistics = document.querySelector('#exportStatistics');
 	btnUpdateTicket.disabled = true;
 	btnUpdateTicket.dataset['task_id'] = 0;
 	
@@ -401,9 +404,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		},
 	};
 
-	const fillFileInfo = (fileInfo) => {
+	const fillFileInfo = (fileInfo, attachmentsList) => {
 		let { file_id, file_name, file_size } = JSON.parse(fileInfo);
-		attachmentsContainer.insertAdjacentHTML('beforeend', `
+		attachmentsList.insertAdjacentHTML('beforeend', `
 			<p class="file-delete-container">File name: ${file_name}, Size: ${file_size}
 				<img class="file-delete" src="img/delete.svg" atl="Delete file" data-file_id="${file_id}" title="Delete file"/>
 			</p>
@@ -489,6 +492,19 @@ window.addEventListener('DOMContentLoaded', () => {
 		sendRequest('POST', requestURL, body, true).then(showAllTasks);
 	};
 
+
+	const getAllTaskFiles = (taskID, attachmentsList) => {
+		const body = {
+			method: 'getAllTaskFiles',
+			params: {
+				id: taskID,
+			},
+		}
+		sendRequest('POST', requestURL, body).then((data) => {
+			showAddedFileNew(data, attachmentsList);
+		});	
+	};
+
 	const getBoard = (action = 0) => {
 		const body = {
 			method: 'getBoard',
@@ -542,15 +558,15 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const fillUsersList = (data) => {
-		if(!!data.success) {
-			inputName.textContent = '';
-			data.success.answer.forEach(function ({user_name}) {
-				inputName.insertAdjacentHTML('beforeend', `
-					<option value="${user_name}">${user_name}</option>
-				`);
-			});
-		}
-		inputName.value = '';
+		// if(!!data.success) {
+		// 	inputName.textContent = '';
+		// 	data.success.answer.forEach(function ({user_name}) {
+		// 		inputName.insertAdjacentHTML('beforeend', `
+		// 			<option value="${user_name}">${user_name}</option>
+		// 		`);
+		// 	});
+		// }
+		// inputName.value = '';
 	};
 
 	const editExcelTask = (e) => {
@@ -567,7 +583,9 @@ window.addEventListener('DOMContentLoaded', () => {
 					const itemValue = item.dataset['item_value'];
 					const inputID = item.dataset['item_id'];
 					if(!itemValue || !inputID) continue;
-					document.querySelector(`#${inputID}`).value = itemValue;
+					try {
+						document.querySelector(`#${inputID}`).value = itemValue;
+					} catch (e) {}
 				}
 				btnUpdateTicket.dataset['task_id'] = taskID;
 				btnUpdateTicket.disabled = false;
@@ -586,11 +604,15 @@ window.addEventListener('DOMContentLoaded', () => {
 	const editStatusTask = (e) => {
 		const target = e.target;
 		if(target.classList.contains('icon-edit')) {
+			if (previousElem === target) {
+				return false;
+			}
 			formNewTaskStatus.reset();
+			previousElem = target;
 			ticketCreatorStatus.value = currentUser;
-			setFieldsEditForm(target, '.task-ticket-status', taskStatus_id);
+			const taskID = setFieldsEditForm(target, '.task-ticket-status', taskStatus_id);
 			toggleToUpdateMode(btnUpdateTaskStatus, btnAddTaskStatus, attachmentsAreaStatus);
-
+			getAllTaskFiles(taskID, attachmentsContainerStatus);
 			// 
 			const taskDescription = ticketDescriptionStatus.innerText;
 			const positionCreator = taskDescription.lastIndexOf(textCreatorHeader);
@@ -634,10 +656,11 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const setFieldsEditForm = (targetElem, rowSelector, elemTaskID) => {
+		let taskID = 0;
 		const rowTask = targetElem.closest(rowSelector);
 		if(!!rowTask) {
 			selectTR(rowSelector, rowTask);
-			const taskID = rowTask.getAttribute('data-task_id');
+			taskID = rowTask.getAttribute('data-task_id');
 			for(const item of rowTask.children)
 			{
 				const itemValue = item.dataset['item_value'];
@@ -658,20 +681,29 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 			elemTaskID.value = taskID;
 		}
+		return taskID;
 	};
 
-	const showAddedFile = (resultFileList) => 
-	{
-		if (!!resultFileList.success.answer) {
-			const taskID = resultFileList.success.answer.id;
-			fillFileTaskInfo(taskID);
-			attachmentsContainer.textContent = '';
-			(resultFileList.success.answer.files).forEach(fileItem => fillFileInfo(JSON.stringify(fileItem)));
+	// const showAddedFile = (resultFileList) => 
+	// {
+	// 	if (!!resultFileList.success.answer) {
+	// 		const taskID = resultFileList.success.answer.id;
+	// 		fillFileTaskInfo(taskID);
+	// 		attachmentsContainer.textContent = '';
+	// 		(resultFileList.success.answer.files).forEach(fileItem => fillFileInfo(JSON.stringify(fileItem)));
+	// 	}
+	// };
+
+	const showAddedFileNew = (data, attachmentsList) => {
+		if (!!data.success.answer) {
+			const taskID = data.success.answer.id;
+			fillFileTaskInfo(data.success.answer.files, taskID);
+			attachmentsList.textContent = '';
+			(data.success.answer.files).forEach(fileItem => fillFileInfo(JSON.stringify(fileItem), attachmentsList));
 		}
 	};
 
 	const showAddedUser = (data) => {
-		console.log(Object.keys(data.success.answer).length);
 		if (data.success.answer && (data.success.answer.length > 0 || Object.keys(data.success.answer).length > 0)) {
 			getKanboardUsers();
 		}
@@ -683,7 +715,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				fileDeleted.remove();
 				fileDeleted = 0;
 				const taskID = resultFileList.success.answer.id;
-				fillFileTaskInfo(taskID);
+				fillFileTaskInfo(resultFileList.success.answer.files, taskID);
 			}
 		}
 	};
@@ -698,12 +730,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const fillFileTaskInfo = taskID => {
+	const fillFileTaskInfo = (filesArray, taskID) => {
 		try {
 			const fileTaskInfo = document.querySelector('#task_id_' + taskID);
-			fileTaskInfo.innerHTML = filesAttached(resultFileList.success.answer.files);
+			fileTaskInfo.innerHTML = filesAttached(filesArray);
 		}
-		catch (e) {}
+		catch (e) {
+			console.error(e);
+		}
 	};
 
 	const actionTask = (event) => {
@@ -753,11 +787,14 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 			attachmentsContainer.textContent = '';
 			if (!!filesList) {
-				JSON.parse(filesList.dataset['files_list']).forEach(fillFileInfo);
+				JSON.parse(filesList.dataset['files_list']).forEach((item) => {
+					fillFileInfo(item, attachmentsContainer);
+				});
 			}
 			ticketTitle.value = taskTitle.textContent;
 			ticketProjectName.value = taskProjectName.textContent;
 			btnUpdateTask.dataset['task_id'] = taskID;
+			taskMain_id.value  = taskID;
 			toggleToUpdateMode(btnUpdateTask, btnAddTask, attachmentsArea);
 		}
 	};
@@ -772,6 +809,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		btnAddTask.classList.remove('d-none');
 		attachmentsArea.classList.add('invisible');
 		btnUpdateTask.dataset['task_id'] = 0;
+		taskMain_id.value = 0;
 	};
 
 	const clearAllSection = (shownedSections) => {
@@ -823,13 +861,28 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const createTaskFile = () => {
+	// const createTaskFile = () => {
+	// 	const formData = new FormData();
+	// 	formData.append('file', btnCreateTaskFile.files[0]);
+	// 	formData.append('method', 'createTaskFile');
+	// 	formData.append('id', btnUpdateTask.dataset['task_id']);
+	// 	sendFile('POST', requestURL, formData).then((data) => {
+	// 		showAddedFileNew(data, attachmentsContainer);
+	// 	});
+	// 	// btnCreateTaskFile.value = '';
+	// };
+
+	const createTaskFileNew = (e, attachmentsList) => {
+		const target = e.target;
+		const inputData = new FormData(target.form);
+		const task_id = inputData.get('id');
 		const formData = new FormData();
-		formData.append('file', btnCreateTaskFile.files[0]);
+		formData.append('file', target.files[0]);
 		formData.append('method', 'createTaskFile');
-		formData.append('id', btnUpdateTask.dataset['task_id']);
-		sendFile('POST', requestURL, formData).then(showAddedFile);
-		btnCreateTaskFile.value = '';
+		formData.append('id', task_id);
+		sendFile('POST', requestURL, formData).then((data) => {
+			showAddedFileNew(data, attachmentsList);
+		});
 	};
 
 	const attachmentsAction = (event) => {
@@ -844,7 +897,9 @@ window.addEventListener('DOMContentLoaded', () => {
 					id: fileAction.dataset['file_id'],
 				},
 			}
-			sendRequest('POST', requestURL, body).then(removeFileFromList);
+			sendRequest('POST', requestURL, body).then((data) => {
+				removeFileFromList(data);
+			});
 		}
 	};
 
@@ -899,19 +954,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const updateTaskFull = () => {
 		if(btnUpdateTicket.dataset['task_id'] != 0) {
+			const date_start = new Date(`${inputDate.value}T${inputTime.value}`);
+			
 			const body = {
 				method: 'updateTaskFull',
 				params: {
 					description: spaces2cr(inputDescr.value),
 					id: btnUpdateTicket.dataset['task_id'],
-					user_name: inputName.value,
-					date_due: inputDate.value.trim(),
+					date_started: date_start.getTime() / 1000,
 					ticket: inputTicket.value.trim(),
 					capop: inputCapOp.value.trim(),
 					oracle: inputOracle.value.trim(),
 				},
 			}
-			sendRequest('POST', requestURL, body, true).then(showUpdatedExcelTask);
+			sendRequest('POST', requestURL, body, true).then(getTaskBoard);
 		}
 	};
 
@@ -940,8 +996,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const getTaskBoard = () => {
 		clearExcelTicketFields();
-		getUsers();
-		getBoard();
+		// getUsers();
+		getBoard('excel');
 	};
 
 	const getTaskStatus = () => {
@@ -1023,40 +1079,40 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	function showUpdatedExcelTask(data)
-	{
-		$('#waitModal').modal('hide');
-		if(!!data.success) {
-			let {id, date_due, description, title, fields} = data.success.answer;	
-			const tr_excel = tableExcel.querySelector(`tr[data-task_id="${id}"]`);
-			if (tr_excel) {
-				tr_excel.dataset['date_due'] = date_due;
-				tr_excel.classList.add(hideTask(date_due));
-				const taskTitle = tr_excel.querySelector('.ticket-name'),
-					taskDate = tr_excel.querySelector('.ticket-date'),
-					taskDescription = tr_excel.querySelector('.ticket-descr'),
-					taskTicket = tr_excel.querySelector('.ticket-ticket'),
-					taskCapop = tr_excel.querySelector('.ticket-capop'),
-					taskOracle = tr_excel.querySelector('.ticket-oracle');
+	// function showUpdatedExcelTask(data)
+	// {
+	// 	$('#waitModal').modal('hide');
+	// 	if(!!data.success) {
+	// 		let {id, date_due, description, title, fields} = data.success.answer;	
+	// 		const tr_excel = tableExcel.querySelector(`tr[data-task_id="${id}"]`);
+	// 		if (tr_excel) {
+	// 			tr_excel.dataset['date_due'] = date_due;
+	// 			tr_excel.classList.add(hideTask(date_due));
+	// 			const taskTitle = tr_excel.querySelector('.ticket-name'),
+	// 				taskDate = tr_excel.querySelector('.ticket-date'),
+	// 				taskDescription = tr_excel.querySelector('.ticket-descr'),
+	// 				taskTicket = tr_excel.querySelector('.ticket-ticket'),
+	// 				taskCapop = tr_excel.querySelector('.ticket-capop'),
+	// 				taskOracle = tr_excel.querySelector('.ticket-oracle');
 
-				const descr_spaces = cr2spaces(description);
+	// 			const descr_spaces = cr2spaces(description);
 				
-				// taskTitle.textContent = title;
-				taskDescription.innerHTML = descr_spaces;
-				taskDate.innerHTML = timestampToDate(date_due, false);
-				taskTicket.textContent = fields['ticket'];
-				taskCapop.textContent = fields['capop'];
-				taskOracle.textContent = fields['oracle'];
+	// 			// taskTitle.textContent = title;
+	// 			taskDescription.innerHTML = descr_spaces;
+	// 			taskDate.innerHTML = timestampToDate(date_due, false);
+	// 			taskTicket.textContent = fields['ticket'];
+	// 			taskCapop.textContent = fields['capop'];
+	// 			taskOracle.textContent = fields['oracle'];
 
-				// taskTitle.dataset['item_value'] = title;
-				taskDescription.dataset['item_value'] = descr_spaces;
-				taskDate.dataset['item_value'] = timestampToDate(date_due, false);
-				taskTicket.dataset['item_value'] = fields['ticket'];
-				taskCapop.dataset['item_value'] = fields['capop'];
-				taskOracle.dataset['item_value'] = fields['oracle'];
-			}
-		}
-	}
+	// 			// taskTitle.dataset['item_value'] = title;
+	// 			taskDescription.dataset['item_value'] = descr_spaces;
+	// 			taskDate.dataset['item_value'] = timestampToDate(date_due, false);
+	// 			taskTicket.dataset['item_value'] = fields['ticket'];
+	// 			taskCapop.dataset['item_value'] = fields['capop'];
+	// 			taskOracle.dataset['item_value'] = fields['oracle'];
+	// 		}
+	// 	}
+	// }
 
 	function showAllTasks(data)
 	{
@@ -1093,13 +1149,15 @@ window.addEventListener('DOMContentLoaded', () => {
 		if(!!data.success) {
 			tableExcel.textContent = '';
 			data.success.answer.forEach(function ({
-				id, date_due, description, fields, assignee_name
+				id, date_due, date_started, description, fields, assignee_name
 			}) 
 			{
 				const descr_spaces = cr2spaces(description);
+				const time_started = timestampToTime(date_started);
 				tableExcel.insertAdjacentHTML('beforeend', `
 					<tr class="task-ticket-excel ${hideTask(date_due)}" data-task_id="${id}" data-date_due="${date_due}">
-						<td class="ticket-date" data-item_value="${timestampToDate(date_due, false)}" data-item_id="inputDate">${timestampToDate(date_due, false)}</td>
+						<td class="ticket-date" data-item_value="${timestampToDate(date_started, false)}" data-item_id="inputDate">${timestampToDate(date_started, false)} ${time_started}</td>
+						<td class="ticket-date" data-item_value="${time_started}" data-item_id="inputTime">${timestampToDate(date_due, false)}</td>
 						<td class="ticket-name" data-item_value="${assignee_name ?? '&nbsp;'}" data-item_id="inputName">${assignee_name ?? '&nbsp;'}</td>
 						<td class="ticket-descr" data-item_value="${descr_spaces}" data-item_id="inputDescr">${descr_spaces}</td>
 						<td class="ticket-ticket" data-item_value="${fields['ticket']}" data-item_id="inputTicket">${fields['ticket']}</td>
@@ -1114,7 +1172,6 @@ window.addEventListener('DOMContentLoaded', () => {
 					</tr>
 				`);
 			});
-			// tableExcel.addEventListener('click', editExcelTask);
 		}
 		$('#waitModal').modal('hide');
 	};
@@ -1245,9 +1302,15 @@ window.addEventListener('DOMContentLoaded', () => {
 	btnAddTask.addEventListener('click', (e) => {
 		createTask(showAddedTask);
 	});
-	btnCreateTaskFile.value = '';
-	btnCreateTaskFile.addEventListener('change', createTaskFile);
-	attachmentsContainer.addEventListener('click', attachmentsAction);
+
+	btnCreateTaskFile.addEventListener('change', (e) => {
+		createTaskFileNew(e, attachmentsContainer);
+	});
+
+	[attachmentsContainer, attachmentsContainerStatus].forEach(item => {
+			item.addEventListener('click', attachmentsAction);
+		});
+		
 	tableUsers.addEventListener('click', actionForUsers);
 	rightsForm.addEventListener('submit', (e) => {
 		e.preventDefault();
@@ -1309,7 +1372,12 @@ window.addEventListener('DOMContentLoaded', () => {
 	ticketEditForm.addEventListener('reset', (e) => {
 		btnUpdateTicket.dataset['task_id'] = 0;
 		btnUpdateTicket.disabled = true;
+		// for (let elemForm of e.target) {
+		// 	if (elemForm.type === 'reset') continue;
+		// 	elemForm.disabled = true;
+		// }
 	});
+
 	exportExcel.addEventListener('click', (e) => {
 		e.preventDefault();
 		document.location.href=`./${requestURL}?method=doDataExport&status=all&section=excel&days=${periodDays}`;
@@ -1317,8 +1385,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	//init status
 	tableStatus.addEventListener('click', editStatusTask);
+	btnCreateTaskFileStatus.addEventListener('change', (e) => {
+		createTaskFileNew(e, attachmentsContainerStatus);
+	});
 	formNewTaskStatus.addEventListener('reset', () => {
 		attachmentsAreaStatus.classList.add('invisible');
+		attachmentsContainerStatus.textContent = '';
 		formNewTaskStatus.querySelectorAll('[data-disable_on_update="1"]').forEach(item => {
 			item.readOnly = false;
 			item.classList.remove('text-muted');
@@ -1327,6 +1399,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		ticketDescriptionStatus.textContent = '';
 		btnUpdateTaskStatus.classList.add('d-none');
 		btnAddTaskStatus.classList.remove('d-none');
+		previousElem = null;
 	});
 
 	formNewTaskStatus.addEventListener('submit', (e) => {
@@ -1346,8 +1419,15 @@ window.addEventListener('DOMContentLoaded', () => {
 			method: method,
 			params: arrData,
 		};
-			// sendRequest('POST', requestURL, body).then(showAddedTaskStatus);
 			sendRequest('POST', requestURL, body).then(getTaskStatus);
+	});
+
+	// init statistics
+	exportStatistics.addEventListener('click', () => {
+		const data = dataTableObj.rows({search:'applied'}).data();
+			for (let idx=0; idx < data.length; idx++) {
+				console.log(data[idx]);
+			}
 	});
 
 

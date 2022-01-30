@@ -48,7 +48,6 @@ if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
 
 $accessType = $db_object->getAccessType($rights, $params['section'] ?? 'null');
 
-
 if ($method !== 0)
 {
 	if ($method === 'signIn') {
@@ -82,7 +81,6 @@ if ($method !== 0)
 	} elseif ($method === 'delUser' && $params !== 0 && strlen(trim($params['userName'])) > 2) {
 		$param_error_msg['answer'] = $db_object->delUser(trim($params['userName']));
 	} elseif ($method === 'setRights' && $params !== 0 && strlen(trim($params['userName'])) > 2 && $params['rights']) {
-		// $new_rights = json_decode($params['rights'], true);
 		if (isset($params['rights'][0]['pageName'])) {
 			$param_error_msg['answer'] = $db_object->setRights(trim($params['userName']), $params['rights']);
 		}
@@ -116,7 +114,7 @@ if ($method !== 0)
 						'description'	=> nl2br($task['description'], FALSE),
 						'title'			=> $task['title'],
 						'project_name'	=> $projectName,
-						'files'			=> array_map($taskFilesMapper, $taskFiles['result']),
+						'files'			=> array_map("taskFilesMapper", $taskFiles['result']),
 					];
 				}
 			}
@@ -141,13 +139,12 @@ if ($method !== 0)
 				} else {
 					$task_version = false;
 				}
-				// $db_object->errorLog('origin:'.$task_origin_title.', id:'.$params['id'].', version:'.$task_version);
 				$task_title = ($task_version !== false && $task_origin_title !== null) ? $task_origin_title : (trim($params['title'] ?? ""));
 				$taskResult = $kanboard->callKanboardAPI($method, [
 					'project_id'	=> $projectID,
 					'title'			=> $task_title,
 					'description'	=> (trim($params['description'] ?? ""))."\nSubmitted by: ".$taskCreator."\nOTL: ".(trim($params['OTL'] ?? "")),
-					'date_started'	=> date('Y-m-d H:i'),
+					// 'date_started'	=> date('Y-m-d H:i'),
 					'creator_id'	=> $userID,
 					]);
 				if (isset($taskResult['result']))
@@ -173,14 +170,17 @@ if ($method !== 0)
 		}
 		elseif ($method === 'removeTask' && $params !== 0 && $params['id'] != 0)
 		{
-			$taskResult = $kanboard->callKanboardAPI($method, [
-				'task_id'	=> $params['id'],
-			]);
-			if (isset($taskResult['result']))
+			if ($accessType != false)
 			{
-				$param_error_msg['answer'] = [
-					'id'	=> (int)$params['id'],
-				];
+				$taskResult = $kanboard->callKanboardAPI($method, [
+					'task_id'	=> $params['id'],
+				]);
+				if (isset($taskResult['result']))
+				{
+					$param_error_msg['answer'] = [
+						'id'	=> (int)$params['id'],
+					];
+				}
 			}
 		}
 		elseif ($method === 'updateTask' && $params !== 0 && $params['id'] != 0)
@@ -211,10 +211,12 @@ if ($method !== 0)
 		}
 		elseif($method === 'updateTaskFull' && $params !== 0 && $params['id'] != 0)
 		{
+			$date_ts = $params['date_started'];
 			$taskResult = $kanboard->callKanboardAPI('updateTask', [
 				'id'	=> $params['id'],
 				'description'	=> (trim($params['description'] ?? "")),
-				'date_due'		=> $params['date_due'],
+				'date_started'	=> date('Y-m-d H:i', $date_ts),
+				// 'date_due'		=> $params['date_due'],
 			]);
 			if(isset($taskResult['result']) && $taskResult['result']) {
 				$taskResult = $kanboard->callKanboardAPI('saveTaskMetadata', [
@@ -233,6 +235,10 @@ if ($method !== 0)
 				}
 			}
 		}
+		elseif ($method === 'getAllTaskFiles' && $params !== 0 && $params['id'] != 0)
+		{
+			$param_error_msg['answer'] = $kanboard->getAllTaskFiles(trim($params['id']));
+		}
 		elseif ($method === 'createTaskFile' && $params !== 0 && $params['id'] != 0)
 		{
 			$tmp = $_FILES['file']['tmp_name'];
@@ -246,13 +252,14 @@ if ($method !== 0)
 							]);	
 				if (isset($taskResult['result']))
 				{
-					$taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
-							'task_id'	=> $params['id'],
-							]);
-					$param_error_msg['answer'] = [
-						'id'			=> (int)$params['id'],
-						'files'			=> array_map($taskFilesMapper, $taskFiles['result']),
-					];
+					// $taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
+					// 		'task_id'	=> $params['id'],
+					// 		]);
+					// $param_error_msg['answer'] = [
+					// 	'id'			=> (int)$params['id'],
+					// 	'files'			=> array_map("taskFilesMapper", $taskFiles['result']),
+					// ];
+					$param_error_msg['answer'] = $kanboard->getAllTaskFiles(trim($params['id']));
 				}
 			}
 		}
@@ -268,13 +275,14 @@ if ($method !== 0)
 				$taskResult = $kanboard->callKanboardAPI($method, [
 							$params['id'],
 							]);
-				$taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
-							'task_id'	=> $taskID,
-							]);
-				$param_error_msg['answer'] = [
-					'id'			=> (int)$taskID,
-					'files'			=> array_map($taskFilesMapper, $taskFiles['result']),
-				];
+				// $taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
+				// 			'task_id'	=> $taskID,
+				// 			]);
+				// $param_error_msg['answer'] = [
+				// 	'id'			=> (int)$taskID,
+				// 	'files'			=> array_map("taskFilesMapper", $taskFiles['result']),
+				// ];
+				$param_error_msg['answer'] = $kanboard->getAllTaskFiles($taskID);
 			}
 		}
 		elseif($method === 'getBoard')
@@ -311,6 +319,7 @@ if ($method !== 0)
 									'id'			=> (int)$task['id'],
 									'date_due'		=> (int)$task['date_due'],
 									'date_creation'	=> (int)$task['date_creation'],
+									'date_started'	=> (int)$task['date_started'],
 									'title'			=> $task['title']. (($task_version != false) ? '_v'.$task_version : ''),
 									'status'		=> $column_names[$column['id']] ?? 'undefined',
 									'reference'		=> $task['reference'],

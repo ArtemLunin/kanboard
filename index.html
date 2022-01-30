@@ -28,6 +28,7 @@
 					<div class="col-10">
 						<div class="border border-dark mt-2 p-2 modify-container">
 							<form method="POST" action="#" id="formNewTask">
+								<input type="hidden" id="task_id" name="id" value="0">
 								<input type="hidden" id="mainForm" name="section" value="main">
 								<div class="row mx-0">
 									<div class="col-lg-4 col-sm-6 px-0">
@@ -53,8 +54,7 @@
 										</div>
 										<div class="row">
 											<div class="col">
-												<input type="text" class="ticket-OTL" name="OTL" placeholder="OTL" maxlength="10"
-													size="10">
+												<input type="text" class="ticket-OTL" name="OTL" placeholder="OTL">
 											</div>
 										</div>
 										<div class="row">
@@ -82,8 +82,8 @@
 												<div class="row">
 													<div class="col">
 														<div class="form-group">
-															<label for="attachFile">Attach new file</label>
-															<input type="file" class="form-control-file" id="attachFile">
+															<label for="attachFile" class="file-input-show">Attach new file...</label>
+															<input type="file" class="form-control-file file-input-hidden" id="attachFile">
 														</div>
 													</div>
 												</div>
@@ -175,15 +175,15 @@
 												<div class="row">
 													<div class="col">
 														<div class="form-group">
-															<label for="attachFileStatus">Attach new file</label>
-															<input type="file" class="form-control-file-status" id="attachFileStatus"
+															<label for="attachFileStatus" class="file-input-show">Attach new file...</label>
+															<input type="file" class="form-control-file-status file-input-hidden" id="attachFileStatus"
 																name="attachFile">
 														</div>
 													</div>
 												</div>
 												<div class="row">
 													<div class="col">
-														<div class="attachments-header-status">Attachments</div>
+														<div class="attachments-header">Attachments</div>
 														<div class="attachments-container-status"></div>
 													</div>
 												</div>
@@ -195,7 +195,7 @@
 									<div class="col">
 										<button type="submit" class="btn btn-primary btn-sm btn-add-task-status">Add</button>
 										<button type="submit" class="btn btn-primary btn-sm btn-update-task-status d-none">Update</button>
-										<button type="reset" class="btn btn-warning btn-sm btn-clear-settings-staus">Clear</button>
+										<button type="reset" class="btn btn-warning btn-sm btn-clear-settings-status">Clear</button>
 									</div>
 								</div>
 							</form>
@@ -221,8 +221,11 @@
 				</div>
 			</section>
 			<section class="section statistics">
+				<div>
+					<a href="#" class="btn btn-info btn-sm" role="button" id="exportStatistics">Export</a>
+				</div>
 				<div class="page-data d-none" data-statistics="1"></div>
-				<table class="table table-bordered table-sm mt-2" id="table_statistics">
+				<table class="table table-bordered compact table-sm mt-2" id="table_statistics">
 					<thead class="thead-light">
 						<tr>
 							<th>Project Name</th>
@@ -242,13 +245,18 @@
 					<form class="form-inline justify-content-between" method="POST" action="#" id="ticketEditForm">
 						<div class="d-flex mb-1">
 							<label class="my-1 mr-1" for="inputDate">Date</label>
-							<input type="date" class="form-control my-1 mr-2" id="inputDate" name="inputDate">
+							<input type="date" class="form-control my-1 mr-2" id="inputDate" name="inputDate" required>
+							<label class="my-1 mr-1" for="inputTime">Time</label>
+							<input type="time" class="form-control my-1 mr-2" id="inputTime" name="inputTime" required>
 						</div>
-						<div class="d-flex mb-1">
+						<!-- <div class="d-flex mb-1">
+							
+						</div>				 -->
+						<!-- <div class="d-flex mb-1">
 							<label class="my-1 mr-1" for="inputName">Name</label>
 							<select class="custom-select mr-2" type="text" name="inputName" id="inputName">
 							</select>
-						</div>
+						</div> -->
 						<div class="d-flex mb-1">
 							<label class="my-1 mr-1" for="inputDescr">Description</label>
 							<input class="form-control mr-2" type="text" name="inputDescr" id="inputDescr" size="40">
@@ -270,30 +278,31 @@
 							<input class="form-control" type="text" name="inputOracle" id="inputOracle">
 						</div>
 						<div class="d-flex mb-1">
-							<button type="submit" class="btn btn-primary btn-update-ticket mr-1" data-task_id="0" disabled>Update</button>
-							<button type="reset" class="btn btn-warning btn-clear-excel">Clear</button>
+							<button type="submit" class="btn btn-primary btn-sm btn-update-ticket mr-1" data-task_id="0" disabled>Update</button>
+							<button type="reset" class="btn btn-warning btn-sm btn-clear-excel">Clear</button>
 						</div>
 					</form>
 				</div>
 				<div class="excel-menu d-flex justify-content-between align-items-center">
 					<div class="period-select py-2">
-						<button type="button" class="btn btn-primary" data-days="0">Yesterday</button>
-						<button type="button" class="btn btn-secondary" data-days="1">Today</button>
-						<button type="button" class="btn btn-secondary" data-days="2">Tomorrow</button>
-						<button type="button" class="btn btn-secondary" data-days="7">Week</button>
-						<button type="button" class="btn btn-secondary user-none" data-days="14">2 Weeks</button>
-						<button type="button" class="btn btn-secondary user-none" data-days="31">Month</button>
-						<button type="button" class="btn btn-secondary user-none" data-days="62">2 Months</button>
-						<button type="button" class="btn btn-secondary user-none" data-days="365">Year</button>
+						<button type="button" class="btn btn-primary btn-sm" data-days="0">-1D</button>
+						<button type="button" class="btn btn-secondary btn-sm" data-days="1">Today</button>
+						<button type="button" class="btn btn-secondary btn-sm" data-days="2">+1D</button>
+						<button type="button" class="btn btn-secondary btn-sm" data-days="7">Week</button>
+						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="14">2 Weeks</button>
+						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="31">Month</button>
+						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="62">2 Months</button>
+						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="365">YTD</button>
 					</div>
 					<div>
-						<a href="#" class="btn btn-info" role="button" id="exportExcel">Export</a>
+						<a href="#" class="btn btn-info btn-sm" role="button" id="exportExcel">Export</a>
 					</div>
 				</div>
 				<table class="table table-bordered table-sm mt-2">
 					<thead class="thead-light">
 						<tr>
-							<th>Date</th>
+							<th>Date started</th>
+							<th>Date due</th>
 							<th>Assigned</th>
 							<th>Description</th>
 							<th>Reference</th>
@@ -356,7 +365,7 @@
 									<select class="custom-select mr-2" name="statistics" id="statisticsPage" data-selectname="statistics">
 										<option value=""></option>
 										<option value="admin">admin</option>
-										<option value="user">user</option>
+										<!-- <option value="user">user</option> -->
 									</select>
 									<button type="submit" class="btn btn-primary my-1 mr-2">Set</button>
 								</form>

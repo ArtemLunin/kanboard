@@ -120,7 +120,6 @@ class databaseUtils {
 		if (isset($result['id']) && 
 			(password_verify($password, $result['password']) || $storedSession === true))
 		{
-			// $this->user = $result['user_name'];
 			$rights = json_decode($result['user_rights'], true);
 			if ($rights) {
 				$rights = array_filter($rights, array($this, 'hideNoAccessRights'));
@@ -137,7 +136,7 @@ class databaseUtils {
 	}
 	function getAccessType($rights, $section) {
 		foreach ($rights as $item) {
-			if (isset($item['sectionName']) && $item['sectionName'] == $section) {
+			if (isset($item['sectionName']) && $item['sectionName'] === $section) {
 				return $item['accessType'] ?? false;
 			}
 		}
