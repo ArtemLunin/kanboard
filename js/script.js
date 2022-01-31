@@ -76,26 +76,51 @@ const dateToTimestamp = date_str => {
 	return 0;
 };
 
+// const tsPeriod = () => {
+// 	const today = new Date();
+// 	const nextDay = new Date();
+// 	nextDay.setDate(nextDay.getDate() + periodDays - 1);
+// 	let dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+// 	if (periodDays === 0) {
+// 		dayStart -= 24 * 3600 * 1000;
+// 	}
+// 	const dayEnd = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), 23, 59, 59);
+// 	return {
+// 		dayStart: dayStart.valueOf() / 1000,
+// 		dayEnd: dayEnd.valueOf() / 1000,
+// 	}
+// };
+
+// const hideTask = (date_due) => {
+// 	let {dayStart, dayEnd} = tsPeriod();
+// 	let hideTaskClass = 'd-none';
+
+// 	if(!date_due || (date_due > dayStart && date_due < dayEnd)) {
+// 		hideTaskClass = '';
+// 	}
+// 	return hideTaskClass;
+// };
+
 const tsPeriod = () => {
 	const today = new Date();
-	const nextDay = new Date();
-	nextDay.setDate(nextDay.getDate() + periodDays - 1);
-	let dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-	if (periodDays === 0) {
-		dayStart -= 24 * 3600 * 1000;
-	}
-	const dayEnd = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), 23, 59, 59);
+	const prevDay = new Date();
+	prevDay.setDate(prevDay.getDate() - periodDays);
+	let dayStart = new Date(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate(), 0, 0, 0);
+	let dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+	// if (periodDays === 0) {
+	// 	dayStart -= 24 * 3600 * 1000;
+	// }
 	return {
 		dayStart: dayStart.valueOf() / 1000,
 		dayEnd: dayEnd.valueOf() / 1000,
 	}
 };
 
-const hideTask = (date_due) => {
+const hideTask = (date_started) => {
 	let {dayStart, dayEnd} = tsPeriod();
 	let hideTaskClass = 'd-none';
 
-	if(!date_due || (date_due > dayStart && date_due < dayEnd)) {
+	if(!date_started || (date_started > dayStart && date_started < dayEnd)) {
 		hideTaskClass = '';
 	}
 	return hideTaskClass;
@@ -392,12 +417,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		attachments.classList.remove('invisible');
 	};
 
-	// const toggleStatusToUpdateMode = () => {
-	// 	btnUpdateTaskStatus.classList.remove('d-none');
-	// 	btnAddTaskStatus.classList.add('d-none');
-	// 	attachmentsAreaStatus.classList.remove('invisible');
-	// };
-
 	const apiCallbackProps = {
 		'getTagsByProject': function (data, container) {
 			fillProjectsList(data, container);
@@ -684,16 +703,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		return taskID;
 	};
 
-	// const showAddedFile = (resultFileList) => 
-	// {
-	// 	if (!!resultFileList.success.answer) {
-	// 		const taskID = resultFileList.success.answer.id;
-	// 		fillFileTaskInfo(taskID);
-	// 		attachmentsContainer.textContent = '';
-	// 		(resultFileList.success.answer.files).forEach(fileItem => fillFileInfo(JSON.stringify(fileItem)));
-	// 	}
-	// };
-
 	const showAddedFileNew = (data, attachmentsList) => {
 		if (!!data.success.answer) {
 			const taskID = data.success.answer.id;
@@ -853,24 +862,13 @@ window.addEventListener('DOMContentLoaded', () => {
 	const refreshBoardTable = () => {
 		const taskTickets = document.querySelectorAll('.task-ticket-excel');
 		taskTickets.forEach(item => {
-			if (hideTask(parseInt(item.dataset['date_due'], 10)) === 'd-none') {
+			if (hideTask(parseInt(item.dataset['date_started'], 10)) === 'd-none') {
 				item.classList.add('d-none');
 			} else {
 				item.classList.remove('d-none');
 			}
 		});
 	};
-
-	// const createTaskFile = () => {
-	// 	const formData = new FormData();
-	// 	formData.append('file', btnCreateTaskFile.files[0]);
-	// 	formData.append('method', 'createTaskFile');
-	// 	formData.append('id', btnUpdateTask.dataset['task_id']);
-	// 	sendFile('POST', requestURL, formData).then((data) => {
-	// 		showAddedFileNew(data, attachmentsContainer);
-	// 	});
-	// 	// btnCreateTaskFile.value = '';
-	// };
 
 	const createTaskFileNew = (e, attachmentsList) => {
 		const target = e.target;
@@ -1015,8 +1013,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	{
 		attachmentsContainer.textContent = '';
 		toggleToUpdateMode(btnUpdateTask, btnAddTask, attachmentsArea);
-		if(!!data.success && data.success.answer.length > 0) {
-			let {id, creator_id, date_completed, date_creation, description, title, project_name, files = []} = data.success.answer;
+		if(data.success && data.success.answer) {
+			let {id, date_creation, description, title, project_name, files = []} = data.success.answer;
 			btnUpdateTask.dataset['task_id'] = data.success.answer.id;
 			ticketsContainer.insertAdjacentHTML('afterbegin', `
 					<div class="task-ticket" data-task_id="${id}">
@@ -1155,15 +1153,14 @@ window.addEventListener('DOMContentLoaded', () => {
 				const descr_spaces = cr2spaces(description);
 				const time_started = timestampToTime(date_started);
 				tableExcel.insertAdjacentHTML('beforeend', `
-					<tr class="task-ticket-excel ${hideTask(date_due)}" data-task_id="${id}" data-date_due="${date_due}">
+					<tr class="task-ticket-excel ${hideTask(date_started)}" data-task_id="${id}" data-date_started="${date_started}">
 						<td class="ticket-date" data-item_value="${timestampToDate(date_started, false)}" data-item_id="inputDate">${timestampToDate(date_started, false)} ${time_started}</td>
-						<td class="ticket-date" data-item_value="${time_started}" data-item_id="inputTime">${timestampToDate(date_due, false)}</td>
 						<td class="ticket-name" data-item_value="${assignee_name ?? '&nbsp;'}" data-item_id="inputName">${assignee_name ?? '&nbsp;'}</td>
 						<td class="ticket-descr" data-item_value="${descr_spaces}" data-item_id="inputDescr">${descr_spaces}</td>
 						<td class="ticket-ticket" data-item_value="${fields['ticket']}" data-item_id="inputTicket">${fields['ticket']}</td>
 						<td class="ticket-capop" data-item_value="${fields['capop']}" data-item_id="inputCapOp">${fields['capop']}</td>
 						<td class="ticket-oracle" data-item_value="${fields['oracle']}" data-item_id="inputOracle">${fields['oracle']}</td>
-						<td class="text-center">
+						<td class="text-center" data-item_value="${time_started}" data-item_id="inputTime">
 							<a href="#"><img class="icon-edit" src="img/edit.svg"></a>
 						</td>
 						<td class="text-center">
@@ -1195,14 +1192,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		dataTableObj = $('#table_statistics').DataTable({
 		"columnDefs": [
 			{ "orderable": false, "targets": [2, 3] },
-			// { "searchable": true},
 		// 	{ "width": "15%", "targets": [1, 2, 3] },
 		],
 		"order": [
 			[0, 'asc'],
 			[1, 'asc']
 		],
-		"autoWidth": true,
+		// "autoWidth": true,
 		"paging": false,
 		"searching": true,
 		});
@@ -1372,10 +1368,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	ticketEditForm.addEventListener('reset', (e) => {
 		btnUpdateTicket.dataset['task_id'] = 0;
 		btnUpdateTicket.disabled = true;
-		// for (let elemForm of e.target) {
-		// 	if (elemForm.type === 'reset') continue;
-		// 	elemForm.disabled = true;
-		// }
 	});
 
 	exportExcel.addEventListener('click', (e) => {
@@ -1423,11 +1415,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	// init statistics
-	exportStatistics.addEventListener('click', () => {
-		const data = dataTableObj.rows({search:'applied'}).data();
-			for (let idx=0; idx < data.length; idx++) {
-				console.log(data[idx]);
-			}
+	exportStatistics.addEventListener('click', (e) => {
+		e.preventDefault();
+		document.location.href=`./${requestURL}?method=doDataExport&status=all&section=statistics`;
 	});
 
 
