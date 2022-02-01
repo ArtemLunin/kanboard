@@ -7,12 +7,16 @@ body {
 	margin:0;
 	/* color:#fff; */
 	padding-left:120px;
+	font-family: 'Roboto', sans-serif;
 }
 /* table {
 	width: 90%;
 } */
 .menu {
-	background:#82a9bc;;
+	background:#363636;
+	color:#fff;
+	/* background-color: #363636; */
+	/* background-color: rgba(255, 255, 255, 0.3); */
 	height:100vh;
 	width:120px;
 	position:fixed;
@@ -63,11 +67,12 @@ h6 {
 }
 #inputProject, #inputProjectStatus {
 	min-width: 60%;
+	max-width: 70%;
 	height: 32px;
 }
-#inputProjectStatus {
+/* #inputProjectStatus {
 	max-width: 70%;
-}
+} */
 .tickets-container {
 	margin-top: 20px;
 }

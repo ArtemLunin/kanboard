@@ -144,22 +144,18 @@ class databaseUtils {
 	}
 	function setRights($user, $rights) {
 		if ($this->root_access === true) {
-			// $new_rights = json_decode($rights_JSON, true);
-			// if (isset($new_rights[0]['pageName'])) {
-				$new_rights = array_merge($this->initialRights, $rights);
-				$sql = "UPDATE users SET user_rights=:rights WHERE user_name=:user";
-				if ($this->modSQL($sql, [
-					'rights'	=> json_encode($new_rights),
-					'user'		=> $user,
-				], true)) {	
-					return $new_rights;
-				}
-			// }	
+			$new_rights = array_merge($this->initialRights, $rights);
+			$sql = "UPDATE users SET user_rights=:rights WHERE user_name=:user";
+			if ($this->modSQL($sql, [
+				'rights'	=> json_encode($new_rights),
+				'user'		=> $user,
+			], true)) {	
+				return $new_rights;
+			}
 		}
 		return false;
 	}
 	function hideNoAccessRights($user_rights) {
-		// if ($user_rights['accessType'] != '')
 			return $user_rights['accessType'] != '';
 	}
 	function setSQLError($pdo_exception, $error_text)

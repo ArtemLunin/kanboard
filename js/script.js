@@ -1,5 +1,7 @@
 'use strict';
 
+const requestURL = 'backend.php';
+
 const entityMap = {
   '&': '&amp;',
   '<': '&lt;',
@@ -107,9 +109,6 @@ const tsPeriod = () => {
 	prevDay.setDate(prevDay.getDate() - periodDays);
 	let dayStart = new Date(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate(), 0, 0, 0);
 	let dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-	// if (periodDays === 0) {
-	// 	dayStart -= 24 * 3600 * 1000;
-	// }
 	return {
 		dayStart: dayStart.valueOf() / 1000,
 		dayEnd: dayEnd.valueOf() / 1000,
@@ -156,7 +155,6 @@ const escapeHTML = (string) => {
 const capitalize = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
 window.addEventListener('DOMContentLoaded', () => {
-	const requestURL = 'backend.php';
 	const menu = document.querySelector('.menu ul'),
 		section = document.querySelectorAll('.section');
 	const loginForm = document.querySelector('#login-form'),
@@ -704,7 +702,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const showAddedFileNew = (data, attachmentsList) => {
-		if (!!data.success.answer) {
+		if (data && data.success) {
 			const taskID = data.success.answer.id;
 			fillFileTaskInfo(data.success.answer.files, taskID);
 			attachmentsList.textContent = '';
@@ -963,6 +961,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					ticket: inputTicket.value.trim(),
 					capop: inputCapOp.value.trim(),
 					oracle: inputOracle.value.trim(),
+					section: ticketEditForm.querySelector('#excelForm').value,
 				},
 			}
 			sendRequest('POST', requestURL, body, true).then(getTaskBoard);

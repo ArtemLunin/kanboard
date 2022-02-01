@@ -46,7 +46,8 @@ if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
 	$rights = $db_object->getRigths($_SESSION['logged_user'], 'dummypass', true);
 }
 
-$accessType = $db_object->getAccessType($rights, $params['section'] ?? 'null');
+$section = $params['section'] ?? '';
+$accessType = $db_object->getAccessType($rights, $section);
 
 if ($method !== 0)
 {
@@ -122,10 +123,10 @@ if ($method !== 0)
 		elseif($method === 'createTask' && $params !== 0)
 		{
 			$taskCreator = trim($params['creator'] ?? "");
-			if ($currentUser !== 'defaultUser' || isset($params['section']) && $params['section'] == 'status') {
+			if ($currentUser !== 'defaultUser' || isset($params['section']) && $section === 'status') {
 				$taskCreator = $currentUser;
 			}
-			if ($accessType != false)
+			if ($accessType !== false)
 			{
 				if (isset($params['version'])) {
 					$task_version = (int)$kanboard->getMetadataField($params['id'], 'version');
@@ -206,7 +207,7 @@ if ($method !== 0)
 		} elseif ($method === 'getTask' && $params !== 0 && $params['id'] != 0) {
 
 		}
-		elseif($method === 'updateTaskFull' && $accessType !== false && $params !== 0 && $params['id'] != 0)
+		elseif($method === 'updateTaskFull' && $accessType !== false && $section === 'excel' && $params !== 0 && $params['id'] != 0)
 		{
 			$date_ts = $params['date_started'];
 			$taskResult = $kanboard->callKanboardAPI('updateTask', [
@@ -249,13 +250,6 @@ if ($method !== 0)
 							]);	
 				if (isset($taskResult['result']))
 				{
-					// $taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
-					// 		'task_id'	=> $params['id'],
-					// 		]);
-					// $param_error_msg['answer'] = [
-					// 	'id'			=> (int)$params['id'],
-					// 	'files'			=> array_map("taskFilesMapper", $taskFiles['result']),
-					// ];
 					$param_error_msg['answer'] = $kanboard->getAllTaskFiles(trim($params['id']));
 				}
 			}
@@ -277,7 +271,8 @@ if ($method !== 0)
 		}
 		elseif($method === 'getBoard')
 		{
-			if ($accessType === 'user' || $accessType === 'admin') {
+			if (($section === 'excel' || $section === 'status' || $section === 'statistics') && 
+				($accessType === 'user' || $accessType === 'admin')) {
 				$taskResult = $kanboard->callKanboardAPI('getBoard', [
 				$projectID,
 			]);
@@ -328,7 +323,7 @@ if ($method !== 0)
 		}
 		elseif($method === 'getAssignableUsers')
 		{
-			if ($accessType != false)
+			if ($accessType !== false)
 			{
 				$taskResult = $kanboard->callKanboardAPI($method, [$projectID, false]);
 				if (isset($taskResult['result']) && count($taskResult['result'])) {
@@ -364,7 +359,7 @@ if ($method !== 0)
 				}
 			}
 		}
-		elseif ($method === 'doDataExport' && $params !== 0 && $params['section'] !== '' && $accessType != false) 
+		elseif ($method === 'doDataExport' && $params !== 0 && ($section === 'excel' || $section === 'statistics') && $accessType !== false) 
 		{
 			$all_column = false;
 			if (isset($params['status']) && $params['status'] === 'all') {
@@ -384,13 +379,13 @@ if ($method !== 0)
 						$projectID,
 					]);
 
-			if ($params['section'] === 'statistics') {
+			if ($section === 'statistics') {
 				try
 				{
 					if (isset($taskResult['result']) && count($taskResult['result'])) {
 						$sheet->fromArray([
 								'Project Name',
-								'Created date',
+								'Date created',
 								'OTL',
 								'Tilte',
 								'Ticket creator',
@@ -425,26 +420,32 @@ if ($method !== 0)
 				{
 					error_log($e->getMessage());
 				}
-			} else {
+			} elseif ($section === 'excel') {
 				$days = 1;
 				if(isset($params['days'])) {
 					$days = $params['days'];
 				}
 				$dayObj = new DateTime();
-				if ($days == 0) {
-					$dayObj->sub(new DateInterval('P1D'));
-				}
+				// if ($days == 0) {
+				// 	$dayObj->sub(new DateInterval('P1D'));
+				// }
+				// $dayObj->setTime(0,0,0);
+				// $dayStart = $dayObj->getTimestamp();
+				// $dayObj->add(new DateInterval('P'.$days.'D'));
+				// $dayObj->setTime(23,59,59);
+				// $dayEnd = $dayObj->getTimestamp();			
+				
+				$dayObj->setTime(23,59,59);
+				$dayEnd = $dayObj->getTimestamp();		
+				$dayObj->sub(new DateInterval('P'.$days.'D'));
 				$dayObj->setTime(0,0,0);
 				$dayStart = $dayObj->getTimestamp();
-				$dayObj->add(new DateInterval('P'.$days.'D'));
-				$dayObj->setTime(23,59,59);
-				$dayEnd = $dayObj->getTimestamp();			
-				
+
 				try
 				{
 					if (isset($taskResult['result']) && count($taskResult['result'])) {
 						$sheet->fromArray([
-								'Date due',
+								'Date started',
 								'Assigned',
 								'Description',
 								'Reference',
@@ -457,12 +458,13 @@ if ($method !== 0)
 						foreach ($taskResult['result'][0]['columns'] as $key => $column) {
 							if($shownedColumnID != $column['id'] && !$all_column) continue;
 							foreach ($column['tasks'] as $key => $task) {
-								$task_date_due = (int)$task['date_due'];
-								if($task['is_active'] == 1 && ($task_date_due >= $dayStart && $task_date_due < $dayEnd || $task_date_due == 0)) {
+								// $task_date_due = (int)$task['date_due'];
+								$task_date_started = (int)$task['date_started'];
+								if($task['is_active'] == 1 && ($task_date_started > $dayStart && $task_date_started < $dayEnd || $task_date_started == 0)) {
 									$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
 									$fieldsMetadata = $kanboard->getMetadataFields($taskMetadata['result']);
 									$sheet->fromArray([
-										$task['date_due'] > 0 ? date("Y-m-d", $task['date_due']) : '',
+										$task['date_started'] > 0 ? date("Y-m-d", $task['date_started']) : '',
 										$task['assignee_username'] ?? 'not assigned',
 										$task['description'],
 										$fieldsMetadata['ticket'],

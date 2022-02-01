@@ -1,4 +1,5 @@
 vendor/
+dima/
 *.zip
 *test.php
 config.php
