@@ -107,6 +107,10 @@ const tsPeriod = () => {
 	const today = new Date();
 	const prevDay = new Date();
 	prevDay.setDate(prevDay.getDate() - periodDays);
+	if (periodDays < 0)
+	{
+		today.setDate(today.getDate() - periodDays);
+	}
 	let dayStart = new Date(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate(), 0, 0, 0);
 	let dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 	return {
@@ -193,7 +197,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		inputName = document.querySelector('#inputName'),
 		inputDate = document.querySelector('#inputDate'),
 		inputTime = document.querySelector('#inputTime'),
-		inputDescr = document.querySelector('#inputDescr'),
+		// inputDescr = document.querySelector('#inputDescr'),
+		inputTitle = document.querySelector('#inputTitle'),
 		inputTicket = document.querySelector('#inputTicket'),
 		inputCapOp = document.querySelector('#inputCapOp'),
 		inputOracle = document.querySelector('#inputOracle'),
@@ -850,7 +855,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			target.classList.remove('btn-secondary');
 			target.classList.add('btn-primary');
 			periodDays = parseInt(target.dataset['days'], 10);
-			if(isNaN(periodDays) || periodDays > 365 || periodDays < 0) {
+			if(isNaN(periodDays) || periodDays > 365 || periodDays < -1) {
 				periodDays = 0;
 			}
 			refreshBoardTable();
@@ -955,7 +960,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			const body = {
 				method: 'updateTaskFull',
 				params: {
-					description: spaces2cr(inputDescr.value),
+					// description: spaces2cr(inputDescr.value),
+					title: inputTitle.value.trim(),
 					id: btnUpdateTicket.dataset['task_id'],
 					date_started: date_start.getTime() / 1000,
 					ticket: inputTicket.value.trim(),
@@ -1146,7 +1152,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if(!!data.success) {
 			tableExcel.textContent = '';
 			data.success.answer.forEach(function ({
-				id, date_due, date_started, description, fields, assignee_name
+				id, date_due, date_started, title, description, fields, assignee_name
 			}) 
 			{
 				const descr_spaces = cr2spaces(description);
@@ -1155,7 +1161,8 @@ window.addEventListener('DOMContentLoaded', () => {
 					<tr class="task-ticket-excel ${hideTask(date_started)}" data-task_id="${id}" data-date_started="${date_started}">
 						<td class="ticket-date" data-item_value="${timestampToDate(date_started, false)}" data-item_id="inputDate">${timestampToDate(date_started, false)} ${time_started}</td>
 						<td class="ticket-name" data-item_value="${assignee_name ?? '&nbsp;'}" data-item_id="inputName">${assignee_name ?? '&nbsp;'}</td>
-						<td class="ticket-descr" data-item_value="${descr_spaces}" data-item_id="inputDescr">${descr_spaces}</td>
+						<!--<td class="ticket-descr" data-item_value="${descr_spaces}" data-item_id="inputDescr">${descr_spaces}</td>-->
+						<td class="ticket-title" data-item_value="${title}" data-item_id="inputTitle">${title}</td>
 						<td class="ticket-ticket" data-item_value="${fields['ticket']}" data-item_id="inputTicket">${fields['ticket']}</td>
 						<td class="ticket-capop" data-item_value="${fields['capop']}" data-item_id="inputCapOp">${fields['capop']}</td>
 						<td class="ticket-oracle" data-item_value="${fields['oracle']}" data-item_id="inputOracle">${fields['oracle']}</td>

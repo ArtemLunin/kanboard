@@ -255,6 +255,8 @@
 							<input type="time" class="form-control my-1 mr-2" id="inputTime" name="inputTime" required>
 						</div>
 						<div class="d-flex mb-1">
+							<label class="my-1 mr-1" for="inputTitle">Title</label>
+							<input class="form-control mr-2" type="text" name="inputTitle" id="inputTitle">
 							<label class="my-1 mr-1" for="inputTicket">Reference</label>
 							<input class="form-control mr-2" type="text" name="inputTicket" id="inputTicket">
 							<label class="my-1 mr-1" for="inputCapOp">Capex/Opex</label>
@@ -272,10 +274,9 @@
 						<div class="d-flex mb-1">
 							
 						</div> -->
-						<div class="d-flex mb-1">
-							<label class="my-1 mr-1" for="inputDescr">Description</label>
-							<input class="form-control mr-2" type="text" name="inputDescr" id="inputDescr" size="40">
-						</div>
+						<!-- <div class="d-flex mb-1">
+
+						</div> -->
 						<div class="d-flex mb-1">
 							<button type="submit" class="btn btn-primary btn-sm btn-update-ticket mr-1" data-task_id="0" disabled>Update</button>
 							<button type="reset" class="btn btn-warning btn-sm btn-clear-excel">Clear</button>
@@ -284,9 +285,9 @@
 				</div>
 				<div class="excel-menu d-flex justify-content-between align-items-center">
 					<div class="period-select py-2">
-						<button type="button" class="btn btn-primary btn-sm" data-days="0">Today</button>
 						<button type="button" class="btn btn-secondary btn-sm" data-days="1">-1D</button>
-						<!-- <button type="button" class="btn btn-secondary btn-sm" data-days="2">+1D</button> -->
+						<button type="button" class="btn btn-primary btn-sm" data-days="0">Today</button>
+						<button type="button" class="btn btn-secondary btn-sm" data-days="-1">+1D</button>
 						<button type="button" class="btn btn-secondary btn-sm" data-days="7">Week</button>
 						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="14">2 Weeks</button>
 						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="31">Month</button>
@@ -302,7 +303,7 @@
 						<tr>
 							<th>Date started</th>
 							<th>Assigned</th>
-							<th>Description</th>
+							<th>Title</th>
 							<th>Reference</th>
 							<th>Capex/Opex</th>
 							<th>Oracle</th>

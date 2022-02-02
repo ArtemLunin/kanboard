@@ -212,7 +212,8 @@ if ($method !== 0)
 			$date_ts = $params['date_started'];
 			$taskResult = $kanboard->callKanboardAPI('updateTask', [
 				'id'	=> $params['id'],
-				'description'	=> (trim($params['description'] ?? "")),
+				// 'description'	=> (trim($params['description'] ?? "")),
+				'title'	=> (trim($params['title'] ?? "")),
 				'date_started'	=> date('Y-m-d H:i', $date_ts),
 				// 'date_due'		=> $params['date_due'],
 			]);
@@ -436,8 +437,13 @@ if ($method !== 0)
 				// $dayEnd = $dayObj->getTimestamp();			
 				
 				$dayObj->setTime(23,59,59);
-				$dayEnd = $dayObj->getTimestamp();		
-				$dayObj->sub(new DateInterval('P'.$days.'D'));
+				$dayEnd = $dayObj->getTimestamp();
+				if ($days >=0) {
+					$dayObj->sub(new DateInterval('P'.$days.'D'));
+				} else {
+					$dayEnd -= $days * 24 * 3600;
+					$dayObj->add(new DateInterval('P'.abs($days).'D'));
+				}
 				$dayObj->setTime(0,0,0);
 				$dayStart = $dayObj->getTimestamp();
 
@@ -447,7 +453,7 @@ if ($method !== 0)
 						$sheet->fromArray([
 								'Date started',
 								'Assigned',
-								'Description',
+								'Title',
 								'Reference',
 								'Capex/Opex',
 								'Oracle',
@@ -466,7 +472,7 @@ if ($method !== 0)
 									$sheet->fromArray([
 										$task['date_started'] > 0 ? date("Y-m-d", $task['date_started']) : '',
 										$task['assignee_username'] ?? 'not assigned',
-										$task['description'],
+										$task['title'],
 										$fieldsMetadata['ticket'],
 										$fieldsMetadata['capop'],
 										$fieldsMetadata['oracle'],
