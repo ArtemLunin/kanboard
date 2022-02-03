@@ -468,6 +468,10 @@ if ($method !== 0)
 								$task_date_started = (int)$task['date_started'];
 								if($task['is_active'] == 1 && ($task_date_started > $dayStart && $task_date_started < $dayEnd || $task_date_started == 0)) {
 									$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
+									if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
+									{
+										continue;
+									}
 									$fieldsMetadata = $kanboard->getMetadataFields($taskMetadata['result']);
 									$sheet->fromArray([
 										$task['date_started'] > 0 ? date("Y-m-d", $task['date_started']) : '',

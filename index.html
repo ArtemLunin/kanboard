@@ -12,8 +12,8 @@
 	<script type="text/javascript" charset="utf8" src="js/datatables.min.js"></script>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;0,900;1,400&display=swap"
-		rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Roboto:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="css/style.css">
 	<script type="text/javascript" src="js/script.js" defer></script>
 	<title>Kanboard tickets</title>
@@ -66,7 +66,7 @@
 										</div>
 										<div class="row">
 											<div class="col">
-												<select name="inputProject" id="inputProject" class="custom-select p-0" required></select>
+												<select name="inputProject" id="inputProject" class="custom-select-sm p-0" required></select>
 											</div>
 										</div>
 									</div>
@@ -160,7 +160,7 @@
 										</div>
 										<div class="row">
 											<div class="col">
-												<select name="projectName" id="inputProjectStatus" class="custom-select p-0" required></select>
+												<select name="projectName" id="inputProjectStatus" class="custom-select-sm p-0" required></select>
 											</div>
 										</div>
 									</div>
@@ -226,10 +226,10 @@
 			</section>
 			<section class="section statistics">
 				<div>
-					<a href="#" class="btn btn-info btn-sm" role="button" id="exportStatistics">Export</a>
+					<a href="#" role="button" id="exportStatistics" title="Export to Excel"><img class="icon-excel" src="img/file-excel.svg"></a>
 				</div>
 				<div class="page-data d-none" data-statistics="1"></div>
-				<table class="table table-bordered compact table-sm mt-2" id="table_statistics">
+				<table class="table table-hover table-bordered compact table-sm mt-2" id="table_statistics">
 					<thead class="thead-light">
 						<tr>
 							<th>Project Name</th>
@@ -250,23 +250,23 @@
 						<input type="hidden" id="excelForm" name="section" value="excel">
 						<div class="d-flex mb-1">
 							<label class="my-1 mr-1" for="inputDate">Date</label>
-							<input type="date" class="form-control my-1 mr-2" id="inputDate" name="inputDate" required>
+							<input type="date" class="form-control-sm my-1 mr-2" id="inputDate" name="inputDate" required>
 							<label class="my-1 mr-1" for="inputTime">Time</label>
-							<input type="time" class="form-control my-1 mr-2" id="inputTime" name="inputTime" required>
+							<input type="time" class="form-control-sm my-1 mr-2" id="inputTime" name="inputTime" required>
 						</div>
 						<div class="d-flex mb-1">
 							<label class="my-1 mr-1" for="inputTitle">Title</label>
-							<input class="form-control mr-2" type="text" name="inputTitle" id="inputTitle">
+							<input class="form-control-sm mr-2" type="text" name="inputTitle" id="inputTitle">
 							<label class="my-1 mr-1" for="inputTicket">Reference</label>
-							<input class="form-control mr-2" type="text" name="inputTicket" id="inputTicket">
+							<input class="form-control-sm mr-2" type="text" name="inputTicket" id="inputTicket">
 							<label class="my-1 mr-1" for="inputCapOp">Capex/Opex</label>
-							<select id="inputCapOp" class="custom-select mr-2">
+							<select id="inputCapOp" class="custom-select-sm mr-2">
 								<option value="" selected="" disabled="" hidden="">Choose...</option>
 								<option value="Capex">Capex</option>
 								<option value="Opex">Opex</option>
 							</select>
 							<label class="my-1 mr-1" for="inputOracle">Oracle</label>
-							<input class="form-control" type="text" name="inputOracle" id="inputOracle">
+							<input class="form-control-sm" type="text" name="inputOracle" id="inputOracle">
 						</div>
 						<!-- <div class="d-flex mb-1">
 							
@@ -295,7 +295,7 @@
 						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="365">YTD</button>
 					</div>
 					<div>
-						<a href="#" class="btn btn-info btn-sm" role="button" id="exportExcel" download="">Export</a>
+						<a href="#" role="button" id="exportExcel" download="" title="Export to Excel"><img class="icon-excel" src="img/file-excel.svg"></a>
 					</div>
 				</div>
 				<table class="table table-bordered table-sm mt-2">
@@ -320,12 +320,12 @@
 				<div class="row">
 					<div class="col-1 px-0"></div>
 					<div class="col-10">
-						<table class="table table-bordered table-hover table-users">
+						<table class="table table-sm table-bordered table-hover table-users">
 							<thead>
 								<tr>
 									<th>User</th>
 									<th>Main</th>
-									<th>Status</th>
+									<th>Request</th>
 									<th>Excel</th>
 									<th>Statistics</th>
 									<th>Action</th>
@@ -338,35 +338,35 @@
 							<h5>User management</h5>
 							<form class="form-inline form-auth" method="POST" action="#" id="new-user-form" data-method="addUser">
 								<label class="my-1 mr-2" for="newUsername">Name</label>
-								<input type="text" class="form-control my-1 mr-2" id="newUsername" name="userName" size="12" required>
+								<input type="text" class="form-control-sm my-1 mr-2" id="newUsername" name="userName" size="12" required>
 								<label class="my-1 mr-2" for="newPassword">Password</label>
-								<input type="password" class="form-control my-1 mr-2" id="newPassword" name="password" size="12" required>
-								<button type="submit" id="btnAddUser" class="btn btn-primary my-1 mr-2">Add</button>
-								<input class="btn btn-warning" type="reset" value="Reset">
+								<input type="password" class="form-control-sm my-1 mr-2" id="newPassword" name="password" size="12" required>
+								<button type="submit" id="btnAddUser" class="btn btn-sm btn-primary my-1 mr-2">Add</button>
+								<button class="btn btn-sm btn-warning" type="reset">Clear</button>
 							</form>
 							<div class="set-rights">
 								<h5>Assign rights</h5>
 								<form class="form-inline" method="POST" action="#" id="rights-form" data-method="setRights">
 									<input type="hidden" id="rightsUserName" name="userName">
-									<label class="input-group-text" for="statusPage">Status</label>
-									<select class="custom-select mr-2" name="status" id="statusPage" data-selectname="status">
+									<label class="input-group-text-sm mr-1" for="statusPage">Request</label>
+									<select class="custom-select-sm mr-2" name="status" id="statusPage" data-selectname="status">
 										<option value=""></option>
 										<option value="admin">admin</option>
 										<option value="user">user</option>
 									</select>
-									<label class="input-group-text" for="excelPage">Excel</label>
-									<select class="custom-select mr-2" name="excel" id="excelPage" data-selectname="excel">
+									<label class="input-group-text-sm mr-1" for="excelPage">Excel</label>
+									<select class="custom-select-sm mr-2" name="excel" id="excelPage" data-selectname="excel">
 										<option value=""></option>
 										<option value="admin">admin</option>
 										<option value="user">user</option>
 									</select>
-									<label class="input-group-text" for="statisticsPage">Statistics</label>
-									<select class="custom-select mr-2" name="statistics" id="statisticsPage" data-selectname="statistics">
+									<label class="input-group-text-sm mr-1" for="statisticsPage">Statistics</label>
+									<select class="custom-select-sm mr-2" name="statistics" id="statisticsPage" data-selectname="statistics">
 										<option value=""></option>
 										<option value="admin">admin</option>
 										<!-- <option value="user">user</option> -->
 									</select>
-									<button type="submit" class="btn btn-primary my-1 mr-2">Set</button>
+									<button type="submit" class="btn btn-sm btn-primary my-1 mr-2">Set</button>
 								</form>
 							</div>
 						</div>
@@ -410,7 +410,7 @@
 							<input type="password" class="form-control" id="password" name="password">
 						</div>
 						<div class="form-group d-flex justify-content-center">
-							<button type="submit" class="btn btn-primary">Submit</button>
+							<button type="submit" class="btn btn-sm btn-primary">Submit</button>
 						</div>
 					</form>
 				</div>		
@@ -432,8 +432,8 @@
 					<p class="ticket-descr font-italic m-2"></p>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-					<button type="button" class="btn btn-danger btn-remove" data-task_id="">Remove</button>
+					<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-sm btn-danger btn-remove" data-task_id="">Remove</button>
 				</div>
 			</div>
 		</div>
