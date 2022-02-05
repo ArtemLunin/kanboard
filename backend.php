@@ -43,7 +43,7 @@ catch (Exception $e) {
 
 if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
 	$currentUser = $_SESSION['logged_user'];
-	$rights = $db_object->getRigths($_SESSION['logged_user'], 'dummypass', true);
+	$rights = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
 }
 
 $section = $params['section'] ?? '';
@@ -55,7 +55,7 @@ if ($method !== 0)
 		$kanboardUserName = trim($params['userName'] ?? 'defaultUser');
 		$kanboardUserPass = trim($params['password'] ?? '');
 		if (strlen($kanboardUserName) && strlen($kanboardUserPass)) {
-			$rights = $db_object->getRigths($kanboardUserName, $kanboardUserPass);
+			$rights = $db_object->getRights($kanboardUserName, $kanboardUserPass);
 			if ($rights) {
 				$_SESSION['logged_user'] = $kanboardUserName;
 				$currentUser = $kanboardUserName;
@@ -145,7 +145,6 @@ if ($method !== 0)
 					'project_id'	=> $projectID,
 					'title'			=> $task_title,
 					'description'	=> (trim($params['description'] ?? ""))."\nSubmitted by: ".$taskCreator."\nOTL: ".(trim($params['OTL'] ?? "")),
-					// 'date_started'	=> date('Y-m-d H:i'),
 					'creator_id'	=> $userID,
 					]);
 				if (isset($taskResult['result']))
@@ -158,7 +157,7 @@ if ($method !== 0)
 							"otl"		=> trim($params['OTL'] ?? ""),
 							"creator"	=> $taskCreator,
 							"version"	=> ($task_version !== false) ? $task_version : 0,
-							"origintask"	=> ($task_version !== false) ? $params['id'] : 0,
+							"origintask"	=> ($task_version !== false) ? $params['id'] : (int)$taskResult['result'],
 						]);
 					$task_out = $kanboard->fieldsTask($taskResult['result'], true, $task_version);
 					$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$taskResult['result']]);
@@ -169,7 +168,7 @@ if ($method !== 0)
 				}
 			}
 		}
-		elseif ($method === 'removeTask' && $accessType !== false && $params !== 0 && $params['id'] != 0)
+		elseif ($method === 'removeTask' && $accessType !== false && $section === 'excel' && $params !== 0 && $params['id'] != 0)
 		{
 			$taskResult = $kanboard->callKanboardAPI($method, [
 				'task_id'	=> $params['id'],
@@ -215,7 +214,6 @@ if ($method !== 0)
 				// 'description'	=> (trim($params['description'] ?? "")),
 				'title'	=> (trim($params['title'] ?? "")),
 				'date_started'	=> date('Y-m-d H:i', $date_ts),
-				// 'date_due'		=> $params['date_due'],
 			]);
 			if(isset($taskResult['result']) && $taskResult['result']) {
 				$taskResult = $kanboard->callKanboardAPI('saveTaskMetadata', [
@@ -289,6 +287,7 @@ if ($method !== 0)
 						foreach ($column['tasks'] as $key => $task) {
 							if ($task['is_active'] == 1) {
 								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
+								// error_log('task:'.$task['id'].', meta:'.json_encode($taskMetadata));
 								if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
 								{
 									continue;
@@ -299,8 +298,9 @@ if ($method !== 0)
 								if($assignee_name === '') {
 									$assignee_name = $task['assignee_username'] ?? 'not assigned';
 								}
-								if ($task_origin_id == 0)
+								if ($task_origin_id == 0 || ($task_origin_id === $task['id'])){
 									$task_version = false;
+								}
 								$param_error_msg['answer'][] = [
 									'id'			=> (int)$task['id'],
 									'date_due'		=> (int)$task['date_due'],

@@ -35,65 +35,61 @@
 								<input type="hidden" id="task_id" name="id" value="0">
 								<input type="hidden" id="mainForm" name="section" value="main">
 								<div class="row mx-0">
-									<div class="col-lg-4 col-sm-6 px-0">
+									<div class="col-lg-8 col-sm-6 px-1">
 										<div class="row">
 											<div class="col">Ticket title</div>
 										</div>
-										<div class="row">
+										<div class="row mb-1">
 											<div class="col">
 												<input type="text" class="ticket-title" placeholder="Ticket title" required>
 											</div>
 										</div>
 										<div class="row">
-											<div class="col">Ticket creator</div>
-										</div>
-										<div class="row">
-											<div class="col">
-												<input type="text" class="ticket-creator" name="ticketCreator" placeholder="Creator"
-													required>
-											</div>
-										</div>
-										<div class="row">
-											<div class="col">OTL</div>
-										</div>
-										<div class="row">
-											<div class="col">
-												<input type="text" class="ticket-OTL" name="OTL" placeholder="OTL">
-											</div>
-										</div>
-										<div class="row">
-											<div class="col">Project</div>
-										</div>
-										<div class="row">
-											<div class="col">
-												<select name="inputProject" id="inputProject" class="custom-select-sm p-0" required></select>
-											</div>
-										</div>
-									</div>
-									<div class="col-lg-8 col-sm-6 px-0">
-										<div class="row">
 											<div class="col">Description</div>
 										</div>
-										<div class="row">
+										<div class="row mb-1">
 											<div class="col">
-												<div class="ticket-description text-area border mr-1 mr-xl-2 rounded"
-													contenteditable="true">
+												<div class="ticket-description text-area border border-dark p-1" contenteditable="true">
 												</div>
 											</div>
 										</div>
 										<div class="row">
+											<div class="col">
+												Ticket creator
+											</div>
+											<div class="col">
+												OTL
+											</div>
+											<div class="col">
+												Project
+											</div>
+										</div>
+										<div class="row">
+											<div class="col">
+												<input type="text" class="ticket-creator" name="ticketCreator" placeholder="Creator" required>
+											</div>
+											<div class="col">
+												<input type="text" class="ticket-OTL" name="OTL" placeholder="OTL">
+											</div>
+											<div class="col">
+												<select name="inputProject" id="inputProject" class="custom-select-sm p-0" required></select>
+											</div>					
+										</div>
+									</div>
+									<div class="col-lg-4 col-sm-6 px-1">
+										<div class="row text-right">
 											<div class="col attachments-area">
 												<div class="row">
 													<div class="col">
 														<div class="form-group">
-															<label for="attachFile" class="file-input-show">Attach new file...</label>
+															<label for="attachFile" class="file-input-show btn btn-info btn-sm">Attach new file...</label>
 															<input type="file" class="form-control-file file-input-hidden" id="attachFile">
 														</div>
 													</div>
 												</div>
 												<div class="row">
 													<div class="col">
-														<div class="attachments-header">Attachments</div>
+														<div class="attachments-header">Attachments:</div>
 														<div class="attachments-container"></div>
 													</div>
 												</div>
@@ -128,58 +124,60 @@
 						<div class="border border-dark mt-2 p-2 modify-container">
 							<form method="POST" action="#" id="formNewTaskStatus">
 								<input type="hidden" id="taskStatus_id" name="id" value="0">
+								<!-- <input type="hidden" id="origin_id" name="origin_id" value="0"> -->
 								<input type="hidden" id="statusForm" name="section" value="status">
 								<div class="row mx-0">
-									<div class="col-lg-4 col-sm-6 px-0">
+									<div class="col-lg-8 col-sm-6 px-1">
 										<div class="row">
 											<div class="col">Ticket title</div>
 										</div>
-										<div class="row">
+										<div class="row mb-1">
 											<div class="col">
-												<input type="text" class="ticket-title-status" placeholder="Ticket title" name="title" id="titleStatus" data-disable_on_update="1" required>
+												<input type="text" class="ticket-title-status" placeholder="Ticket title" name="title" id="titleStatus"
+													data-disable_on_update="1" required>
 											</div>
 										</div>
 										<div class="row">
-											<div class="col">Ticket creator</div>
+											<div class="col">Description</div>
 										</div>
-										<div class="row">
+										<div class="row mb-1">
 											<div class="col">
-												<input type="text" class="ticket-creator-status" placeholder="Creator" name="creator" id="creatorStatus" disabled>
+												<div class="ticket-description text-area border border-dark p-1" contenteditable="true"
+													id="ticketDescriptionStatus">
+												</div>
 											</div>
 										</div>
 										<div class="row">
-											<div class="col">OTL</div>
+											<div class="col">
+												Ticket creator
+											</div>
+											<div class="col">
+												OTL
+											</div>
+											<div class="col">
+												Project
+											</div>
 										</div>
 										<div class="row">
+											<div class="col">
+												<input type="text" class="ticket-creator-status" placeholder="Creator" name="creator" id="creatorStatus"
+													disabled>
+											</div>
 											<div class="col">
 												<input type="text" class="ticket-OTL-status" name="OTL" id="OTLStatus" placeholder="OTL">
 											</div>
-										</div>
-										<div class="row">
-											<div class="col">Project</div>
-										</div>
-										<div class="row">
 											<div class="col">
 												<select name="projectName" id="inputProjectStatus" class="custom-select-sm p-0" required></select>
 											</div>
 										</div>
 									</div>
-									<div class="col-lg-8 col-sm-6 px-0">
-										<div class="row">
-											<div class="col">Description</div>
-										</div>
-										<div class="row">
-											<div class="col">
-												<div class="ticket-description text-area border mr-1 mr-xl-2 rounded" contenteditable="true" id="ticketDescriptionStatus">
-												</div>
-											</div>
-										</div>
-										<div class="row">
+									<div class="col-lg-4 col-sm-6 px-1">
+										<div class="row text-right">
 											<div class="col attachments-area-status">
 												<div class="row">
 													<div class="col">
 														<div class="form-group">
-															<label for="attachFileStatus" class="file-input-show">Attach new file...</label>
+															<label for="attachFileStatus" class="file-input-show btn btn-info btn-sm">Attach new file...</label>
 															<input type="file" class="form-control-file-status file-input-hidden" id="attachFileStatus"
 																name="attachFile">
 														</div>
@@ -187,7 +185,7 @@
 												</div>
 												<div class="row">
 													<div class="col">
-														<div class="attachments-header">Attachments</div>
+														<div class="attachments-header">Attachments:</div>
 														<div class="attachments-container-status"></div>
 													</div>
 												</div>
@@ -428,8 +426,8 @@
 				</div>
 				<div class="modal-body">
 					Are you sure you want to remove the ticket?
-					<p class="font-weight-bolder m-2">Description:</p>
-					<p class="ticket-descr font-italic m-2"></p>
+					<p class="font-weight-bolder m-2">Title:</p>
+					<p class="ticket-title-excel font-italic m-2"></p>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Close</button>

@@ -5,8 +5,6 @@ class databaseUtils {
 	private $unauthorized = true;
 	private $root_access = false;
 	private $pdo = null;
-	// private $user = '';
-	// private $rights = [];
 	private $initialRights = [[
 		'pageName' => 'Main',
 		'sectionName' => 'main',
@@ -111,7 +109,7 @@ class databaseUtils {
 		}
 		return false;
 	}
-	function getRigths($user, $password, $storedSession = false) {
+	function getRights($user, $password, $storedSession = false) {
 		$rights = [];
 		$sql = "SELECT id, user_name, password, user_rights FROM users WHERE user_name=:user";
 		$row = $this->pdo->prepare($sql);
@@ -123,6 +121,11 @@ class databaseUtils {
 			$rights = json_decode($result['user_rights'], true);
 			if ($rights) {
 				$rights = array_filter($rights, array($this, 'hideNoAccessRights'));
+				array_walk($rights, function (&$one_right) {
+					if ($one_right['pageName'] == 'Status') {
+						$one_right['pageName'] = 'Request';
+					}
+				});
 			}
 			$this->unauthorized = false;
 			if ($result['user_name'] === SUPER_USER) {

@@ -203,7 +203,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		inputCapOp = document.querySelector('#inputCapOp'),
 		inputOracle = document.querySelector('#inputOracle'),
 		ticketEditForm = document.querySelector('#ticketEditForm'),
-		ticketDescr = document.querySelector('.ticket-descr'),
+		ticketTitleExcel = document.querySelector('.ticket-title-excel'),
+		// ticketDescr = document.querySelector('.ticket-descr'),
 		exportExcel = document.querySelector('#exportExcel');
 	// status elements
 		const formNewTaskStatus = document.querySelector('#formNewTaskStatus'),
@@ -215,6 +216,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			attachmentsContainerStatus = document.querySelector('.attachments-container-status'),
 			ticketProjectNameStatus = document.querySelector('#inputProjectStatus'),
 			taskStatus_id = document.querySelector('#taskStatus_id'),
+			origin_id = document.querySelector('#origin_id'),
 			attachmentsAreaStatus = document.querySelector('.attachments-area-status'),
 			tableStatus = document.querySelector('.table-status'),
 			ticketCreatorStatus = document.querySelector('#creatorStatus'),
@@ -276,6 +278,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const iniInterface = (useSignIn = false) => {
+		currentUser = '';
 		clearEditableFields();
 		clearAllSection('data-showned');
 		let body = {
@@ -310,25 +313,25 @@ window.addEventListener('DOMContentLoaded', () => {
 		switch (showSection) {
 			case 'main':
 				if (!section[idx].dataset['showned']) {
-					section[idx].dataset['showned'] = '1';
+					// section[idx].dataset['showned'] = '1';
 					getAllTask();
 				}
 				break;
 			case 'status':
 				if (!section[idx].dataset['showned']) {
-					section[idx].dataset['showned'] = '1';
+					// section[idx].dataset['showned'] = '1';
 					getTaskStatus();
 				}
 				break;
 			case 'statistics':
 				if (!section[idx].dataset['showned']) {
-					section[idx].dataset['showned'] = '1';
+					// section[idx].dataset['showned'] = '1';
 					getTaskStatistics();
 				}
 				break;
 			case 'excel':
 				if (!section[idx].dataset['showned']) {
-					section[idx].dataset['showned'] = '1';
+					// section[idx].dataset['showned'] = '1';
 					getTaskBoard();
 				}
 				break;
@@ -512,6 +515,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			method: 'getAllTasks',
 		}
 		sendRequest('POST', requestURL, body, true).then(showAllTasks);
+		ticketCreator.value = currentUser;
 	};
 
 
@@ -617,7 +621,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			if(!!taskTicket) {
 				const taskID = taskTicket.dataset['task_id'];
 				btnRemove.dataset['task_id'] = taskID;
-				ticketDescr.textContent = taskTicket.querySelector('.ticket-descr').dataset['item_value'];
+				ticketTitleExcel.textContent = taskTicket.querySelector('.ticket-title-table').dataset['item_value'];
 				$('#modalRemoveDialog').modal('show');
 			}
 		}
@@ -634,7 +638,10 @@ window.addEventListener('DOMContentLoaded', () => {
 			ticketCreatorStatus.value = currentUser;
 			const taskID = setFieldsEditForm(target, '.task-ticket-status', taskStatus_id);
 			toggleToUpdateMode(btnUpdateTaskStatus, btnAddTaskStatus, attachmentsAreaStatus);
-			getAllTaskFiles(taskID, attachmentsContainerStatus);
+			if (taskID !== 0) {
+				btnCreateTaskFileStatus.setAttribute('task_id', taskID);
+				getAllTaskFiles(taskID, attachmentsContainerStatus);
+			}
 			// 
 			const taskDescription = ticketDescriptionStatus.innerText;
 			const positionCreator = taskDescription.lastIndexOf(textCreatorHeader);
@@ -672,17 +679,16 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else {
 				ticketDescriptionStatus.innerText = taskDescription.trim();
 			}
-			// 
-
 		}
 	};
 
 	const setFieldsEditForm = (targetElem, rowSelector, elemTaskID) => {
-		let taskID = 0;
+		let taskID = 0, originTaskID = 0;
 		const rowTask = targetElem.closest(rowSelector);
 		if(!!rowTask) {
 			selectTR(rowSelector, rowTask);
 			taskID = rowTask.getAttribute('data-task_id');
+			originTaskID = rowTask.getAttribute('data-origin_id');
 			for(const item of rowTask.children)
 			{
 				const itemValue = item.dataset['item_value'];
@@ -702,12 +708,16 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 			elemTaskID.value = taskID;
+			// origin_id.value = taskID;
+			if (originTaskID && originTaskID != 0) {
+				elemTaskID.value = originTaskID;
+			}
 		}
 		return taskID;
 	};
 
 	const showAddedFileNew = (data, attachmentsList) => {
-		if (data && data.success) {
+		if (data && data.success && data.success.answer.files) {
 			const taskID = data.success.answer.id;
 			fillFileTaskInfo(data.success.answer.files, taskID);
 			attachmentsList.textContent = '';
@@ -748,7 +758,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			fileTaskInfo.innerHTML = filesAttached(filesArray);
 		}
 		catch (e) {
-			console.error(e);
 		}
 	};
 
@@ -813,7 +822,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const clearEditableFields = () => {
 		ticketTitle.value = '';
-		ticketCreator.value = '';
+		ticketCreator.value = currentUser;
 		ticketOTL.value = '';
 		ticketProjectName.value = '';
 		ticketDescription.textContent = '';
@@ -876,8 +885,12 @@ window.addEventListener('DOMContentLoaded', () => {
 	const createTaskFileNew = (e, attachmentsList) => {
 		const target = e.target;
 		const inputData = new FormData(target.form);
-		const task_id = inputData.get('id');
+		let task_id = inputData.get('id');
 		const formData = new FormData();
+		const fileStatusTaskID = btnCreateTaskFileStatus.getAttribute('task_id');
+		if (!!fileStatusTaskID) {
+			task_id = fileStatusTaskID;
+		}
 		formData.append('file', target.files[0]);
 		formData.append('method', 'createTaskFile');
 		formData.append('id', task_id);
@@ -980,6 +993,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			method: 'removeTask',
 			params: {
 				id: btnRemove.dataset['task_id'],
+				section: ticketEditForm.querySelector('#excelForm').value,
 			},
 		}
 		sendRequest('POST', requestURL, body).then(removeTaskFull);
@@ -999,7 +1013,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const getTaskBoard = () => {
 		clearExcelTicketFields();
-		// getUsers();
 		getBoard('excel');
 	};
 
@@ -1162,7 +1175,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						<td class="ticket-date" data-item_value="${timestampToDate(date_started, false)}" data-item_id="inputDate">${timestampToDate(date_started, false)} ${time_started}</td>
 						<td class="ticket-name" data-item_value="${assignee_name ?? '&nbsp;'}" data-item_id="inputName">${assignee_name ?? '&nbsp;'}</td>
 						<!--<td class="ticket-descr" data-item_value="${descr_spaces}" data-item_id="inputDescr">${descr_spaces}</td>-->
-						<td class="ticket-title" data-item_value="${title}" data-item_id="inputTitle">${title}</td>
+						<td class="ticket-title-table" data-item_value="${title}" data-item_id="inputTitle">${title}</td>
 						<td class="ticket-ticket" data-item_value="${fields['ticket']}" data-item_id="inputTicket">${fields['ticket']}</td>
 						<td class="ticket-capop" data-item_value="${fields['capop']}" data-item_id="inputCapOp">${fields['capop']}</td>
 						<td class="ticket-oracle" data-item_value="${fields['oracle']}" data-item_id="inputOracle">${fields['oracle']}</td>
@@ -1217,9 +1230,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			data.success.answer.sort(byField('date_creation'));
 			data.success.answer.forEach(function ({id, title, assignee_name, status, date_creation, reference, description, project_name, fields}) {
 				const submitted_name = getField(fields, 'creator', '');
-				const originTaskID = getField(fields, 'originTask', id);
+				const originTaskID = getField(fields, 'origintask', id);
 				tableStatus.insertAdjacentHTML('beforeend', `
-				 	<tr class="task-ticket-status" data-task_id="${originTaskID}">
+				 	<tr class="task-ticket-status" data-task_id="${id}" data-origin_id="${originTaskID}">
 						<td>${id}</td>
 						<td data-item_value="${title}" data-item_id="titleStatus">${title}</td>
 						<td data-item_value="${submitted_name}" data-item_id="creatorStatus">${submitted_name}</td>
@@ -1393,6 +1406,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			item.readOnly = false;
 			item.classList.remove('text-muted');
 		});
+		btnCreateTaskFileStatus.removeAttribute('task_id');
 		taskStatus_id.value = 0;
 		ticketDescriptionStatus.textContent = '';
 		btnUpdateTaskStatus.classList.add('d-none');
