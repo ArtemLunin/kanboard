@@ -62,18 +62,10 @@ h6 {
 .modify-container {
 	border-radius: 6px;
 }
-/* #inputProject, #inputProjectStatus {
-	min-width: 60%;
-	max-width: 70%;
-	height: 32px;
-} */
-/* #inputProjectStatus {
-	max-width: 70%;
-} */
 .tickets-container {
 	margin-top: 20px;
 }
-.ticket-title { 
+.ticket-title, .ticket-title-status { 
 	width: 100%;
 }
 .task-ticket, .task-ticket-excel, .table-statistics {

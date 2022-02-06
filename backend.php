@@ -287,7 +287,6 @@ if ($method !== 0)
 						foreach ($column['tasks'] as $key => $task) {
 							if ($task['is_active'] == 1) {
 								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
-								// error_log('task:'.$task['id'].', meta:'.json_encode($taskMetadata));
 								if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
 								{
 									continue;
