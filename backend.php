@@ -285,7 +285,7 @@ if ($method !== 0)
 					foreach ($taskResult['result'][0]['columns'] as $key => $column) {
 						if($shownedColumnID != $column['id'] && !$all_column) continue;
 						foreach ($column['tasks'] as $key => $task) {
-							if ($task['is_active'] == 1) {
+							if ($task['is_active'] == 1 && ($task['creator_id'] == $userID)) {
 								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
 								if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
 								{
@@ -394,9 +394,9 @@ if ($method !== 0)
 							'A1');
 						$rowExcel = 2;
 						foreach ($taskResult['result'][0]['columns'] as $key => $column) {
-							if($shownedColumnID !== $column['id'] && !$all_column) continue;
+							if ($shownedColumnID !== $column['id'] && !$all_column) continue;
 							foreach ($column['tasks'] as $key => $task) {
-								if ($task['is_active'] != 1) continue;
+								if ($task['is_active'] != 1  || ($task['creator_id'] != $userID)) continue;
 								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
 								$fieldsMetadata = $kanboard->getMetadataFields($taskMetadata['result']);
 								$sheet->fromArray([
@@ -461,11 +461,11 @@ if ($method !== 0)
 							'A1');
 						$rowExcel = 2;
 						foreach ($taskResult['result'][0]['columns'] as $key => $column) {
-							if($shownedColumnID != $column['id'] && !$all_column) continue;
+							if ($shownedColumnID != $column['id'] && !$all_column) continue;
 							foreach ($column['tasks'] as $key => $task) {
 								// $task_date_due = (int)$task['date_due'];
 								$task_date_started = (int)$task['date_started'];
-								if($task['is_active'] == 1 && ($task_date_started > $dayStart && $task_date_started < $dayEnd || $task_date_started == 0)) {
+								if($task['is_active'] == 1 && ($task['creator_id'] == $userID) && ($task_date_started > $dayStart && $task_date_started < $dayEnd || $task_date_started == 0)) {
 									$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
 									if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
 									{

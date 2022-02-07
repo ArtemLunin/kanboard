@@ -231,12 +231,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		const headers = {
 			'Content-Type': 'application/json'
 		};
-		if(showWait) {
-			// totalWaits++;
-			// setTimeout(() => {
-				$('#waitModal').modal('show');
-			// }, 500);
-		}
+		// if(showWait) {
+		// 	// totalWaits++;
+		// 	// setTimeout(() => {
+		// 		$('#waitModal').modal('show');
+		// 	// }, 500);
+		// }
 		try {
 			const response = await fetch(url, {
 				method: method,
@@ -252,9 +252,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			return data;
 		} catch (e) {
 			console.error(e);
-			if(showWait) {
-				$('#waitModal').modal('hide');
-			}
+			// if(showWait) {
+			// 	$('#waitModal').modal('hide');
+			// }
 		}
 	}
 
@@ -392,7 +392,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		menu.insertAdjacentHTML('beforeend', `
 			<li data-section="${loginAction}">${capitalize(loginAction)}</li>
 		`);
-		$('#waitModal').modal('hide');
+		// $('#waitModal').modal('hide');
 		menu.children[0].style.backgroundColor = 'rgba(0,0,0,0.1)';
 		toggleSection('main');
 	};
@@ -1080,7 +1080,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	function showUpdatedTask(data)
 	{
-		$('#waitModal').modal('hide');
+		// $('#waitModal').modal('hide');
 		clearEditableFields();
 		if(!!data.success) {
 			let {id, creator_id, date_completed, date_creation, description, title, project_name} = data.success.answer;
@@ -1158,7 +1158,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			containerError.innerText = data.error.error;
 			containerError.classList.remove('d-none');
 		}
-		$('#waitModal').modal('hide');
+		// $('#waitModal').modal('hide');
 	}
 
 	const showBoardTable = (data) => {
@@ -1189,7 +1189,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				`);
 			});
 		}
-		$('#waitModal').modal('hide');
+		// $('#waitModal').modal('hide');
 	};
 
 	const showStatisticsTable = (data) => {
@@ -1221,7 +1221,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		"paging": false,
 		"searching": true,
 		});
-		$('#waitModal').modal('hide');
+		// $('#waitModal').modal('hide');
 	};
 
 	const showStatusTable = (data) => {
@@ -1248,7 +1248,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 			
 		}
-		$('#waitModal').modal('hide');
+		// $('#waitModal').modal('hide');
 	};
 
 	const getOTL = (fieldsKanboard) => {
