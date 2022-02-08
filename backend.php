@@ -98,7 +98,7 @@ if ($method !== 0)
 							]);
 			if (isset($taskResult['result']) && count($taskResult['result'])) {
 				foreach ($taskResult['result'] as $key => $task) {
-					if (($task['creator_id'] != $userID) ||
+					if (/* ($task['creator_id'] != $userID) || */
 						($shownedColumnID != $task['column_id']) || 
 						((int)$task['date_completed'] !== 0)) {
 						continue;
@@ -130,6 +130,7 @@ if ($method !== 0)
 			{
 				if (isset($params['version'])) {
 					$task_version = (int)$kanboard->getMetadataField($params['id'], 'version');
+					if ($task_version === 0) $task_version = 1;
 					$task_version++;
 					$task_origin = $kanboard->fieldsTask($params['id'], true, false);
 					$task_origin_title = $task_origin['title'] ?? null;
@@ -156,7 +157,7 @@ if ($method !== 0)
 						[
 							"otl"		=> trim($params['OTL'] ?? ""),
 							"creator"	=> $taskCreator,
-							"version"	=> ($task_version !== false) ? $task_version : 0,
+							"version"	=> ($task_version !== false) ? $task_version : 1,
 							"origintask"	=> ($task_version !== false) ? $params['id'] : (int)$taskResult['result'],
 						]);
 					$task_out = $kanboard->fieldsTask($taskResult['result'], true, $task_version);
@@ -168,7 +169,7 @@ if ($method !== 0)
 				}
 			}
 		}
-		elseif ($method === 'removeTask' && $accessType !== false && $section === 'excel' && $params !== 0 && $params['id'] != 0)
+		elseif ($method === 'removeTask' && $accessType === 'admin' && $section === 'excel' && $params !== 0 && $params['id'] != 0)
 		{
 			$taskResult = $kanboard->callKanboardAPI($method, [
 				'task_id'	=> $params['id'],
@@ -206,19 +207,20 @@ if ($method !== 0)
 		} elseif ($method === 'getTask' && $params !== 0 && $params['id'] != 0) {
 
 		}
-		elseif($method === 'updateTaskFull' && $accessType !== false && $section === 'excel' && $params !== 0 && $params['id'] != 0)
+		elseif($method === 'updateTaskFull' && $accessType === 'admin' && $section === 'excel' && $params !== 0 && $params['id'] != 0)
 		{
 			$date_ts = $params['date_started'];
 			$taskResult = $kanboard->callKanboardAPI('updateTask', [
 				'id'	=> $params['id'],
 				// 'description'	=> (trim($params['description'] ?? "")),
-				'title'	=> (trim($params['title'] ?? "")),
+				'title'			=> (trim($params['title'] ?? "")),
 				'date_started'	=> date('Y-m-d H:i', $date_ts),
+				'reference'		=> (trim($params['reference'] ?? "")),
 			]);
 			if(isset($taskResult['result']) && $taskResult['result']) {
 				$taskResult = $kanboard->callKanboardAPI('saveTaskMetadata', [
 					$params['id'], [
-						"ticket"	=> (trim($params['ticket'] ?? "")),
+						// "ticket"	=> (trim($params['ticket'] ?? "")),
 						"capop"		=> (trim($params['capop'] ?? "")),
 						"oracle"	=> (trim($params['oracle'] ?? "")),
 						"user_name" => (trim($params['user_name'] ?? "")),
@@ -285,12 +287,12 @@ if ($method !== 0)
 					foreach ($taskResult['result'][0]['columns'] as $key => $column) {
 						if($shownedColumnID != $column['id'] && !$all_column) continue;
 						foreach ($column['tasks'] as $key => $task) {
-							if ($task['is_active'] == 1 && ($task['creator_id'] == $userID)) {
+							if ($task['is_active'] == 1 /* && ($task['creator_id'] == $userID) */) {
 								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
-								if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
-								{
-									continue;
-								}
+								// if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
+								// {
+								// 	continue;
+								// }
 								$task_version = $taskMetadata['result']['version'] ?? false;
 								$task_origin_id = $taskMetadata['result']['origintask'] ?? 0;
 								$projectName = $kanboard->getTaskProjectName($task['id']);
@@ -312,6 +314,7 @@ if ($method !== 0)
 									'project_name'	=> $projectName,
 									'assignee_name'	=> $assignee_name,
 									'fields'		=> $kanboard->getMetadataFields($taskMetadata['result']),
+									'editable'		=> ($accessType === 'user') ? 0 : 1,
 								];
 								$assignee_name = '';
 							}
@@ -396,7 +399,7 @@ if ($method !== 0)
 						foreach ($taskResult['result'][0]['columns'] as $key => $column) {
 							if ($shownedColumnID !== $column['id'] && !$all_column) continue;
 							foreach ($column['tasks'] as $key => $task) {
-								if ($task['is_active'] != 1  || ($task['creator_id'] != $userID)) continue;
+								if ($task['is_active'] != 1 /*  || ($task['creator_id'] != $userID) */) continue;
 								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
 								$fieldsMetadata = $kanboard->getMetadataFields($taskMetadata['result']);
 								$sheet->fromArray([
@@ -465,7 +468,7 @@ if ($method !== 0)
 							foreach ($column['tasks'] as $key => $task) {
 								// $task_date_due = (int)$task['date_due'];
 								$task_date_started = (int)$task['date_started'];
-								if($task['is_active'] == 1 && ($task['creator_id'] == $userID) && ($task_date_started > $dayStart && $task_date_started < $dayEnd || $task_date_started == 0)) {
+								if($task['is_active'] == 1 /* && ($task['creator_id'] == $userID) */ && ($task_date_started > $dayStart && $task_date_started < $dayEnd || $task_date_started == 0)) {
 									$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
 									if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
 									{
@@ -476,7 +479,7 @@ if ($method !== 0)
 										$task['date_started'] > 0 ? date("Y-m-d", $task['date_started']) : '',
 										$task['assignee_username'] ?? 'not assigned',
 										$task['title'],
-										$fieldsMetadata['ticket'],
+										$task['reference'],
 										$fieldsMetadata['capop'],
 										$fieldsMetadata['oracle'],
 									], 

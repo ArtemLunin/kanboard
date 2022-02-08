@@ -49,7 +49,6 @@ const byField = (field) => {
 
 const timestampToDate = (timestampValue, timeOut = true) => {
 	if(!timestampValue) {
-		// return '&nbsp;';
 		return '';
 	}
   const a = new Date(timestampValue * 1000);
@@ -231,12 +230,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		const headers = {
 			'Content-Type': 'application/json'
 		};
-		// if(showWait) {
+		if(showWait) {
 		// 	// totalWaits++;
 		// 	// setTimeout(() => {
-		// 		$('#waitModal').modal('show');
+				$('#waitModal').modal('show');
 		// 	// }, 500);
-		// }
+		}
 		try {
 			const response = await fetch(url, {
 				method: method,
@@ -247,13 +246,13 @@ window.addEventListener('DOMContentLoaded', () => {
 			// totalWaits--;
 			// if (showWait && totalWaits == 0)
 			// {
-			// 	$('#waitModal').modal('hide');
+				// $('#waitModal').modal('hide');
 			// }
 			return data;
 		} catch (e) {
 			console.error(e);
 			// if(showWait) {
-			// 	$('#waitModal').modal('hide');
+				$('#waitModal').modal('hide');
 			// }
 		}
 	}
@@ -392,7 +391,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		menu.insertAdjacentHTML('beforeend', `
 			<li data-section="${loginAction}">${capitalize(loginAction)}</li>
 		`);
-		// $('#waitModal').modal('hide');
+		$('#waitModal').modal('hide');
 		menu.children[0].style.backgroundColor = 'rgba(0,0,0,0.1)';
 		toggleSection('main');
 	};
@@ -507,7 +506,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				section: mainForm.value,
 			},
 		};
-		sendRequest('POST', requestURL, body, true).then(showUpdatedTask);
+		sendRequest('POST', requestURL, body).then(showUpdatedTask);
 	};
 
 	const getAllTask = () => {
@@ -977,13 +976,13 @@ window.addEventListener('DOMContentLoaded', () => {
 					title: inputTitle.value.trim(),
 					id: btnUpdateTicket.dataset['task_id'],
 					date_started: date_start.getTime() / 1000,
-					ticket: inputTicket.value.trim(),
+					reference: inputTicket.value.trim(),
 					capop: inputCapOp.value.trim(),
 					oracle: inputOracle.value.trim(),
 					section: ticketEditForm.querySelector('#excelForm').value,
 				},
 			}
-			sendRequest('POST', requestURL, body, true).then(getTaskBoard);
+			sendRequest('POST', requestURL, body).then(getTaskBoard);
 		}
 	};
 
@@ -1158,38 +1157,41 @@ window.addEventListener('DOMContentLoaded', () => {
 			containerError.innerText = data.error.error;
 			containerError.classList.remove('d-none');
 		}
-		// $('#waitModal').modal('hide');
+		$('#waitModal').modal('hide');
 	}
 
 	const showBoardTable = (data) => {
 		if(!!data.success) {
 			tableExcel.textContent = '';
 			data.success.answer.forEach(function ({
-				id, date_due, date_started, title, description, fields, assignee_name
+				id, date_due, date_started, title, reference, description, fields, assignee_name, editable
 			}) 
 			{
 				const descr_spaces = cr2spaces(description);
 				const time_started = timestampToTime(date_started);
+				let disable_edit = (editable === 0) ? "invisible" : "";
+
+				
 				tableExcel.insertAdjacentHTML('beforeend', `
 					<tr class="task-ticket-excel ${hideTask(date_started)}" data-task_id="${id}" data-date_started="${date_started}">
 						<td class="ticket-date" data-item_value="${timestampToDate(date_started, false)}" data-item_id="inputDate">${timestampToDate(date_started, false)} ${time_started}</td>
 						<td class="ticket-name" data-item_value="${assignee_name ?? '&nbsp;'}" data-item_id="inputName">${assignee_name ?? '&nbsp;'}</td>
 						<!--<td class="ticket-descr" data-item_value="${descr_spaces}" data-item_id="inputDescr">${descr_spaces}</td>-->
 						<td class="ticket-title-table" data-item_value="${title}" data-item_id="inputTitle">${title}</td>
-						<td class="ticket-ticket" data-item_value="${fields['ticket']}" data-item_id="inputTicket">${fields['ticket']}</td>
+						<td class="ticket-ticket" data-item_value="${reference}" data-item_id="inputTicket">${reference}</td>
 						<td class="ticket-capop" data-item_value="${fields['capop']}" data-item_id="inputCapOp">${fields['capop']}</td>
 						<td class="ticket-oracle" data-item_value="${fields['oracle']}" data-item_id="inputOracle">${fields['oracle']}</td>
 						<td class="text-center" data-item_value="${time_started}" data-item_id="inputTime">
-							<a href="#"><img class="icon-edit" src="img/edit.svg"></a>
+							<a href="#" class="${disable_edit}"><img class="icon-edit" src="img/edit.svg"></a>
 						</td>
 						<td class="text-center">
-							<a href="#"><img class="icon-delete" src="img/delete.svg"></a>
+							<a href="#" class="${disable_edit}"><img class="icon-delete" src="img/delete.svg"></a>
 						</td>
 					</tr>
 				`);
 			});
 		}
-		// $('#waitModal').modal('hide');
+		$('#waitModal').modal('hide');
 	};
 
 	const showStatisticsTable = (data) => {
@@ -1211,7 +1213,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		dataTableObj = $('#table_statistics').DataTable({
 		"columnDefs": [
 			{ "orderable": false, "targets": [2, 3] },
-		// 	{ "width": "15%", "targets": [1, 2, 3] },
+			{ "width": "10%", "targets": [0, 1, 2, 4] },
 		],
 		"order": [
 			[0, 'asc'],
@@ -1221,7 +1223,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		"paging": false,
 		"searching": true,
 		});
-		// $('#waitModal').modal('hide');
+		$('#waitModal').modal('hide');
 	};
 
 	const showStatusTable = (data) => {
@@ -1248,7 +1250,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 			
 		}
-		// $('#waitModal').modal('hide');
+		$('#waitModal').modal('hide');
 	};
 
 	const getOTL = (fieldsKanboard) => {
