@@ -287,7 +287,7 @@ if ($method !== 0)
 					foreach ($taskResult['result'][0]['columns'] as $key => $column) {
 						if($shownedColumnID != $column['id'] && !$all_column) continue;
 						foreach ($column['tasks'] as $key => $task) {
-							if ($task['is_active'] == 1 /* && ($task['creator_id'] == $userID) */) {
+							if ($task['is_active'] == 1 && ($section !== 'status' || $task['creator_id'] == $userID)) {
 								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
 								// if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
 								// {

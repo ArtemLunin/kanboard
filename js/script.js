@@ -36,6 +36,8 @@ let pageStatus = 0, fileDeleted = 0, totalWaits = 0, periodDays = 0;
 let currentUser = '';
 let previousElem = null;
 
+let dayStartExcel, dayEndExcel = 0;
+
 let dataTableObj;
 
 const errorMsg = document.createElement('div');
@@ -78,50 +80,59 @@ const dateToTimestamp = date_str => {
 };
 
 // const tsPeriod = () => {
-// 	const today = new Date();
-// 	const nextDay = new Date();
-// 	nextDay.setDate(nextDay.getDate() + periodDays - 1);
-// 	let dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-// 	if (periodDays === 0) {
-// 		dayStart -= 24 * 3600 * 1000;
+// 	const today = new Date(), prevDay = new Date();
+// 	let dayStart = 0, dayEnd = 0;
+// 	if (periodDays == 7 || periodDays == 14) {
+// 		const currTime = today.getTime();
+// 		const dayOfWeek = today.getDay();
+// 		prevDay.setTime(currTime - dayOfWeek * 24 * 3600 * 1000);
+// 		today.setTime(currTime + (periodDays - dayOfWeek - 1) * 24 * 3600 * 1000);
+// 	} else {
+// 		prevDay.setDate(prevDay.getDate() - periodDays);
+// 		if (periodDays < 0)
+// 		{
+// 			today.setDate(today.getDate() - periodDays);
+// 		}
 // 	}
-// 	const dayEnd = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), 23, 59, 59);
+// 		dayStart = new Date(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate(), 0, 0, 0);
+// 		dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 // 	return {
-// 		dayStart: dayStart.valueOf() / 1000,
-// 		dayEnd: dayEnd.valueOf() / 1000,
+// 		dayStart: dayStart.getTime() / 1000,
+// 		dayEnd: dayEnd.getTime() / 1000,
 // 	}
 // };
 
-// const hideTask = (date_due) => {
-// 	let {dayStart, dayEnd} = tsPeriod();
-// 	let hideTaskClass = 'd-none';
-
-// 	if(!date_due || (date_due > dayStart && date_due < dayEnd)) {
-// 		hideTaskClass = '';
-// 	}
-// 	return hideTaskClass;
-// };
-
-const tsPeriod = () => {
-	const today = new Date();
-	const prevDay = new Date();
-	prevDay.setDate(prevDay.getDate() - periodDays);
-	if (periodDays < 0)
-	{
-		today.setDate(today.getDate() - periodDays);
+function tsPeriodDays (periodDays) {
+	const today = new Date(), prevDay = new Date();
+	let dayStart = 0, dayEnd = 0;
+	const currTime = today.getTime();
+	if (periodDays == 7 || periodDays == 14) {
+		const dayOfWeek = today.getDay();
+		prevDay.setTime(currTime - dayOfWeek * 24 * 3600 * 1000);
+		today.setTime(currTime + (periodDays - dayOfWeek - 1) * 24 * 3600 * 1000);
+	} else if (periodDays == 31 || periodDays == 62) {
+		prevDay.setDate(1);
+		today.setMonth(today.getMonth() + 1 * (periodDays / 31), 0);
+	} else if (periodDays == 365) {
+		prevDay.setMonth(0, 1);
+		today.setMonth(12, 31);
+	} else {
+		prevDay.setDate(prevDay.getDate() - periodDays);
+		if (periodDays < 0)
+		{
+			today.setDate(today.getDate() - periodDays);
+		}
 	}
-	let dayStart = new Date(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate(), 0, 0, 0);
-	let dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+	dayStart = new Date(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate(), 0, 0, 0);
+	dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 	return {
-		dayStart: dayStart.valueOf() / 1000,
-		dayEnd: dayEnd.valueOf() / 1000,
+		dayStart: dayStart.getTime() / 1000,
+		dayEnd: dayEnd.getTime() / 1000,
 	}
-};
+}
 
-const hideTask = (date_started) => {
-	let {dayStart, dayEnd} = tsPeriod();
+const hideTask = ({date_started, dayStart, dayEnd}) => {
 	let hideTaskClass = 'd-none';
-
 	if(!date_started || (date_started > dayStart && date_started < dayEnd)) {
 		hideTaskClass = '';
 	}
@@ -364,36 +375,38 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const showInterface = (data) => {
 		let loginAction = 'logout';
-		menu.textContent = '';
-		if(!!data.success) {
-			if (data.success.answer.user === 'defaultUser') {
-				loginAction = 'login'
-			} else {
-				currentUser = data.success.answer.user;
-			}
-			data.success.answer.rights.forEach(({pageName, sectionAttr, sectionName, accessType}) => {
-				if (accessType != '') {			
-					menu.insertAdjacentHTML('beforeend', `
-					<li data-section="${sectionAttr}">${pageName}</li>
-					`);
-					if (sectionName === 'excel')
-					{
-						if (accessType === 'user')
+		if(data) {
+			menu.textContent = '';
+			if(!!data.success) {
+				if (data.success.answer.user === 'defaultUser') {
+					loginAction = 'login'
+				} else {
+					currentUser = data.success.answer.user;
+				}
+				data.success.answer.rights.forEach(({pageName, sectionAttr, sectionName, accessType}) => {
+					if (accessType != '') {			
+						menu.insertAdjacentHTML('beforeend', `
+						<li data-section="${sectionAttr}">${pageName}</li>
+						`);
+						if (sectionName === 'excel')
 						{
-							toggleNoAccessRights('period-select', 'user-none', 'none');
-						} else {
-							toggleNoAccessRights('period-select', 'user-none', '');
+							if (accessType === 'user')
+							{
+								toggleNoAccessRights('period-select', 'user-none', 'none');
+							} else {
+								toggleNoAccessRights('period-select', 'user-none', '');
+							}
 						}
 					}
-				}
-			});
+				});
+			}
+			menu.insertAdjacentHTML('beforeend', `
+				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
+			`);
+			$('#waitModal').modal('hide');
+			menu.children[0].style.backgroundColor = 'rgba(0,0,0,0.1)';
+			toggleSection('main');
 		}
-		menu.insertAdjacentHTML('beforeend', `
-			<li data-section="${loginAction}">${capitalize(loginAction)}</li>
-		`);
-		$('#waitModal').modal('hide');
-		menu.children[0].style.backgroundColor = 'rgba(0,0,0,0.1)';
-		toggleSection('main');
 	};
 
 	const toggleNoAccessRights = (selector, elem, displayProp) => {
@@ -872,8 +885,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const refreshBoardTable = () => {
 		const taskTickets = document.querySelectorAll('.task-ticket-excel');
+		let {dayStart, dayEnd} = tsPeriodDays(periodDays);
 		taskTickets.forEach(item => {
-			if (hideTask(parseInt(item.dataset['date_started'], 10)) === 'd-none') {
+			let date_started = parseInt(item.dataset['date_started'], 10);
+			if (hideTask({date_started, dayStart, dayEnd}) === 'd-none') {
 				item.classList.add('d-none');
 			} else {
 				item.classList.remove('d-none');
@@ -1162,6 +1177,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const showBoardTable = (data) => {
 		if(!!data.success) {
+			let {dayStart, dayEnd} = tsPeriodDays(periodDays);
 			tableExcel.textContent = '';
 			data.success.answer.forEach(function ({
 				id, date_due, date_started, title, reference, description, fields, assignee_name, editable
@@ -1169,11 +1185,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			{
 				const descr_spaces = cr2spaces(description);
 				const time_started = timestampToTime(date_started);
-				let disable_edit = (editable === 0) ? "invisible" : "";
-
-				
+				let disable_edit = (editable === 0) ? "invisible" : "";	
 				tableExcel.insertAdjacentHTML('beforeend', `
-					<tr class="task-ticket-excel ${hideTask(date_started)}" data-task_id="${id}" data-date_started="${date_started}">
+					<tr class="task-ticket-excel ${hideTask({date_started, dayStart, dayEnd})}" data-task_id="${id}" data-date_started="${date_started}">
 						<td class="ticket-date" data-item_value="${timestampToDate(date_started, false)}" data-item_id="inputDate">${timestampToDate(date_started, false)} ${time_started}</td>
 						<td class="ticket-name" data-item_value="${assignee_name ?? '&nbsp;'}" data-item_id="inputName">${assignee_name ?? '&nbsp;'}</td>
 						<!--<td class="ticket-descr" data-item_value="${descr_spaces}" data-item_id="inputDescr">${descr_spaces}</td>-->
@@ -1230,7 +1244,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (!!data.success) {
 			tableStatus.textContent = '';
 			data.success.answer.sort(byField('date_creation'));
-			data.success.answer.forEach(function ({id, title, assignee_name, status, date_creation, reference, description, project_name, fields}) {
+			data.success.answer.forEach(function ({id, title, assignee_name, status, date_creation, date_started, reference, description, project_name, fields}) {
 				const submitted_name = getField(fields, 'creator', '');
 				const originTaskID = getField(fields, 'origintask', id);
 				tableStatus.insertAdjacentHTML('beforeend', `
@@ -1240,6 +1254,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						<td data-item_value="${submitted_name}" data-item_id="creatorStatus">${submitted_name}</td>
 						<td data-item_value="${getOTL(fields)}" data-item_id="OTLStatus">${assignee_name}</td>
 						<td>${timestampToDate(date_creation, false)}</td>
+						<td>${timestampToDate(date_started, false)}</td>
 						<td data-item_value="${description}" data-item_id="ticketDescriptionStatus">${reference}</td>
 						<td data-item_value="${project_name}" data-item_id="inputProjectStatus">${status}</td>
 						<td class="text-center">

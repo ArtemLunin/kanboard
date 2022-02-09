@@ -75,6 +75,15 @@ h6 {
 	word-wrap: break-word;
 	border-radius: 6px;
 }
+.task-ticket-excel .ticket-date, .ticket-name, .ticket-capop, .ticket-oracle {
+	width: 10%;
+}
+.task-ticket-excel .ticket-title-table, .ticket-ticket {
+	width: 25%;
+}
+.task-ticket-excel .text-center {
+	width: 5%;
+}
 .task-ticket {
 	background-color: rgb(245, 247, 196);
 	border: 1px solid rgb(223, 227, 45);
