@@ -35,22 +35,23 @@ try
 	$currentUser = 'defaultUser';
 }
 catch (Exception $e) {
-	$projectID = FALSE;
+	$projectID = false;
 	unset($param_error_msg['answer']);
 	error_log('Exception: ' . $e->getMessage());
 	$param_error_msg['error'] = $e->getMessage();
 }
 
-if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
-	$currentUser = $_SESSION['logged_user'];
-	$rights = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
-}
 
-$section = $params['section'] ?? '';
-$accessType = $db_object->getAccessType($rights, $section);
-
-if ($method !== 0)
+if ($projectID !== false && $method !== 0)
 {
+	if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
+		$currentUser = $_SESSION['logged_user'];
+		$rights = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
+	}
+	
+	$section = $params['section'] ?? '';
+	$accessType = $db_object->getAccessType($rights, $section);
+
 	if ($method === 'signIn') {
 		$kanboardUserName = trim($params['userName'] ?? 'defaultUser');
 		$kanboardUserPass = trim($params['password'] ?? '');
@@ -210,17 +211,18 @@ if ($method !== 0)
 		elseif($method === 'updateTaskFull' && $accessType === 'admin' && $section === 'excel' && $params !== 0 && $params['id'] != 0)
 		{
 			$date_ts = $params['date_started'];
+			$pattern = '/_v\d+$/i';
+			$title = preg_replace($pattern, '', trim($params['title'] ?? ""));
 			$taskResult = $kanboard->callKanboardAPI('updateTask', [
 				'id'	=> $params['id'],
 				// 'description'	=> (trim($params['description'] ?? "")),
-				'title'			=> (trim($params['title'] ?? "")),
+				'title'			=> $title,
 				'date_started'	=> date('Y-m-d H:i', $date_ts),
-				'reference'		=> (trim($params['reference'] ?? "")),
+				'reference'		=> trim($params['reference'] ?? ""),
 			]);
 			if(isset($taskResult['result']) && $taskResult['result']) {
 				$taskResult = $kanboard->callKanboardAPI('saveTaskMetadata', [
 					$params['id'], [
-						// "ticket"	=> (trim($params['ticket'] ?? "")),
 						"capop"		=> (trim($params['capop'] ?? "")),
 						"oracle"	=> (trim($params['oracle'] ?? "")),
 						"user_name" => (trim($params['user_name'] ?? "")),
@@ -429,26 +431,35 @@ if ($method !== 0)
 					$days = $params['days'];
 				}
 				$dayObj = new DateTime();
-				// if ($days == 0) {
-				// 	$dayObj->sub(new DateInterval('P1D'));
-				// }
-				// $dayObj->setTime(0,0,0);
-				// $dayStart = $dayObj->getTimestamp();
-				// $dayObj->add(new DateInterval('P'.$days.'D'));
-				// $dayObj->setTime(23,59,59);
-				// $dayEnd = $dayObj->getTimestamp();			
-				
-				$dayObj->setTime(23,59,59);
-				$dayEnd = $dayObj->getTimestamp();
-				if ($days >=0) {
-					$dayObj->sub(new DateInterval('P'.$days.'D'));
-				} else {
-					$dayEnd -= $days * 24 * 3600;
-					$dayObj->add(new DateInterval('P'.abs($days).'D'));
-				}
-				$dayObj->setTime(0,0,0);
-				$dayStart = $dayObj->getTimestamp();
+				$today = new DateTime();
+				$prevday = new DateTime();
+				if ($days == 7 || $days == 14) {
+					$dayOfWeek = date('w');
+					error_log('dayOfWeek:'.$dayOfWeek);
+					$prevday->sub(new DateInterval('P'.$dayOfWeek.'D'));
+					$prevday->setTime(0,0,0);
+					$dayStart = $prevday->getTimestamp();
+					error_log('start_date:'.date('Y-m-d H:i:s', $dayStart));
+					$today->add(new DateInterval('P'.($days - $dayOfWeek - 1).'D'));
+					$today->setTime(23,59,59);
+					$dayEnd = $today->getTimestamp();
+					error_log('end_date:'.date('Y-m-d H:i:s', $dayEnd));
+					// const dayOfWeek = today.getDay();
+					// prevDay.setTime(currTime - dayOfWeek * 24 * 3600 * 1000);
+					// today.setTime(currTime + (periodDays - dayOfWeek - 1) * 24 * 3600 * 1000);
 
+				} else {
+					$dayObj->setTime(23,59,59);
+					$dayEnd = $dayObj->getTimestamp();
+					if ($days >=0) {
+						$dayObj->sub(new DateInterval('P'.$days.'D'));
+					} else {
+						$dayEnd -= $days * 24 * 3600;
+						$dayObj->add(new DateInterval('P'.abs($days).'D'));
+					}
+					$dayObj->setTime(0,0,0);
+					$dayStart = $dayObj->getTimestamp();
+				}
 				try
 				{
 					if (isset($taskResult['result']) && count($taskResult['result'])) {

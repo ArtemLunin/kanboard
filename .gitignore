@@ -5,3 +5,6 @@ dima/
 config.php
 lorem_text.txt
 kanboard_settings.txt
+composer.json
+composer.lock
+
