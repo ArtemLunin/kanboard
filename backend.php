@@ -433,21 +433,24 @@ if ($projectID !== false && $method !== 0)
 				$dayObj = new DateTime();
 				$today = new DateTime();
 				$prevday = new DateTime();
-				if ($days == 7 || $days == 14) {
-					$dayOfWeek = date('w');
-					error_log('dayOfWeek:'.$dayOfWeek);
+				$prevday->setTime(0,0,0);
+				$today->setTime(23,59,59);
+				if ($days == '7' || $days == '14') {
+					$dayOfWeek = $prevday->format('w');
 					$prevday->sub(new DateInterval('P'.$dayOfWeek.'D'));
-					$prevday->setTime(0,0,0);
 					$dayStart = $prevday->getTimestamp();
-					error_log('start_date:'.date('Y-m-d H:i:s', $dayStart));
 					$today->add(new DateInterval('P'.($days - $dayOfWeek - 1).'D'));
-					$today->setTime(23,59,59);
 					$dayEnd = $today->getTimestamp();
-					error_log('end_date:'.date('Y-m-d H:i:s', $dayEnd));
-					// const dayOfWeek = today.getDay();
-					// prevDay.setTime(currTime - dayOfWeek * 24 * 3600 * 1000);
-					// today.setTime(currTime + (periodDays - dayOfWeek - 1) * 24 * 3600 * 1000);
-
+				} elseif ($days == '31' || $days == '62') {
+					$prevday->setDate((int)$prevday->format('Y'), (int)$prevday->format('n'), 1);
+					$dayStart = $prevday->getTimestamp();
+					$today->setDate((int)$prevday->format('Y'), (int)$prevday->format('n') + ($days / 31), 0);
+					$dayEnd = $today->getTimestamp();
+				} elseif ($days == '365') {
+					$prevday->setDate((int)$prevday->format('Y'), 1, 1);
+					$dayStart = $prevday->getTimestamp();
+					$today->setDate((int)$prevday->format('Y'), 12, 31);
+					$dayEnd = $today->getTimestamp();
 				} else {
 					$dayObj->setTime(23,59,59);
 					$dayEnd = $dayObj->getTimestamp();
@@ -477,14 +480,13 @@ if ($projectID !== false && $method !== 0)
 						foreach ($taskResult['result'][0]['columns'] as $key => $column) {
 							if ($shownedColumnID != $column['id'] && !$all_column) continue;
 							foreach ($column['tasks'] as $key => $task) {
-								// $task_date_due = (int)$task['date_due'];
-								$task_date_started = (int)$task['date_started'];
-								if($task['is_active'] == 1 /* && ($task['creator_id'] == $userID) */ && ($task_date_started > $dayStart && $task_date_started < $dayEnd || $task_date_started == 0)) {
+								$task_started = (int)$task['date_started'];
+								if($task['is_active'] == 1 /* && ($task['creator_id'] == $userID) */ && ($task_started > $dayStart && $task_started < $dayEnd || $task_started == 0)) {
 									$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
-									if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
-									{
-										continue;
-									}
+									// if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
+									// {
+									// 	continue;
+									// }
 									$fieldsMetadata = $kanboard->getMetadataFields($taskMetadata['result']);
 									$sheet->fromArray([
 										$task['date_started'] > 0 ? date("Y-m-d", $task['date_started']) : '',
