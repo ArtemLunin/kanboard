@@ -1,5 +1,6 @@
 vendor/
 dima/
+kanboard_upd/
 *.zip
 *test.php
 config.php
@@ -7,4 +8,5 @@ lorem_text.txt
 kanboard_settings.txt
 composer.json
 composer.lock
+unused_functions.js
 

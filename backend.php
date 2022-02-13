@@ -105,6 +105,12 @@ if ($projectID !== false && $method !== 0)
 						continue;
 					}
 					$projectName = $kanboard->getTaskProjectName($task['id']);
+					$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
+					$task_version = $taskMetadata['result']['version'] ?? false;
+					$task_origin_id = $taskMetadata['result']['origintask'] ?? 0;
+					if ($task_origin_id == 0 || ($task_origin_id === $task['id'])){
+						$task_version = false;
+					}
 					$taskFiles = $kanboard->callKanboardAPI('getAllTaskFiles', [
 							'task_id'	=> $task['id'],
 							]);
@@ -114,7 +120,7 @@ if ($projectID !== false && $method !== 0)
 						'date_creation'	=> (int)$task['date_creation'],
 						'date_completed'=> (int)$task['date_completed'],
 						'description'	=> nl2br($task['description'], FALSE),
-						'title'			=> $task['title'],
+						'title'			=> $task['title']. (($task_version != false) ? '_v'.$task_version : ''),
 						'project_name'	=> $projectName,
 						'files'			=> array_map("taskFilesMapper", $taskFiles['result']),
 					];
@@ -184,9 +190,11 @@ if ($projectID !== false && $method !== 0)
 		}
 		elseif ($method === 'updateTask' && $accessType !== false && $params !== 0 && $params['id'] != 0)
 		{
+			$pattern = '/_v\d+$/i';
+			$title = preg_replace($pattern, '', trim($params['title'] ?? ""));
 			$taskResult = $kanboard->callKanboardAPI($method, [
-							'title'			=> trim($params['title']) ?? "",
-							'description'	=> (trim($params['description']) ?? "")."\nSubmitted by: ".(trim($params['creator']) ?? "")."\nOTL: ".(trim($params['OTL']) ?? ""),
+							'title'			=> $title,
+							'description'	=> (trim($params['description'] ?? ""))."\nSubmitted by: ".(trim($params['creator'] ?? ""))."\nOTL: ".(trim($params['OTL'] ?? "")),
 							'id'	=> $params['id'],
 							]);
 			if (isset($taskResult['result']))

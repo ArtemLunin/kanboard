@@ -79,29 +79,6 @@ const dateToTimestamp = date_str => {
 	return 0;
 };
 
-// const tsPeriod = () => {
-// 	const today = new Date(), prevDay = new Date();
-// 	let dayStart = 0, dayEnd = 0;
-// 	if (periodDays == 7 || periodDays == 14) {
-// 		const currTime = today.getTime();
-// 		const dayOfWeek = today.getDay();
-// 		prevDay.setTime(currTime - dayOfWeek * 24 * 3600 * 1000);
-// 		today.setTime(currTime + (periodDays - dayOfWeek - 1) * 24 * 3600 * 1000);
-// 	} else {
-// 		prevDay.setDate(prevDay.getDate() - periodDays);
-// 		if (periodDays < 0)
-// 		{
-// 			today.setDate(today.getDate() - periodDays);
-// 		}
-// 	}
-// 		dayStart = new Date(prevDay.getFullYear(), prevDay.getMonth(), prevDay.getDate(), 0, 0, 0);
-// 		dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-// 	return {
-// 		dayStart: dayStart.getTime() / 1000,
-// 		dayEnd: dayEnd.getTime() / 1000,
-// 	}
-// };
-
 function tsPeriodDays (periodDays) {
 	const today = new Date(), prevDay = new Date();
 	let dayStart = 0, dayEnd = 0;
@@ -238,13 +215,13 @@ window.addEventListener('DOMContentLoaded', () => {
 	btnUpdateTicket.dataset['task_id'] = 0;
 	
 	async function sendRequest(method, url, body, showWait = false) {
+		containerError.classList.add('d-none');
 		const headers = {
 			'Content-Type': 'application/json'
 		};
 		if(showWait) {
-		// 	// totalWaits++;
 		// 	// setTimeout(() => {
-				$('#waitModal').modal('show');
+				// $('#waitModal').modal('show');
 		// 	// }, 500);
 		}
 		try {
@@ -254,17 +231,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				headers: headers
 			});
 			const data = await response.json();
-			// totalWaits--;
-			// if (showWait && totalWaits == 0)
-			// {
-				// $('#waitModal').modal('hide');
-			// }
 			return data;
 		} catch (e) {
 			console.error(e);
-			// if(showWait) {
 				$('#waitModal').modal('hide');
-			// }
 		}
 	}
 
@@ -519,7 +489,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				section: mainForm.value,
 			},
 		};
-		sendRequest('POST', requestURL, body).then(showUpdatedTask);
+		sendRequest('POST', requestURL, body).then(getAllTask);
 	};
 
 	const getAllTask = () => {
@@ -691,6 +661,16 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else {
 				ticketDescriptionStatus.innerText = taskDescription.trim();
 			}
+			formNewTaskStatus.addEventListener('input', toggleFormStatusToNew);
+		}
+	};
+
+	const toggleFormStatusToNew = () => {
+		let element = document.activeElement;
+		if (element.tagName !== 'BODY' && element.type !== 'file') {
+			btnUpdateTaskStatus.disabled = false;
+			btnCreateTaskFileStatus.removeAttribute('task_id');
+			attachmentsContainerStatus.textContent = '';
 		}
 	};
 
@@ -827,6 +807,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			ticketTitle.value = taskTitle.textContent;
 			ticketProjectName.value = taskProjectName.textContent;
 			btnUpdateTask.dataset['task_id'] = taskID;
+			btnCreateTaskFile.setAttribute('task_id', taskID);
 			taskMain_id.value  = taskID;
 			toggleToUpdateMode(btnUpdateTask, btnAddTask, attachmentsArea);
 		}
@@ -842,6 +823,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		btnAddTask.classList.remove('d-none');
 		attachmentsArea.classList.add('invisible');
 		btnUpdateTask.dataset['task_id'] = 0;
+		btnCreateTaskFile.removeAttribute('task_id');
 		taskMain_id.value = 0;
 	};
 
@@ -857,12 +839,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		ticketEditForm.reset();
 	};
 
-	const selectTR = (selector, taskTicket) => {
+	const selectTR = (selector, taskTicket = null) => {
 		const taskTickets = document.querySelectorAll(selector);
 		taskTickets.forEach(item => {
 			item.classList.remove('table-primary');
 		});
-		taskTicket.classList.add('table-primary');
+		if (taskTicket) {
+			taskTicket.classList.add('table-primary');
+		}
 	};
 
 	const periodChange = (e) => {
@@ -896,21 +880,31 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const createTaskFileNew = (e, attachmentsList) => {
+	const createTaskFileNew = (e, btnFile, attachmentsList, refreshStatus = false) => {
 		const target = e.target;
 		const inputData = new FormData(target.form);
-		let task_id = inputData.get('id');
+		// let task_id = inputData.get('id');
+		let task_id = 0;
 		const formData = new FormData();
-		const fileStatusTaskID = btnCreateTaskFileStatus.getAttribute('task_id');
+		const fileStatusTaskID = btnFile.getAttribute('task_id');
 		if (!!fileStatusTaskID) {
 			task_id = fileStatusTaskID;
 		}
-		formData.append('file', target.files[0]);
-		formData.append('method', 'createTaskFile');
-		formData.append('id', task_id);
-		sendFile('POST', requestURL, formData).then((data) => {
-			showAddedFileNew(data, attachmentsList);
-		});
+		if (target.files[0]) {
+			if (task_id != 0) {
+				formData.append('file', target.files[0]);
+				formData.append('method', 'createTaskFile');
+				formData.append('id', task_id);
+				sendFile('POST', requestURL, formData).then((data) => {
+					showAddedFileNew(data, attachmentsList);
+					if (refreshStatus) {
+						getTaskStatus();
+					}
+				});
+			} else {
+				attachmentsList.insertAdjacentHTML('afterbegin', `File name: ${target.files[0].name}, Size: ${target.files[0].size} (waiting for upload)<br>`);
+			}
+		}
 	};
 
 	const attachmentsAction = (event) => {
@@ -1037,6 +1031,16 @@ window.addEventListener('DOMContentLoaded', () => {
 		ticketCreatorStatus.value = currentUser;
 	};
 
+	function attachFileStatus(data) {
+		if (data.success && data.success.answer && data.success.answer.id && btnCreateTaskFileStatus.files[0]) {
+			taskStatus_id.value = data.success.answer.id;
+			btnCreateTaskFileStatus.setAttribute('task_id', data.success.answer.id);
+			btnCreateTaskFileStatus.dispatchEvent(new Event('change'));
+		} else {
+			getTaskStatus();
+		}
+	}
+
 	const getTaskStatistics = () => {
 		getBoard('statistics');
 	};
@@ -1051,7 +1055,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			ticketsContainer.insertAdjacentHTML('afterbegin', `
 					<div class="task-ticket" data-task_id="${id}">
 						<a href="#" class="task-action" data-task_id="${id}">#${id}</a>
-						<h6 class="task-title">${title}</h6>
+						<p class="task-title">${title}</p>
 						<p class="task-description">${description}</p>
 						<p class="task-project">Project: <span class="task-project-name">${project_name}</span></p>
 						<div class="task-footer">
@@ -1063,38 +1067,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// function showAddedTaskStatus(data)
-	// {
-	// 	taskStatus_id.value = data.success.answer.id;
-	// 	attachmentsContainerStatus.textContent = '';
-
-	// 	toggleToUpdateMode(btnUpdateTaskStatus, btnAddTaskStatus, attachmentsAreaStatus);
-	// 	if(!!data.success) {
-	// 		let {id, title, assignee_name, status, date_creation, reference, description, project_name, fields} = data.success.answer;
-	// 		let submitted_name = '&nbsp;';
-	// 		if (!!fields['creator'] && fields['creator'] !== '') {
-	// 			submitted_name = fields['creator'];
-	// 		}
-	// 		tableStatus.insertAdjacentHTML('afterbegin', `
-	// 			<tr class="task-ticket-status" data-task_id="${id}">
-	// 				<td>${id}</td>
-	// 				<td data-item_value="${title}" data-item_id="titleStatus">${title}</td>
-	// 				<td data-item_value="${submitted_name}" data-item_id="creatorStatus">${submitted_name}</td>
-	// 				<td data-item_value="${getOTL(fields)}" data-item_id="OTLStatus">${assignee_name}</td>
-	// 				<td>${timestampToDate(date_creation, false)}</td>
-	// 				<td data-item_value="${description}" data-item_id="ticketDescriptionStatus">${reference}</td>
-	// 				<td data-item_value="${project_name}" data-item_id="inputProjectStatus">${status}</td>
-	// 				<td class="text-center">
-	// 					<a href="#"><img class="icon-edit" src="img/edit.svg"></a>
-	// 				</td>
-	// 			</tr>			
-	// 		`);
-	// 	}
-	// }
-
 	function showUpdatedTask(data)
 	{
-		// $('#waitModal').modal('hide');
 		clearEditableFields();
 		if(!!data.success) {
 			let {id, creator_id, date_completed, date_creation, description, title, project_name} = data.success.answer;
@@ -1109,41 +1083,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// function showUpdatedExcelTask(data)
-	// {
-	// 	$('#waitModal').modal('hide');
-	// 	if(!!data.success) {
-	// 		let {id, date_due, description, title, fields} = data.success.answer;	
-	// 		const tr_excel = tableExcel.querySelector(`tr[data-task_id="${id}"]`);
-	// 		if (tr_excel) {
-	// 			tr_excel.dataset['date_due'] = date_due;
-	// 			tr_excel.classList.add(hideTask(date_due));
-	// 			const taskTitle = tr_excel.querySelector('.ticket-name'),
-	// 				taskDate = tr_excel.querySelector('.ticket-date'),
-	// 				taskDescription = tr_excel.querySelector('.ticket-descr'),
-	// 				taskTicket = tr_excel.querySelector('.ticket-ticket'),
-	// 				taskCapop = tr_excel.querySelector('.ticket-capop'),
-	// 				taskOracle = tr_excel.querySelector('.ticket-oracle');
-
-	// 			const descr_spaces = cr2spaces(description);
-				
-	// 			// taskTitle.textContent = title;
-	// 			taskDescription.innerHTML = descr_spaces;
-	// 			taskDate.innerHTML = timestampToDate(date_due, false);
-	// 			taskTicket.textContent = fields['ticket'];
-	// 			taskCapop.textContent = fields['capop'];
-	// 			taskOracle.textContent = fields['oracle'];
-
-	// 			// taskTitle.dataset['item_value'] = title;
-	// 			taskDescription.dataset['item_value'] = descr_spaces;
-	// 			taskDate.dataset['item_value'] = timestampToDate(date_due, false);
-	// 			taskTicket.dataset['item_value'] = fields['ticket'];
-	// 			taskCapop.dataset['item_value'] = fields['capop'];
-	// 			taskOracle.dataset['item_value'] = fields['oracle'];
-	// 		}
-	// 	}
-	// }
-
 	function showAllTasks(data)
 	{
 		if(!!data.success) {
@@ -1157,7 +1096,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				ticketsContainer.insertAdjacentHTML('beforeend', `
 					<div class="task-ticket" data-task_id="${id}">
 						<a href="#" class="task-action" data-task_id="${id}">#${id}</a>
-						<h6 class="task-title">${title}</h6>
+						<p class="task-title">${title}</p>
 						<p class="task-description">${description}</p>
 						<p class="task-project">Project: <span class="task-project-name">${project_name}</span></p>
 						<div class="task-footer">
@@ -1204,6 +1143,9 @@ window.addEventListener('DOMContentLoaded', () => {
 					</tr>
 				`);
 			});
+		} else if (!!data.error) {
+			containerError.innerText = data.error.error;
+			containerError.classList.remove('d-none');
 		}
 		$('#waitModal').modal('hide');
 	};
@@ -1223,20 +1165,22 @@ window.addEventListener('DOMContentLoaded', () => {
 					<td>${fields.creator}</td>
 				`);
 			});
+			dataTableObj = $('#table_statistics').DataTable({
+				"columnDefs": [
+					{ "orderable": false, "targets": [2, 3] },
+					{ "width": "10%", "targets": [0, 1, 2, 4] },
+				],
+				"order": [
+					[0, 'asc'],
+					[1, 'asc']
+				],
+				"paging": false,
+				"searching": true,
+			});
+		} else if (!!data.error) {
+			containerError.innerText = data.error.error;
+			containerError.classList.remove('d-none');
 		}
-		dataTableObj = $('#table_statistics').DataTable({
-		"columnDefs": [
-			{ "orderable": false, "targets": [2, 3] },
-			{ "width": "10%", "targets": [0, 1, 2, 4] },
-		],
-		"order": [
-			[0, 'asc'],
-			[1, 'asc']
-		],
-		// "autoWidth": true,
-		"paging": false,
-		"searching": true,
-		});
 		$('#waitModal').modal('hide');
 	};
 
@@ -1264,6 +1208,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				`);
 			});
 			
+		} else if (!!data.error) {
+			containerError.innerText = data.error.error;
+			containerError.classList.remove('d-none');
 		}
 		$('#waitModal').modal('hide');
 	};
@@ -1336,7 +1283,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	btnCreateTaskFile.addEventListener('change', (e) => {
-		createTaskFileNew(e, attachmentsContainer);
+		createTaskFileNew(e, btnCreateTaskFile, attachmentsContainer);
 	});
 
 	[attachmentsContainer, attachmentsContainerStatus].forEach(item => {
@@ -1404,6 +1351,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	ticketEditForm.addEventListener('reset', (e) => {
 		btnUpdateTicket.dataset['task_id'] = 0;
 		btnUpdateTicket.disabled = true;
+		selectTR('.task-ticket-excel');
 	});
 
 	exportExcel.addEventListener('click', (e) => {
@@ -1414,21 +1362,25 @@ window.addEventListener('DOMContentLoaded', () => {
 	//init status
 	tableStatus.addEventListener('click', editStatusTask);
 	btnCreateTaskFileStatus.addEventListener('change', (e) => {
-		createTaskFileNew(e, attachmentsContainerStatus);
+		createTaskFileNew(e, btnCreateTaskFileStatus, attachmentsContainerStatus, true);
 	});
-	formNewTaskStatus.addEventListener('reset', () => {
-		attachmentsAreaStatus.classList.add('invisible');
+	formNewTaskStatus.addEventListener('reset', (e) => {
+		const target = e.target;
+		// attachmentsAreaStatus.classList.add('invisible');
 		attachmentsContainerStatus.textContent = '';
-		formNewTaskStatus.querySelectorAll('[data-disable_on_update="1"]').forEach(item => {
+		target.querySelectorAll('[data-disable_on_update="1"]').forEach(item => {
 			item.readOnly = false;
 			item.classList.remove('text-muted');
 		});
+		target.removeEventListener('input', toggleFormStatusToNew);
 		btnCreateTaskFileStatus.removeAttribute('task_id');
 		taskStatus_id.value = 0;
 		ticketDescriptionStatus.textContent = '';
 		btnUpdateTaskStatus.classList.add('d-none');
+		btnUpdateTaskStatus.disabled = true;
 		btnAddTaskStatus.classList.remove('d-none');
 		previousElem = null;
+		selectTR('.task-ticket-status');
 	});
 
 	formNewTaskStatus.addEventListener('submit', (e) => {
@@ -1448,7 +1400,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			method: method,
 			params: arrData,
 		};
-			sendRequest('POST', requestURL, body).then(getTaskStatus);
+			// sendRequest('POST', requestURL, body).then(getTaskStatus);
+			sendRequest('POST', requestURL, body).then(attachFileStatus);
 	});
 
 	// init statistics

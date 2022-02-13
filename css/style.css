@@ -1,15 +1,45 @@
 * {
 	box-sizing: border-box;
+	font-size: 12px;
 }
 
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../fonts/OpenSans-Regular.eot');
+    src: url('../fonts/OpenSans-Regular.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/OpenSans-Regular.woff') format('woff'),
+    url('../fonts/OpenSans-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../fonts/OpenSans-Bold.eot');
+    src: url('../fonts/OpenSans-Bold.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/OpenSans-Bold.woff') format('woff'),
+    url('../fonts/OpenSans-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    }
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../fonts/OpenSans-Italic.eot');
+    src: url('../fonts/OpenSans-Italic.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/OpenSans-Italic.woff') format('woff'),
+    url('../fonts/OpenSans-Italic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+}
 body {
 	margin:0;
 	padding-left:120px;
-	font-size: 14px;
 	font-family: 'Open Sans', 'Roboto', 'sans-serif';
 }
 table {
 	line-height: 1;
+}
+.table td {
+	vertical-align: middle;
 }
 .menu {
 	background:#363636;
@@ -29,7 +59,7 @@ table {
 }
 .menu li{
 	padding:0.5em 1em 0.5em 1em;
-	font-size:0.95em;
+	font-size:1.125rem;
 	font-weight:regular;
 	background-repeat:no-repeat;
 	background-position:left 15px center;
@@ -53,15 +83,15 @@ main {
 p {
 	margin: 0;
 }
-h6 {
-	font-weight: bold;
-}
 .app-container {
 	margin: auto;
 }
 .modify-container {
 	border-radius: 6px;
 }
+/* .section.status {
+	font-size: 12px;
+} */
 .tickets-container {
 	margin-top: 20px;
 }
@@ -75,11 +105,17 @@ h6 {
 	word-wrap: break-word;
 	border-radius: 6px;
 }
-.task-ticket-excel .ticket-date, .ticket-name, .ticket-capop, .ticket-oracle {
+.task-ticket-excel .ticket-date, .task-ticket-excel .ticket-name, .task-ticket-excel .ticket-capop {
 	width: 10%;
 }
-.task-ticket-excel .ticket-title-table, .ticket-ticket {
-	width: 25%;
+.task-ticket-excel .ticket-ticket {
+	width: 15%;
+}
+.task-ticket-excel .ticket-oracle {
+	width: 7%;
+}
+.task-ticket-excel .ticket-title-table {
+	width: 38%;
 }
 .task-ticket-excel .text-center {
 	width: 5%;
@@ -90,7 +126,7 @@ h6 {
 }
 .task-project {
 	display: inline;
-	font-weight: bold;
+	/* font-weight: bold; */
 }
 .task-footer {
 	text-align: right;
