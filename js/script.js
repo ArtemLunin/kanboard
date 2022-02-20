@@ -185,10 +185,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		inputDate = document.querySelector('#inputDate'),
 		inputTime = document.querySelector('#inputTime'),
 		// inputDescr = document.querySelector('#inputDescr'),
+		// inputAssigne = document.querySelector('#inputAssigne'),
 		inputTitle = document.querySelector('#inputTitle'),
 		inputTicket = document.querySelector('#inputTicket'),
 		inputCapOp = document.querySelector('#inputCapOp'),
 		inputOracle = document.querySelector('#inputOracle'),
+		inputStatus =  document.querySelector('#inputStatus'),
 		ticketEditForm = document.querySelector('#ticketEditForm'),
 		ticketTitleExcel = document.querySelector('.ticket-title-excel'),
 		// ticketDescr = document.querySelector('.ticket-descr'),
@@ -205,7 +207,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			taskStatus_id = document.querySelector('#taskStatus_id'),
 			origin_id = document.querySelector('#origin_id'),
 			attachmentsAreaStatus = document.querySelector('.attachments-area-status'),
-			tableStatus = document.querySelector('.table-status'),
+			tableStatus = document.querySelector('.table-request'),
 			ticketCreatorStatus = document.querySelector('#creatorStatus'),
 			ticketOTLStatus = document.querySelector('#OTLStatus');
 		// statistics elements
@@ -281,7 +283,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const toggleSection = (showSection = null) => {
+	const toggleSection = (showSection) => {
 		let idx = 0;
 		section.forEach((item, i) => {
 			item.style.display = 'none';
@@ -290,6 +292,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 		});
 		section[idx].style.display = 'block';
+
+		clearOldData(showSection);
 		switch (showSection) {
 			case 'main':
 				if (!section[idx].dataset['showned']) {
@@ -315,14 +319,26 @@ window.addEventListener('DOMContentLoaded', () => {
 					getTaskBoard();
 				}
 				break;
-			default:
-				break;
 			case 'settings':
 				if (!section[idx].dataset['showned']) {
-					section[idx].dataset['showned'] = '1';
+					// section[idx].dataset['showned'] = '1';
 					getKanboardUsers();
 				}
 				break;
+			default:
+				break;
+		}
+	};
+
+	const clearOldData = (...sections) => {
+		for (let section of sections) {
+			let dataContainer = document.querySelector(`section.${section} .dynamic-data`);
+			if (dataContainer) {
+				dataContainer.textContent = '';
+			}
+		}
+		if (!!dataTableObj) {
+			dataTableObj.clear().draw();;
 		}
 	};
 
@@ -407,7 +423,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const apiCallbackProps = {
 		'getTagsByProject': function (data, container) {
-			fillProjectsList(data, container);
+			fillSelect(data, container);
+		},
+		'getColumns': function (data, container) {
+			fillSelect(data, container);
+		},
+		'getAssignableUsers': function (data, container) {
+			fillSelect(data, container);
 		},
 	};
 
@@ -514,6 +536,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const getBoard = (action = 0) => {
+		clearOldData(action);
 		const body = {
 			method: 'getBoard',
 			params: {
@@ -530,12 +553,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const getUsers = () => {
-		const body = {
-			method: 'getAssignableUsers',
-		}
-		sendRequest('POST', requestURL, body).then(fillUsersList);
-	};
+	// const getUsers = () => {
+	// 	const body = {
+	// 		method: 'getAssignableUsers',
+	// 	}
+	// 	sendRequest('POST', requestURL, body).then(fillUsersList);
+	// };
 
 	const getKanboardUsers = () => {
 		const body = {
@@ -553,16 +576,16 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const fillProjectsList = (data, elemProjectList) => {
+	const fillSelect = (data, elemList) => {
 		if(!!data.success) {
-			elemProjectList.innerHTML = '<option value="" selected disabled hidden>Choose project</option>';
-			data.success.answer.forEach(function ({project_name}) {
-				elemProjectList.insertAdjacentHTML('beforeend', `
-					<option value="${project_name}">${project_name}</option>
+			elemList.innerHTML = '<option value="" selected disabled hidden>Choose...</option>';
+			data.success.answer.forEach(function (item) {
+				elemList.insertAdjacentHTML('beforeend', `
+					<option value="${item}">${item}</option>
 				`);
 			});
 		}
-		elemProjectList.value = '';
+		elemList.value = '';
 	};
 
 	const fillUsersList = (data) => {
@@ -831,8 +854,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.querySelectorAll(`[${shownedSections}]`).forEach(item => {
 			item.removeAttribute(shownedSections);
 		});
-		tableExcel.textContent = '';
-		tableStatus.textContent = '';
+		clearOldData('main','status', 'statistics', 'excel');
+		// tableExcel.textContent = '';
+		// tableStatus.textContent = '';
+		// tableStatistics.textContent = '';
 	};
 
 	const clearExcelTicketFields = () => {
@@ -981,13 +1006,14 @@ window.addEventListener('DOMContentLoaded', () => {
 			const body = {
 				method: 'updateTaskFull',
 				params: {
-					// description: spaces2cr(inputDescr.value),
+					assignee_name: inputName.value,
 					title: inputTitle.value.trim(),
 					id: btnUpdateTicket.dataset['task_id'],
 					date_started: date_start.getTime() / 1000,
 					reference: inputTicket.value.trim(),
 					capop: inputCapOp.value.trim(),
 					oracle: inputOracle.value.trim(),
+					status: inputStatus.value,
 					section: ticketEditForm.querySelector('#excelForm').value,
 				},
 			}
@@ -1021,6 +1047,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const getTaskBoard = () => {
 		clearExcelTicketFields();
+		getDataFromKanboard('getColumns', apiCallbackProps, inputStatus);
+		getDataFromKanboard('getAssignableUsers', apiCallbackProps, inputName);
 		getBoard('excel');
 	};
 
@@ -1117,23 +1145,22 @@ window.addEventListener('DOMContentLoaded', () => {
 	const showBoardTable = (data) => {
 		if(!!data.success) {
 			let {dayStart, dayEnd} = tsPeriodDays(periodDays);
-			tableExcel.textContent = '';
 			data.success.answer.forEach(function ({
-				id, date_due, date_started, title, reference, description, fields, assignee_name, editable
+				id, date_started, title, reference, description, fields, assignee_name, status, editable
 			}) 
 			{
-				const descr_spaces = cr2spaces(description);
 				const time_started = timestampToTime(date_started);
 				let disable_edit = (editable === 0) ? "invisible" : "";	
 				tableExcel.insertAdjacentHTML('beforeend', `
 					<tr class="task-ticket-excel ${hideTask({date_started, dayStart, dayEnd})}" data-task_id="${id}" data-date_started="${date_started}">
+						<td class="ticket-id">${id}</td>
 						<td class="ticket-date" data-item_value="${timestampToDate(date_started, false)}" data-item_id="inputDate">${timestampToDate(date_started, false)} ${time_started}</td>
-						<td class="ticket-name" data-item_value="${assignee_name ?? '&nbsp;'}" data-item_id="inputName">${assignee_name ?? '&nbsp;'}</td>
-						<!--<td class="ticket-descr" data-item_value="${descr_spaces}" data-item_id="inputDescr">${descr_spaces}</td>-->
+						<td class="ticket-name" data-item_value="${assignee_name}" data-item_id="inputName">${assignee_name}</td>
 						<td class="ticket-title-table" data-item_value="${title}" data-item_id="inputTitle">${title}</td>
 						<td class="ticket-ticket" data-item_value="${reference}" data-item_id="inputTicket">${reference}</td>
 						<td class="ticket-capop" data-item_value="${fields['capop']}" data-item_id="inputCapOp">${fields['capop']}</td>
 						<td class="ticket-oracle" data-item_value="${fields['oracle']}" data-item_id="inputOracle">${fields['oracle']}</td>
+						<td class="ticket-status" data-item_value="${status}" data-item_id="inputStatus">${status}</td>
 						<td class="text-center" data-item_value="${time_started}" data-item_id="inputTime">
 							<a href="#" class="${disable_edit}"><img class="icon-edit" src="img/edit.svg"></a>
 						</td>
@@ -1155,7 +1182,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			dataTableObj.clear().destroy();
 		}
 		if (!!data.success) {
-			tableStatistics.textContent = '';
 			data.success.answer.forEach(function ({project_name, title, date_creation, fields}) {
 				tableStatistics.insertAdjacentHTML('beforeend', `
 					<td>${project_name}</td>
@@ -1186,7 +1212,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const showStatusTable = (data) => {
 		if (!!data.success) {
-			tableStatus.textContent = '';
 			data.success.answer.sort(byField('date_creation'));
 			data.success.answer.forEach(function ({id, title, assignee_name, status, date_creation, date_started, reference, description, project_name, fields}) {
 				const submitted_name = getField(fields, 'creator', '');

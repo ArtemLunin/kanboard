@@ -12,7 +12,7 @@
 	<script type="text/javascript" charset="utf8" src="js/datatables.min.js"></script>
 	<link rel="stylesheet" href="css/style.css">
 	<script type="text/javascript" src="js/script.js" defer></script>
-	<title>Kanboard tickets</title>
+	<title>SDE Tickets</title>
 </head>
 <body>
 	<nav class="menu" tabindex="0">
@@ -120,7 +120,7 @@
 							<hr class="dotted">
 							<div class="triangle triangle-up"></div>
 						</div>
-						<div class="tickets-container">
+						<div class="dynamic-data tickets-container">
 						</div>
 					</div>
 					<div class="col-1 px-0"></div>
@@ -134,7 +134,6 @@
 						<div class="border border-dark mt-2 p-2 modify-container">
 							<form method="POST" action="#" id="formNewTaskStatus">
 								<input type="hidden" id="taskStatus_id" name="id" value="0">
-								<!-- <input type="hidden" id="origin_id" name="origin_id" value="0"> -->
 								<input type="hidden" id="statusForm" name="section" value="status">
 								<div class="row mx-0">
 									<div class="col-lg-8 col-sm-6 px-1">
@@ -165,7 +164,7 @@
 												</div>
 												<div class="row mb-1">
 													<div class="col">
-														<input type="text" class="ticket-creator-status" placeholder="Creator" name="creator" id="creatorStatus" disabled>
+														<input type="text" class="ticket-creator-status" placeholder="Creator" name="creator" id="creatorStatus">
 													</div>
 												</div>
 											</div>
@@ -188,7 +187,7 @@
 												</div>
 												<div class="row mb-1">
 													<div class="col">
-														<select name="projectName" id="inputProjectStatus" class="custom-select-sm font1em p-0" required></select>
+														<select name="projectName" id="inputProjectStatus" class="custom-select-sm font1em p-0" ></select>
 													</div>
 												</div>
 											</div>
@@ -239,7 +238,7 @@
 									<th>Edit</th>
 								</tr>
 							</thead>
-							<tbody class="table-status">
+							<tbody class="dynamic-data table-request">
 							</tbody>
 						</table>
 					</div>
@@ -261,7 +260,7 @@
 							<th>Ticket creator</th>
 						</tr>
 					</thead>
-					<tbody class="table-statistics">
+					<tbody class="dynamic-data table-statistics">
 					</tbody>
 				</table>
 			</section>
@@ -272,13 +271,16 @@
 						<input type="hidden" id="excelForm" name="section" value="excel">
 						<div class="d-flex mb-1">
 							<label class="my-1 mr-1" for="inputDate">Date</label>
-							<input type="date" class="form-control-sm my-1 mr-2" id="inputDate" name="inputDate" required>
+							<input type="date" class="form-control-sm my-1 mr-2" id="inputDate" name="inputDate">
 							<label class="my-1 mr-1" for="inputTime">Time</label>
-							<input type="time" class="form-control-sm my-1 mr-2" id="inputTime" name="inputTime" required>
+							<input type="time" class="form-control-sm my-1 mr-2" id="inputTime" name="inputTime">
 						</div>
 						<div class="d-flex mb-1">
 							<label class="my-1 mr-1" for="inputTitle">Title</label>
 							<input class="form-control-sm mr-2" type="text" name="inputTitle" id="inputTitle">
+							<label class="my-1 mr-1" for="inputName">Assigne</label>
+							<select id="inputName" class="custom-select-sm font1em mr-2" name="assigne">
+							</select>
 							<label class="my-1 mr-1" for="inputTicket">Reference</label>
 							<input class="form-control-sm mr-2" type="text" name="reference" id="inputTicket">
 							<label class="my-1 mr-1" for="inputCapOp">Capex/Opex</label>
@@ -288,7 +290,10 @@
 								<option value="Opex">Opex</option>
 							</select>
 							<label class="my-1 mr-1" for="inputOracle">Oracle</label>
-							<input class="form-control-sm" type="text" name="inputOracle" id="inputOracle">
+							<input class="form-control-sm mr-2" type="text" name="inputOracle" id="inputOracle">
+							<label class="my-1 mr-1" for="inputStatus">Status</label>
+							<select id="inputStatus" class="custom-select-sm font1em mr-2" name="status">
+							</select>
 						</div>
 						<div class="d-flex mb-1">
 							<button type="submit" class="btn btn-primary btn-sm btn-update-ticket mr-1" data-task_id="0" disabled>Update</button>
@@ -314,17 +319,19 @@
 				<table class="table table-bordered table-sm mt-2">
 					<thead class="thead-light">
 						<tr>
+							<th>Ticket #</th>
 							<th>Date started</th>
 							<th>Assigned</th>
 							<th>Title</th>
 							<th>Reference</th>
 							<th>Capex/Opex</th>
 							<th>Oracle</th>
+							<th>Status</th>
 							<th>Edit</th>
 							<th>Remove</th>
 						</tr>
 					</thead>
-					<tbody class="table-excel">
+					<tbody class="dynamic-data table-excel">
 					</tbody>
 				</table>
 				<!-- </div> -->

@@ -8,38 +8,61 @@ class Kanboard {
 	private $metadataFields = [
 		"capop", "oracle", "ticket", "otl", "creator", "version", "origintask"
 	];
+	private $kanboardColumns = [];
 
 	function __construct () {
-		$this->projectID = $this->getInitialParams('getProjectByIdentifier', ['identifier' => KANBOARD_PROJECT_IDENTIFIER]);
-		$this->userID = $this->getInitialParams('getUserByName', ['username' => KANBOARD_USER_CREATE_TICKETS]);
-		$this->shownedColumnID = $this->getInitialParams('getColumns', [$this->projectID], KANBOARD_SHOW_COLUMN_NAME);
+		$this->projectID = $this->getField([
+			'method'	=> 'getProjectByIdentifier', 
+			'paramObj'	=> ['identifier' => KANBOARD_PROJECT_IDENTIFIER],
+			'additionalParam' => null,
+			'fieldName'		=> 'id',
+			'defaultVal'	=> 0
+			]);
+		$this->userID = $this->getField([
+			'method'	=> 'getUserByName', 
+			'paramObj'	=> ['username' => KANBOARD_USER_CREATE_TICKETS],
+			'additionalParam' => null,
+			'fieldName'		=> 'id',
+			'defaultVal'	=> 0
+			]);
+		// $this->userID = $this->getFieldInfo('getUserByName', 'username', KANBOARD_USER_CREATE_TICKETS, 'id', 0);
+		$this->shownedColumnID = $this->getField([
+			'method'	=> 'getColumns', 
+			'paramObj'	=> [$this->projectID], 
+			'additionalParam' => KANBOARD_SHOW_COLUMN_NAME,
+			'fieldName'		=> 'id',
+			'defaultVal'	=> 0
+			]);
 	}
-	function getInitialParams($method, $paramObj, $additionalParam = NULL)
+	// function getField($method, $paramObj, $additionalParam = NULL)
+	function getField($params)
 	{
-		$resultID = 0;
+		['method' => $method, 'paramObj' => $paramObj, 'additionalParam' => $additionalParam, 'fieldName' => $fieldName, 'defaultVal' => $defaultVal] = $params;
 		$this->kanboardRequest['method'] = $method;
 		$this->kanboardRequest['params'] = $paramObj;
 		$raw_result = callKanboardAPI(json_encode($this->kanboardRequest));
-		$result = json_decode($raw_result, TRUE);
+		$result = json_decode($raw_result, true);
 		if ($method === 'getColumns' && isset($additionalParam)) {
 			$arr_columns = $result['result'] ?? [];
 			if (count($arr_columns) != 0) {
-				$arr_columns_id = array_map('strtolower', array_column($arr_columns, 'title', 'id'));
-				$resultID = array_search(strtolower($additionalParam), $arr_columns_id);
-				if ($resultID === FALSE) {
-					$resultID = 0;
+				$arr_columns_id = array_column($arr_columns, 'title', 'id');
+				$this->kanboardColumns = $arr_columns_id;
+				$arr_columns_id = array_map('strtolower', $arr_columns_id);
+				$fieldVal = array_search(strtolower($additionalParam), $arr_columns_id);
+				if ($fieldVal === false) {
+					$fieldVal = $defaultVal;
 				}
 			}
 			else {
-				$resultID = 0;
+				$fieldVal = $defaultVal;
 			}
 		} else {
-			$resultID = $result['result']['id'] ?? 0;
-			if ($resultID == 0) {
-				throw new Exception('Error getting '.json_encode($paramObj)."\nNetwork result:".$raw_result."\nRequest:".json_encode($this->kanboardRequest));
-			}
+			$fieldVal = $result['result'][$fieldName] ?? $defaultVal;
+			// if ($fieldVal == 0) {
+			// 	throw new Exception('Error getting '.json_encode($paramObj)."\nNetwork result:".$raw_result."\nRequest:".json_encode($this->kanboardRequest));
+			// }
 		}
-		return $resultID;
+		return $fieldVal;
 	}
 	function __get($name) {
 		return $this->$name;
@@ -92,7 +115,15 @@ class Kanboard {
 	function fieldsTask($task_id, $convert_nl = true, $task_version = false) {
 		$task = $this->callKanboardAPI('getTask', ['task_id' => $task_id]);
 		if (isset($task['result'])) {
+			$statusColumn = '';
+			// if (count($this->kanboardColumns) > 0) {
+			// 	$statusColumn = $this->kanboardColumns[(int)$task['result']['column_id']];
+			// } else {
+				
+			// 	error_log('columns query');
+			// }
 			$column_names = $this->getColumnsNames();
+			$statusColumn = $column_names[(int)$task['result']['column_id']] ?? 'undefined';
 			$task = [
 				'id'			=> (int)$task['result']['id'],
 				'creator_id'	=> (int)$task['result']['creator_id'],
@@ -103,8 +134,16 @@ class Kanboard {
 				'reference'		=> $task['result']['reference'],
 				'description'	=> $convert_nl ? nl2br($task['result']['description'], FALSE) : $task['result']['description'],
 				'title'			=> $task['result']['title'] . (($task_version !== false) ? '_v'.$task_version : ''),
-				'status'		=> $column_names[(int)$task['result']['column_id']] ?? 'undefined',
-				'assignee_name'	=> 'not assigned',
+				// 'status'		=> $column_names[(int)$task['result']['column_id']] ?? 'undefined',
+				'status'		=> $statusColumn,
+				// 'assignee_name'	=> $this->getFieldInfo('getUser', 'user_id', (int)$task['result']['owner_id'], 'username', ''),
+				'assignee_name'	=> $this->getField([
+					'method'	=> 'getUser', 
+					'paramObj'	=> ['user_id' => (int)$task['result']['owner_id']],
+					'additionalParam' => null,
+					'fieldName'		=> 'username',
+					'defaultVal'	=> ''
+				]),
 			];
 		} else {
 			$task = null;
@@ -112,6 +151,9 @@ class Kanboard {
 		return $task;
 	}
 	function getColumnsNames() {
+		if (count($this->kanboardColumns) > 0) {
+			return $this->kanboardColumns;
+		}
 		$column_names = [];
 		$columns = $this->callKanboardAPI('getColumns', [
 			$this->projectID,
@@ -123,12 +165,42 @@ class Kanboard {
 		}
 		return $column_names;
 	}
+	// function getUserByName($user_name) {
+	// 	$user_id = false;
+	// 	$result = $this->callKanboardAPI('getUserByName', [
+	// 		'username' => $user_name
+	// 	]);
+	// 	if(isset($result['result']) && $result['result']) {
+	// 		$user_id = $result['result']['id'];
+	// 	}
+	// 	return $user_id;
+	// }
+	// function getUser($user_id) {
+	// 	$user_name = '';
+	// 	$result = $this->callKanboardAPI('getUser', [
+	// 		'user_id' => $user_id
+	// 	]);
+	// 	if(isset($result['result']) && $result['result']) {
+	// 		$user_id = $result['result']['username'];
+	// 	}
+	// 	return $user_id;
+	// }
+	// function getFieldInfo($apiName, $filterName, $filterVal, $fieldName, $defaultVal) {
+	// 	$fieldVal = $defaultVal;
+	// 	$result = $this->callKanboardAPI($apiName, [
+	// 		$filterName => $filterVal
+	// 	]);
+	// 	if(isset($result['result']) && $result['result']) {
+	// 		$fieldVal = $result['result'][$fieldName];
+	// 	}
+	// 	return $fieldVal;
+	// }
 	function setTaskMetadata($task_id, $metadataFields) {
 		return $this->callKanboardAPI('saveTaskMetadata', [$task_id, $metadataFields]);
 	}
-	function getUserNameFromTag($tags_arr) {
-		return array_values($tags_arr)[0];
-	}
+	// function getUserNameFromTag($tags_arr) {
+	// 	return array_values($tags_arr)[0];
+	// }
 	function getProjectNameFromTag($tags_arr) {
 		return array_values($tags_arr)[0];
 	}

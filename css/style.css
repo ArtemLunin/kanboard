@@ -105,20 +105,23 @@ p {
 	word-wrap: break-word;
 	border-radius: 6px;
 }
-.task-ticket-excel .ticket-date, .task-ticket-excel .ticket-name, .task-ticket-excel .ticket-capop {
+.task-ticket-excel .ticket-id {
+	width: 5%;
+}
+.task-ticket-excel .ticket-date, .task-ticket-excel .ticket-name, .task-ticket-excel .ticket-status {
 	width: 10%;
 }
 .task-ticket-excel .ticket-ticket {
 	width: 15%;
 }
-.task-ticket-excel .ticket-oracle {
+.task-ticket-excel .ticket-oracle, .task-ticket-excel .ticket-capop {
 	width: 7%;
 }
 .task-ticket-excel .ticket-title-table {
-	width: 38%;
+	width: 30%;
 }
 .task-ticket-excel .text-center {
-	width: 5%;
+	width: 3%;
 }
 .task-ticket {
 	background-color: rgb(245, 247, 196);
