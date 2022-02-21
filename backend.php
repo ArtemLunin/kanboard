@@ -122,7 +122,7 @@ if ($projectID !== false && $method !== 0)
 						'description'	=> nl2br($task['description'], FALSE),
 						'title'			=> $task['title']. (($task_version != false) ? '_v'.$task_version : ''),
 						'project_name'	=> $projectName,
-						'files'			=> array_map("taskFilesMapper", $taskFiles['result']),
+						'files'			=> array_map("taskFilesMapper", $taskFiles['result'] ?? []),
 					];
 				}
 			}
@@ -230,6 +230,10 @@ if ($projectID !== false && $method !== 0)
 					'defaultVal'	=> ''
 					]);
 			}
+			$newColumnnID = false;
+			if (isset($params['status'])) {
+				$newColumnnID = array_search($params['status'], $kanboard->getColumnsNames());
+			}
 			$date_ts = (is_numeric($params['date_started'])) ? $params['date_started'] : 0;
 			$pattern = '/_v\d+$/i';
 			$title = preg_replace($pattern, '', trim($params['title'] ?? ""));
@@ -246,6 +250,15 @@ if ($projectID !== false && $method !== 0)
 			}
 			$taskResult = $kanboard->callKanboardAPI('updateTask', $arr_params);
 			if(isset($taskResult['result']) && $taskResult['result']) {
+				if ($newColumnnID !== false) {
+					$taskResult = $kanboard->callKanboardAPI('moveTaskPosition', [
+						'project_id'	=> $projectID,
+						'task_id'		=> $params['id'],
+						'column_id'		=> $newColumnnID,
+						'position'		=> 10000,
+						'swimlane_id' 	=> 1
+					]);
+				}	
 				$taskResult = $kanboard->callKanboardAPI('saveTaskMetadata', [
 					$params['id'], [
 						"capop"		=> (trim($params['capop'] ?? "")),
@@ -305,7 +318,6 @@ if ($projectID !== false && $method !== 0)
 				$projectID,
 			]);
 				if (isset($taskResult['result']) && count($taskResult['result'])) {
-					// $column_names = $kanboard->getColumnsNames();
 					$assignee_name = '';
 					$all_column = false;
 					if ($params !== 0 && $params['status'] == 'all') {
@@ -335,7 +347,6 @@ if ($projectID !== false && $method !== 0)
 									'date_creation'	=> (int)$task['date_creation'],
 									'date_started'	=> (int)$task['date_started'],
 									'title'			=> $task['title']. (($task_version != false) ? '_v'.$task_version : ''),
-									// 'status'		=> $column_names[$column['id']] ?? 'undefined',
 									'status'		=> $column['title'],
 									'reference'		=> $task['reference'],
 									'description'	=> $task['description'],
@@ -352,13 +363,11 @@ if ($projectID !== false && $method !== 0)
 			}
 			
 		}
-		elseif( ($method === 'getTagsByProject' /*|| $method === 'getColumns' */|| $method === 'getAssignableUsers'))
+		elseif( ($method === 'getTagsByProject' || $method === 'getAssignableUsers'))
 		{
 			if ($method === 'getTagsByProject') {
 				$field_name = 'name';
-			} /* elseif ($method === 'getColumns') {
-				$field_name = 'title';
-			} */ else {
+			} else {
 				$field_name = 'user';
 			}
 			$result = $kanboard->callKanboardAPI($method, [$projectID]);
@@ -375,7 +384,6 @@ if ($projectID !== false && $method !== 0)
 		}
 		elseif($method === 'getColumns')
 		{
-			// $param_error_msg['answer'][] = array_values($kanboard->getColumnsNames());
 			foreach(array_values($kanboard->getColumnsNames()) as $result_object) {
 				$param_error_msg['answer'][] = $result_object;
 			}

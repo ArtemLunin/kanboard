@@ -38,7 +38,7 @@ let previousElem = null;
 
 let dayStartExcel, dayEndExcel = 0;
 
-let dataTableObj;
+let dataTableObj, dataTableExcel;
 
 const errorMsg = document.createElement('div');
 errorMsg.textContent = 'Username or password is incorrect';
@@ -338,8 +338,12 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 		if (!!dataTableObj) {
-			dataTableObj.clear().draw();;
+			dataTableObj.clear().draw();
 		}
+		if (!!dataTableExcel) {
+			dataTableExcel.clear().draw();
+		}
+		
 	};
 
 	menu.addEventListener('click', (e) => {
@@ -1143,6 +1147,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const showBoardTable = (data) => {
+		if (!!dataTableExcel) {
+			dataTableExcel.clear().destroy();
+		}
 		if(!!data.success) {
 			let {dayStart, dayEnd} = tsPeriodDays(periodDays);
 			data.success.answer.forEach(function ({
@@ -1169,6 +1176,18 @@ window.addEventListener('DOMContentLoaded', () => {
 						</td>
 					</tr>
 				`);
+			});
+			dataTableExcel = $('#table_excel').DataTable({
+				"columnDefs": [
+					{ "orderable": false, "targets": [0, 3, 4, 5, 6, 7, 8, 9] },
+					// { "width": "10%", "targets": [0, 1, 2, 4] },
+				],
+				"order": [
+					[1, 'asc'],
+					[2, 'asc']
+				],
+				"paging": false,
+				"searching": false,
 			});
 		} else if (!!data.error) {
 			containerError.innerText = data.error.error;
