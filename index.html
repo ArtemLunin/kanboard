@@ -62,7 +62,7 @@
 												</div>
 											</div>
 											<div class="col">
-												<div class="row">
+												<div class="row mb-1">
 													<div class="col"><label class="m-0" for="OTL">OTL</label>
 													</div>
 												</div>
@@ -73,7 +73,7 @@
 												</div>
 											</div>
 											<div class="col">
-												<div class="row">
+												<div class="row mb-1">
 													<div class="col"><label class="m-0" for="inputProject">Project</label>
 														
 													</div>
@@ -266,40 +266,205 @@
 			</section>
 			<section class="section excel">
 				<div class="page-data d-none" data-excel="1"></div>
-				<div class="my-2 p-2 border">
-					<form class="form-inline justify-content-between" method="POST" action="#" id="ticketEditForm">
+				<div class="border border-dark mt-2 p-2 modify-container">
+					<form method="POST" action="#" id="ticketEditForm">
+						<input type="hidden" id="taskExcel_id" name="id" value="0">
 						<input type="hidden" id="excelForm" name="section" value="excel">
-						<div class="d-flex mb-1">
-							<label class="my-1 mr-1" for="inputDate">Date</label>
-							<input type="date" class="form-control-sm my-1 mr-2" id="inputDate" name="inputDate">
-							<label class="my-1 mr-1" for="inputTime">Time</label>
-							<input type="time" class="form-control-sm my-1 mr-2" id="inputTime" name="inputTime">
+						<div class="row mx-0">
+							<div class="col-lg-8 col-sm-6 px-1">
+								<div class="row">
+									<div class="col">
+										<label class="my-1 mr-1" for="inputTitle">Ticket title</label>
+									</div>
+								</div>
+								<div class="row mb-1">
+									<div class="col">
+										<input type="text" class="ticket-title-excel-form" placeholder="Ticket title" name="title" id="inputTitle" data-disable_on_update="1" required>
+										<!-- <input class="form-control-sm mr-2" type="text" name="inputTitle" id="inputTitle" required>	 -->
+									</div>
+								</div>
+								<div class="row">
+									<div class="col">Description</div>
+								</div>
+								<div class="row mb-1">
+									<div class="col">
+										<div class="excel-description text-area border border-dark p-1" contenteditable="true"
+											id="ticketDescriptionExcel">
+										</div>
+									</div>
+								</div>
+								<div class="row mb-1">
+									<div class="col">
+										<div class="row">
+											<div class="col"><label class="m-0" for="creatorExcel">Ticket creator</label>
+											</div>
+										</div>
+										<div class="row mb-1">
+											<div class="col">
+												<input type="text" class="ticket-creator-excel" placeholder="Creator" name="creator" id="creatorExcel">
+											</div>
+										</div>
+									</div>
+									<div class="col">
+										<div class="row">
+											<div class="col"><label class="m-0" for="OTLExcel">OTL</label>
+											</div>
+										</div>
+										<div class="row mb-1">
+											<div class="col">
+												<input type="text" class="ticket-OTL-excel" name="OTL" id="OTLExcel" placeholder="OTL">
+											</div>
+										</div>
+									</div>
+									<div class="col">
+										<div class="row">
+											<div class="col">
+												<label class="m-0" for="inputProjectExcel">Project</label>
+											</div>
+										</div>
+										<div class="row mb-1">
+											<div class="col">
+												<select name="projectName" id="inputProjectExcel" class="custom-select-sm font1em p-0"></select>
+											</div>
+										</div>
+									</div>
+								</div>
+											<!-- <form class="form-inline justify-content-between" method="POST" action="#" id="ticketEditForm"> -->
+									<div class="row d-flex mb-1">
+										<div class="col">
+											<div class="row flex-nowrap">
+												<div class="col">
+													<div class="row">
+														<div class="col">
+															<label class="mr-1" for="inputDate">Date</label>
+														</div>
+													</div>
+													<div class="row">
+														<div class="col">
+															<input type="date" class="form-control-sm mr-2" id="inputDate" name="inputDate">
+														</div>
+													</div>
+												</div>
+												<div class="col">
+													<div class="row">
+														<div class="col">
+															<label class="mr-1" for="inputTime">Time</label>
+														</div>
+													</div>
+													<div class="row">
+														<div class="col">
+															<input type="time" class="form-control-sm mr-2" id="inputTime" name="inputTime">
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="col">
+											<div class="row">
+												<label class="my-1 mr-1" for="inputName">Assigne</label>
+											</div>
+											<div class="row">
+												<select id="inputName" class="custom-select-sm font1em mr-2" name="assigne">
+												</select>
+											</div>
+										</div>
+										<div class="col">
+											<div class="row">
+												<label class="my-1 mr-1" for="inputTicket">Reference</label>
+											</div>
+											<div class="row">
+												<input class="form-control-sm mr-2" type="text" name="reference" id="inputTicket">
+											</div>
+										</div>
+										<div class="col">
+											<div class="row">
+												<label class="my-1 mr-1" for="inputCapOp">Capex/Opex</label>
+											</div>
+											<div class="row">
+												<select id="inputCapOp" class="custom-select-sm font1em mr-2">
+													<option value="" selected="" disabled="" hidden="">Choose...</option>
+													<option value="Capex">Capex</option>
+													<option value="Opex">Opex</option>
+												</select>
+											</div>
+										</div>
+										<div class="col">
+											<div class="row">
+												<label class="my-1 mr-1" for="inputOracle">Oracle</label>
+											</div>
+											<div class="row">
+												<input class="form-control-sm mr-2" type="text" name="inputOracle" id="inputOracle">
+											</div>
+										</div>
+										<div class="col">
+											<div class="row">
+												<label class="my-1 mr-1" for="inputStatus">Status</label>
+											</div>
+											<div class="row">
+												<select id="inputStatus" class="custom-select-sm font1em mr-2" name="status">
+												</select>
+											</div>
+										</div>
+									</div>
+									<div class="d-flex mb-1">
+										<!-- <label class="my-1 mr-1" for="inputTitle">Title</label>
+										<input class="form-control-sm mr-2" type="text" name="inputTitle" id="inputTitle"> -->
+										<!-- <label class="my-1 mr-1" for="inputName">Assigne</label>
+										<select id="inputName" class="custom-select-sm font1em mr-2" name="assigne">
+										</select>
+										<label class="my-1 mr-1" for="inputTicket">Reference</label>
+										<input class="form-control-sm mr-2" type="text" name="reference" id="inputTicket">
+										<label class="my-1 mr-1" for="inputCapOp">Capex/Opex</label>
+										<select id="inputCapOp" class="custom-select-sm font1em mr-2">
+											<option value="" selected="" disabled="" hidden="">Choose...</option>
+											<option value="Capex">Capex</option>
+											<option value="Opex">Opex</option>
+										</select>
+										<label class="my-1 mr-1" for="inputOracle">Oracle</label>
+										<input class="form-control-sm mr-2" type="text" name="inputOracle" id="inputOracle">
+										<label class="my-1 mr-1" for="inputStatus">Status</label>
+										<select id="inputStatus" class="custom-select-sm font1em mr-2" name="status">
+										</select> -->
+									</div>
+									<!-- <div class="d-flex mb-1">
+										<button type="submit" class="btn btn-primary btn-sm btn-update-ticket mr-1" data-task_id="0" disabled>Update</button>
+										<button type="reset" class="btn btn-warning btn-sm btn-clear-excel">Clear</button>
+									</div> -->
+								<!-- </form> -->
+							</div>
+							<div class="col-lg-4 col-sm-6 px-1">
+								<!-- <div class="row text-right">
+									<div class="col attachments-area-status">
+										<div class="row">
+											<div class="col">
+												<div class="form-group">
+													<label for="attachFileStatus" class="file-input-show btn btn-info btn-sm">Attach new file...</label>
+													<input type="file" class="form-control-file-status file-input-hidden" id="attachFileStatus"
+														name="attachFile">
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<div class="col">
+												<div class="attachments-header">Attachments:</div>
+												<div class="attachments-container-status"></div>
+											</div>
+										</div>
+									</div>
+								</div> -->
+							</div>
 						</div>
-						<div class="d-flex mb-1">
-							<label class="my-1 mr-1" for="inputTitle">Title</label>
-							<input class="form-control-sm mr-2" type="text" name="inputTitle" id="inputTitle">
-							<label class="my-1 mr-1" for="inputName">Assigne</label>
-							<select id="inputName" class="custom-select-sm font1em mr-2" name="assigne">
-							</select>
-							<label class="my-1 mr-1" for="inputTicket">Reference</label>
-							<input class="form-control-sm mr-2" type="text" name="reference" id="inputTicket">
-							<label class="my-1 mr-1" for="inputCapOp">Capex/Opex</label>
-							<select id="inputCapOp" class="custom-select-sm font1em mr-2">
-								<option value="" selected="" disabled="" hidden="">Choose...</option>
-								<option value="Capex">Capex</option>
-								<option value="Opex">Opex</option>
-							</select>
-							<label class="my-1 mr-1" for="inputOracle">Oracle</label>
-							<input class="form-control-sm mr-2" type="text" name="inputOracle" id="inputOracle">
-							<label class="my-1 mr-1" for="inputStatus">Status</label>
-							<select id="inputStatus" class="custom-select-sm font1em mr-2" name="status">
-							</select>
-						</div>
-						<div class="d-flex mb-1">
-							<button type="submit" class="btn btn-primary btn-sm btn-update-ticket mr-1" data-task_id="0" disabled>Update</button>
-							<button type="reset" class="btn btn-warning btn-sm btn-clear-excel">Clear</button>
+						<div class="row mt-2">
+							<div class="col">
+								<button type="submit" class="btn btn-primary btn-sm btn-add-task-excel">Add</button>
+								<button type="submit" class="btn btn-primary btn-sm btn-update-task-excel d-none" disabled>Update</button>
+								<button type="reset" class="btn btn-warning btn-sm btn-clear-settings-excel">Clear</button>
+							</div>
 						</div>
 					</form>
+				</div>
+				<div class="my-2 p-2 border">
+					
 				</div>
 				<div class="excel-menu d-flex justify-content-between align-items-center">
 					<div class="period-select py-2">

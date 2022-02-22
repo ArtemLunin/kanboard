@@ -177,7 +177,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		taskMain_id = document.querySelector('#task_id'),
 		setRightsContainer = document.querySelector('.set-rights');
 	// excel elements
-	const btnUpdateTicket = document.querySelector('.btn-update-ticket'),
+	const ticketEditForm = document.querySelector('#ticketEditForm'),
+		ticketDescriptionExcel = document.querySelector('#ticketDescriptionExcel'),
+		btnUpdateTaskExcel = document.querySelector('.btn-update-task-excel'),
+		btnAddTaskExcel = document.querySelector('.btn-add-task-excel'),
+		// btnUpdateTicket = document.querySelector('.btn-update-ticket'),
 		periodSelect = document.querySelector('.period-select'),
 		tableExcel = document.querySelector('.table-excel'),
 		btnRemove = document.querySelector('.btn-remove'),
@@ -191,9 +195,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		inputCapOp = document.querySelector('#inputCapOp'),
 		inputOracle = document.querySelector('#inputOracle'),
 		inputStatus =  document.querySelector('#inputStatus'),
-		ticketEditForm = document.querySelector('#ticketEditForm'),
 		ticketTitleExcel = document.querySelector('.ticket-title-excel'),
+		ticketProjectNameExcel = document.querySelector('#inputProjectExcel'),
 		// ticketDescr = document.querySelector('.ticket-descr'),
+		taskExcel_id = document.querySelector('#taskExcel_id'),
 		exportExcel = document.querySelector('#exportExcel');
 	// status elements
 		const formNewTaskStatus = document.querySelector('#formNewTaskStatus'),
@@ -213,8 +218,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		// statistics elements
 		const tableStatistics = document.querySelector('.table-statistics'),
 			exportStatistics = document.querySelector('#exportStatistics');
-	btnUpdateTicket.disabled = true;
-	btnUpdateTicket.dataset['task_id'] = 0;
+	// btnUpdateTicket.disabled = true;
+	// btnUpdateTicket.dataset['task_id'] = 0;
 	
 	async function sendRequest(method, url, body, showWait = false) {
 		containerError.classList.add('d-none');
@@ -622,8 +627,8 @@ window.addEventListener('DOMContentLoaded', () => {
 						document.querySelector(`#${inputID}`).value = itemValue;
 					} catch (e) {}
 				}
-				btnUpdateTicket.dataset['task_id'] = taskID;
-				btnUpdateTicket.disabled = false;
+				// btnUpdateTicket.dataset['task_id'] = taskID;
+				// btnUpdateTicket.disabled = false;
 			}
 		} else if(target.classList.contains('icon-delete')) {
 			const taskTicket = target.closest('.task-ticket-excel');
@@ -1053,6 +1058,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		clearExcelTicketFields();
 		getDataFromKanboard('getColumns', apiCallbackProps, inputStatus);
 		getDataFromKanboard('getAssignableUsers', apiCallbackProps, inputName);
+		getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectNameExcel);
 		getBoard('excel');
 	};
 
@@ -1393,8 +1399,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		updateTaskFull();
 	});
 	ticketEditForm.addEventListener('reset', (e) => {
-		btnUpdateTicket.dataset['task_id'] = 0;
-		btnUpdateTicket.disabled = true;
+		// btnUpdateTicket.dataset['task_id'] = 0;
+		// btnUpdateTicket.disabled = true;
 		selectTR('.task-ticket-excel');
 	});
 
