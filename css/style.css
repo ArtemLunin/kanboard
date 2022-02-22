@@ -111,7 +111,7 @@ p {
 .task-ticket-excel .ticket-date, .task-ticket-excel .ticket-name, .task-ticket-excel .ticket-status {
 	width: 10%;
 }
-.task-ticket-excel .ticket-ticket {
+.task-ticket-excel .ticket-reference {
 	width: 15%;
 }
 .task-ticket-excel .ticket-oracle, .task-ticket-excel .ticket-capop {

@@ -370,10 +370,10 @@
 										</div>
 										<div class="col">
 											<div class="row">
-												<label class="my-1 mr-1" for="inputTicket">Reference</label>
+												<label class="my-1 mr-1" for="inputReference">Reference</label>
 											</div>
 											<div class="row">
-												<input class="form-control-sm mr-2" type="text" name="reference" id="inputTicket">
+												<input class="form-control-sm mr-2" type="text" name="reference" id="inputReference">
 											</div>
 										</div>
 										<div class="col">
@@ -456,15 +456,12 @@
 						</div>
 						<div class="row mt-2">
 							<div class="col">
-								<button type="submit" class="btn btn-primary btn-sm btn-add-task-excel">Add</button>
-								<button type="submit" class="btn btn-primary btn-sm btn-update-task-excel d-none" disabled>Update</button>
+								<button type="submit" class="btn btn-primary btn-sm btn-add-task-excel" data-action="add">Add</button>
+								<button type="submit" class="btn btn-primary btn-sm btn-update-task-excel d-none" data-action="update" disabled>Update</button>
 								<button type="reset" class="btn btn-warning btn-sm btn-clear-settings-excel">Clear</button>
 							</div>
 						</div>
 					</form>
-				</div>
-				<div class="my-2 p-2 border">
-					
 				</div>
 				<div class="excel-menu d-flex justify-content-between align-items-center">
 					<div class="period-select py-2">
