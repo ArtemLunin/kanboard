@@ -178,7 +178,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		setRightsContainer = document.querySelector('.set-rights');
 	// excel elements
 	const ticketEditForm = document.querySelector('#ticketEditForm'),
-		ticketCreatorExcel = document.querySelector('#creatorExcel'),
 		ticketDescriptionExcel = document.querySelector('#ticketDescriptionExcel'),
 		btnUpdateTaskExcel = document.querySelector('.btn-update-task-excel'),
 		btnAddTaskExcel = document.querySelector('.btn-add-task-excel'),
@@ -195,6 +194,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		inputReference = document.querySelector('#inputReference'),
 		inputCapOp = document.querySelector('#inputCapOp'),
 		inputOracle = document.querySelector('#inputOracle'),
+		ticketCreatorExcel = document.querySelector('#creatorExcel'),
+		ticketOTLExcel = document.querySelector('#OTLExcel'),
 		inputStatus =  document.querySelector('#inputStatus'),
 		ticketTitleExcel = document.querySelector('.ticket-title-excel'),
 		ticketProjectNameExcel = document.querySelector('#inputProjectExcel'),
@@ -566,13 +567,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	// const getUsers = () => {
-	// 	const body = {
-	// 		method: 'getAssignableUsers',
-	// 	}
-	// 	sendRequest('POST', requestURL, body).then(fillUsersList);
-	// };
-
 	const getKanboardUsers = () => {
 		const body = {
 			method: 'getKanboardUsers',
@@ -601,18 +595,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		elemList.value = '';
 	};
 
-	const fillUsersList = (data) => {
-		// if(!!data.success) {
-		// 	inputName.textContent = '';
-		// 	data.success.answer.forEach(function ({user_name}) {
-		// 		inputName.insertAdjacentHTML('beforeend', `
-		// 			<option value="${user_name}">${user_name}</option>
-		// 		`);
-		// 	});
-		// }
-		// inputName.value = '';
-	};
-
 	const editExcelTask = (e) => {
 		e.preventDefault();
 		const target = e.target;
@@ -637,6 +619,46 @@ window.addEventListener('DOMContentLoaded', () => {
 						}
 					} catch (e) {}
 				}
+				// 
+				const taskDescription = ticketDescriptionExcel.innerText;
+				const positionCreator = taskDescription.lastIndexOf(textCreatorHeader);
+				const positionOTL = taskDescription.lastIndexOf(textOTLHeader);
+				let extDescriptionPosition = 0;
+				let endPositionOTL, endPositionCreator = 0;
+
+				if (positionOTL !== -1) {
+					extDescriptionPosition = positionOTL;
+				} else {
+					ticketOTLExcel.value = '';
+				}
+				if (positionCreator !== -1) {
+					if (!extDescriptionPosition || (extDescriptionPosition > positionCreator)) {
+						extDescriptionPosition = positionCreator;
+					}
+				} else {
+					ticketCreatorExcel.value = '';
+				}
+				if (extDescriptionPosition) {
+					ticketDescriptionExcel.innerText = taskDescription.substring(0, extDescriptionPosition).trim();
+					if (positionOTL < positionCreator) {
+						endPositionOTL = positionCreator;
+						endPositionCreator = taskDescription.length;
+					} else {
+						endPositionCreator = positionOTL;
+						endPositionOTL = taskDescription.length;
+					}
+					if (positionOTL !== -1) {
+						ticketOTLExcel.value = taskDescription.substring(positionOTL + textOTLHeader.length, endPositionOTL).trim();
+					}
+					if (positionCreator !== -1) {
+						ticketCreatorExcel.value = taskDescription.substring(positionCreator + textCreatorHeader.length, endPositionCreator).trim();	
+					}
+				} else {
+					ticketDescriptionExcel.innerText = taskDescription.trim();
+				}
+
+
+
 				btnUpdateTaskExcel.dataset['task_id'] = taskID;
 				btnUpdateTaskExcel.disabled = false;
 			}
@@ -1131,7 +1153,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	function showAllTasks(data)
 	{
-		if(!!data.success) {
+		if(data && data.success) {
 			getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectName);
 			ticketsContainer.textContent = '';
 			data.success.answer.sort(byField('date_creation'));
