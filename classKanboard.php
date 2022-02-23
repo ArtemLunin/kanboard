@@ -25,7 +25,6 @@ class Kanboard {
 			'fieldName'		=> 'id',
 			'defaultVal'	=> 0
 			]);
-		// $this->userID = $this->getFieldInfo('getUserByName', 'username', KANBOARD_USER_CREATE_TICKETS, 'id', 0);
 		$this->shownedColumnID = $this->getField([
 			'method'	=> 'getColumns', 
 			'paramObj'	=> [$this->projectID], 
@@ -165,42 +164,29 @@ class Kanboard {
 		}
 		return $column_names;
 	}
-	// function getUserByName($user_name) {
-	// 	$user_id = false;
-	// 	$result = $this->callKanboardAPI('getUserByName', [
-	// 		'username' => $user_name
-	// 	]);
-	// 	if(isset($result['result']) && $result['result']) {
-	// 		$user_id = $result['result']['id'];
-	// 	}
-	// 	return $user_id;
-	// }
-	// function getUser($user_id) {
-	// 	$user_name = '';
-	// 	$result = $this->callKanboardAPI('getUser', [
-	// 		'user_id' => $user_id
-	// 	]);
-	// 	if(isset($result['result']) && $result['result']) {
-	// 		$user_id = $result['result']['username'];
-	// 	}
-	// 	return $user_id;
-	// }
-	// function getFieldInfo($apiName, $filterName, $filterVal, $fieldName, $defaultVal) {
-	// 	$fieldVal = $defaultVal;
-	// 	$result = $this->callKanboardAPI($apiName, [
-	// 		$filterName => $filterVal
-	// 	]);
-	// 	if(isset($result['result']) && $result['result']) {
-	// 		$fieldVal = $result['result'][$fieldName];
-	// 	}
-	// 	return $fieldVal;
-	// }
+	function getUserIDByName($user_name) {
+		$user_id = 0;
+		if (isset($user_name) && $user_name != '') {
+			$user_id = (int)$this->getField([
+				'method'	=> 'getUserByName', 
+				'paramObj'	=> ['username' => $user_name],
+				'additionalParam' => null,
+				'fieldName'		=> 'id',
+				'defaultVal'	=> 0
+			]);
+		}
+		return $user_id;
+	}
+	function getColumnID($column_name) {
+		$column_id = false;
+		if (isset($column_name) && $column_name != '') {
+			$column_id = array_search($column_name, $this->getColumnsNames());
+		}
+		return $column_id;
+	}
 	function setTaskMetadata($task_id, $metadataFields) {
 		return $this->callKanboardAPI('saveTaskMetadata', [$task_id, $metadataFields]);
 	}
-	// function getUserNameFromTag($tags_arr) {
-	// 	return array_values($tags_arr)[0];
-	// }
 	function getProjectNameFromTag($tags_arr) {
 		return array_values($tags_arr)[0];
 	}

@@ -267,7 +267,7 @@
 			<section class="section excel">
 				<div class="page-data d-none" data-excel="1"></div>
 				<div class="border border-dark mt-2 p-2 modify-container">
-					<form method="POST" action="#" id="ticketEditForm">
+					<form method="POST" action="#" id="ticketExcelForm">
 						<input type="hidden" id="taskExcel_id" name="id" value="0">
 						<input type="hidden" id="excelForm" name="section" value="excel">
 						<div class="row mx-0">
@@ -364,7 +364,7 @@
 												<label class="my-1 mr-1" for="inputName">Assigne</label>
 											</div>
 											<div class="row">
-												<select id="inputName" class="custom-select-sm font1em mr-2" name="assigne">
+												<select id="inputName" class="custom-select-sm font1em p-0 mr-2" name="assignee_name">
 												</select>
 											</div>
 										</div>
@@ -381,7 +381,7 @@
 												<label class="my-1 mr-1" for="inputCapOp">Capex/Opex</label>
 											</div>
 											<div class="row">
-												<select id="inputCapOp" class="custom-select-sm font1em mr-2">
+												<select id="inputCapOp" class="custom-select-sm font1em p-0 mr-2">
 													<option value="" selected="" disabled="" hidden="">Choose...</option>
 													<option value="Capex">Capex</option>
 													<option value="Opex">Opex</option>
@@ -401,7 +401,7 @@
 												<label class="my-1 mr-1" for="inputStatus">Status</label>
 											</div>
 											<div class="row">
-												<select id="inputStatus" class="custom-select-sm font1em mr-2" name="status">
+												<select id="inputStatus" class="custom-select-sm font1em p-0 mr-2" name="status">
 												</select>
 											</div>
 										</div>

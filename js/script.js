@@ -177,7 +177,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		taskMain_id = document.querySelector('#task_id'),
 		setRightsContainer = document.querySelector('.set-rights');
 	// excel elements
-	const ticketEditForm = document.querySelector('#ticketEditForm'),
+	const ticketExcelForm = document.querySelector('#ticketExcelForm'),
 		ticketDescriptionExcel = document.querySelector('#ticketDescriptionExcel'),
 		btnUpdateTaskExcel = document.querySelector('.btn-update-task-excel'),
 		btnAddTaskExcel = document.querySelector('.btn-add-task-excel'),
@@ -529,11 +529,12 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const getAllTask = () => {
+		formNewTask.reset();
 		const body = {
 			method: 'getAllTasks',
 		}
 		sendRequest('POST', requestURL, body, true).then(showAllTasks);
-		ticketCreator.value = currentUser;
+		ticketCreator.defaultValue = currentUser;
 	};
 
 
@@ -878,17 +879,18 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const clearEditableFields = () => {
-		ticketTitle.value = '';
-		ticketCreator.value = currentUser;
-		ticketOTL.value = '';
-		ticketProjectName.value = '';
-		ticketDescription.textContent = '';
-		btnUpdateTask.classList.add('d-none');
-		btnAddTask.classList.remove('d-none');
-		attachmentsArea.classList.add('invisible');
-		btnUpdateTask.dataset['task_id'] = 0;
-		btnCreateTaskFile.removeAttribute('task_id');
-		taskMain_id.value = 0;
+		// ticketTitle.value = '';
+		// ticketCreator.value = currentUser;
+		// ticketOTL.value = '';
+		// ticketProjectName.value = '';
+		// ticketDescription.textContent = '';
+		// btnUpdateTask.classList.add('d-none');
+		// btnAddTask.classList.remove('d-none');
+		// attachmentsArea.classList.add('invisible');
+		// btnUpdateTask.dataset['task_id'] = 0;
+		// btnCreateTaskFile.removeAttribute('task_id');
+		// taskMain_id.value = 0;
+		formNewTask.reset();
 	};
 
 	const clearAllSection = (shownedSections) => {
@@ -899,7 +901,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const clearExcelTicketFields = () => {
-		ticketEditForm.reset();
+		ticketExcelForm.reset();
+		// ticketCreatorExcel.defaultValue = currentUser;
 	};
 
 	const selectTR = (selector, taskTicket = null) => {
@@ -1052,7 +1055,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					capop: inputCapOp.value.trim(),
 					oracle: inputOracle.value.trim(),
 					status: inputStatus.value,
-					section: ticketEditForm.querySelector('#excelForm').value,
+					section: ticketExcelForm.querySelector('#excelForm').value,
 				},
 			}
 			sendRequest('POST', requestURL, body).then(getTaskBoard);
@@ -1065,7 +1068,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			method: 'removeTask',
 			params: {
 				id: btnRemove.dataset['task_id'],
-				section: ticketEditForm.querySelector('#excelForm').value,
+				section: ticketExcelForm.querySelector('#excelForm').value,
 			},
 		}
 		sendRequest('POST', requestURL, body).then(removeTaskFull);
@@ -1089,14 +1092,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		getDataFromKanboard('getAssignableUsers', apiCallbackProps, inputName);
 		getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectNameExcel);
 		getBoard('excel');
-		ticketCreatorExcel.value = currentUser;
+		ticketCreatorExcel.defaultValue = currentUser;
 	};
 
 	const getTaskStatus = () => {
 		formNewTaskStatus.reset();
 		getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectNameStatus);
 		getBoard('status');
-		ticketCreatorStatus.value = currentUser;
+		ticketCreatorStatus.defaultValue = currentUser;
 	};
 
 	function attachFileStatus(data) {
@@ -1135,21 +1138,21 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	function showUpdatedTask(data)
-	{
-		clearEditableFields();
-		if(!!data.success) {
-			let {id, creator_id, date_completed, date_creation, description, title, project_name} = data.success.answer;
-			const hrefAction = document.querySelector(`.task-ticket[data-task_id="${id}"]`);
-			const taskTitle = hrefAction.querySelector('.task-title');
-			const taskDescription = hrefAction.querySelector('.task-description');
-			const taskProjectName = hrefAction.querySelector('.task-project-name');
+	// function showUpdatedTask(data)
+	// {
+	// 	clearEditableFields();
+	// 	if(!!data.success) {
+	// 		let {id, creator_id, date_completed, date_creation, description, title, project_name} = data.success.answer;
+	// 		const hrefAction = document.querySelector(`.task-ticket[data-task_id="${id}"]`);
+	// 		const taskTitle = hrefAction.querySelector('.task-title');
+	// 		const taskDescription = hrefAction.querySelector('.task-description');
+	// 		const taskProjectName = hrefAction.querySelector('.task-project-name');
 
-			taskTitle.textContent = title;
-			taskDescription.innerHTML = description;
-			taskProjectName.textContent = project_name;
-		}
-	}
+	// 		taskTitle.textContent = title;
+	// 		taskDescription.innerHTML = description;
+	// 		taskProjectName.textContent = project_name;
+	// 	}
+	// }
 
 	function showAllTasks(data)
 	{
@@ -1349,19 +1352,50 @@ window.addEventListener('DOMContentLoaded', () => {
 			</tr>`;
 	}
 
+	function sendDataTask(dataForm, callback, additionalParams) {
+		const formData = new FormData(dataForm);
+		const arrData = {};
+		let method = 'createTask';
+		for (let [key, value] of formData.entries()) {
+			if (typeof value == 'object') continue;
+			arrData[key] = value.trim();
+		}
+		for (let prop in additionalParams) {
+			arrData[prop] = additionalParams[prop];
+		}
+		const body = {
+			method: method,
+			params: arrData,
+		};
+		console.log(body);
+		// sendRequest('POST', requestURL, body).then(callback);
+	}
+
 	//init main
 	btnClearSettings.addEventListener('click', clearEditableFields);
 	btnUpdateTask.addEventListener('click', updateTask);
 	ticketsContainer.addEventListener('click', actionTask);
 	formNewTask.addEventListener('submit', (e) => {
-		e.preventDefault();
-	});
-	formNewTask.addEventListener('reset', (e) => {
-		e.preventDefault();
-	});
-	btnAddTask.addEventListener('click', (e) => {
+		// e.preventDefault();
 		createTask(showAddedTask);
 	});
+	formNewTask.addEventListener('reset', (e) => {
+		// ticketTitle.value = '';
+		// ticketCreator.value = currentUser;
+		// ticketOTL.value = '';
+		// ticketProjectName.value = '';
+		ticketDescription.textContent = '';
+		btnUpdateTask.classList.add('d-none');
+		btnAddTask.classList.remove('d-none');
+		attachmentsArea.classList.add('invisible');
+		btnUpdateTask.dataset['task_id'] = 0;
+		btnCreateTaskFile.removeAttribute('task_id');
+		taskMain_id.value = 0;
+		// e.preventDefault();
+	});
+	// btnAddTask.addEventListener('click', (e) => {
+	// 	createTask(showAddedTask);
+	// });
 
 	btnCreateTaskFile.addEventListener('change', (e) => {
 		createTaskFileNew(e, btnCreateTaskFile, attachmentsContainer);
@@ -1426,21 +1460,24 @@ window.addEventListener('DOMContentLoaded', () => {
 	periodSelect.addEventListener('click', periodChange);
 	btnRemove.addEventListener('click', removeTask);
 
-	ticketEditForm.addEventListener('submit', (e) => {
+	ticketExcelForm.addEventListener('submit', (e) => {
 		e.preventDefault();
+		// const formData = new FormData(e.target);
 		const element = document.activeElement;
 		if (element.tagName === 'BUTTON') {
 			let action = element.getAttribute('data-action');
 			if (action === 'add') {
-
+				sendDataTask(e.target, '', {
+					'description': ticketDescriptionExcel.innerText,
+					'version': 1,
+				});
 			} else if (action === 'update') {
 				updateTaskFull();
 			}
 		}
 	});
 
-	ticketEditForm.addEventListener('reset', (e) => {
-		ticketCreatorExcel.value = currentUser;
+	ticketExcelForm.addEventListener('reset', (e) => {
 		btnUpdateTaskExcel.dataset['task_id'] = 0;
 		ticketDescriptionExcel.textContent = '';
 		btnUpdateTaskExcel.classList.add('d-none');
@@ -1495,8 +1532,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			method: method,
 			params: arrData,
 		};
-			// sendRequest('POST', requestURL, body).then(getTaskStatus);
-			sendRequest('POST', requestURL, body).then(attachFileStatus);
+		sendRequest('POST', requestURL, body).then(attachFileStatus);
 	});
 
 	// init statistics

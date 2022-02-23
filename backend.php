@@ -136,6 +136,18 @@ if ($projectID !== false && $method !== 0)
 			// }
 			if ($accessType !== false)
 			{
+				$arr_params = [
+					'title'			=> $title,
+					'project_id'	=> $projectID,
+					'reference'		=> trim($params['reference'] ?? ""),
+					'description'	=> (trim($params['description'] ?? ""))."\nSubmitted by: ".$taskCreator."\nOTL: ".(trim($params['OTL'] ?? "")),
+					'creator_id'	=> $userID,
+				];
+				$kanboardUserID = $kanboard->getUserIDByName(trim($params['assignee_name'] ?? ""));
+				$columnnID = $kanboard->getColumnID($params['status'] ?? "");
+				// date_started нужно сформировать на фронте из двух полей
+				//  или составить здесь из даты и времени
+				$date_ts = (is_numeric($params['date_started'])) ? $params['date_started'] : 0;
 				if (isset($params['version'])) {
 					$task_version = (int)$kanboard->getMetadataField($params['id'], 'version');
 					if ($task_version === 0) $task_version = 1;
@@ -150,12 +162,23 @@ if ($projectID !== false && $method !== 0)
 					$task_version = false;
 				}
 				$task_title = ($task_version !== false && $task_origin_title !== null) ? $task_origin_title : (trim($params['title'] ?? ""));
-				$taskResult = $kanboard->callKanboardAPI($method, [
-					'project_id'	=> $projectID,
-					'title'			=> $task_title,
-					'description'	=> (trim($params['description'] ?? ""))."\nSubmitted by: ".$taskCreator."\nOTL: ".(trim($params['OTL'] ?? "")),
-					'creator_id'	=> $userID,
-					]);
+				if ($kanboardUserID != 0) {
+					$arr_params['owner_id'] = $kanboardUserID;
+				}
+				if ($columnnID !== false) {
+					$arr_params['column_id'] = $columnnID;
+				}
+				if ($date_ts) {
+					$arr_params['date_started']	= date('Y-m-d H:i', $date_ts);
+				}
+				// $taskResult = $kanboard->callKanboardAPI($method, [
+				// 	'project_id'	=> $projectID,
+				// 	'title'			=> $task_title,
+				// 	'description'	=> (trim($params['description'] ?? ""))."\nSubmitted by: ".$taskCreator."\nOTL: ".(trim($params['OTL'] ?? "")),
+				// 	'creator_id'	=> $userID,
+				// 	]);
+				
+				$taskResult = $kanboard->callKanboardAPI($method, $arr_params);
 				if (isset($taskResult['result']))
 				{
 					if(isset($params['projectName']) && trim($params['projectName']) !== '') {
@@ -219,17 +242,18 @@ if ($projectID !== false && $method !== 0)
 		}
 		elseif($method === 'updateTaskFull' && $accessType === 'admin' && $section === 'excel' && $params !== 0 && $params['id'] != 0)
 		{
-			$assignee_name = trim($params['assignee_name'] ?? "");
-			$kanboardUserID = 0;
-			if ($assignee_name != '') {
-				$kanboardUserID = $kanboard->getField([
-					'method'	=> 'getUserByName', 
-					'paramObj'	=> ['username' => $assignee_name],
-					'additionalParam' => null,
-					'fieldName'		=> 'id',
-					'defaultVal'	=> ''
-					]);
-			}
+			// $assignee_name = trim($params['assignee_name'] ?? "");
+			// $kanboardUserID = 0;
+			// if ($assignee_name != '') {
+			// 	$kanboardUserID = $kanboard->getField([
+			// 		'method'	=> 'getUserByName', 
+			// 		'paramObj'	=> ['username' => $assignee_name],
+			// 		'additionalParam' => null,
+			// 		'fieldName'		=> 'id',
+			// 		'defaultVal'	=> ''
+			// 		]);
+			// }
+			$kanboardUserID = getUserIDByName(trim($params['assignee_name'] ?? ""));
 			$newColumnnID = false;
 			if (isset($params['status'])) {
 				$newColumnnID = array_search($params['status'], $kanboard->getColumnsNames());
