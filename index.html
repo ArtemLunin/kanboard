@@ -227,7 +227,7 @@
 						<table class="table table-bordered table-sm mt-2">
 							<thead class="thead-light">
 								<tr>
-									<th>Ticket #</th>
+									<th>Ticket</th>
 									<th>Ticket info</th>
 									<th>Submited by</th>
 									<th>Assigned to</th>
@@ -341,7 +341,7 @@
 													</div>
 													<div class="row">
 														<div class="col">
-															<input type="date" class="form-control-sm mr-2" id="inputDate" name="inputDate">
+															<input type="date" class="form-control-sm mr-2" id="inputDate" name="date">
 														</div>
 													</div>
 												</div>
@@ -353,7 +353,7 @@
 													</div>
 													<div class="row">
 														<div class="col">
-															<input type="time" class="form-control-sm mr-2" id="inputTime" name="inputTime">
+															<input type="time" class="form-control-sm mr-2" id="inputTime" name="time">
 														</div>
 													</div>
 												</div>
@@ -361,7 +361,7 @@
 										</div>
 										<div class="col">
 											<div class="row">
-												<label class="my-1 mr-1" for="inputName">Assigne</label>
+												<label class="my-1 mr-1" for="inputName">Assign</label>
 											</div>
 											<div class="row">
 												<select id="inputName" class="custom-select-sm font1em p-0 mr-2" name="assignee_name">
@@ -381,7 +381,7 @@
 												<label class="my-1 mr-1" for="inputCapOp">Capex/Opex</label>
 											</div>
 											<div class="row">
-												<select id="inputCapOp" class="custom-select-sm font1em p-0 mr-2">
+												<select id="inputCapOp" class="custom-select-sm font1em p-0 mr-2" name="capop">
 													<option value="" selected="" disabled="" hidden="">Choose...</option>
 													<option value="Capex">Capex</option>
 													<option value="Opex">Opex</option>
@@ -393,7 +393,7 @@
 												<label class="my-1 mr-1" for="inputOracle">Oracle</label>
 											</div>
 											<div class="row">
-												<input class="form-control-sm mr-2" type="text" name="inputOracle" id="inputOracle">
+												<input class="form-control-sm mr-2" type="text" name="oracle" id="inputOracle">
 											</div>
 										</div>
 										<div class="col">
@@ -481,7 +481,7 @@
 				<table class="table table-bordered table-sm compact mt-2" id="table_excel">
 					<thead class="thead-light">
 						<tr>
-							<th>Ticket #</th>
+							<th>Ticket</th>
 							<th>Date started</th>
 							<th>Assigned</th>
 							<th>Title</th>

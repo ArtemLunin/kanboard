@@ -244,7 +244,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			return data;
 		} catch (e) {
 			console.error(e);
-				$('#waitModal').modal('hide');
+			console.log('url:' + url);
+			$('#waitModal').modal('hide');
 		}
 	}
 
@@ -658,8 +659,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					ticketDescriptionExcel.innerText = taskDescription.trim();
 				}
 
-
-
+				taskExcel_id.value = taskID;
 				btnUpdateTaskExcel.dataset['task_id'] = taskID;
 				btnUpdateTaskExcel.disabled = false;
 			}
@@ -814,8 +814,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			const fileTaskInfo = document.querySelector('#task_id_' + taskID);
 			fileTaskInfo.innerHTML = filesAttached(filesArray);
 		}
-		catch (e) {
-		}
+		catch (e) {}
 	};
 
 	const actionTask = (event) => {
@@ -1081,6 +1080,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				const tr_excel = tableExcel.querySelector(`tr[data-task_id="${id}"]`);
 				if (tr_excel) {
 					tr_excel.remove();
+					try {
+						// dataTableExcel.draw();
+					} catch (e) {}
 				}
 			}
 		}
@@ -1228,6 +1230,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				],
 				"paging": false,
 				"searching": false,
+				"info": false,
 			});
 		} else if (!!data.error) {
 			containerError.innerText = data.error.error;
@@ -1352,10 +1355,13 @@ window.addEventListener('DOMContentLoaded', () => {
 			</tr>`;
 	}
 
-	function sendDataTask(dataForm, callback, additionalParams) {
+	function sendDataTask(dataForm, callback, additionalParams, updateMode = false) {
 		const formData = new FormData(dataForm);
 		const arrData = {};
 		let method = 'createTask';
+		if (updateMode === true) {
+			method = 'updateTaskFull';
+		}
 		for (let [key, value] of formData.entries()) {
 			if (typeof value == 'object') continue;
 			arrData[key] = value.trim();
@@ -1367,8 +1373,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			method: method,
 			params: arrData,
 		};
-		console.log(body);
-		// sendRequest('POST', requestURL, body).then(callback);
+		sendRequest('POST', requestURL, body).then(callback);
 	}
 
 	//init main
@@ -1376,7 +1381,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	btnUpdateTask.addEventListener('click', updateTask);
 	ticketsContainer.addEventListener('click', actionTask);
 	formNewTask.addEventListener('submit', (e) => {
-		// e.preventDefault();
+		e.preventDefault();
 		createTask(showAddedTask);
 	});
 	formNewTask.addEventListener('reset', (e) => {
@@ -1462,22 +1467,27 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	ticketExcelForm.addEventListener('submit', (e) => {
 		e.preventDefault();
-		// const formData = new FormData(e.target);
 		const element = document.activeElement;
 		if (element.tagName === 'BUTTON') {
 			let action = element.getAttribute('data-action');
+			const date_start = new Date(`${inputDate.value}T${inputTime.value}`);
 			if (action === 'add') {
-				sendDataTask(e.target, '', {
+				sendDataTask(e.target, getTaskBoard, {
 					'description': ticketDescriptionExcel.innerText,
-					'version': 1,
-				});
+					'date_started': (isNaN(date_start)) ? 0 : date_start.getTime() / 1000,
+				}, false);
 			} else if (action === 'update') {
-				updateTaskFull();
+				// updateTaskFull();
+				sendDataTask(e.target, getTaskBoard, {
+					'description': ticketDescriptionExcel.innerText,
+					'date_started': (isNaN(date_start)) ? 0 : date_start.getTime() / 1000,
+				}, true);
 			}
 		}
 	});
 
 	ticketExcelForm.addEventListener('reset', (e) => {
+		taskExcel_id.value = 0;
 		btnUpdateTaskExcel.dataset['task_id'] = 0;
 		ticketDescriptionExcel.textContent = '';
 		btnUpdateTaskExcel.classList.add('d-none');

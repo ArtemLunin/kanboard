@@ -216,24 +216,23 @@ function callKanboardAPI($kanbanJSONParams)
 {
   $curl = curl_init();
 
-curl_setopt_array($curl, [
-  CURLOPT_URL => KANBOARD_CITE,
-  CURLOPT_RETURNTRANSFER => TRUE,
-  CURLOPT_ENCODING => '',
-  CURLOPT_MAXREDIRS => 10,
-  CURLOPT_TIMEOUT => 5,
-  CURLOPT_FOLLOWLOCATION => TRUE,
-  CURLOPT_CUSTOMREQUEST => 'POST',
-  CURLOPT_POSTFIELDS => $kanbanJSONParams,
-  CURLOPT_HTTPHEADER => [
-    'Authorization: Basic '. KANBOARD_TOKEN
-  ],
-]);
+	curl_setopt_array($curl, [
+	CURLOPT_URL => KANBOARD_CITE,
+	CURLOPT_RETURNTRANSFER => TRUE,
+	CURLOPT_ENCODING => '',
+	CURLOPT_MAXREDIRS => 10,
+	CURLOPT_TIMEOUT => 5,
+	CURLOPT_FOLLOWLOCATION => TRUE,
+	CURLOPT_CUSTOMREQUEST => 'POST',
+	CURLOPT_POSTFIELDS => $kanbanJSONParams,
+	CURLOPT_HTTPHEADER => [
+		'Authorization: Basic '. KANBOARD_TOKEN
+	],
+	]);
 
-$response = curl_exec($curl);
-curl_close($curl);
-// return $kanbanJSONParams;
-return $response;
+	$response = curl_exec($curl);
+	curl_close($curl);
+	return $response;
 }
 
 function taskFilesMapper($fileItem) 
@@ -243,5 +242,14 @@ function taskFilesMapper($fileItem)
 		'file_name'	=> $fileItem['name'],
 		'file_size'	=> $fileItem['size'],
 	];
+}
+
+function setDateStarted($date_started_ts) {
+	$correct_date = (is_numeric($date_started_ts)) ? (int)$date_started_ts : 0;
+	if (($correct_date < time() - 3600 * 24 * 30) || ($correct_date > time() + 3600 * 24 * 365))
+	{
+		$correct_date= 0;
+	}
+	return $correct_date;
 }
 ?>
