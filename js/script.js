@@ -108,9 +108,9 @@ function tsPeriodDays (periodDays) {
 	}
 }
 
-const hideTask = ({date_started, dayStart, dayEnd}) => {
+const hideTask = ({date_started, dayStart, dayEnd, hideTaskNoDate}) => {
 	let hideTaskClass = 'd-none';
-	if(!date_started || (date_started > dayStart && date_started < dayEnd)) {
+	if(!(date_started || hideTaskNoDate) || (date_started > dayStart && date_started < dayEnd)) {
 		hideTaskClass = '';
 	}
 	return hideTaskClass;
@@ -498,7 +498,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const createTask = (callback) => {
-		if (ticketTitle.value.trim().length == 0 || ticketCreator.value.trim().length == 0 /* || ticketProjectName.value == '' */ || ticketDescription.innerText.trim().length == 0)
+		if (ticketTitle.value.trim().length == 0 || ticketCreator.value.trim().length == 0 || ticketDescription.innerText.trim().length == 0)
 		{
 			return false;
 		}
@@ -926,8 +926,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		if(target.classList.contains('btn')) {
 			for(const item of periodSelect.children)
 			{
-				item.classList.remove('btn-primary');
-				item.classList.add('btn-secondary');
+				if (item.tagName === 'BUTTON') {
+					item.classList.remove('btn-primary');
+					item.classList.add('btn-secondary');
+				}
 			}
 			target.classList.remove('btn-secondary');
 			target.classList.add('btn-primary');
@@ -944,7 +946,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		let {dayStart, dayEnd} = tsPeriodDays(periodDays);
 		taskTickets.forEach(item => {
 			let date_started = parseInt(item.dataset['date_started'], 10);
-			if (hideTask({date_started, dayStart, dayEnd}) === 'd-none' || (hideTaskNoDate && isNaN(date_started))) {
+			if (hideTask({date_started, dayStart, dayEnd, hideTaskNoDate}) === 'd-none') {
 				item.classList.add('d-none');
 			} else {
 				item.classList.remove('d-none');
@@ -1142,6 +1144,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if(data.success && data.success.answer) {
 			let {id, date_creation, description, title, project_name, files = []} = data.success.answer;
 			btnUpdateTask.dataset['task_id'] = data.success.answer.id;
+			btnCreateTaskFile.setAttribute('task_id', id);
 			ticketsContainer.insertAdjacentHTML('afterbegin', `
 					<div class="task-ticket" data-task_id="${id}">
 						<a href="#" class="task-action" data-task_id="${id}">#${id}</a>
@@ -1395,17 +1398,22 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	//init main
 	btnClearSettings.addEventListener('click', clearEditableFields);
-	btnUpdateTask.addEventListener('click', updateTask);
+	// btnUpdateTask.addEventListener('click', updateTask);
 	ticketsContainer.addEventListener('click', actionTask);
 	formNewTask.addEventListener('submit', (e) => {
 		e.preventDefault();
-		createTask(showAddedTask);
+		const element = document.activeElement;
+		if (element.tagName === 'BUTTON') {
+			let action = element.getAttribute('data-action');
+			if (action === 'add') {
+				createTask(showAddedTask);
+			} else if (action === 'update') {
+				updateTask();
+			}
+		}
+		
 	});
 	formNewTask.addEventListener('reset', (e) => {
-		// ticketTitle.value = '';
-		// ticketCreator.value = currentUser;
-		// ticketOTL.value = '';
-		// ticketProjectName.value = '';
 		ticketDescription.textContent = '';
 		btnUpdateTask.classList.add('d-none');
 		btnAddTask.classList.remove('d-none');
@@ -1413,11 +1421,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		btnUpdateTask.dataset['task_id'] = 0;
 		btnCreateTaskFile.removeAttribute('task_id');
 		taskMain_id.value = 0;
-		// e.preventDefault();
 	});
-	// btnAddTask.addEventListener('click', (e) => {
-	// 	createTask(showAddedTask);
-	// });
 
 	btnCreateTaskFile.addEventListener('change', (e) => {
 		createTaskFileNew(e, btnCreateTaskFile, attachmentsContainer);
@@ -1428,7 +1432,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	
 	btnCreateTaskFileStatus.addEventListener('change', (e) => {
-		createTaskFileNew(e, btnCreateTaskFileStatus, attachmentsContainerStatus, getTaskStatus);
+		let callback = null;
+		if (document.activeElement.type === 'submit') {
+			callback = getTaskStatus;
+		}
+		createTaskFileNew(e, btnCreateTaskFileStatus, attachmentsContainerStatus, callback);
 	});
 		
 	btnCreateTaskFileExcel.addEventListener('change', (e) => {
@@ -1496,9 +1504,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	btnRemove.addEventListener('click', removeTask);
 	cbHideTask.addEventListener('click', (e) => 
 	{
-		const target = e.target;
-			
+		refreshBoardTable(e.target.checked);		
 	});
+	cbHideTask.checked = false;
 
 	ticketExcelForm.addEventListener('submit', (e) => {
 		e.preventDefault();

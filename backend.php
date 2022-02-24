@@ -138,7 +138,7 @@ if ($projectID !== false && $method !== 0)
 			{
 				$kanboardUserID = $kanboard->getUserIDByName(trim($params['assignee_name'] ?? ""));
 				$columnID = $kanboard->getColumnID($params['status'] ?? "");
-				$date_ts = setDateStarted($params['date_started']);
+				$date_ts = setDateStarted($params['date_started'] ?? 0);
 
 				if (isset($params['version'])) {
 					$task_version = (int)$kanboard->getMetadataField($params['id'], 'version');
@@ -221,12 +221,12 @@ if ($projectID !== false && $method !== 0)
 			{
 				if(isset($params['projectName']) && trim($params['projectName']) !== '') {
 					$kanboard->setTaskProjectName((int)$params['id'], trim($params['projectName']));
-					$kanboard->setTaskMetadata((int)$params['id'], 
-					[
-						"otl"		=> (trim($params['OTL'] ?? "")),
-						"creator"	=> (trim($params['creator'] ?? "")),
-					]);
 				}
+				$kanboard->setTaskMetadata((int)$params['id'], 
+				[
+					"otl"		=> (trim($params['OTL'] ?? "")),
+					"creator"	=> (trim($params['creator'] ?? "")),
+				]);
 				// getTask
 				$task_out = $kanboard->fieldsTask($params['id'], true);
 				$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$taskResult['result']]);
@@ -241,7 +241,7 @@ if ($projectID !== false && $method !== 0)
 			$taskCreator = trim($params['creator'] ?? "");
 			$kanboardUserID = $kanboard->getUserIDByName(trim($params['assignee_name'] ?? ""));
 			$columnID = $kanboard->getColumnID($params['status'] ?? "");
-			$date_ts = setDateStarted($params['date_started']);
+			$date_ts = setDateStarted($params['date_started'] ?? 0);
 			$pattern = '/_v\d+$/i';
 			$title = preg_replace($pattern, '', trim($params['title'] ?? ""));
 			$arr_params = [
@@ -258,6 +258,9 @@ if ($projectID !== false && $method !== 0)
 			}
 			$taskResult = $kanboard->callKanboardAPI('updateTask', $arr_params);
 			if(isset($taskResult['result']) && $taskResult['result']) {
+				if (isset($params['projectName']) && trim($params['projectName']) !== '') {
+					$kanboard->setTaskProjectName((int)$params['id'], trim($params['projectName']));
+				}
 				if ($columnID !== false) {
 					$taskResult = $kanboard->callKanboardAPI('moveTaskPosition', [
 						'project_id'	=> $projectID,
@@ -280,7 +283,8 @@ if ($projectID !== false && $method !== 0)
 				{
 					$task_out = $kanboard->fieldsTask($params['id'], false);
 					$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$params['id']]);
-					$param_error_msg['answer'] = $task_out + ['fields'		=> $kanboard->getMetadataFields($taskMetadata['result'])];
+					$projectName = $kanboard->getTaskProjectName($params['id']);
+					$param_error_msg['answer'] = $task_out + ['fields'		=> $kanboard->getMetadataFields($taskMetadata['result'])]+ ['project_name'	=> $projectName];
 				}
 			}
 		}
@@ -413,6 +417,8 @@ if ($projectID !== false && $method !== 0)
 			$spreadsheet->getActiveSheet()->getColumnDimension('D')->setAutoSize(true);
 			$spreadsheet->getActiveSheet()->getColumnDimension('E')->setAutoSize(true);
 			$spreadsheet->getActiveSheet()->getColumnDimension('F')->setAutoSize(true);
+			$spreadsheet->getActiveSheet()->getColumnDimension('G')->setAutoSize(true);
+			$spreadsheet->getActiveSheet()->getColumnDimension('H')->setAutoSize(true);
 
 			$taskResult = $kanboard->callKanboardAPI('getBoard', [
 						$projectID,
@@ -501,12 +507,14 @@ if ($projectID !== false && $method !== 0)
 				{
 					if (isset($taskResult['result']) && count($taskResult['result'])) {
 						$sheet->fromArray([
+								'Ticket',
 								'Date started',
 								'Assigned',
 								'Title',
 								'Reference',
 								'Capex/Opex',
 								'Oracle',
+								'Status',
 							], 
 							NULL, 
 							'A1');
@@ -523,12 +531,14 @@ if ($projectID !== false && $method !== 0)
 									// }
 									$fieldsMetadata = $kanboard->getMetadataFields($taskMetadata['result']);
 									$sheet->fromArray([
+										$task['id'],
 										$task['date_started'] > 0 ? date("Y-m-d", $task['date_started']) : '',
 										$task['assignee_username'] ?? 'not assigned',
 										$task['title'],
 										$task['reference'],
 										$fieldsMetadata['capop'],
 										$fieldsMetadata['oracle'],
+										$column['title'],
 									], 
 									NULL, 
 									'A'.$rowExcel);

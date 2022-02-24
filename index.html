@@ -37,7 +37,7 @@
 										</div>
 										<div class="row mb-1">
 											<div class="col">
-												<input type="text" class="ticket-title" placeholder="Ticket title" required>
+												<input type="text" class="ticket-title" name="title" placeholder="Ticket title" required>
 											</div>
 										</div>
 										<div class="row">
@@ -109,8 +109,8 @@
 								</div>
 								<div class="row mt-2">
 									<div class="col">
-										<button type="submit" class="btn btn-primary btn-sm btn-add-task">Add</button>
-										<button type="submit" class="btn btn-primary btn-sm btn-update-task d-none">Update</button>
+										<button type="submit" class="btn btn-primary btn-sm btn-add-task"data-action="add">Add</button>
+										<button type="submit" class="btn btn-primary btn-sm btn-update-task d-none" data-action="update">Update</button>
 										<button type="reset" class="btn btn-warning btn-sm btn-clear-settings">Clear</button>
 									</div>
 								</div>
@@ -329,11 +329,10 @@
 										</div>
 									</div>
 								</div>
-<!--  -->
 								<div class="row mb-1">
-									<div class="col">
+									<div class="col flex-grow-0">
 										<div class="row flex-nowrap">
-											<div class="col">
+											<div class="col pr-0">
 												<div class="row">
 													<div class="col">
 														<label class="m-0" for="inputDate">Date</label>
@@ -345,7 +344,7 @@
 													</div>
 												</div>
 											</div>
-											<div class="col">
+											<div class="col pr-0 pl-0">
 												<div class="row">
 													<div class="col">
 														<label class="m-0" for="inputTime">Time</label>
@@ -380,7 +379,7 @@
 										</div>
 										<div class="row mb-1">
 											<div class="col">
-												<input class="form-control-sm mr-2" type="text" name="reference" id="inputReference">
+												<input class="form-control-sm mr-2" size="10" type="text" name="reference" id="inputReference">
 											</div>
 										</div>
 									</div>
@@ -408,7 +407,7 @@
 										</div>
 										<div class="row">
 											<div class="col">
-												<input class="form-control-sm mr-2" type="text" name="oracle" id="inputOracle">
+												<input class="form-control-sm mr-2" size="10" type="text" name="oracle" id="inputOracle">
 											</div>
 										</div>
 									</div>
