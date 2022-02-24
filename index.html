@@ -329,117 +329,112 @@
 										</div>
 									</div>
 								</div>
-											<!-- <form class="form-inline justify-content-between" method="POST" action="#" id="ticketEditForm"> -->
-									<div class="row d-flex mb-1">
-										<div class="col">
-											<div class="row flex-nowrap">
-												<div class="col">
-													<div class="row">
-														<div class="col">
-															<label class="mr-1" for="inputDate">Date</label>
-														</div>
-													</div>
-													<div class="row">
-														<div class="col">
-															<input type="date" class="form-control-sm mr-2" id="inputDate" name="date">
-														</div>
+<!--  -->
+								<div class="row mb-1">
+									<div class="col">
+										<div class="row flex-nowrap">
+											<div class="col">
+												<div class="row">
+													<div class="col">
+														<label class="m-0" for="inputDate">Date</label>
 													</div>
 												</div>
-												<div class="col">
-													<div class="row">
-														<div class="col">
-															<label class="mr-1" for="inputTime">Time</label>
-														</div>
+												<div class="row mb-1">
+													<div class="col">
+														<input type="date" class="form-control-sm mr-2" id="inputDate" name="date">
 													</div>
-													<div class="row">
-														<div class="col">
-															<input type="time" class="form-control-sm mr-2" id="inputTime" name="time">
-														</div>
+												</div>
+											</div>
+											<div class="col">
+												<div class="row">
+													<div class="col">
+														<label class="m-0" for="inputTime">Time</label>
+													</div>
+												</div>
+												<div class="row mb-1">
+													<div class="col">
+														<input type="time" class="form-control-sm mr-2" id="inputTime" name="time">
 													</div>
 												</div>
 											</div>
 										</div>
-										<div class="col">
-											<div class="row">
-												<label class="my-1 mr-1" for="inputName">Assign</label>
+									</div>
+									<div class="col">
+										<div class="row">
+											<div class="col">
+												<label class="m-0" for="inputName">Assign</label>
 											</div>
-											<div class="row">
+										</div>
+										<div class="row mb-1">
+											<div class="col">
 												<select id="inputName" class="custom-select-sm font1em p-0 mr-2" name="assignee_name">
 												</select>
 											</div>
 										</div>
-										<div class="col">
-											<div class="row">
-												<label class="my-1 mr-1" for="inputReference">Reference</label>
+									</div>
+									<div class="col">
+										<div class="row">
+											<div class="col">
+												<label class="m-0" for="inputReference">Reference</label>
 											</div>
-											<div class="row">
+										</div>
+										<div class="row mb-1">
+											<div class="col">
 												<input class="form-control-sm mr-2" type="text" name="reference" id="inputReference">
 											</div>
 										</div>
-										<div class="col">
-											<div class="row">
-												<label class="my-1 mr-1" for="inputCapOp">Capex/Opex</label>
+									</div>
+									<div class="col">
+										<div class="row">
+											<div class="col">
+												<label class="m-0" for="inputCapOp">Capex/Opex</label>
 											</div>
-											<div class="row">
+										</div>
+										<div class="row mb-1">
+											<div class="col">
 												<select id="inputCapOp" class="custom-select-sm font1em p-0 mr-2" name="capop">
 													<option value="" selected="" disabled="" hidden="">Choose...</option>
 													<option value="Capex">Capex</option>
 													<option value="Opex">Opex</option>
 												</select>
+											</div>	
+										</div>
+									</div>
+									<div class="col">
+										<div class="row">
+											<div class="col">
+												<label class="m-0" for="inputOracle">Oracle</label>
 											</div>
 										</div>
-										<div class="col">
-											<div class="row">
-												<label class="my-1 mr-1" for="inputOracle">Oracle</label>
-											</div>
-											<div class="row">
+										<div class="row">
+											<div class="col">
 												<input class="form-control-sm mr-2" type="text" name="oracle" id="inputOracle">
 											</div>
 										</div>
-										<div class="col">
-											<div class="row">
-												<label class="my-1 mr-1" for="inputStatus">Status</label>
-											</div>
-											<div class="row">
-												<select id="inputStatus" class="custom-select-sm font1em p-0 mr-2" name="status">
-												</select>
+									</div>
+									<div class="col">
+										<div class="row">
+											<div class="col">
+												<label class="m-0" for="inputStatus">Status</label>
 											</div>
 										</div>
+										<div class="row mb-1">
+											<div class="col">
+												<select id="inputStatus" class="custom-select-sm font1em p-0 mr-2" name="status">
+												</select>
+											</div>	
+										</div>
 									</div>
-									<div class="d-flex mb-1">
-										<!-- <label class="my-1 mr-1" for="inputTitle">Title</label>
-										<input class="form-control-sm mr-2" type="text" name="inputTitle" id="inputTitle"> -->
-										<!-- <label class="my-1 mr-1" for="inputName">Assigne</label>
-										<select id="inputName" class="custom-select-sm font1em mr-2" name="assigne">
-										</select>
-										<label class="my-1 mr-1" for="inputTicket">Reference</label>
-										<input class="form-control-sm mr-2" type="text" name="reference" id="inputTicket">
-										<label class="my-1 mr-1" for="inputCapOp">Capex/Opex</label>
-										<select id="inputCapOp" class="custom-select-sm font1em mr-2">
-											<option value="" selected="" disabled="" hidden="">Choose...</option>
-											<option value="Capex">Capex</option>
-											<option value="Opex">Opex</option>
-										</select>
-										<label class="my-1 mr-1" for="inputOracle">Oracle</label>
-										<input class="form-control-sm mr-2" type="text" name="inputOracle" id="inputOracle">
-										<label class="my-1 mr-1" for="inputStatus">Status</label>
-										<select id="inputStatus" class="custom-select-sm font1em mr-2" name="status">
-										</select> -->
-									</div>
-									<!-- <div class="d-flex mb-1">
-										<button type="submit" class="btn btn-primary btn-sm btn-update-ticket mr-1" data-task_id="0" disabled>Update</button>
-										<button type="reset" class="btn btn-warning btn-sm btn-clear-excel">Clear</button>
-									</div> -->
-								<!-- </form> -->
+								</div>
 							</div>
 							<div class="col-lg-4 col-sm-6 px-1">
-								<!-- <div class="row text-right">
-									<div class="col attachments-area-status">
+								<div class="row text-right">
+									<div class="col attachments-area-excel">
 										<div class="row">
 											<div class="col">
 												<div class="form-group">
-													<label for="attachFileStatus" class="file-input-show btn btn-info btn-sm">Attach new file...</label>
-													<input type="file" class="form-control-file-status file-input-hidden" id="attachFileStatus"
+													<label for="attachFileExcel" class="file-input-show btn btn-info btn-sm">Attach new file...</label>
+													<input type="file" class="form-control-file-excel file-input-hidden" id="attachFileExcel"
 														name="attachFile">
 												</div>
 											</div>
@@ -447,11 +442,11 @@
 										<div class="row">
 											<div class="col">
 												<div class="attachments-header">Attachments:</div>
-												<div class="attachments-container-status"></div>
+												<div class="attachments-container-excel"></div>
 											</div>
 										</div>
 									</div>
-								</div> -->
+								</div>
 							</div>
 						</div>
 						<div class="row mt-2">
@@ -473,6 +468,7 @@
 						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="31">Month</button>
 						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="62">2 Months</button>
 						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="365">YTD</button>
+						<input type="checkbox" id="cbHideTask"><span class="mx-1">Hide no date</span>
 					</div>
 					<div>
 						<a href="#" role="button" id="exportExcel" download="" title="Export to Excel"><img class="icon-excel" src="img/file-excel.svg"></a>

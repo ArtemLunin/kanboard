@@ -201,6 +201,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		ticketProjectNameExcel = document.querySelector('#inputProjectExcel'),
 		// ticketDescr = document.querySelector('.ticket-descr'),
 		taskExcel_id = document.querySelector('#taskExcel_id'),
+		btnCreateTaskFileExcel= document.querySelector('#attachFileExcel'),
+		attachmentsContainerExcel = document.querySelector('.attachments-container-excel'),
+		attachmentsAreaExcel = document.querySelector('.attachments-area-excel'),
+		cbHideTask = document.querySelector('#cbHideTask'),
 		exportExcel = document.querySelector('#exportExcel');
 	// status elements
 		const formNewTaskStatus = document.querySelector('#formNewTaskStatus'),
@@ -244,7 +248,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			return data;
 		} catch (e) {
 			console.error(e);
-			console.log('url:' + url);
 			$('#waitModal').modal('hide');
 		}
 	}
@@ -607,6 +610,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				toggleToUpdateMode(btnUpdateTaskExcel, btnAddTaskExcel);
 				selectTR('.task-ticket-excel', taskTicket);
 				const taskID = taskTicket.dataset['task_id'];
+				if (taskID !== 0) {
+					btnCreateTaskFileExcel.setAttribute('task_id', taskID);
+					getAllTaskFiles(taskID, attachmentsContainerExcel);
+				}
 				for(const item of taskTicket.children)
 				{
 					const itemValue = item.dataset['item_value'];
@@ -932,12 +939,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const refreshBoardTable = () => {
+	const refreshBoardTable = (hideTaskNoDate = false) => {
 		const taskTickets = document.querySelectorAll('.task-ticket-excel');
 		let {dayStart, dayEnd} = tsPeriodDays(periodDays);
 		taskTickets.forEach(item => {
 			let date_started = parseInt(item.dataset['date_started'], 10);
-			if (hideTask({date_started, dayStart, dayEnd}) === 'd-none') {
+			if (hideTask({date_started, dayStart, dayEnd}) === 'd-none' || (hideTaskNoDate && isNaN(date_started))) {
 				item.classList.add('d-none');
 			} else {
 				item.classList.remove('d-none');
@@ -945,7 +952,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const createTaskFileNew = (e, btnFile, attachmentsList, refreshStatus = false) => {
+	const createTaskFileNew = (e, btnFile, attachmentsList, callback = null) => {
 		const target = e.target;
 		const inputData = new FormData(target.form);
 		// let task_id = inputData.get('id');
@@ -962,8 +969,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				formData.append('id', task_id);
 				sendFile('POST', requestURL, formData).then((data) => {
 					showAddedFileNew(data, attachmentsList);
-					if (refreshStatus) {
-						getTaskStatus();
+					if (callback) {
+						callback();
 					}
 				});
 			} else {
@@ -1111,6 +1118,16 @@ window.addEventListener('DOMContentLoaded', () => {
 			btnCreateTaskFileStatus.dispatchEvent(new Event('change'));
 		} else {
 			getTaskStatus();
+		}
+	}
+
+	function attachFileExcel(data) {
+		if (data.success && data.success.answer && data.success.answer.id && btnCreateTaskFileExcel.files[0]) {
+			taskExcel_id.value = data.success.answer.id;
+			btnCreateTaskFileExcel.setAttribute('task_id', data.success.answer.id);
+			btnCreateTaskFileExcel.dispatchEvent(new Event('change'));
+		} else {
+			getTaskBoard();
 		}
 	}
 
@@ -1406,10 +1423,23 @@ window.addEventListener('DOMContentLoaded', () => {
 		createTaskFileNew(e, btnCreateTaskFile, attachmentsContainer);
 	});
 
-	[attachmentsContainer, attachmentsContainerStatus].forEach(item => {
+	[attachmentsContainer, attachmentsContainerStatus, attachmentsContainerExcel].forEach(item => {
 			item.addEventListener('click', attachmentsAction);
 		});
+	
+	btnCreateTaskFileStatus.addEventListener('change', (e) => {
+		createTaskFileNew(e, btnCreateTaskFileStatus, attachmentsContainerStatus, getTaskStatus);
+	});
 		
+	btnCreateTaskFileExcel.addEventListener('change', (e) => {
+		let callback = null;
+		if (document.activeElement.type === 'submit') {
+			callback = getTaskBoard;
+		}
+		createTaskFileNew(e, btnCreateTaskFileExcel, attachmentsContainerExcel, callback);
+	});
+
+
 	tableUsers.addEventListener('click', actionForUsers);
 	rightsForm.addEventListener('submit', (e) => {
 		e.preventDefault();
@@ -1464,6 +1494,11 @@ window.addEventListener('DOMContentLoaded', () => {
 	tableExcel.addEventListener('click', editExcelTask);
 	periodSelect.addEventListener('click', periodChange);
 	btnRemove.addEventListener('click', removeTask);
+	cbHideTask.addEventListener('click', (e) => 
+	{
+		const target = e.target;
+			
+	});
 
 	ticketExcelForm.addEventListener('submit', (e) => {
 		e.preventDefault();
@@ -1472,12 +1507,11 @@ window.addEventListener('DOMContentLoaded', () => {
 			let action = element.getAttribute('data-action');
 			const date_start = new Date(`${inputDate.value}T${inputTime.value}`);
 			if (action === 'add') {
-				sendDataTask(e.target, getTaskBoard, {
+				sendDataTask(e.target, attachFileExcel, {
 					'description': ticketDescriptionExcel.innerText,
 					'date_started': (isNaN(date_start)) ? 0 : date_start.getTime() / 1000,
 				}, false);
 			} else if (action === 'update') {
-				// updateTaskFull();
 				sendDataTask(e.target, getTaskBoard, {
 					'description': ticketDescriptionExcel.innerText,
 					'date_started': (isNaN(date_start)) ? 0 : date_start.getTime() / 1000,
@@ -1487,6 +1521,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	ticketExcelForm.addEventListener('reset', (e) => {
+		attachmentsContainerExcel.textContent = '';
+		btnCreateTaskFileExcel.removeAttribute('task_id');
 		taskExcel_id.value = 0;
 		btnUpdateTaskExcel.dataset['task_id'] = 0;
 		ticketDescriptionExcel.textContent = '';
@@ -1503,9 +1539,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	//init status
 	tableStatus.addEventListener('click', editStatusTask);
-	btnCreateTaskFileStatus.addEventListener('change', (e) => {
-		createTaskFileNew(e, btnCreateTaskFileStatus, attachmentsContainerStatus, true);
-	});
 	formNewTaskStatus.addEventListener('reset', (e) => {
 		const target = e.target;
 		// attachmentsAreaStatus.classList.add('invisible');
