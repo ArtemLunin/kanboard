@@ -6,9 +6,9 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script src="js/jquery-3.4.1.min.js"></script>
 	<script src="js/popper.min.js"></script>
-	<link rel="stylesheet" href="./css/bootstrap.min.css">
-	<script src="js/bootstrap.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="css/datatables.min.css">
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<script src="js/bootstrap.min.js"></script>
 	<script type="text/javascript" charset="utf8" src="js/datatables.min.js"></script>
 	<link rel="stylesheet" href="css/style.css">
 	<script type="text/javascript" src="js/script.js" defer></script>
@@ -24,8 +24,8 @@
 		<container class="sections">
 			<section class="section main">
 				<div class="row">
-					<div class="col-1 px-0"></div>
-					<div class="col-10">
+					<div class="col-md-1 px-0"></div>
+					<div class="col-md-10">
 						<div class="border border-dark mt-2 p-2 modify-container">
 							<form method="POST" action="#" id="formNewTask">
 								<input type="hidden" id="task_id" name="id" value="0">
@@ -123,7 +123,7 @@
 						<div class="dynamic-data tickets-container">
 						</div>
 					</div>
-					<div class="col-1 px-0"></div>
+					<div class="col-md-1 px-0"></div>
 				</div>
 			</section>
 			<section class="section status">
@@ -258,6 +258,7 @@
 							<th>OTL</th>
 							<th>Tilte</th>
 							<th>Ticket creator</th>
+							<th>Link</th>
 						</tr>
 					</thead>
 					<tbody class="dynamic-data table-statistics">
@@ -266,231 +267,243 @@
 			</section>
 			<section class="section excel">
 				<div class="page-data d-none" data-excel="1"></div>
-				<div class="border border-dark mt-2 p-2 modify-container">
-					<form method="POST" action="#" id="ticketExcelForm">
-						<input type="hidden" id="taskExcel_id" name="id" value="0">
-						<input type="hidden" id="excelForm" name="section" value="excel">
-						<div class="row mx-0">
-							<div class="col-lg-8 col-sm-6 px-1">
-								<div class="row">
-									<div class="col">
-										<label class="my-1 mr-1" for="inputTitle">Ticket title</label>
-									</div>
-								</div>
-								<div class="row mb-1">
-									<div class="col">
-										<input type="text" class="ticket-title-excel-form" placeholder="Ticket title" name="title" id="inputTitle" data-disable_on_update="1" required>
-										<!-- <input class="form-control-sm mr-2" type="text" name="inputTitle" id="inputTitle" required>	 -->
-									</div>
-								</div>
-								<div class="row">
-									<div class="col">Description</div>
-								</div>
-								<div class="row mb-1">
-									<div class="col">
-										<div class="excel-description text-area border border-dark p-1" contenteditable="true"
-											id="ticketDescriptionExcel">
-										</div>
-									</div>
-								</div>
-								<div class="row mb-1">
-									<div class="col">
+				<div class="row">
+					<div class="col-md-1 px-0"></div>
+					<div class="col-md-10">
+						<div class="border border-dark mt-2 p-2 modify-container">
+							<form method="POST" action="#" id="ticketExcelForm">
+								<input type="hidden" id="taskExcel_id" name="id" value="0">
+								<input type="hidden" id="excelForm" name="section" value="excel">
+								<div class="row mx-0">
+									<div class="col-lg-8 col-sm-6 px-1">
 										<div class="row">
-											<div class="col"><label class="m-0" for="creatorExcel">Ticket creator</label>
+											<div class="col">
+												<label class="my-1 mr-1" for="inputTitle">Ticket title</label>
 											</div>
 										</div>
 										<div class="row mb-1">
 											<div class="col">
-												<input type="text" class="ticket-creator-excel" placeholder="Creator" name="creator" id="creatorExcel">
+												<input type="text" class="ticket-title-excel-form" placeholder="Ticket title" name="title"
+													id="inputTitle" data-disable_on_update="1" required>
+												<!-- <input class="form-control-sm mr-2" type="text" name="inputTitle" id="inputTitle" required>	 -->
 											</div>
 										</div>
-									</div>
-									<div class="col">
 										<div class="row">
-											<div class="col"><label class="m-0" for="OTLExcel">OTL</label>
-											</div>
+											<div class="col">Description</div>
 										</div>
 										<div class="row mb-1">
 											<div class="col">
-												<input type="text" class="ticket-OTL-excel" name="OTL" id="OTLExcel" placeholder="OTL">
+												<div class="excel-description text-area border border-dark p-1" contenteditable="true"
+													id="ticketDescriptionExcel">
+												</div>
 											</div>
 										</div>
-									</div>
-									<div class="col">
-										<div class="row">
-											<div class="col">
-												<label class="m-0" for="inputProjectExcel">Project</label>
-											</div>
-										</div>
-										<div class="row mb-1">
-											<div class="col">
-												<select name="projectName" id="inputProjectExcel" class="custom-select-sm font1em p-0"></select>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="row mb-1">
-									<div class="col flex-grow-0">
-										<div class="row flex-nowrap">
-											<div class="col pr-0">
+										<div class="d-flex flex-wrap mb-1">
+											<div class="mr-1">
 												<div class="row">
-													<div class="col">
-														<label class="m-0" for="inputDate">Date</label>
+													<div class="col"><label class="m-0" for="creatorExcel">Ticket creator</label>
 													</div>
 												</div>
 												<div class="row mb-1">
 													<div class="col">
-														<input type="date" class="form-control-sm mr-2" id="inputDate" name="date">
+														<input type="text" class="ticket-creator-excel" placeholder="Creator" name="creator"
+															id="creatorExcel">
 													</div>
 												</div>
 											</div>
-											<div class="col pr-0 pl-0">
+											<div class="mr-1">
 												<div class="row">
-													<div class="col">
-														<label class="m-0" for="inputTime">Time</label>
+													<div class="col"><label class="m-0" for="OTLExcel">OTL</label>
 													</div>
 												</div>
 												<div class="row mb-1">
 													<div class="col">
-														<input type="time" class="form-control-sm mr-2" id="inputTime" name="time">
+														<input type="text" class="ticket-OTL-excel" name="OTL" id="OTLExcel" placeholder="OTL">
+													</div>
+												</div>
+											</div>
+											<div class="mr-1">
+												<div class="row">
+													<div class="col">
+														<label class="m-0" for="inputProjectExcel">Project</label>
+													</div>
+												</div>
+												<div class="row mb-1">
+													<div class="col">
+														<select name="projectName" id="inputProjectExcel"
+															class="custom-select-sm font1em p-0"></select>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="d-flex flex-wrap mb-1">											<div class="mr-1 flex-grow-0">
+												<div class="d-flex flex-nowrap">
+													<div class="pr-0">
+														<div class="row">
+															<div class="col">
+																<label class="m-0" for="inputDate">Date</label>
+															</div>
+														</div>
+														<div class="row mb-1">
+															<div class="col">
+																<input type="date" class="form-control-sm mr-2" id="inputDate" name="date">
+															</div>
+														</div>
+													</div>
+													<div class="pr-0 pl-0">
+														<div class="row">
+															<div class="col">
+																<label class="m-0" for="inputTime">Time</label>
+															</div>
+														</div>
+														<div class="row mb-1">
+															<div class="col">
+																<input type="time" class="form-control-sm mr-2" id="inputTime" name="time">
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="mr-1">
+												<div class="row">
+													<div class="col">
+														<label class="m-0" for="inputName">Assign</label>
+													</div>
+												</div>
+												<div class="row mb-1">
+													<div class="col">
+														<select id="inputName" class="custom-select-sm font1em p-0 mr-2" name="assignee_name">
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="mr-1">
+												<div class="row">
+													<div class="col">
+														<label class="m-0" for="inputReference">Reference</label>
+													</div>
+												</div>
+												<div class="row mb-1">
+													<div class="col">
+														<input class="form-control-sm mr-2" size="10" type="text" name="reference"
+															id="inputReference">
+													</div>
+												</div>
+											</div>
+											<div class="mr-1">
+												<div class="row">
+													<div class="col">
+														<label class="m-0" for="inputCapOp">Capex/Opex</label>
+													</div>
+												</div>
+												<div class="row mb-1">
+													<div class="col">
+														<select id="inputCapOp" class="custom-select-sm font1em p-0 mr-2" name="capop">
+															<option value="" selected="" disabled="" hidden="">Choose...</option>
+															<option value="Capex">Capex</option>
+															<option value="Opex">Opex</option>
+														</select>
+													</div>
+												</div>
+											</div>
+											<div class="mr-1">
+												<div class="row">
+													<div class="col">
+														<label class="m-0" for="inputOracle">Oracle</label>
+													</div>
+												</div>
+												<div class="row">
+													<div class="col">
+														<input class="form-control-sm mr-2" size="10" type="text" name="oracle"
+															id="inputOracle">
+													</div>
+												</div>
+											</div>
+											<div class="mr-1">
+												<div class="row">
+													<div class="col">
+														<label class="m-0" for="inputStatus">Status</label>
+													</div>
+												</div>
+												<div class="row mb-1">
+													<div class="col">
+														<select id="inputStatus" class="custom-select-sm font1em p-0 mr-2" name="status">
+														</select>
 													</div>
 												</div>
 											</div>
 										</div>
 									</div>
-									<div class="col">
-										<div class="row">
-											<div class="col">
-												<label class="m-0" for="inputName">Assign</label>
-											</div>
-										</div>
-										<div class="row mb-1">
-											<div class="col">
-												<select id="inputName" class="custom-select-sm font1em p-0 mr-2" name="assignee_name">
-												</select>
-											</div>
-										</div>
-									</div>
-									<div class="col">
-										<div class="row">
-											<div class="col">
-												<label class="m-0" for="inputReference">Reference</label>
-											</div>
-										</div>
-										<div class="row mb-1">
-											<div class="col">
-												<input class="form-control-sm mr-2" size="10" type="text" name="reference" id="inputReference">
-											</div>
-										</div>
-									</div>
-									<div class="col">
-										<div class="row">
-											<div class="col">
-												<label class="m-0" for="inputCapOp">Capex/Opex</label>
-											</div>
-										</div>
-										<div class="row mb-1">
-											<div class="col">
-												<select id="inputCapOp" class="custom-select-sm font1em p-0 mr-2" name="capop">
-													<option value="" selected="" disabled="" hidden="">Choose...</option>
-													<option value="Capex">Capex</option>
-													<option value="Opex">Opex</option>
-												</select>
-											</div>	
-										</div>
-									</div>
-									<div class="col">
-										<div class="row">
-											<div class="col">
-												<label class="m-0" for="inputOracle">Oracle</label>
-											</div>
-										</div>
-										<div class="row">
-											<div class="col">
-												<input class="form-control-sm mr-2" size="10" type="text" name="oracle" id="inputOracle">
-											</div>
-										</div>
-									</div>
-									<div class="col">
-										<div class="row">
-											<div class="col">
-												<label class="m-0" for="inputStatus">Status</label>
-											</div>
-										</div>
-										<div class="row mb-1">
-											<div class="col">
-												<select id="inputStatus" class="custom-select-sm font1em p-0 mr-2" name="status">
-												</select>
-											</div>	
-										</div>
-									</div>
-								</div>
-							</div>
-							<div class="col-lg-4 col-sm-6 px-1">
-								<div class="row text-right">
-									<div class="col attachments-area-excel">
-										<div class="row">
-											<div class="col">
-												<div class="form-group">
-													<label for="attachFileExcel" class="file-input-show btn btn-info btn-sm">Attach new file...</label>
-													<input type="file" class="form-control-file-excel file-input-hidden" id="attachFileExcel"
-														name="attachFile">
+									<div class="col-lg-4 col-sm-6 px-1">
+										<div class="row text-right">
+											<div class="col attachments-area-excel">
+												<div class="row">
+													<div class="col">
+														<div class="form-group">
+															<label for="attachFileExcel" class="file-input-show btn btn-info btn-sm">Attach new
+																file...</label>
+															<input type="file" class="form-control-file-excel file-input-hidden"
+																id="attachFileExcel" name="attachFile">
+														</div>
+													</div>
+												</div>
+												<div class="row">
+													<div class="col">
+														<div class="attachments-header">Attachments:</div>
+														<div class="attachments-container-excel"></div>
+													</div>
 												</div>
 											</div>
 										</div>
-										<div class="row">
-											<div class="col">
-												<div class="attachments-header">Attachments:</div>
-												<div class="attachments-container-excel"></div>
-											</div>
-										</div>
 									</div>
 								</div>
+								<div class="row mt-2">
+									<div class="col">
+										<button type="submit" class="btn btn-primary btn-sm btn-add-task-excel" data-action="add">Add</button>
+										<button type="submit" class="btn btn-primary btn-sm btn-update-task-excel d-none" data-action="update"
+											disabled>Update</button>
+										<button type="reset" class="btn btn-warning btn-sm btn-clear-settings-excel">Clear</button>
+									</div>
+								</div>
+							</form>
+						</div>
+						<div class="excel-menu d-flex justify-content-between align-items-center">
+							<div class="period-select py-2">
+								<button type="button" class="btn btn-secondary btn-sm" data-days="1">-1D</button>
+								<button type="button" class="btn btn-primary btn-sm" data-days="0">Today</button>
+								<button type="button" class="btn btn-secondary btn-sm" data-days="-1">+1D</button>
+								<button type="button" class="btn btn-secondary btn-sm" data-days="7">Week</button>
+								<button type="button" class="btn btn-secondary btn-sm user-none" data-days="14">2 Weeks</button>
+								<button type="button" class="btn btn-secondary btn-sm user-none" data-days="31">Month</button>
+								<button type="button" class="btn btn-secondary btn-sm user-none" data-days="62">2 Months</button>
+								<button type="button" class="btn btn-secondary btn-sm user-none" data-days="365">YTD</button>
+								<input type="checkbox" id="cbHideTask"><span class="mx-1">Hide no date</span>
+							</div>
+							<div>
+								<a href="#" role="button" id="exportExcel" download="" title="Export to Excel"><img class="icon-excel"
+										src="img/file-excel.svg"></a>
 							</div>
 						</div>
-						<div class="row mt-2">
-							<div class="col">
-								<button type="submit" class="btn btn-primary btn-sm btn-add-task-excel" data-action="add">Add</button>
-								<button type="submit" class="btn btn-primary btn-sm btn-update-task-excel d-none" data-action="update" disabled>Update</button>
-								<button type="reset" class="btn btn-warning btn-sm btn-clear-settings-excel">Clear</button>
-							</div>
-						</div>
-					</form>
-				</div>
-				<div class="excel-menu d-flex justify-content-between align-items-center">
-					<div class="period-select py-2">
-						<button type="button" class="btn btn-secondary btn-sm" data-days="1">-1D</button>
-						<button type="button" class="btn btn-primary btn-sm" data-days="0">Today</button>
-						<button type="button" class="btn btn-secondary btn-sm" data-days="-1">+1D</button>
-						<button type="button" class="btn btn-secondary btn-sm" data-days="7">Week</button>
-						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="14">2 Weeks</button>
-						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="31">Month</button>
-						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="62">2 Months</button>
-						<button type="button" class="btn btn-secondary btn-sm user-none" data-days="365">YTD</button>
-						<input type="checkbox" id="cbHideTask"><span class="mx-1">Hide no date</span>
+						<table class="table table-sm compact mt-2 cell-border" id="table_excel">
+							<thead class="thead-light">
+								<tr>
+									<th>Ticket</th>
+									<th>Date started</th>
+									<th>Assigned</th>
+									<th>Title</th>
+									<th>Reference</th>
+									<th class="th-small">Capex/Opex</th>
+									<th class="th-small">Oracle</th>
+									<th class="th-small">Status</th>
+									<th class="th-small">Edit</th>
+									<th class="th-small">Remove</th>
+								</tr>
+							</thead>
+							<tbody class="dynamic-data table-excel">
+							</tbody>
+						</table>
 					</div>
-					<div>
-						<a href="#" role="button" id="exportExcel" download="" title="Export to Excel"><img class="icon-excel" src="img/file-excel.svg"></a>
-					</div>
-				</div>
-				<table class="table table-bordered table-sm compact mt-2" id="table_excel">
-					<thead class="thead-light">
-						<tr>
-							<th>Ticket</th>
-							<th>Date started</th>
-							<th>Assigned</th>
-							<th>Title</th>
-							<th>Reference</th>
-							<th>Capex/Opex</th>
-							<th>Oracle</th>
-							<th>Status</th>
-							<th>Edit</th>
-							<th>Remove</th>
-						</tr>
-					</thead>
-					<tbody class="dynamic-data table-excel">
-					</tbody>
-				</table>
+					<div class="col-md-1 px-0"></div>
 				<!-- </div> -->
 			</section>
 			<section class="section settings">

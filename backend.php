@@ -22,6 +22,8 @@ $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
 $params = $paramJSON['params'] ?? $_REQUEST ?? 0;
 
+$linksToTask = preg_replace('/jsonrpc\.php/', '?controller=TaskViewController&action=show&', KANBOARD_CITE);
+
 
 $db_object = new mySQLDatabaseUtils\databaseUtils();
 
@@ -122,6 +124,7 @@ if ($projectID !== false && $method !== 0)
 						'description'	=> nl2br($task['description'], FALSE),
 						'title'			=> $task['title']. (($task_version != false) ? '_v'.$task_version : ''),
 						'project_name'	=> $projectName,
+						'url'			=> $task['url'],
 						'files'			=> array_map("taskFilesMapper", $taskFiles['result'] ?? []),
 					];
 				}
@@ -365,6 +368,7 @@ if ($projectID !== false && $method !== 0)
 									'reference'		=> $task['reference'],
 									'description'	=> $task['description'],
 									'project_name'	=> $projectName,
+									'url'			=> $linksToTask . 'task_id=' . $task['id'] . '&project_id='.$projectID,
 									'assignee_name'	=> $assignee_name,
 									'fields'		=> $kanboard->getMetadataFields($taskMetadata['result']),
 									'editable'		=> ($accessType === 'user') ? 0 : 1,

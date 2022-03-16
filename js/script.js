@@ -181,15 +181,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		ticketDescriptionExcel = document.querySelector('#ticketDescriptionExcel'),
 		btnUpdateTaskExcel = document.querySelector('.btn-update-task-excel'),
 		btnAddTaskExcel = document.querySelector('.btn-add-task-excel'),
-		// btnUpdateTicket = document.querySelector('.btn-update-ticket'),
 		periodSelect = document.querySelector('.period-select'),
 		tableExcel = document.querySelector('.table-excel'),
 		btnRemove = document.querySelector('.btn-remove'),
 		inputName = document.querySelector('#inputName'),
 		inputDate = document.querySelector('#inputDate'),
 		inputTime = document.querySelector('#inputTime'),
-		// inputDescr = document.querySelector('#inputDescr'),
-		// inputAssigne = document.querySelector('#inputAssigne'),
 		inputTitle = document.querySelector('#inputTitle'),
 		inputReference = document.querySelector('#inputReference'),
 		inputCapOp = document.querySelector('#inputCapOp'),
@@ -199,7 +196,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		inputStatus =  document.querySelector('#inputStatus'),
 		ticketTitleExcel = document.querySelector('.ticket-title-excel'),
 		ticketProjectNameExcel = document.querySelector('#inputProjectExcel'),
-		// ticketDescr = document.querySelector('.ticket-descr'),
 		taskExcel_id = document.querySelector('#taskExcel_id'),
 		btnCreateTaskFileExcel= document.querySelector('#attachFileExcel'),
 		attachmentsContainerExcel = document.querySelector('.attachments-container-excel'),
@@ -772,7 +768,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 			elemTaskID.value = taskID;
-			// origin_id.value = taskID;
 			if (originTaskID && originTaskID != 0) {
 				elemTaskID.value = originTaskID;
 			}
@@ -885,17 +880,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const clearEditableFields = () => {
-		// ticketTitle.value = '';
-		// ticketCreator.value = currentUser;
-		// ticketOTL.value = '';
-		// ticketProjectName.value = '';
-		// ticketDescription.textContent = '';
-		// btnUpdateTask.classList.add('d-none');
-		// btnAddTask.classList.remove('d-none');
-		// attachmentsArea.classList.add('invisible');
-		// btnUpdateTask.dataset['task_id'] = 0;
-		// btnCreateTaskFile.removeAttribute('task_id');
-		// taskMain_id.value = 0;
 		formNewTask.reset();
 	};
 
@@ -908,7 +892,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const clearExcelTicketFields = () => {
 		ticketExcelForm.reset();
-		// ticketCreatorExcel.defaultValue = currentUser;
 	};
 
 	const selectTR = (selector, taskTicket = null) => {
@@ -957,7 +940,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	const createTaskFileNew = (e, btnFile, attachmentsList, callback = null) => {
 		const target = e.target;
 		const inputData = new FormData(target.form);
-		// let task_id = inputData.get('id');
 		let task_id = 0;
 		const formData = new FormData();
 		const fileStatusTaskID = btnFile.getAttribute('task_id');
@@ -1089,9 +1071,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				const tr_excel = tableExcel.querySelector(`tr[data-task_id="${id}"]`);
 				if (tr_excel) {
 					tr_excel.remove();
-					try {
-						// dataTableExcel.draw();
-					} catch (e) {}
 				}
 			}
 		}
@@ -1160,22 +1139,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// function showUpdatedTask(data)
-	// {
-	// 	clearEditableFields();
-	// 	if(!!data.success) {
-	// 		let {id, creator_id, date_completed, date_creation, description, title, project_name} = data.success.answer;
-	// 		const hrefAction = document.querySelector(`.task-ticket[data-task_id="${id}"]`);
-	// 		const taskTitle = hrefAction.querySelector('.task-title');
-	// 		const taskDescription = hrefAction.querySelector('.task-description');
-	// 		const taskProjectName = hrefAction.querySelector('.task-project-name');
-
-	// 		taskTitle.textContent = title;
-	// 		taskDescription.innerHTML = description;
-	// 		taskProjectName.textContent = project_name;
-	// 	}
-	// }
-
 	function showAllTasks(data)
 	{
 		if(data && data.success) {
@@ -1230,18 +1193,26 @@ window.addEventListener('DOMContentLoaded', () => {
 						<td class="ticket-oracle" data-item_value="${fields['oracle']}" data-item_id="inputOracle">${fields['oracle']}</td>
 						<td class="ticket-status" data-item_value="${status}" data-item_id="inputStatus">${status}</td>
 						<td class="text-center" data-item_value="${time_started}" data-item_id="inputTime">
-							<a href="#" class="${disable_edit}"><img class="icon-edit" src="img/edit.svg"></a>
+							<a href="#" class="${disable_edit}"><img class="icon-edit icon-edit-sm" src="img/edit.svg"></a>
 						</td>
 						<td class="text-center" data-item_value="${description}" data-item_id="ticketDescriptionExcel">
-							<a href="#" class="${disable_edit}"><img class="icon-delete" src="img/delete.svg"></a>
+							<a href="#" class="${disable_edit}"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
 						</td>
 					</tr>
 				`);
 			});
 			dataTableExcel = $('#table_excel').DataTable({
+				"columns": [
+					{ "width": "5%" },
+					{ "width": "10%" },
+					null, { "width": "30%" }, null, { "width": "5%" }, { "width": "10%" }, { "width": "5%" }, { "width": "3%" }, { "width": "3%" },
+				],
 				"columnDefs": [
 					{ "orderable": false, "targets": [3, 4, 5, 6, 7, 8, 9] },
-					// { "width": "10%", "targets": [0, 1, 2, 4] },
+					{
+						targets: -1,
+						className: 'dt-head-left'
+					},
 				],
 				"order": [
 					[0, 'asc'],
@@ -1264,13 +1235,16 @@ window.addEventListener('DOMContentLoaded', () => {
 			dataTableObj.clear().destroy();
 		}
 		if (!!data.success) {
-			data.success.answer.forEach(function ({project_name, title, date_creation, fields}) {
+			data.success.answer.forEach(function ({project_name, title, url, date_creation, fields}) {
 				tableStatistics.insertAdjacentHTML('beforeend', `
 					<td>${project_name}</td>
 					<td>${timestampToDate(date_creation, false)}</td>
 					<td>${fields.otl}</td>
 					<td>${title}</td>
 					<td>${fields.creator}</td>
+					<td>
+						<a href="${url}" class="text-decoration-none" target="_blank">Link</a>
+					</td>
 				`);
 			});
 			dataTableObj = $('#table_statistics').DataTable({
@@ -1279,8 +1253,8 @@ window.addEventListener('DOMContentLoaded', () => {
 					{ "width": "10%", "targets": [0, 1, 2, 4] },
 				],
 				"order": [
+					[1, 'desc'],
 					[0, 'asc'],
-					[1, 'asc']
 				],
 				"paging": false,
 				"searching": true,
@@ -1309,7 +1283,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						<td data-item_value="${description}" data-item_id="ticketDescriptionStatus">${reference}</td>
 						<td data-item_value="${project_name}" data-item_id="inputProjectStatus">${status}</td>
 						<td class="text-center">
-							<a href="#"><img class="icon-edit" src="img/edit.svg"></a>
+							<a href="#"><img class="icon-edit icon-edit-sm" src="img/edit.svg"></a>
 						</td>
 					</tr>
 				`);
@@ -1398,7 +1372,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	//init main
 	btnClearSettings.addEventListener('click', clearEditableFields);
-	// btnUpdateTask.addEventListener('click', updateTask);
 	ticketsContainer.addEventListener('click', actionTask);
 	formNewTask.addEventListener('submit', (e) => {
 		e.preventDefault();
@@ -1549,7 +1522,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	tableStatus.addEventListener('click', editStatusTask);
 	formNewTaskStatus.addEventListener('reset', (e) => {
 		const target = e.target;
-		// attachmentsAreaStatus.classList.add('invisible');
 		attachmentsContainerStatus.textContent = '';
 		target.querySelectorAll('[data-disable_on_update="1"]').forEach(item => {
 			item.readOnly = false;
