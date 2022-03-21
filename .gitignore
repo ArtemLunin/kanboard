@@ -11,5 +11,8 @@ composer.lock
 unused_functions.js
 db_conf.php
 db_automator.php
-
+excel.html
+index.html
+statistics.html
+tickets_status.html
 
