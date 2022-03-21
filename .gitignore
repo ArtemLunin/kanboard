@@ -9,4 +9,7 @@ kanboard_settings.txt
 composer.json
 composer.lock
 unused_functions.js
+db_conf.php
+db_automator.php
+
 

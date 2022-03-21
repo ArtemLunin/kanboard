@@ -1,6 +1,7 @@
 'use strict';
 
 const requestURL = 'backend.php';
+const automatorURL = 'utils.php';
 
 const entityMap = {
   '&': '&amp;',
@@ -31,6 +32,9 @@ sections.forEach((item, idx) => {
 const textCreatorHeader = 'Submitted by:';
 const textOTLHeader = 'OTL:';
 
+const startDocumentTitle = document.title;
+let currentHash = location.hash.substring(1);
+
 let fileAttach;
 let pageStatus = 0, fileDeleted = 0, totalWaits = 0, periodDays = 0;
 let currentUser = '';
@@ -42,6 +46,8 @@ let dataTableObj, dataTableExcel;
 
 const errorMsg = document.createElement('div');
 errorMsg.textContent = 'Username or password is incorrect';
+
+let filesTemplate, xls_files;
 
 // common functions
 // for sort in ORDER DESC
@@ -220,6 +226,16 @@ window.addEventListener('DOMContentLoaded', () => {
 		// statistics elements
 		const tableStatistics = document.querySelector('.table-statistics'),
 			exportStatistics = document.querySelector('#exportStatistics');
+		// automator elements
+		const listDevices = document.querySelector('#listDevices'),
+			listTemplates = document.querySelector('#uploadedTemplates'),
+			formTeplateUpload = document.querySelector('#formTeplateUpload'),
+			formDevicesUpload=document.querySelector('#formDevicesUpload'),
+			errorMsgAutomator = document.querySelector('#upload_error'),
+			errorMsgDevices = document.querySelector('#upload_devices_error'),
+			modalCommand = document.querySelector('#btnDialogModal'),
+			btnTemplateSelect = document.querySelector('#buttonTemplateSelect'),
+			btnDevicesSelect = document.querySelector('#buttonDevicesSelect');
 
 	btnUpdateTaskExcel.disabled = true;
 	btnUpdateTaskExcel.dataset['task_id'] = 0;
@@ -239,6 +255,20 @@ window.addEventListener('DOMContentLoaded', () => {
 				method: method,
 				body: JSON.stringify(body),
 				headers: headers
+			});
+			const data = await response.json();
+			return data;
+		} catch (e) {
+			console.error(e);
+			$('#waitModal').modal('hide');
+		}
+	}
+
+	async function sendRequestAutomator(method, url, body) {
+		try {
+			const response = await fetch(url, {
+				method: method,
+				body: body,
 			});
 			const data = await response.json();
 			return data;
@@ -292,6 +322,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const toggleSection = (showSection) => {
+		document.title = startDocumentTitle;
+		location.hash = showSection;
 		let idx = 0;
 		section.forEach((item, i) => {
 			item.style.display = 'none';
@@ -333,6 +365,10 @@ window.addEventListener('DOMContentLoaded', () => {
 					getKanboardUsers();
 				}
 				break;
+			case 'automator':
+				document.title = 'Automator';
+				getAutomator();
+				break;
 			default:
 				break;
 		}
@@ -362,14 +398,20 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else if (target.dataset['section'] === 'login') {
 				toggleSignIn('show');
 			} else {
-				Array.from(target.parentNode.children).forEach(item => {
-					item.style.backgroundColor = '';
-				});
-				target.style.backgroundColor = 'rgba(0,0,0,0.1)';
+				selectMenuItem(target.parentNode, target.dataset['section']);
 				toggleSection(target.dataset['section']);
 			}
 		}
 	});
+
+	const selectMenuItem = (menu, section) => {
+		Array.from(menu.children).forEach(item => {
+			item.style.backgroundColor = '';
+		});
+		try {
+			menu.querySelector(`[data-section="${section}"]`).style.backgroundColor = 'rgba(0,0,0,0.1)';
+		} catch (e) {};
+	};
 
 	const showInterface = (data) => {
 		let loginAction = 'logout';
@@ -399,11 +441,19 @@ window.addEventListener('DOMContentLoaded', () => {
 				});
 			}
 			menu.insertAdjacentHTML('beforeend', `
+				<li data-section="automator">Automator</li>
+			`);
+			menu.insertAdjacentHTML('beforeend', `
 				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
 			`);
 			$('#waitModal').modal('hide');
-			menu.children[0].style.backgroundColor = 'rgba(0,0,0,0.1)';
-			toggleSection('main');
+			// menu.children[0].style.backgroundColor = 'rgba(0,0,0,0.1)';
+			let section = 'main';
+			if (currentHash === 'automator') {
+				section = 'automator';
+			}
+			selectMenuItem(menu, section);
+			toggleSection(section);
 		}
 	};
 
@@ -1116,6 +1166,33 @@ window.addEventListener('DOMContentLoaded', () => {
 		getBoard('statistics');
 	};
 
+	const getAutomator = () => {
+		// const formData = new FormData();
+		// formData.append('doShowAllDevives', 1);
+		// sendRequestAutomator('POST', automatorURL, formData).then(showAutomator);
+		commonAutomatorRequest({
+			formParams: {
+				doShowAllDevives: 1,
+			},
+			URL: automatorURL,
+			callback: showAutomator
+		});
+	};
+
+	const doGetTemplates = () => {
+		listTemplates.textContent = '';
+		// const formData = new FormData();
+		// formData.append('doGetTemplates', 1);
+		// sendRequestAutomator('POST', automatorURL, formData).then(showTemplates);
+		commonAutomatorRequest({
+			formParams: {
+				doGetTemplates: 1,
+			},
+			URL: automatorURL,
+			callback: showTemplates
+		});
+	};
+
 	function showAddedTask(data)
 	{
 		attachmentsContainer.textContent = '';
@@ -1296,6 +1373,198 @@ window.addEventListener('DOMContentLoaded', () => {
 		$('#waitModal').modal('hide');
 	};
 
+	const showAutomator = (data) => {
+		if(!!data.answer) {
+			while (listDevices.hasChildNodes()) {   
+				listDevices.removeChild(listDevices.firstChild);
+			}
+			const tableNode = document.createElement('table');
+			// const theadNode = document.createElement('thead');
+			const tbodyNode = document.createElement('tbody');
+			const trNodeIDs = document.createElement('tr');
+			const tdNodeBlank2 = document.createElement('td');
+			tdNodeBlank2.innerHTML = '<input type="checkbox" id="main_checkbox" title="check/uncheck all">';
+			trNodeIDs.appendChild(tdNodeBlank2);
+			for (var cell_idx in data.answer[0]) // get names
+			{
+				const tdNodeIDs = document.createElement('td');
+				tdNodeIDs.innerText = data.answer[0][cell_idx];
+				trNodeIDs.appendChild(tdNodeIDs);
+			}
+			// tableNode.appendChild(theadNode);
+			tbodyNode.appendChild(trNodeIDs);
+			
+			for (let row_idx in data.answer)
+			{
+				if (row_idx == 0) continue;
+				for (let device_idx in data.answer[row_idx])
+				{
+					const trNodeValues = document.createElement('tr');
+					const tdNodeCB = document.createElement('td');
+					tdNodeCB.innerHTML = `<input type="checkbox" id="cb_${device_idx}" class="check_box" name="checked_devices">`;
+					trNodeValues.appendChild(tdNodeCB);
+					for (let cell_idx in data.answer[row_idx][device_idx])
+					{
+						const tdNodeValues = document.createElement('td');
+						tdNodeValues.innerText = data.answer[row_idx][device_idx][cell_idx];
+						trNodeValues.appendChild(tdNodeValues);
+					}
+					tbodyNode.appendChild(trNodeValues);	
+				}
+			}
+			tableNode.appendChild(tbodyNode);
+			tableNode.classList.add('table', 'table-bordered', 'table-hover', 'table-sm');
+			listDevices.appendChild(tableNode);
+			document.getElementById('main_checkbox').addEventListener('click', checkAllCB);
+		}
+	};
+
+	const showTemplates = (data) => {
+		if (!!data.answer) {
+			while (listTemplates.hasChildNodes()) {   
+				listTemplates.removeChild(listTemplates.firstChild);
+			}
+			const titleList = document.createElement('p');
+			titleList.innerText='Existing templates:';
+			const ulNode = document.createElement('ul');
+			ulNode.setAttribute('class','list-group');
+			for (let template_idx in data.answer)
+			{
+				const cbNode = document.createElement('input');
+				cbNode.setAttribute('type', 'checkbox');
+				cbNode.setAttribute('class', 'check_box_template')
+				cbNode.setAttribute('name', 'checked_templates');
+				cbNode.setAttribute('id', `cb_template_${data.answer[template_idx][0]}`);
+				const liNode = document.createElement('li');
+				liNode.setAttribute('class', 'list-group-item py-0');
+				liNode.appendChild(cbNode);
+				const textNode = document.createElement('span');
+				textNode.innerText = data.answer[template_idx][1];
+				textNode.setAttribute('class', 'p-3');
+				liNode.appendChild(textNode);
+				ulNode.appendChild(liNode);
+			}
+			listTemplates.appendChild(titleList);
+			listTemplates.appendChild(ulNode);
+		} else {
+			errorMsgAutomator.innerText = JSON.stringify(data);
+			errorMsgAutomator.style.display = 'block';
+		}
+	};
+
+	btnTemplateSelect.addEventListener('click', () => {
+		if (typeof filesTemplate == 'undefined') return false;
+		uploadAutomatorItems({
+			formParams: {
+				doUploadTemplate: 1,
+				templateFile: filesTemplate[0]
+			},
+			URL: automatorURL,
+			callback: function () {
+				$('#modalTemplateUploadDialog').modal('hide');
+			}
+		});
+		filesTemplate = null;
+	});
+
+	btnDevicesSelect.addEventListener('click', () => {
+		if (typeof xls_files == 'undefined' || !xls_files) return false;
+		uploadAutomatorItems({
+			formParams: {
+				doUploadDevices: 1,
+				devicesFile: xls_files[0]
+			},
+			URL: automatorURL,
+			callback: function () {
+				$('#modalDevicesUploadDialog').modal('hide');
+				getAutomator();
+			}
+		})
+		xls_files = null;
+	});
+
+	document.querySelector('#templateFileUploadButton').addEventListener('change', function(e)
+	{
+		const target = e.target;
+		filesTemplate = target.files;
+	});
+
+	document.querySelector('#devicesFileUploadButton').addEventListener('change', function(e)
+	{
+		const target = e.target;
+		xls_files = target.files;
+	});
+
+	document.querySelector('#buttonTemplateDelete').addEventListener('click', function()
+	{
+		modalCommand.setAttribute('modal-command', 'deleteTemplate');
+		document.getElementById('titleDialogModal').innerText = "Delete template";
+		document.getElementById('questionDialogModal').innerText = 'Do you want to delete selected templates?';
+		$('#modalTemplateUploadDialog').modal('hide');
+		$('#dialogModal').modal({
+  			keyboard: true
+		});
+	});
+
+	document.querySelector('#deleteDevices').addEventListener('click', function()
+	{
+		modalCommand.setAttribute('modal-command', 'deleteDevices');
+		document.getElementById('titleDialogModal').innerText = "Delete Device";
+		document.getElementById('questionDialogModal').innerText = 'Do you want to delete selected devices?';
+		$('#dialogModal').modal({
+  			keyboard: true
+		});
+	});
+
+	document.querySelector('#downloadTemplate').addEventListener('click', function()
+	{
+		const arr_id_checked = getArraySelectedCbox(listDevices.querySelectorAll('.check_box'), 'cb_');
+		$('#dialogModal').modal('hide');
+
+		if (arr_id_checked.length)
+		{
+			commonAutomatorRequest({
+			formParams: {
+				doDownloadTemplate: 1,
+				devices_id: JSON.stringify(arr_id_checked),
+			},
+			URL: automatorURL,
+			callback: function (data) {
+				document.location.href = data.answer;
+			}
+		});
+		}
+	});
+
+	modalCommand.addEventListener('click', (e) => {
+		const target = e.target;
+		const modalCommandValue = target.getAttribute('modal-command');
+		$('#dialogModal').modal('hide');
+		switch(modalCommandValue)
+		{
+			case 'deleteTemplate':
+				commonAutomatorRequest({
+					formParams: {
+						doDeleteTemplates: 1,
+						templates_id: JSON.stringify(getArraySelectedCbox(listTemplates.querySelectorAll('.check_box_template'), 'cb_template_')),
+					},
+					URL: automatorURL,
+				});
+				break;
+			case 'deleteDevices':
+				commonAutomatorRequest({
+					formParams: {
+						doDeleteDevices: 1,
+						devices_id: JSON.stringify(getArraySelectedCbox(listDevices.querySelectorAll('.check_box'), 'cb_')),
+					},
+					URL: automatorURL,
+					callback: getAutomator,
+				});
+				break;
+			default:
+		}
+	});
+
 	const getOTL = (fieldsKanboard) => {
 		let OTLStatus = '';
 		if (!!fieldsKanboard['otl'] && fieldsKanboard['otl'] !== '') {
@@ -1303,6 +1572,75 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		return OTLStatus;
 	};
+
+	$('#modalTemplateUploadDialog').on('show.bs.modal', function (e) {
+		formTeplateUpload.reset();
+		errorMsgAutomator.style.display = "none";
+		errorMsgAutomator.innerText = '';
+		doGetTemplates();
+	});
+
+	$('#modalDevicesUploadDialog').on('show.bs.modal', function (e) {
+		formDevicesUpload.reset();
+		errorMsgDevices.style.display="none";
+		errorMsgDevices.innerText='';
+	});
+	
+	function checkAllCB()
+	{
+		if(document.getElementById('main_checkbox').checked)
+		{
+			for (let check_boxes of listDevices.getElementsByClassName('check_box'))
+			{
+				check_boxes.checked = true;	
+			}
+		}
+		else
+		{
+			for (let check_boxes of listDevices.getElementsByClassName('check_box'))
+			{
+				check_boxes.checked = false;
+			}
+		}
+	}
+
+	function getArraySelectedCbox (cboxNodes, cboxPrefix) {
+		const arr_id_checked = [];
+		const re = new RegExp(`${cboxPrefix}([0-9]+)`);
+		for (let check_box of cboxNodes)
+		{
+			let match_id = check_box.id.match(re);
+			if(match_id && check_box.checked)
+			{
+				arr_id_checked.push(match_id[1]);
+			}
+		}
+		return arr_id_checked;
+	}
+
+	function uploadAutomatorItems ({ formParams, URL, callback = null }) {
+		const formData = new FormData();
+		for (let param in formParams) {
+			formData.append(param, formParams[param]);	
+		}
+		sendFile('POST', URL, formData).then(() => {
+			if (callback) {
+				callback();
+			}
+		});
+	}
+
+	function commonAutomatorRequest ({ formParams, URL, callback = null }) {
+		const formData = new FormData();
+		for (let param in formParams) {
+			formData.append(param, formParams[param]);	
+		}
+		sendRequestAutomator('POST', URL, formData).then((data) => {
+			if (callback) {
+				callback(data);
+			}
+		});
+	}
 
 	function showUsers(data) {
 		if(!!data.success) {
@@ -1564,6 +1902,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.location.href=`./${requestURL}?method=doDataExport&status=all&section=statistics`;
 	});
 
+	// init automator
 
 	clearInputsForms();
 	iniInterface();

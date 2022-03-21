@@ -267,9 +267,9 @@
 			</section>
 			<section class="section excel">
 				<div class="page-data d-none" data-excel="1"></div>
-				<div class="row">
-					<div class="col-md-1 px-0"></div>
-					<div class="col-md-10">
+				<!-- <div class="row"> -->
+					<!-- <div class="col-md-1 px-0"></div> -->
+					<!-- <div class="col-md-10"> -->
 						<div class="border border-dark mt-2 p-2 modify-container">
 							<form method="POST" action="#" id="ticketExcelForm">
 								<input type="hidden" id="taskExcel_id" name="id" value="0">
@@ -492,7 +492,7 @@
 									<th>Assigned</th>
 									<th>Title</th>
 									<th>Reference</th>
-									<th class="th-small">Capex/Opex</th>
+									<th class="th-small">Capex / Opex</th>
 									<th class="th-small">Oracle</th>
 									<th class="th-small">Status</th>
 									<th class="th-small">Edit</th>
@@ -502,8 +502,8 @@
 							<tbody class="dynamic-data table-excel">
 							</tbody>
 						</table>
-					</div>
-					<div class="col-md-1 px-0"></div>
+					<!-- </div> -->
+					<!-- <div class="col-md-1 px-0"></div> -->
 				<!-- </div> -->
 			</section>
 			<section class="section settings">
@@ -563,6 +563,30 @@
 					</div>
 					<div class="col-1 px-0"></div>
 				</div>
+			</section>
+			<section class="section automator">
+				<nav class="navbar navbar-expand-lg navbar-light bg-light">
+					<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+						aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+					<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+						<div class="navbar-nav">
+							<a class="nav-item nav-link active" href="#" data-toggle="modal"
+								data-target="#modalTemplateUploadDialog">Template</a>
+							<a class="nav-item nav-link active" href="#" data-toggle="modal"
+								data-target="#modalDevicesUploadDialog">Devices</a>
+							<a class="nav-item nav-link disabled" href="#" data-toggle="modal"
+								data-target="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+							<button type="button" class="btn btn-danger mr-2" id="deleteDevices">Delete</button>
+							<button type="button" class="btn btn-info" id="downloadTemplate">Config</button>
+							<a class="nav-item nav-link disabled" href="#" data-toggle="modal"
+								data-target="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+							<a class="nav-item nav-link active" href="#" id="configs"></a>
+						</div>
+					</div>
+				</nav>
+				<div id="listDevices"></div>
 			</section>
 		</container>
 	</main>
@@ -624,6 +648,83 @@
 				<div class="modal-footer">
 					<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Close</button>
 					<button type="button" class="btn btn-sm btn-danger btn-remove" data-task_id="">Remove</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- automator elements -->
+	<div class="modal fade" id="modalTemplateUploadDialog" tabindex="-1" role="dialog"
+		aria-labelledby="templateUploadDialog" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="templateUploadDialog">Upload template</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body" id="listTemplates">
+					<div id="uploadedTemplates"></div>
+					<form action="tools.php" method="POST" id="formTeplateUpload" enctype="multipart/form-data">
+						<div class="form-group">
+							<label for="templateFileUploadButton">Select a template to upload</label>
+							<input type="file" class="form-control-file" id="templateFileUploadButton" name="templateFile"
+								accept=".txt">
+						</div>
+					</form>
+					<div class="alert alert-danger" id="upload_error"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-warning" id="buttonTemplateDelete"
+						title="Delete selected">Delete</button>
+					<button type="button" class="btn btn-primary" id="buttonTemplateSelect">Save changes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal fade" id="modalDevicesUploadDialog" tabindex="-1" role="dialog" aria-labelledby="devicesUploadDialog" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="devicesUploadDialog">Upload devices list</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<form action="tools.php" method="POST" id="formDevicesUpload" enctype="multipart/form-data">
+						<div class="form-group">
+							<label for="devicesFileUploadButton">Select a Excel file to upload</label>
+							<input type="file" class="form-control-file" id="devicesFileUploadButton" name="devicesFile"
+								accept=".xlsx">
+						</div>
+					</form>
+					<div class="alert alert-danger" id="upload_devices_error"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" id="buttonDevicesSelect">Save changes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="dialogModal" class="modal" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="titleDialogModal">Question</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<p id="questionDialogModal"></p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+					<button type="button" class="btn btn-primary" modal-command="" id="btnDialogModal">Yes</button>
 				</div>
 			</div>
 		</div>

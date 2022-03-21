@@ -10,7 +10,8 @@ class databaseUtils {
 		'sectionName' => 'main',
 		'sectionAttr'	=> 'main',
 		'accessType'	=> 'admin',
-	]];
+	],
+	];
 	private $superRights = [[
 		'pageName' => 'Settings',
 		'sectionName' => 'settings',
