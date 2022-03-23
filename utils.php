@@ -10,6 +10,8 @@ $param_error_count=0;
 $param_error_msg=[];
 $output_zip=FALSE;
 
+$TEMPLATES_PATH = 'templates/';
+
 $out_res=[];
 if (isset ($_REQUEST['doUploadTemplate']))
 {
@@ -19,7 +21,7 @@ if (isset ($_REQUEST['doUploadTemplate']))
 		{
 			try
 			{
-				move_uploaded_file($_FILES['templateFile']['tmp_name'], 'templates/'.$_FILES['templateFile']['name']);
+				move_uploaded_file($_FILES['templateFile']['tmp_name'], $TEMPLATES_PATH.$_FILES['templateFile']['name']);
 				$sql_ins="INSERT INTO templates (template_file) VALUES (:template);";
 				$row_ins=$pdo->prepare($sql_ins);
 				$row_ins->execute(['template'=>$_FILES['templateFile']['name']]);
@@ -200,18 +202,16 @@ if (isset ($_REQUEST['doUploadDevices']))
 }
 elseif (isset($_REQUEST['doGetTemplates']))
 {
-	$arr_templates=[];
-	$sql_get="SELECT id, template_file FROM templates ORDER BY template_file;";
-	$row_get=$pdo->prepare($sql_get);
+	$arr_templates = [];
+	$sql_get = "SELECT id, template_file FROM templates ORDER BY template_file";
+	$row_get = $pdo->prepare($sql_get);
 	$row_get->execute();
-	if ($table_res=$row_get->fetchall())
-	{
-		foreach ($table_res as $row_)
-		{
-			$arr_templates[]=array($row_['id'] , $row_['template_file']);
+	if ($table_res = $row_get->fetchall()) {
+		foreach ($table_res as $row_) {
+			$arr_templates[] = [$row_['id'] , $row_['template_file'], $TEMPLATES_PATH];
 		}
 	}
-	$out_res=array('answer'=>$arr_templates);
+	$out_res = ['answer' => $arr_templates];
 }
 elseif (isset($_REQUEST['doShowAllDevives']))
 {
@@ -334,17 +334,14 @@ elseif (isset($_REQUEST['doDeleteDevices']))
 }
 elseif (isset($_REQUEST['doDownloadTemplate']))
 {
-	$arr_param=[];
-	//$sql_sel="SELECT devices.device_id, devices.parameter_value FROM devices, parameters WHERE parameters.parameter_name='template_file' AND parameters.parameter_id=devices.parameter_id AND devices.device_id=:device_id;";
-	//parameter_id=1 - template_file_name
-	//parameter_id=2 - hostname
-	$sql_sel="SELECT devices.device_id, devices.parameter_value FROM devices WHERE devices.parameter_id=2 AND devices.device_id=:device_id;";
-	$sql_sel_params="SELECT parameter_id, parameter_value FROM devices WHERE device_id=:device_id ORDER BY parameter_id ASC;";
-	$row_sel=$pdo->prepare($sql_sel);
+	$arr_param = [];
+	$sql_sel = "SELECT devices.device_id, devices.parameter_value FROM devices WHERE devices.parameter_id=2 AND devices.device_id=:device_id;";
+	$sql_sel_params = "SELECT parameter_id, parameter_value FROM devices WHERE device_id=:device_id ORDER BY parameter_id ASC;";
+	$row_sel = $pdo->prepare($sql_sel);
 	if (isset($_REQUEST['devices_id']) && $_REQUEST['devices_id']!="")
 	{
-		$devices_config=[];
-		$arr_id=json_decode($_REQUEST['devices_id']);
+		$devices_config = [];
+		$arr_id = json_decode($_REQUEST['devices_id']);
 		try
 		{
 			foreach ($arr_id as $key => $value) 
@@ -360,11 +357,11 @@ elseif (isset($_REQUEST['doDownloadTemplate']))
 						}
 					}
 					$row_sel->execute(['device_id' => $value]);
-					if ($table_res=$row_sel->fetchall())
+					if ($table_res = $row_sel->fetchall())
 					{
 						foreach ($table_res as $row_)
 						{
-							$file_template=@fopen('templates/'.$row_['parameter_value'],'r');
+							$file_template=@fopen($TEMPLATES_PATH.$row_['parameter_value'],'r');
 							if ($file_template) 
 							{
 								$file_config=fopen('config_files/config_'.$arr_param[1].".txt",'w');
@@ -395,38 +392,34 @@ elseif (isset($_REQUEST['doDownloadTemplate']))
 						}
 					}
 				}
-				//$output_zip=TRUE;
 			}
 			if (!$param_error_count)
 			{
-							$zip = new ZipArchive();
-							$filename_zip = 'config_files/configs.zip';
-							@unlink($filename_zip);
-							if ($zip->open($filename_zip, ZipArchive::CREATE)===TRUE) 
-							{
-								foreach ($devices_config as $value) {
-									$zip->addFile($value);
-									//@unlink($value);
-								}
-								$zip->close();
-								$out_res=array('answer'=>'./'.$filename_zip);
-								//$output_zip=TRUE;
-								foreach ($devices_config as $value) {
-								//	$zip->addFile($value);
-									@unlink($value);
-								}
-							}
-							else
-							{
-								setError('zip', 'unable to create zip file');
-							}
+				$zip = new ZipArchive();
+				$filename_zip = 'config_files/configs.zip';
+				@unlink($filename_zip);
+				if ($zip->open($filename_zip, ZipArchive::CREATE)===TRUE) 
+				{
+					foreach ($devices_config as $value) {
+						$zip->addFile($value);
+					}
+					$zip->close();
+					$out_res = array('answer'=>'./'.$filename_zip);
+					foreach ($devices_config as $value) {
+						@unlink($value);
+					}
+				}
+				else
+				{
+					setError('zip', 'unable to create zip file');
+				}
 			}
 			
     	}
 		catch (PDOException $e) 
 		{
 			setError('sql', $e->getMessage());
-			$out_res=array('error'=>$param_error_msg);
+			$out_res = ['error' => $param_error_msg];
 		}
 	}
 	else
@@ -434,6 +427,27 @@ elseif (isset($_REQUEST['doDownloadTemplate']))
 		setError('no devices selected', '');
 	}
 }
+// elseif (isset($_REQUEST['doDownloadTemplateFile']))
+// {
+// 	$arr_param = [];
+// 	$templateExists = false;
+// 	$sql_sel = "SELECT id, template_file FROM templates WHERE id=:id";
+// 	$row_sel = $pdo->prepare($sql_sel);
+// 	if (isset($_REQUEST['id']) && $_REQUEST['id'] != "") {
+// 		$row_sel->execute(['id' => $_REQUEST['id']]);
+// 		if ($row = $row_sel->fetch())
+// 		{
+// 			if (file_exists($TEMPLATES_PATH.$row['template_file'])) {
+// 				$templateExists = true;
+// 				$out_res = ['answer' => $TEMPLATES_PATH.$row['template_file']];
+// 			}
+// 		}
+// 	}
+// 	if (!$templateExists) {
+// 		setError('no template file', '');
+// 		$out_res = ['error' => $param_error_msg];
+// 	}
+// }
 elseif (isset($_REQUEST['doDeleteTemplates']))
 {
 	if (isset($_REQUEST['templates_id']) && $_REQUEST['templates_id']!="")
@@ -453,7 +467,7 @@ elseif (isset($_REQUEST['doDeleteTemplates']))
 					$row_sel->execute(['template_id'=>$value]);
 					if ($row_=$row_sel->fetch())
 					{
-						@unlink('templates/'.$row_['template_file']);
+						@unlink($TEMPLATES_PATH.$row_['template_file']);
 						$row_del->execute(['template_id'=>$value]);
 					}
 				}

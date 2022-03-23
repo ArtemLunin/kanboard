@@ -17,6 +17,12 @@ class databaseUtils {
 		'sectionName' => 'settings',
 		'sectionAttr'	=> 'settings',
 		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'Automator',
+		'sectionName' => 'automator',
+		'sectionAttr'	=> 'automator',
+		'accessType'	=> 'admin',
 	]];
 	function __construct () {
 		try
@@ -121,7 +127,7 @@ class databaseUtils {
 		{
 			$rights = json_decode($result['user_rights'], true);
 			if ($rights) {
-				$rights = array_filter($rights, array($this, 'hideNoAccessRights'));
+				// $rights = array_filter($rights, array($this, 'hideNoAccessRights'));
 				array_walk($rights, function (&$one_right) {
 					if ($one_right['pageName'] == 'Status') {
 						$one_right['pageName'] = 'Request';
@@ -132,6 +138,14 @@ class databaseUtils {
 			if ($result['user_name'] === SUPER_USER) {
 				$this->root_access = true;
 				$rights = array_merge($rights, $this->superRights);
+				$uniqRights = [];
+				foreach ($rights as $key => $value) {
+					if (array_search($value['pageName'], $uniqRights) === false) {
+						$uniqRights[] = $value['pageName'];
+					} else {
+						unset($rights[$key]);
+					}
+				}
 			}
 		} else {
 			$rights = false;
@@ -160,7 +174,7 @@ class databaseUtils {
 		return false;
 	}
 	function hideNoAccessRights($user_rights) {
-			return $user_rights['accessType'] != '';
+		return $user_rights['accessType'] != '';
 	}
 	function setSQLError($pdo_exception, $error_text)
 	{

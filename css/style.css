@@ -92,6 +92,15 @@ main {
 p {
 	margin: 0;
 }
+.cursor-pointer {
+	cursor: pointer;
+}
+.template-link:hover {
+	text-decoration: none;
+}
+.template-link img {
+	width: 18px;
+}
 .app-container {
 	margin: auto;
 }

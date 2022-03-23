@@ -43,17 +43,17 @@ catch (Exception $e) {
 	$param_error_msg['error'] = $e->getMessage();
 }
 
+if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
+	$currentUser = $_SESSION['logged_user'];
+	$rights = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
+}
+
+$section = $params['section'] ?? '';
+$accessType = $db_object->getAccessType($rights, $section);
+
 
 if ($projectID !== false && $method !== 0)
 {
-	if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
-		$currentUser = $_SESSION['logged_user'];
-		$rights = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
-	}
-	
-	$section = $params['section'] ?? '';
-	$accessType = $db_object->getAccessType($rights, $section);
-
 	if ($method === 'signIn') {
 		$kanboardUserName = trim($params['userName'] ?? 'defaultUser');
 		$kanboardUserPass = trim($params['password'] ?? '');
@@ -279,7 +279,6 @@ if ($projectID !== false && $method !== 0)
 						"oracle"	=> trim($params['oracle'] ?? ""),
 						"capop"		=> trim($params['capop'] ?? ""),
 						"creator"	=> $taskCreator,
-						// "user_name" => trim($params['user_name'] ?? ""),
 					]
 				]);
 				if (isset($taskResult['result']))
@@ -562,11 +561,13 @@ if ($projectID !== false && $method !== 0)
 		}
 	}
 	
+} 
+if (count($param_error_msg['answer']) === 0 && $accessType === false) {
+	$param_error_msg['answer'] = false;
 }
 if ($projectID) {
 	$out_res = ['success' => $param_error_msg];	
-}
-else {
+} else {
 	$out_res = ['error' => $param_error_msg];	
 }
 

@@ -20,6 +20,7 @@ const sections = [
 	'status',
 	'excel',
 	'statistics',
+	'automator',
 	'action',
 ];
 
@@ -151,6 +152,14 @@ const escapeHTML = (string) => {
 
 const capitalize = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
+function downloadFile(dataurl) {
+  const link = document.createElement("a");
+  link.href = `data:text/plain;charset=utf-8, ${encodeURIComponent(dataurl)}`;
+//   link.download = filename;
+  link.click();
+  link.remove();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
 	const menu = document.querySelector('.menu ul'),
 		section = document.querySelectorAll('.section');
@@ -234,7 +243,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			errorMsgAutomator = document.querySelector('#upload_error'),
 			errorMsgDevices = document.querySelector('#upload_devices_error'),
 			modalCommand = document.querySelector('#btnDialogModal'),
-			btnTemplateSelect = document.querySelector('#buttonTemplateSelect'),
+			// btnTemplateSelect = document.querySelector('#buttonTemplateSelect'),
 			btnDevicesSelect = document.querySelector('#buttonDevicesSelect');
 
 	btnUpdateTaskExcel.disabled = true;
@@ -257,6 +266,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				headers: headers
 			});
 			const data = await response.json();
+			if (data?.success?.answer === false) {
+				logout();
+				return false;
+			}
 			return data;
 		} catch (e) {
 			console.error(e);
@@ -271,6 +284,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				body: body,
 			});
 			const data = await response.json();
+			if (data?.success?.answer === false) {
+				logout();
+				return false;
+			}
 			return data;
 		} catch (e) {
 			console.error(e);
@@ -285,6 +302,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				body: body,
 			});
 			const data = await response.json();
+			if (data?.success?.answer === false) {
+				logout();
+				return false;
+			}
 			return data;
 		} catch (e) {
 			console.error(e);
@@ -441,13 +462,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				});
 			}
 			menu.insertAdjacentHTML('beforeend', `
-				<li data-section="automator">Automator</li>
-			`);
-			menu.insertAdjacentHTML('beforeend', `
 				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
 			`);
 			$('#waitModal').modal('hide');
-			// menu.children[0].style.backgroundColor = 'rgba(0,0,0,0.1)';
 			let section = 'main';
 			if (currentHash === 'automator') {
 				section = 'automator';
@@ -1043,6 +1060,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const actionForUsers = (e) => {
 		e.preventDefault();
+		rightsForm.reset();
 		const target = e.target.closest('tr');
 		const href = e.target.closest('a');
 		target.querySelectorAll('a').forEach(item => {
@@ -1167,9 +1185,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const getAutomator = () => {
-		// const formData = new FormData();
-		// formData.append('doShowAllDevives', 1);
-		// sendRequestAutomator('POST', automatorURL, formData).then(showAutomator);
 		commonAutomatorRequest({
 			formParams: {
 				doShowAllDevives: 1,
@@ -1180,16 +1195,26 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const doGetTemplates = () => {
-		listTemplates.textContent = '';
-		// const formData = new FormData();
-		// formData.append('doGetTemplates', 1);
-		// sendRequestAutomator('POST', automatorURL, formData).then(showTemplates);
 		commonAutomatorRequest({
 			formParams: {
 				doGetTemplates: 1,
 			},
 			URL: automatorURL,
 			callback: showTemplates
+		});
+	};
+
+	const doDownloadTemplateFile = (id) => {
+		commonAutomatorRequest({
+			formParams: {
+				doDownloadTemplateFile: 1,
+				id: id,
+			},
+			URL: automatorURL,
+			callback: function (data) {
+				downloadFile(data.answer);
+				// document.location.href = data.answer;
+			}
 		});
 	};
 
@@ -1282,7 +1307,13 @@ window.addEventListener('DOMContentLoaded', () => {
 				"columns": [
 					{ "width": "5%" },
 					{ "width": "10%" },
-					null, { "width": "30%" }, null, { "width": "5%" }, { "width": "10%" }, { "width": "5%" }, { "width": "3%" }, { "width": "3%" },
+					null, 
+					{ "width": "45%" }, 
+					{ "width": "10%" }, 
+					{ "width": "5%" }, 
+					{ "width": "5%" }, 
+					{ "width": "5%" }, 
+					{ "width": "3%" }, { "width": "3%" },
 				],
 				"columnDefs": [
 					{ "orderable": false, "targets": [3, 4, 5, 6, 7, 8, 9] },
@@ -1421,51 +1452,48 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const showTemplates = (data) => {
 		if (!!data.answer) {
-			while (listTemplates.hasChildNodes()) {   
-				listTemplates.removeChild(listTemplates.firstChild);
-			}
-			const titleList = document.createElement('p');
-			titleList.innerText='Existing templates:';
-			const ulNode = document.createElement('ul');
-			ulNode.setAttribute('class','list-group');
-			for (let template_idx in data.answer)
-			{
-				const cbNode = document.createElement('input');
-				cbNode.setAttribute('type', 'checkbox');
-				cbNode.setAttribute('class', 'check_box_template')
-				cbNode.setAttribute('name', 'checked_templates');
-				cbNode.setAttribute('id', `cb_template_${data.answer[template_idx][0]}`);
-				const liNode = document.createElement('li');
-				liNode.setAttribute('class', 'list-group-item py-0');
-				liNode.appendChild(cbNode);
-				const textNode = document.createElement('span');
-				textNode.innerText = data.answer[template_idx][1];
-				textNode.setAttribute('class', 'p-3');
-				liNode.appendChild(textNode);
-				ulNode.appendChild(liNode);
-			}
-			listTemplates.appendChild(titleList);
-			listTemplates.appendChild(ulNode);
+			const templArr = data.answer;
+			listTemplates.textContent = '';
+			listTemplates.insertAdjacentHTML('beforeend', `
+				<ul class="list-group template-list">
+					${templArr.reduce((res, current) => res + `
+						<li class="list-group-item py-0 d-flex justify-content-between">
+							<span class="">${current[1]}</span>
+							<span class="">
+								<a href="${encodeURI(current[2] + current[1])}" download class="template-link">
+									<img class="icon-delete" src="img/download.svg">
+								</a>
+								<a href="#" class="template-link template-action" data-id="${current[0]}" data-action="delete" data-filename="${encodeURI(current[1])}">
+									<img class="icon-delete" src="img/delete.svg">
+								</a>
+							</span
+							
+						</li>
+					`,
+					 '')}
+				</ul>
+			`);
 		} else {
 			errorMsgAutomator.innerText = JSON.stringify(data);
 			errorMsgAutomator.style.display = 'block';
 		}
 	};
 
-	btnTemplateSelect.addEventListener('click', () => {
-		if (typeof filesTemplate == 'undefined') return false;
-		uploadAutomatorItems({
-			formParams: {
-				doUploadTemplate: 1,
-				templateFile: filesTemplate[0]
-			},
-			URL: automatorURL,
-			callback: function () {
-				$('#modalTemplateUploadDialog').modal('hide');
+	const showModalDialog = ({attributes, dialogTitle, dialogQuestion, previousModal = null}, dialogModalProps = {selector:'#dialogModal', titleSelector:'#titleDialogModal', questionSelector: '#questionDialogModal'}) => {
+		attributes.forEach(item => {
+			for (const [attrName, attrValue] of Object.entries(item)) {
+				modalCommand.setAttribute(attrName, attrValue);
 			}
 		});
-		filesTemplate = null;
-	});
+		document.querySelector(dialogModalProps.titleSelector).innerText = dialogTitle;
+		document.querySelector(dialogModalProps.questionSelector).innerText = dialogQuestion;
+		if (previousModal) {
+			$(previousModal).modal('hide');
+		}
+		$(dialogModalProps.selector).modal({
+  			keyboard: true
+		});
+	};
 
 	btnDevicesSelect.addEventListener('click', () => {
 		if (typeof xls_files == 'undefined' || !xls_files) return false;
@@ -1483,27 +1511,25 @@ window.addEventListener('DOMContentLoaded', () => {
 		xls_files = null;
 	});
 
-	document.querySelector('#templateFileUploadButton').addEventListener('change', function(e)
+	document.querySelector('#templateFileUploadButton').addEventListener('change', (e) => 
 	{
 		const target = e.target;
-		filesTemplate = target.files;
+		if (typeof target.files == 'undefined') return false;
+			uploadAutomatorItems({
+				formParams: {
+					doUploadTemplate: 1,
+					templateFile: target.files[0]
+				},
+				URL: automatorURL,
+				callback: doGetTemplates,
+			});
+			target.value = '';
 	});
 
 	document.querySelector('#devicesFileUploadButton').addEventListener('change', function(e)
 	{
 		const target = e.target;
 		xls_files = target.files;
-	});
-
-	document.querySelector('#buttonTemplateDelete').addEventListener('click', function()
-	{
-		modalCommand.setAttribute('modal-command', 'deleteTemplate');
-		document.getElementById('titleDialogModal').innerText = "Delete template";
-		document.getElementById('questionDialogModal').innerText = 'Do you want to delete selected templates?';
-		$('#modalTemplateUploadDialog').modal('hide');
-		$('#dialogModal').modal({
-  			keyboard: true
-		});
 	});
 
 	document.querySelector('#deleteDevices').addEventListener('click', function()
@@ -1546,9 +1572,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				commonAutomatorRequest({
 					formParams: {
 						doDeleteTemplates: 1,
-						templates_id: JSON.stringify(getArraySelectedCbox(listTemplates.querySelectorAll('.check_box_template'), 'cb_template_')),
+						templates_id: JSON.stringify([target.getAttribute('data-id')]),
 					},
 					URL: automatorURL,
+					callback: doGetTemplates,
 				});
 				break;
 			case 'deleteDevices':
@@ -1903,6 +1930,33 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	// init automator
+	listTemplates.addEventListener('click', (e) => {
+		const target = e.target.closest('.template-action');
+		if (target) {
+			e.preventDefault();
+			const {action = '', id = 0, filename = ''} = target.dataset;
+			switch (action) {
+				case 'delete':
+					showModalDialog({
+						attributes: [
+							{'modal-command': 'deleteTemplate'},
+							{'data-id': id},
+						],
+						dialogTitle: 'Delete template',
+						dialogQuestion: `Do you want to delete template ${decodeURI(filename)}?`,
+						// previousModal: '#modalTemplateUploadDialog'
+					});
+					break;
+				case 'download': 
+					doDownloadTemplateFile(id);
+					break;
+				default:
+					break;
+			}
+			
+		}
+		
+	})
 
 	clearInputsForms();
 	iniInterface();
