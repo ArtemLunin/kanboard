@@ -123,6 +123,12 @@ p {
 	word-wrap: break-word;
 	border-radius: 6px;
 }
+.period-select, .statistics-buttons {
+	float: left;
+}
+.excel-menu {
+	margin-top: 10px;
+}
 /* .task-ticket-excel .ticket-id {
 	width: 5%;
 }
@@ -196,6 +202,9 @@ hr.dotted {
 }
 .file-delete-container {
 	font-size: 14px;
+}
+.file-download {
+	cursor: pointer;
 }
 .file-delete {
 	width: 18px;

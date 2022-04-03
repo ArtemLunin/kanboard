@@ -6,7 +6,7 @@ class Kanboard {
 		'getAllTasks',
 	];
 	private $metadataFields = [
-		"capop", "oracle", "ticket", "otl", "creator", "version", "origintask"
+		"capop", "oracle", "ticket", "otl", "creator", "version", "origintask", "master_date"
 	];
 	private $kanboardColumns = [];
 
@@ -33,7 +33,6 @@ class Kanboard {
 			'defaultVal'	=> 0
 			]);
 	}
-	// function getField($method, $paramObj, $additionalParam = NULL)
 	function getField($params)
 	{
 		['method' => $method, 'paramObj' => $paramObj, 'additionalParam' => $additionalParam, 'fieldName' => $fieldName, 'defaultVal' => $defaultVal] = $params;
@@ -248,8 +247,14 @@ function setDateStarted($date_started_ts) {
 	$correct_date = (is_numeric($date_started_ts)) ? (int)$date_started_ts : 0;
 	if (($correct_date < time() - 3600 * 24 * 30) || ($correct_date > time() + 3600 * 24 * 365))
 	{
-		$correct_date= 0;
+		$correct_date = 0;
 	}
 	return $correct_date;
+}
+
+function removeVersion($taskTitle) {
+	$pattern = '/_v\d+$/i';
+	$title = preg_replace($pattern, '', trim($taskTitle));
+	return $title;
 }
 ?>

@@ -15,12 +15,16 @@ $out_res = [];
 $param_error_msg['answer'] = [];
 
 $xls_output = false;
+$file_output = false;
 $accessType = false;
 $filename = tempnam(sys_get_temp_dir(), 'xls');
 
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
 $params = $paramJSON['params'] ?? $_REQUEST ?? 0;
+
+$params['id']  = $params['id'] ?? 0;
+$date_ts = setDateStarted($params['date_started'] ?? 0);
 
 $linksToTask = preg_replace('/jsonrpc\.php/', '?controller=TaskViewController&action=show&', KANBOARD_CITE);
 
@@ -141,7 +145,6 @@ if ($projectID !== false && $method !== 0)
 			{
 				$kanboardUserID = $kanboard->getUserIDByName(trim($params['assignee_name'] ?? ""));
 				$columnID = $kanboard->getColumnID($params['status'] ?? "");
-				$date_ts = setDateStarted($params['date_started'] ?? 0);
 
 				if (isset($params['version'])) {
 					$task_version = (int)$kanboard->getMetadataField($params['id'], 'version');
@@ -189,6 +192,7 @@ if ($projectID !== false && $method !== 0)
 							"creator"	=> $taskCreator,
 							"version"	=> ($task_version !== false) ? $task_version : 1,
 							"origintask"	=> ($task_version !== false) ? $params['id'] : (int)$taskResult['result'],
+							"master_date" => $date_ts,
 						]);
 					$task_out = $kanboard->fieldsTask($taskResult['result'], true, $task_version);
 					$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$taskResult['result']]);
@@ -213,8 +217,7 @@ if ($projectID !== false && $method !== 0)
 		}
 		elseif ($method === 'updateTask' && $accessType !== false && $params !== 0 && $params['id'] != 0)
 		{
-			$pattern = '/_v\d+$/i';
-			$title = preg_replace($pattern, '', trim($params['title'] ?? ""));
+			$title = removeVersion($params['title'] ?? "");
 			$taskResult = $kanboard->callKanboardAPI($method, [
 							'title'			=> $title,
 							'description'	=> (trim($params['description'] ?? ""))."\nSubmitted by: ".(trim($params['creator'] ?? ""))."\nOTL: ".(trim($params['OTL'] ?? "")),
@@ -230,23 +233,19 @@ if ($projectID !== false && $method !== 0)
 					"otl"		=> (trim($params['OTL'] ?? "")),
 					"creator"	=> (trim($params['creator'] ?? "")),
 				]);
-				// getTask
+				
 				$task_out = $kanboard->fieldsTask($params['id'], true);
 				$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$taskResult['result']]);
 				$projectName = $kanboard->getTaskProjectName($params['id']);
 				$param_error_msg['answer'] = $task_out + ['fields'		=> $kanboard->getMetadataFields($taskMetadata['result'])] + ['project_name'	=> $projectName];
 			}
-		} elseif ($method === 'getTask' && $params !== 0 && $params['id'] != 0) {
-
 		}
 		elseif($method === 'updateTaskFull' && $accessType === 'admin' && $section === 'excel' && $params !== 0 && $params['id'] != 0)
 		{
 			$taskCreator = trim($params['creator'] ?? "");
 			$kanboardUserID = $kanboard->getUserIDByName(trim($params['assignee_name'] ?? ""));
 			$columnID = $kanboard->getColumnID($params['status'] ?? "");
-			$date_ts = setDateStarted($params['date_started'] ?? 0);
-			$pattern = '/_v\d+$/i';
-			$title = preg_replace($pattern, '', trim($params['title'] ?? ""));
+			$title = removeVersion($params['title'] ?? "");
 			$arr_params = [
 				'id'	=> $params['id'],
 				'title'	=> $title,
@@ -273,14 +272,14 @@ if ($projectID !== false && $method !== 0)
 						'swimlane_id' 	=> 1
 					]);
 				}	
-				$taskResult = $kanboard->callKanboardAPI('saveTaskMetadata', [
-					$params['id'], [
+				$taskResult = $kanboard->setTaskMetadata($params['id'], 
+					[
 						"otl"		=> trim($params['OTL'] ?? ""),
 						"oracle"	=> trim($params['oracle'] ?? ""),
 						"capop"		=> trim($params['capop'] ?? ""),
 						"creator"	=> $taskCreator,
-					]
-				]);
+						"master_date" => $date_ts,
+					]);
 				if (isset($taskResult['result']))
 				{
 					$task_out = $kanboard->fieldsTask($params['id'], false);
@@ -324,6 +323,28 @@ if ($projectID !== false && $method !== 0)
 							$params['id'],
 							]);
 				$param_error_msg['answer'] = $kanboard->getAllTaskFiles($taskID);
+			}
+		}
+		elseif ($method === 'downloadTaskFile' && $params['id'] !== 0) {
+			$originalFileName = $kanboard->getField([
+				'method'	=> 'getTaskFile', 
+				'paramObj'	=> [$params['id']],
+				'additionalParam' => null,
+				'fieldName'		=> 'name',
+				'defaultVal'	=> null
+			]);
+			if ($originalFileName) {
+				$taskResult = $kanboard->callKanboardAPI($method, [
+				$params['id'],
+			]);
+				$file64 = $taskResult['result'] ?? 0;
+				if ($file64) {
+					$filename = tempnam(sys_get_temp_dir(), 'xls');
+					$handle = fopen($filename, "w");
+					fwrite($handle, base64_decode($file64));
+					fclose($handle);
+					$file_output = true;
+				}
 			}
 		}
 		elseif($method === 'getBoard')
@@ -378,7 +399,6 @@ if ($projectID !== false && $method !== 0)
 					}
 				}
 			}
-			
 		}
 		elseif( ($method === 'getTagsByProject' || $method === 'getAssignableUsers'))
 		{
@@ -561,19 +581,24 @@ if ($projectID !== false && $method !== 0)
 		}
 	}
 	
-} 
-if (count($param_error_msg['answer']) === 0 && $accessType === false) {
-	$param_error_msg['answer'] = false;
 }
 if ($projectID) {
 	$out_res = ['success' => $param_error_msg];	
 } else {
 	$out_res = ['error' => $param_error_msg];	
 }
-
-if ($xls_output !== FALSE) {
+if ($xls_output !== false) {
 	header("Content-Type: application/vnd.ms-excel; charset=utf-8");
 	header("Content-Disposition: attachment; filename=export.xls");
+	header("Expires: 0");
+	header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+	header("Cache-Control: private", false);
+	$handle = fopen($filename, "r");
+	$contents = fread($handle, filesize($filename));
+	echo $contents;
+} elseif ($file_output !== false) {
+	header("Content-Type: application/octet-stream");
+	header("Content-Disposition: attachment; filename=".$originalFileName);
 	header("Expires: 0");
 	header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 	header("Cache-Control: private", false);

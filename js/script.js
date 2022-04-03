@@ -43,7 +43,12 @@ let previousElem = null;
 
 let dayStartExcel, dayEndExcel = 0;
 
-let dataTableObj, dataTableExcel;
+const table_statistics_selector = 'table_statistics';
+const exportStatistics_selector = 'exportStatistics';
+const table_excel_selector = 'table_excel';
+const exportExcel_selector = 'exportExcel';
+
+const selectCnange = new Event('change');
 
 const errorMsg = document.createElement('div');
 errorMsg.textContent = 'Username or password is incorrect';
@@ -55,6 +60,7 @@ let filesTemplate, xls_files;
 const byField = (field) => {
 	return (a, b) => a[field] > b[field] ? -1 : 1;
 };
+
 
 const timestampToDate = (timestampValue, timeOut = true) => {
 	if(!timestampValue) {
@@ -118,7 +124,7 @@ function tsPeriodDays (periodDays) {
 const hideTask = ({date_started, dayStart, dayEnd, hideTaskNoDate}) => {
 	let hideTaskClass = 'd-none';
 	if(!(date_started || hideTaskNoDate) || (date_started > dayStart && date_started < dayEnd)) {
-		hideTaskClass = '';
+		hideTaskClass = 'not-used';
 	}
 	return hideTaskClass;
 };
@@ -155,7 +161,6 @@ const capitalize = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 function downloadFile(dataurl) {
   const link = document.createElement("a");
   link.href = `data:text/plain;charset=utf-8, ${encodeURIComponent(dataurl)}`;
-//   link.download = filename;
   link.click();
   link.remove();
 }
@@ -193,19 +198,20 @@ window.addEventListener('DOMContentLoaded', () => {
 		setRightsContainer = document.querySelector('.set-rights');
 	// excel elements
 	const ticketExcelForm = document.querySelector('#ticketExcelForm'),
+		holdStatus = document.querySelector('#holdStatus'),
 		ticketDescriptionExcel = document.querySelector('#ticketDescriptionExcel'),
 		btnUpdateTaskExcel = document.querySelector('.btn-update-task-excel'),
 		btnAddTaskExcel = document.querySelector('.btn-add-task-excel'),
-		periodSelect = document.querySelector('.period-select'),
+		// periodSelect = document.querySelector('.period-select'),
 		tableExcel = document.querySelector('.table-excel'),
 		btnRemove = document.querySelector('.btn-remove'),
 		inputName = document.querySelector('#inputName'),
 		inputDate = document.querySelector('#inputDate'),
 		inputTime = document.querySelector('#inputTime'),
 		inputTitle = document.querySelector('#inputTitle'),
-		inputReference = document.querySelector('#inputReference'),
-		inputCapOp = document.querySelector('#inputCapOp'),
-		inputOracle = document.querySelector('#inputOracle'),
+		// inputReference = document.querySelector('#inputReference'),
+		// inputCapOp = document.querySelector('#inputCapOp'),
+		// inputOracle = document.querySelector('#inputOracle'),
 		ticketCreatorExcel = document.querySelector('#creatorExcel'),
 		ticketOTLExcel = document.querySelector('#OTLExcel'),
 		inputStatus =  document.querySelector('#inputStatus'),
@@ -213,13 +219,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		ticketProjectNameExcel = document.querySelector('#inputProjectExcel'),
 		taskExcel_id = document.querySelector('#taskExcel_id'),
 		btnCreateTaskFileExcel= document.querySelector('#attachFileExcel'),
-		attachmentsContainerExcel = document.querySelector('.attachments-container-excel'),
-		attachmentsAreaExcel = document.querySelector('.attachments-area-excel'),
-		cbHideTask = document.querySelector('#cbHideTask'),
-		exportExcel = document.querySelector('#exportExcel');
+		attachmentsContainerExcel = document.querySelector('.attachments-container-excel');
+		// attachmentsAreaExcel = document.querySelector('.attachments-area-excel'),
+		// cbHideTask = document.querySelector('#cbHideTask');
+		// exportExcel = document.querySelector('#exportExcel');
 	// status elements
 		const formNewTaskStatus = document.querySelector('#formNewTaskStatus'),
-			titleStatus = document.querySelector('#titleStatus'),
+			// titleStatus = document.querySelector('#titleStatus'),
 			btnUpdateTaskStatus = document.querySelector('.btn-update-task-status'),
 			btnAddTaskStatus = document.querySelector('.btn-add-task-status'),
 			ticketDescriptionStatus = document.querySelector('#ticketDescriptionStatus'),
@@ -227,14 +233,14 @@ window.addEventListener('DOMContentLoaded', () => {
 			attachmentsContainerStatus = document.querySelector('.attachments-container-status'),
 			ticketProjectNameStatus = document.querySelector('#inputProjectStatus'),
 			taskStatus_id = document.querySelector('#taskStatus_id'),
-			origin_id = document.querySelector('#origin_id'),
+			// origin_id = document.querySelector('#origin_id'),
 			attachmentsAreaStatus = document.querySelector('.attachments-area-status'),
 			tableStatus = document.querySelector('.table-request'),
 			ticketCreatorStatus = document.querySelector('#creatorStatus'),
 			ticketOTLStatus = document.querySelector('#OTLStatus');
 		// statistics elements
-		const tableStatistics = document.querySelector('.table-statistics'),
-			exportStatistics = document.querySelector('#exportStatistics');
+		// const tableStatistics = document.querySelector('.table-statistics');
+			// exportStatistics = document.querySelector('#exportStatistics');
 		// automator elements
 		const listDevices = document.querySelector('#listDevices'),
 			listTemplates = document.querySelector('#uploadedTemplates'),
@@ -246,6 +252,268 @@ window.addEventListener('DOMContentLoaded', () => {
 			// btnTemplateSelect = document.querySelector('#buttonTemplateSelect'),
 			btnDevicesSelect = document.querySelector('#buttonDevicesSelect');
 
+	const periodChange = (e, buttonApi, dataTable, node, config) => {
+		const target = buttonApi.nodes()[0];
+		const periodSelect = buttonApi.container()[0];
+		if (target.classList.contains('btn') && !target.classList.contains('hideNoDate')) {
+			let hideNoData = false;
+			for (const item of periodSelect.children)
+			{
+				if (item.tagName === 'BUTTON') {
+					if (item.dataset['hideNoDate'] == '1') {
+						hideNoData = true;
+					} else {
+						item.classList.remove('btn-primary');
+						item.classList.add('btn-secondary');
+					}
+				}
+			}
+			target.classList.remove('btn-secondary');
+			target.classList.add('btn-primary');
+			periodDays = parseInt(target.dataset['days'], 10);
+			if (isNaN(periodDays) || periodDays > 365 || periodDays < -1) {
+				periodDays = 0;
+			}
+			refreshBoardTable(hideNoData);
+		}
+	};
+
+	const dataTableStatistics = $(`#${table_statistics_selector}`)
+		.on('init.dt', function () {
+				const btnExcel = document.querySelector(`#${exportStatistics_selector}`);
+				btnExcel.className = "";
+				const img = document.createElement('img');
+				img.src = 'img/file-excel.svg';
+				img.classList.add("icon-excel");
+				btnExcel.append(img);
+		})
+		.DataTable({
+			dom: '<"statistics-menu"Bft>',
+			buttons: 
+			{
+				dom: {
+					container: {
+						tag: 'div',
+						className: 'statistics-buttons'
+					},
+					button: {
+						tag: 'button',
+						className: [
+							'btn', 'btn-sm'
+						]
+					},
+					buttonLiner: {
+						tag: null
+					}
+
+				},
+				buttons: [
+					{
+						text: null,
+						action: function (e, dt, node, config) {
+							e.preventDefault();
+							document.location.href = `./${requestURL}?method=doDataExport&status=all&section=statistics`;
+						},
+						attr: {
+							title: 'Export to Excel',
+							id: exportStatistics_selector
+						},
+						tag: 'a',
+						className: null,
+					}
+				]
+			},
+			"autoWidth": false,
+			columns:
+			[
+				{ "width": "10%" },
+				{ "width": "10%" },
+				{ "width": "10%" },
+				{ "width": "55%" },
+				{ "width": "10%" },
+				{ "width": "5%" },
+			],
+			columnDefs: [
+				{ orderable: false, "targets": [2, 3, 5] },
+			],
+			order: [
+				[1, 'desc'],
+				[0, 'asc'],
+			],
+			paging: false,
+			searching: true,
+	});
+
+	const dataTableExcel = $(`#${table_excel_selector}`)
+		.on('init.dt', function () {
+			const btnExcel = document.querySelector(`#${exportExcel_selector}`);
+			btnExcel.className = "";
+			const img = document.createElement('img');
+			img.src = 'img/file-excel.svg';
+			img.classList.add("icon-excel");
+			btnExcel.append(img);
+		})
+		.DataTable({
+		dom: '<"excel-menu"Bft>',
+		buttons: 
+		{
+			dom: {
+				container: {
+					tag: 'div',
+					className: 'period-select'
+				},
+				button: {
+					tag: 'button',
+					className: [
+						'btn', 'btn-sm'
+					]
+				},
+				buttonLiner: {
+					tag: null
+				}
+
+			},
+			buttons: [
+				{
+					text: '-1D',
+					action: function (e, dt, node, config) {
+					},
+					attr: {
+						'data-days': '1'
+					},
+					className: 'btn-secondary',
+				},
+				{
+					text: 'Today',
+					action: function (e, dt, node, config) {
+					},
+					attr: {
+						'data-days': '0'
+					},
+					className: 'btn-primary',
+				},
+				{
+					text: '+1D',
+					action: function (e, dt, node, config) {
+					},
+					attr: {
+						'data-days': '-1'
+					},
+					className: 'btn-secondary',
+				},
+				{
+					text: 'Week',
+					action: function (e, dt, node, config) {
+					},
+					attr: {
+						'data-days': '7'
+					},
+					className: 'btn-secondary',
+				},
+				{
+					text: '2 Weeks',
+					action: function (e, dt, node, config) {
+					},
+					attr: {
+						'data-days': '14'
+					},
+					className: 'user-none btn-secondary',
+				},
+				{
+					text: 'Month',
+					action: function (e, dt, node, config) {
+					},
+					attr: {
+						'data-days': '31'
+					},
+					className: 'user-none btn-secondary',
+				},
+				{
+					text: '2 Months',
+					action: function (e, dt, node, config) {
+					},
+					attr: {
+						'data-days': '62'
+					},
+					className: 'user-none btn-secondary',
+				},
+				{
+					text: 'YTD',
+					action: function (e, dt, node, config) {
+					},
+					attr: {
+						'data-days': '365'
+					},
+					className: 'user-none btn-secondary',
+				},
+				{
+					text: 'Date',
+					action: function (e, dt, node, config) {
+						const target = node[0];
+						let hideNoDate = false;
+						if (target.classList.contains('btn-secondary')) {
+							target.classList.remove('btn-secondary');
+							target.classList.add('btn-warning');
+							target.dataset['hideNoDate'] = '1';
+							hideNoDate = true;
+						} else {
+							target.classList.add('btn-secondary');
+							target.classList.remove('btn-warning');
+							target.dataset['hideNoDate'] = '0';
+						}
+						refreshBoardTable(hideNoDate);
+					},
+					attr: {
+						id: 'hideNoDate'
+					},
+					className: 'hideNoDate btn-secondary',
+				},
+				{
+					text: null,
+					action: function (e, dt, node, config) {
+						e.preventDefault();
+						document.location.href = `./${requestURL}?method=doDataExport&status=all&section=excel&days=${periodDays}`;
+					},
+					attr: {
+						title: 'Export to Excel',
+						id: exportExcel_selector
+					},
+					tag: 'a',
+					className: null,
+				}
+			]
+		},
+		"autoWidth": false,
+		columns:
+		[
+			{ "width": "5%" },
+			{ "width": "10%" },
+			null, 
+			{ "width": "45%" }, 
+			{ "width": "10%" }, 
+			{ "width": "5%" }, 
+			{ "width": "5%" }, 
+			{ "width": "5%" }, 
+			{ "width": "3%" }, { "width": "3%" },
+		],
+		"columnDefs": [
+			{ "orderable": false, "targets": [3, 4, 5, 6, 7, 8, 9] },
+			{
+				targets: -1,
+				className: 'dt-head-left'
+			},
+		],
+		"order": [
+			[0, 'asc'],
+			[1, 'asc'],
+			[2, 'asc']
+		],
+		"paging": false,
+		"searching": true,
+		"info": false,
+	})
+	.on('buttons-action', periodChange);
+	
 	btnUpdateTaskExcel.disabled = true;
 	btnUpdateTaskExcel.dataset['task_id'] = 0;
 	
@@ -266,10 +534,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				headers: headers
 			});
 			const data = await response.json();
-			if (data?.success?.answer === false) {
-				logout();
-				return false;
-			}
 			return data;
 		} catch (e) {
 			console.error(e);
@@ -284,10 +548,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				body: body,
 			});
 			const data = await response.json();
-			if (data?.success?.answer === false) {
-				logout();
-				return false;
-			}
 			return data;
 		} catch (e) {
 			console.error(e);
@@ -302,10 +562,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				body: body,
 			});
 			const data = await response.json();
-			if (data?.success?.answer === false) {
-				logout();
-				return false;
-			}
 			return data;
 		} catch (e) {
 			console.error(e);
@@ -338,7 +594,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			method: 'logout',
 		};
 		sendRequest('POST', requestURL, body).then(() => {
-			iniInterface(false);
+			location.reload();
 		});
 	};
 
@@ -402,13 +658,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				dataContainer.textContent = '';
 			}
 		}
-		if (!!dataTableObj) {
-			dataTableObj.clear().draw();
-		}
-		if (!!dataTableExcel) {
-			dataTableExcel.clear().draw();
-		}
-		
+		// if (!!dataTableObj) {
+		// 	dataTableObj.clear().draw();
+		// }
 	};
 
 	menu.addEventListener('click', (e) => {
@@ -517,7 +769,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	const fillFileInfo = (fileInfo, attachmentsList) => {
 		let { file_id, file_name, file_size } = JSON.parse(fileInfo);
 		attachmentsList.insertAdjacentHTML('beforeend', `
-			<p class="file-delete-container">File name: ${file_name}, Size: ${file_size}
+			<p class="file-delete-container">File name: <a href="${requestURL}?method=downloadTaskFile&id=${file_id}" class="file-download">${file_name}</a>, Size: ${file_size}
 				<img class="file-delete" src="img/delete.svg" atl="Delete file" data-file_id="${file_id}" title="Delete file"/>
 			</p>
 		`);
@@ -732,6 +984,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				taskExcel_id.value = taskID;
 				btnUpdateTaskExcel.dataset['task_id'] = taskID;
 				btnUpdateTaskExcel.disabled = false;
+
+				inputStatus.dispatchEvent(selectCnange);
 			}
 		} else if (target.classList.contains('icon-delete')) {
 			const taskTicket = target.closest('.task-ticket-excel');
@@ -971,26 +1225,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const periodChange = (e) => {
-		const target = e.target;
-		if(target.classList.contains('btn')) {
-			for(const item of periodSelect.children)
-			{
-				if (item.tagName === 'BUTTON') {
-					item.classList.remove('btn-primary');
-					item.classList.add('btn-secondary');
-				}
-			}
-			target.classList.remove('btn-secondary');
-			target.classList.add('btn-primary');
-			periodDays = parseInt(target.dataset['days'], 10);
-			if(isNaN(periodDays) || periodDays > 365 || periodDays < -1) {
-				periodDays = 0;
-			}
-			refreshBoardTable();
-		}
-	};
-
 	const refreshBoardTable = (hideTaskNoDate = false) => {
 		const taskTickets = document.querySelectorAll('.task-ticket-excel');
 		let {dayStart, dayEnd} = tsPeriodDays(periodDays);
@@ -1030,11 +1264,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const attachmentsAction = (event) => {
-		const target = event.target;
-		const fileAction = target.closest('.file-delete');
-		if (!!fileAction)
-		{
+	const attachmentsAction = (e) => {
+		const target = e.target;
+		let fileAction = target.closest('.file-delete');
+		if (!!fileAction) {
 			fileDeleted = target.closest('.file-delete-container');
 			const body = {
 				method: 'removeTaskFile',
@@ -1098,28 +1331,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const updateTaskFull = () => {
-		if(btnUpdateTaskExcel.dataset['task_id'] != 0) {
-			const date_start = new Date(`${inputDate.value}T${inputTime.value}`);
-			
-			const body = {
-				method: 'updateTaskFull',
-				params: {
-					assignee_name: inputName.value,
-					title: inputTitle.value.trim(),
-					id: btnUpdateTaskExcel.dataset['task_id'],
-					date_started: date_start.getTime() / 1000,
-					reference: inputReference.value.trim(),
-					capop: inputCapOp.value.trim(),
-					oracle: inputOracle.value.trim(),
-					status: inputStatus.value,
-					section: ticketExcelForm.querySelector('#excelForm').value,
-				},
-			}
-			sendRequest('POST', requestURL, body).then(getTaskBoard);
-		}
-	};
-
 	const removeTask = () => {
 		$('#modalRemoveDialog').modal('hide');
 		const body = {
@@ -1145,7 +1356,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const getTaskBoard = () => {
-		clearExcelTicketFields();
 		getDataFromKanboard('getColumns', apiCallbackProps, inputStatus);
 		getDataFromKanboard('getAssignableUsers', apiCallbackProps, inputName);
 		getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectNameExcel);
@@ -1204,20 +1414,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const doDownloadTemplateFile = (id) => {
-		commonAutomatorRequest({
-			formParams: {
-				doDownloadTemplateFile: 1,
-				id: id,
-			},
-			URL: automatorURL,
-			callback: function (data) {
-				downloadFile(data.answer);
-				// document.location.href = data.answer;
-			}
-		});
-	};
-
 	function showAddedTask(data)
 	{
 		attachmentsContainer.textContent = '';
@@ -1273,105 +1469,66 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const showBoardTable = (data) => {
-		if (!!dataTableExcel) {
-			dataTableExcel.clear().destroy();
-		}
-		if(!!data.success) {
-			let {dayStart, dayEnd} = tsPeriodDays(periodDays);
-			data.success.answer.forEach(function ({
-				id, date_started, title, reference, description, project_name, fields, assignee_name, status, editable
-			}) 
-			{
-				const time_started = timestampToTime(date_started);
-				let disable_edit = (editable === 0) ? "invisible" : "";	
-				tableExcel.insertAdjacentHTML('beforeend', `
-					<tr class="task-ticket-excel ${hideTask({date_started, dayStart, dayEnd})}" data-task_id="${id}" data-date_started="${date_started}">
-						<td class="ticket-id" data-item_value="${project_name}" data-item_id="inputProjectExcel">${id}</td>
-						<td class="ticket-date" data-item_value="${timestampToDate(date_started, false)}" data-item_id="inputDate">${timestampToDate(date_started, false)} ${time_started}</td>
-						<td class="ticket-name" data-item_value="${assignee_name}" data-item_id="inputName">${assignee_name}</td>
-						<td class="ticket-title-table" data-item_value="${title}" data-item_id="inputTitle">${title}</td>
-						<td class="ticket-reference" data-item_value="${reference}" data-item_id="inputReference">${reference}</td>
-						<td class="ticket-capop" data-item_value="${fields['capop']}" data-item_id="inputCapOp">${fields['capop']}</td>
-						<td class="ticket-oracle" data-item_value="${fields['oracle']}" data-item_id="inputOracle">${fields['oracle']}</td>
-						<td class="ticket-status" data-item_value="${status}" data-item_id="inputStatus">${status}</td>
-						<td class="text-center" data-item_value="${time_started}" data-item_id="inputTime">
-							<a href="#" class="${disable_edit}"><img class="icon-edit icon-edit-sm" src="img/edit.svg"></a>
-						</td>
-						<td class="text-center" data-item_value="${description}" data-item_id="ticketDescriptionExcel">
-							<a href="#" class="${disable_edit}"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
-						</td>
-					</tr>
-				`);
-			});
-			dataTableExcel = $('#table_excel').DataTable({
-				"columns": [
-					{ "width": "5%" },
-					{ "width": "10%" },
-					null, 
-					{ "width": "45%" }, 
-					{ "width": "10%" }, 
-					{ "width": "5%" }, 
-					{ "width": "5%" }, 
-					{ "width": "5%" }, 
-					{ "width": "3%" }, { "width": "3%" },
-				],
-				"columnDefs": [
-					{ "orderable": false, "targets": [3, 4, 5, 6, 7, 8, 9] },
-					{
-						targets: -1,
-						className: 'dt-head-left'
-					},
-				],
-				"order": [
-					[0, 'asc'],
-					[1, 'asc'],
-					[2, 'asc']
-				],
-				"paging": false,
-				"searching": false,
-				"info": false,
-			});
-		} else if (!!data.error) {
-			containerError.innerText = data.error.error;
-			containerError.classList.remove('d-none');
-		}
-		$('#waitModal').modal('hide');
+		clearExcelTicketFields();
+		dataTableExcel.clear().draw();
+	
+		let {dayStart, dayEnd} = tsPeriodDays(periodDays);
+		data.success.answer.forEach(function ({
+			id, date_started, title, reference, description, project_name, fields, assignee_name, status, editable
+		}) {
+			let disable_edit = (editable === 0) ? "invisible" : "";
+			
+			const date_master = (!!fields['master_date']) ? parseInt(fields['master_date'], 10) : date_started;
+			const time_started = timestampToTime(date_master);
+			const warningDateClass = (date_master !== date_started) ? 'bg-warning' : '';
+			
+			const tr = document.createElement('tr');
+			tr.classList.add('task-ticket-excel', hideTask({date_started, dayStart, dayEnd}));
+			tr.dataset.task_id = id;
+			tr.dataset.date_started = date_master;
+			tr.innerHTML = `
+				<td class="ticket-id" data-item_value="${project_name}" data-item_id="inputProjectExcel">${id}</td>
+				<td class="ticket-date ${warningDateClass}" data-item_value="${timestampToDate(date_master, false)}" data-item_id="inputDate">${timestampToDate(date_master, false)} ${time_started}</td>
+				<td class="ticket-name" data-item_value="${assignee_name}" data-item_id="inputName">${assignee_name}</td>
+				<td class="ticket-title-table" data-item_value="${title}" data-item_id="inputTitle">${title}</td>
+				<td class="ticket-reference" data-item_value="${reference}" data-item_id="inputReference">${reference}</td>
+				<td class="ticket-capop" data-item_value="${fields['capop']}" data-item_id="inputCapOp">${fields['capop']}</td>
+				<td class="ticket-oracle" data-item_value="${fields['oracle']}" data-item_id="inputOracle">${fields['oracle']}</td>
+				<td class="ticket-status" data-item_value="${status}" data-item_id="inputStatus">${status}</td>
+				<td class="text-center" data-item_value="${time_started.substring(0, 2)}" data-item_id="inputTime">
+					<a href="#" class="${disable_edit}"><img class="icon-edit icon-edit-sm" src="img/edit.svg"></a>
+				</td>
+				<td class="text-center" data-item_value="${description}" data-item_id="ticketDescriptionExcel">
+					<a href="#" class="${disable_edit}"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
+				</td>	
+			`;
+			dataTableExcel.row.add(tr);
+		});
+		dataTableExcel.draw();
 	};
 
 	const showStatisticsTable = (data) => {
-		if (!!dataTableObj) {
-			dataTableObj.clear().destroy();
-		}
+		dataTableStatistics.clear().draw();
 		if (!!data.success) {
 			data.success.answer.forEach(function ({project_name, title, url, date_creation, fields}) {
-				tableStatistics.insertAdjacentHTML('beforeend', `
-					<td>${project_name}</td>
-					<td>${timestampToDate(date_creation, false)}</td>
-					<td>${fields.otl}</td>
-					<td>${title}</td>
-					<td>${fields.creator}</td>
-					<td>
-						<a href="${url}" class="text-decoration-none" target="_blank">Link</a>
-					</td>
-				`);
+				const tr = document.createElement('tr');
+				tr.innerHTML = `
+				<td>${project_name}</td>
+	 				<td>${timestampToDate(date_creation, false)}</td>
+	 				<td>${fields.otl}</td>
+	 				<td>${title}</td>
+	 				<td>${fields.creator}</td>
+	 				<td>
+	 					<a href="${url}" class="text-decoration-none" target="_blank">Link</a>
+	 				</td>
+	 			`;
+				dataTableStatistics.row.add(tr);
 			});
-			dataTableObj = $('#table_statistics').DataTable({
-				"columnDefs": [
-					{ "orderable": false, "targets": [2, 3] },
-					{ "width": "10%", "targets": [0, 1, 2, 4] },
-				],
-				"order": [
-					[1, 'desc'],
-					[0, 'asc'],
-				],
-				"paging": false,
-				"searching": true,
-			});
+			dataTableStatistics.draw();
 		} else if (!!data.error) {
 			containerError.innerText = data.error.error;
 			containerError.classList.remove('d-none');
 		}
-		$('#waitModal').modal('hide');
 	};
 
 	const showStatusTable = (data) => {
@@ -1410,7 +1567,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				listDevices.removeChild(listDevices.firstChild);
 			}
 			const tableNode = document.createElement('table');
-			// const theadNode = document.createElement('thead');
 			const tbodyNode = document.createElement('tbody');
 			const trNodeIDs = document.createElement('tr');
 			const tdNodeBlank2 = document.createElement('td');
@@ -1422,7 +1578,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				tdNodeIDs.innerText = data.answer[0][cell_idx];
 				trNodeIDs.appendChild(tdNodeIDs);
 			}
-			// tableNode.appendChild(theadNode);
 			tbodyNode.appendChild(trNodeIDs);
 			
 			for (let row_idx in data.answer)
@@ -1599,6 +1754,43 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		return OTLStatus;
 	};
+
+
+	const selectStatus = (e) => {
+		e.preventDefault();
+		const target = e.target;
+		const selectElem = document.querySelector(`#${target.dataset.select_id}`);
+		if (!!selectElem) {
+			if (target.classList.contains('hold')) {
+				target.classList.add('btn-secondary');
+				target.classList.remove('btn-info', 'hold');
+
+				selectElem.dataset.hold = '0';
+			} else {
+				target.classList.remove('btn-secondary');
+				target.classList.add('btn-info', 'hold');
+
+				selectElem.dataset.hold = '1';
+			}
+		}
+	};
+
+	const applyFilterTable = (e) => {
+		const target = e.target;
+		if (target.dataset.hold === '1') {
+			target.dataset.select_value = target.value;
+		} else 
+		{
+			target.dataset.select_value = '';
+		}
+		dataTableExcel.search(target.value).draw();
+	}
+
+	const resetFilterTable = (value) => {
+		if (value) {
+			dataTableExcel.search(value).draw();
+		}
+	}
 
 	$('#modalTemplateUploadDialog').on('show.bs.modal', function (e) {
 		formTeplateUpload.reset();
@@ -1838,20 +2030,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	// init excel
 	tableExcel.addEventListener('click', editExcelTask);
-	periodSelect.addEventListener('click', periodChange);
+	inputStatus.addEventListener('change', applyFilterTable);
 	btnRemove.addEventListener('click', removeTask);
-	cbHideTask.addEventListener('click', (e) => 
-	{
-		refreshBoardTable(e.target.checked);		
-	});
-	cbHideTask.checked = false;
+	holdStatus.addEventListener('click', selectStatus);
 
 	ticketExcelForm.addEventListener('submit', (e) => {
 		e.preventDefault();
 		const element = document.activeElement;
 		if (element.tagName === 'BUTTON') {
 			let action = element.getAttribute('data-action');
-			const date_start = new Date(`${inputDate.value}T${inputTime.value}`);
+			const date_start = new Date(`${inputDate.value}T${inputTime.value}:00`);
 			if (action === 'add') {
 				sendDataTask(e.target, attachFileExcel, {
 					'description': ticketDescriptionExcel.innerText,
@@ -1867,6 +2055,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	ticketExcelForm.addEventListener('reset', (e) => {
+		let select_value = '';
+		
 		attachmentsContainerExcel.textContent = '';
 		btnCreateTaskFileExcel.removeAttribute('task_id');
 		taskExcel_id.value = 0;
@@ -1876,11 +2066,18 @@ window.addEventListener('DOMContentLoaded', () => {
 		btnUpdateTaskExcel.disabled = true;
 		btnAddTaskExcel.classList.remove('d-none');
 		selectTR('.task-ticket-excel');
+
+		if (inputStatus.dataset.hold === '1') {
+			select_value = inputStatus.dataset.select_value;
+		}
+
+		resetFilterTable(select_value);
 	});
 
-	exportExcel.addEventListener('click', (e) => {
-		e.preventDefault();
-		document.location.href=`./${requestURL}?method=doDataExport&status=all&section=excel&days=${periodDays}`;
+	inputTitle.addEventListener('blur', (e) => {
+		if (inputStatus.dataset.hold === '1') {
+			inputStatus.value = inputStatus.dataset.select_value;
+		}
 	});
 
 	//init status
@@ -1923,12 +2120,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		sendRequest('POST', requestURL, body).then(attachFileStatus);
 	});
 
-	// init statistics
-	exportStatistics.addEventListener('click', (e) => {
-		e.preventDefault();
-		document.location.href=`./${requestURL}?method=doDataExport&status=all&section=statistics`;
-	});
-
 	// init automator
 	listTemplates.addEventListener('click', (e) => {
 		const target = e.target.closest('.template-action');
@@ -1944,11 +2135,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						],
 						dialogTitle: 'Delete template',
 						dialogQuestion: `Do you want to delete template ${decodeURI(filename)}?`,
-						// previousModal: '#modalTemplateUploadDialog'
 					});
-					break;
-				case 'download': 
-					doDownloadTemplateFile(id);
 					break;
 				default:
 					break;
@@ -1960,4 +2147,5 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	clearInputsForms();
 	iniInterface();
+	holdStatus.click();
 });
