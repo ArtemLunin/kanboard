@@ -1470,7 +1470,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const showBoardTable = (data) => {
 		clearExcelTicketFields();
-		dataTableExcel.clear().draw();
+		dataTableExcel.clear();
 	
 		let {dayStart, dayEnd} = tsPeriodDays(periodDays);
 		data.success.answer.forEach(function ({
@@ -1786,11 +1786,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		dataTableExcel.search(target.value).draw();
 	}
 
-	const resetFilterTable = (value) => {
-		if (value) {
-			dataTableExcel.search(value).draw();
-		}
-	}
+	const resetFilterTable = () => {
+		dataTableExcel.search('').draw();
+	};
 
 	$('#modalTemplateUploadDialog').on('show.bs.modal', function (e) {
 		formTeplateUpload.reset();
@@ -2069,9 +2067,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		if (inputStatus.dataset.hold === '1') {
 			select_value = inputStatus.dataset.select_value;
+		} else {
+			resetFilterTable();
 		}
 
-		resetFilterTable(select_value);
 	});
 
 	inputTitle.addEventListener('blur', (e) => {
