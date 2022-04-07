@@ -48,6 +48,8 @@ const exportStatistics_selector = 'exportStatistics';
 const table_excel_selector = 'table_excel';
 const exportExcel_selector = 'exportExcel';
 
+const excelDataArray = [];
+
 const selectCnange = new Event('change');
 
 const errorMsg = document.createElement('div');
@@ -122,7 +124,7 @@ function tsPeriodDays (periodDays) {
 }
 
 const hideTask = ({date_started, dayStart, dayEnd, hideTaskNoDate}) => {
-	let hideTaskClass = 'd-none';
+	let hideTaskClass = 'dt-row-none';
 	if(!(date_started || hideTaskNoDate) || (date_started > dayStart && date_started < dayEnd)) {
 		hideTaskClass = 'not-used';
 	}
@@ -202,30 +204,22 @@ window.addEventListener('DOMContentLoaded', () => {
 		ticketDescriptionExcel = document.querySelector('#ticketDescriptionExcel'),
 		btnUpdateTaskExcel = document.querySelector('.btn-update-task-excel'),
 		btnAddTaskExcel = document.querySelector('.btn-add-task-excel'),
-		// periodSelect = document.querySelector('.period-select'),
 		tableExcel = document.querySelector('.table-excel'),
 		btnRemove = document.querySelector('.btn-remove'),
 		inputName = document.querySelector('#inputName'),
 		inputDate = document.querySelector('#inputDate'),
 		inputTime = document.querySelector('#inputTime'),
 		inputTitle = document.querySelector('#inputTitle'),
-		// inputReference = document.querySelector('#inputReference'),
-		// inputCapOp = document.querySelector('#inputCapOp'),
-		// inputOracle = document.querySelector('#inputOracle'),
 		ticketCreatorExcel = document.querySelector('#creatorExcel'),
-		ticketOTLExcel = document.querySelector('#OTLExcel'),
+		// ticketOTLExcel = document.querySelector('#OTLExcel'),
 		inputStatus =  document.querySelector('#inputStatus'),
 		ticketTitleExcel = document.querySelector('.ticket-title-excel'),
 		ticketProjectNameExcel = document.querySelector('#inputProjectExcel'),
 		taskExcel_id = document.querySelector('#taskExcel_id'),
 		btnCreateTaskFileExcel= document.querySelector('#attachFileExcel'),
 		attachmentsContainerExcel = document.querySelector('.attachments-container-excel');
-		// attachmentsAreaExcel = document.querySelector('.attachments-area-excel'),
-		// cbHideTask = document.querySelector('#cbHideTask');
-		// exportExcel = document.querySelector('#exportExcel');
 	// status elements
 		const formNewTaskStatus = document.querySelector('#formNewTaskStatus'),
-			// titleStatus = document.querySelector('#titleStatus'),
 			btnUpdateTaskStatus = document.querySelector('.btn-update-task-status'),
 			btnAddTaskStatus = document.querySelector('.btn-add-task-status'),
 			ticketDescriptionStatus = document.querySelector('#ticketDescriptionStatus'),
@@ -233,7 +227,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			attachmentsContainerStatus = document.querySelector('.attachments-container-status'),
 			ticketProjectNameStatus = document.querySelector('#inputProjectStatus'),
 			taskStatus_id = document.querySelector('#taskStatus_id'),
-			// origin_id = document.querySelector('#origin_id'),
 			attachmentsAreaStatus = document.querySelector('.attachments-area-status'),
 			tableStatus = document.querySelector('.table-request'),
 			ticketCreatorStatus = document.querySelector('#creatorStatus'),
@@ -255,7 +248,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	const periodChange = (e, buttonApi, dataTable, node, config) => {
 		const target = buttonApi.nodes()[0];
 		const periodSelect = buttonApi.container()[0];
+
 		if (target.classList.contains('btn') && !target.classList.contains('hideNoDate')) {
+		
 			let hideNoData = false;
 			for (const item of periodSelect.children)
 			{
@@ -274,14 +269,22 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (isNaN(periodDays) || periodDays > 365 || periodDays < -1) {
 				periodDays = 0;
 			}
+
 			refreshBoardTable(hideNoData);
+			
 		}
 	};
 
 	const dataTableStatistics = $(`#${table_statistics_selector}`)
 		.on('init.dt', function () {
-				const btnExcel = document.querySelector(`#${exportStatistics_selector}`);
-				btnExcel.className = "";
+				// const btnExcel = document.querySelector(`#${exportStatistics_selector}`);
+				// btnExcel.className = "";
+				// const img = document.createElement('img');
+				// img.src = 'img/file-excel.svg';
+				// img.classList.add("icon-excel");
+				// btnExcel.append(img);
+				const btnExcel = document.querySelector(`.native-excel`);
+				// btnExcel.className = "";
 				const img = document.createElement('img');
 				img.src = 'img/file-excel.svg';
 				img.classList.add("icon-excel");
@@ -308,18 +311,29 @@ window.addEventListener('DOMContentLoaded', () => {
 
 				},
 				buttons: [
+					// {
+					// 	text: null,
+					// 	action: function (e, dt, node, config) {
+					// 		e.preventDefault();
+					// 		document.location.href = `./${requestURL}?method=doDataExport&status=all&section=statistics`;
+					// 	},
+					// 	attr: {
+					// 		title: 'Export to Excel',
+					// 		id: exportStatistics_selector
+					// 	},
+					// 	tag: 'a',
+					// 	className: null,
+					// },
 					{
-						text: null,
-						action: function (e, dt, node, config) {
-							e.preventDefault();
-							document.location.href = `./${requestURL}?method=doDataExport&status=all&section=statistics`;
-						},
-						attr: {
-							title: 'Export to Excel',
-							id: exportStatistics_selector
-						},
+						extend: "excel",
+						text: '',
+						title: null,
+						className: 'native-excel',
+						filename: '* Statistics Export',
 						tag: 'a',
-						className: null,
+						exportOptions: {
+							columns: '.exportable'
+						}
 					}
 				]
 			},
@@ -342,7 +356,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			],
 			paging: false,
 			searching: true,
-	});
+			stripeClasses :[],
+		});
 
 	const dataTableExcel = $(`#${table_excel_selector}`)
 		.on('init.dt', function () {
@@ -468,18 +483,33 @@ window.addEventListener('DOMContentLoaded', () => {
 					},
 					className: 'hideNoDate btn-secondary',
 				},
+				// {
+				// 	text: null,
+				// 	action: function (e, dt, node, config) {
+				// 		e.preventDefault();
+				// 		document.location.href = `./${requestURL}?method=doDataExport&status=all&section=excel&days=${periodDays}`;
+				// 	},
+				// 	attr: {
+				// 		title: 'Export to Excel',
+				// 		id: exportExcel_selector
+				// 	},
+				// 	tag: 'a',
+				// 	className: null,
+				// },
 				{
-					text: null,
-					action: function (e, dt, node, config) {
-						e.preventDefault();
-						document.location.href = `./${requestURL}?method=doDataExport&status=all&section=excel&days=${periodDays}`;
-					},
+					extend: "excel",
+					text: '',
+					title: null,
+					// className: 'native-excel',
+					filename: '* Excel Export',
 					attr: {
 						title: 'Export to Excel',
 						id: exportExcel_selector
 					},
 					tag: 'a',
-					className: null,
+					exportOptions: {
+						columns: '.exportable'
+					}
 				}
 			]
 		},
@@ -508,9 +538,10 @@ window.addEventListener('DOMContentLoaded', () => {
 			[1, 'asc'],
 			[2, 'asc']
 		],
-		"paging": false,
-		"searching": true,
-		"info": false,
+		paging: false,
+		searching: true,
+		info: false,
+		stripeClasses :[],
 	})
 	.on('buttons-action', periodChange);
 	
@@ -658,9 +689,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				dataContainer.textContent = '';
 			}
 		}
-		// if (!!dataTableObj) {
-		// 	dataTableObj.clear().draw();
-		// }
 	};
 
 	menu.addEventListener('click', (e) => {
@@ -953,7 +981,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				if (positionOTL !== -1) {
 					extDescriptionPosition = positionOTL;
 				} else {
-					ticketOTLExcel.value = '';
+					// ticketOTLExcel.value = '';
 				}
 				if (positionCreator !== -1) {
 					if (!extDescriptionPosition || (extDescriptionPosition > positionCreator)) {
@@ -972,7 +1000,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						endPositionOTL = taskDescription.length;
 					}
 					if (positionOTL !== -1) {
-						ticketOTLExcel.value = taskDescription.substring(positionOTL + textOTLHeader.length, endPositionOTL).trim();
+						// ticketOTLExcel.value = taskDescription.substring(positionOTL + textOTLHeader.length, endPositionOTL).trim();
 					}
 					if (positionCreator !== -1) {
 						ticketCreatorExcel.value = taskDescription.substring(positionCreator + textCreatorHeader.length, endPositionCreator).trim();	
@@ -1023,7 +1051,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (positionOTL !== -1) {
 				extDescriptionPosition = positionOTL;
 			} else {
-				ticketOTLStatus.value = '';
+				// ticketOTLStatus.value = '';
 			}
 			if (positionCreator !== -1) {
 				if (!extDescriptionPosition || (extDescriptionPosition > positionCreator)) {
@@ -1042,7 +1070,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					endPositionOTL = taskDescription.length;
 				}
 				if (positionOTL !== -1) {
-					ticketOTLStatus.value = taskDescription.substring(positionOTL + textOTLHeader.length, endPositionOTL).trim();
+					// ticketOTLStatus.value = taskDescription.substring(positionOTL + textOTLHeader.length, endPositionOTL).trim();
 				}
 				if (positionCreator !== -1) {
 					ticketCreatorStatus.value = taskDescription.substring(positionCreator + textCreatorHeader.length, endPositionCreator).trim();	
@@ -1226,16 +1254,19 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const refreshBoardTable = (hideTaskNoDate = false) => {
-		const taskTickets = document.querySelectorAll('.task-ticket-excel');
+		// const taskTickets = document.querySelectorAll('.task-ticket-excel');
 		let {dayStart, dayEnd} = tsPeriodDays(periodDays);
-		taskTickets.forEach(item => {
+
+		dataTableExcel.clear().rows.add(excelDataArray).draw();
+		excelDataArray.forEach(item => {
 			let date_started = parseInt(item.dataset['date_started'], 10);
-			if (hideTask({date_started, dayStart, dayEnd, hideTaskNoDate}) === 'd-none') {
-				item.classList.add('d-none');
+			if (hideTask({date_started, dayStart, dayEnd, hideTaskNoDate}) === 'dt-row-none') {
+				item.classList.add('dt-row-none');
 			} else {
-				item.classList.remove('d-none');
+				item.classList.remove('dt-row-none');
 			}
 		});
+		dataTableExcel.rows('.dt-row-none').remove().draw();
 	};
 
 	const createTaskFileNew = (e, btnFile, attachmentsList, callback = null) => {
@@ -1356,6 +1387,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const getTaskBoard = () => {
+		clearExcelTicketFields();
 		getDataFromKanboard('getColumns', apiCallbackProps, inputStatus);
 		getDataFromKanboard('getAssignableUsers', apiCallbackProps, inputName);
 		getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectNameExcel);
@@ -1368,6 +1400,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectNameStatus);
 		getBoard('status');
 		ticketCreatorStatus.defaultValue = currentUser;
+	};
+
+	const getTaskStatistics = () => {
+		getBoard('statistics');
 	};
 
 	function attachFileStatus(data) {
@@ -1389,10 +1425,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			getTaskBoard();
 		}
 	}
-
-	const getTaskStatistics = () => {
-		getBoard('statistics');
-	};
 
 	const getAutomator = () => {
 		commonAutomatorRequest({
@@ -1470,7 +1502,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const showBoardTable = (data) => {
 		clearExcelTicketFields();
-		dataTableExcel.clear();
+		excelDataArray.length = 0;
 	
 		let {dayStart, dayEnd} = tsPeriodDays(periodDays);
 		data.success.answer.forEach(function ({
@@ -1493,7 +1525,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				<td class="ticket-title-table" data-item_value="${title}" data-item_id="inputTitle">${title}</td>
 				<td class="ticket-reference" data-item_value="${reference}" data-item_id="inputReference">${reference}</td>
 				<td class="ticket-capop" data-item_value="${fields['capop']}" data-item_id="inputCapOp">${fields['capop']}</td>
-				<td class="ticket-oracle" data-item_value="${fields['oracle']}" data-item_id="inputOracle">${fields['oracle']}</td>
+				<td class="ticket-otl" data-item_value="${fields['otl']}" data-item_id="inputOtl">${fields['otl']}</td>
 				<td class="ticket-status" data-item_value="${status}" data-item_id="inputStatus">${status}</td>
 				<td class="text-center" data-item_value="${time_started.substring(0, 2)}" data-item_id="inputTime">
 					<a href="#" class="${disable_edit}"><img class="icon-edit icon-edit-sm" src="img/edit.svg"></a>
@@ -1502,9 +1534,10 @@ window.addEventListener('DOMContentLoaded', () => {
 					<a href="#" class="${disable_edit}"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
 				</td>	
 			`;
-			dataTableExcel.row.add(tr);
+			excelDataArray.push(tr);
 		});
-		dataTableExcel.draw();
+		// dataTableExcel.rows.add(excelDataArray).draw();
+		refreshBoardTable();
 	};
 
 	const showStatisticsTable = (data) => {
@@ -1513,7 +1546,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			data.success.answer.forEach(function ({project_name, title, url, date_creation, fields}) {
 				const tr = document.createElement('tr');
 				tr.innerHTML = `
-				<td>${project_name}</td>
+					<td>${project_name}</td>
 	 				<td>${timestampToDate(date_creation, false)}</td>
 	 				<td>${fields.otl}</td>
 	 				<td>${title}</td>
@@ -1783,11 +1816,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		{
 			target.dataset.select_value = '';
 		}
-		dataTableExcel.search(target.value).draw();
+		dataTableExcel.column('.column-status').search(target.value).draw();
 	}
 
 	const resetFilterTable = () => {
-		dataTableExcel.search('').draw();
+		dataTableExcel.column('.column-status').search('').draw();
 	};
 
 	$('#modalTemplateUploadDialog').on('show.bs.modal', function (e) {
@@ -2078,6 +2111,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			inputStatus.value = inputStatus.dataset.select_value;
 		}
 	});
+
 
 	//init status
 	tableStatus.addEventListener('click', editStatusTask);

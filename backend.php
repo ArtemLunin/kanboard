@@ -187,7 +187,7 @@ if ($projectID !== false && $method !== 0)
 					$kanboard->setTaskMetadata((int)$taskResult['result'], 
 						[
 							"otl"		=> trim($params['OTL'] ?? ""),
-							"oracle"	=> trim($params['oracle'] ?? ""),
+							// "oracle"	=> trim($params['oracle'] ?? ""),
 							"capop"		=> trim($params['capop'] ?? ""),
 							"creator"	=> $taskCreator,
 							"version"	=> ($task_version !== false) ? $task_version : 1,
@@ -275,7 +275,7 @@ if ($projectID !== false && $method !== 0)
 				$taskResult = $kanboard->setTaskMetadata($params['id'], 
 					[
 						"otl"		=> trim($params['OTL'] ?? ""),
-						"oracle"	=> trim($params['oracle'] ?? ""),
+						// "oracle"	=> trim($params['oracle'] ?? ""),
 						"capop"		=> trim($params['capop'] ?? ""),
 						"creator"	=> $taskCreator,
 						"master_date" => $date_ts,
