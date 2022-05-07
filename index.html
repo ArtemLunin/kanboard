@@ -524,6 +524,7 @@
 									<th>Excel</th>
 									<th>Statistics</th>
 									<th>Automator</th>
+									<th>Services</th>
 									<th>Action</th>
 								</tr>
 							</thead>
@@ -560,12 +561,17 @@
 									<select class="custom-select-sm mr-2" name="statistics" id="statisticsPage" data-selectname="statistics">
 										<option value=""></option>
 										<option value="admin">admin</option>
-										<!-- <option value="user">user</option> -->
 									</select>
 									<label class="input-group-text-sm mr-1" for="automatorPage">Automator</label>
 									<select class="custom-select-sm mr-2" name="automator" id="automatorPage" data-selectname="automator">
 										<option value=""></option>
 										<option value="admin">admin</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="servicesPage">Services</label>
+									<select class="custom-select-sm mr-2" name="services" id="servicesPage" data-selectname="services">
+										<option value=""></option>
+										<option value="admin">admin</option>
+										<option value="user">user</option>
 									</select>
 									<button type="submit" class="btn btn-sm btn-primary my-1 mr-2">Set</button>
 								</form>
@@ -598,6 +604,103 @@
 					</div>
 				</nav>
 				<div id="listDevices"></div>
+			</section>
+			<section class="section services">
+				<div class="main-mosaic-container container-xl mx-lg-4 mx-md-2 mx-sm-1">
+					<div class="border border-dark mt-2 p-2 modify-mosaic-container">
+						<form action="#" method="POST" id="mosaicForm">
+							<input type="hidden" name="id" id="mosaicNodeId">
+							<div class="row">
+								<div class="col-4 col-xl-3">
+									<div class="row">
+										<div class="col">Node name</div>
+									</div>
+									<div class="row">
+										<div class="col">
+											<input type="text" name="name" id="mosaicNodeName" class="input-device input-device-name" placeholder="Node name">
+										</div>
+									</div>
+									<div class="row">
+										<div class="col">Platform</div>
+									</div>
+									<div class="row">
+										<div class="col">
+											<input type="text" name="platform" id="mosaicNodePlatform" class="input-device input-device-platform" placeholder="Platform">
+										</div>
+									</div>
+									<div class="row">
+										<div class="col">Service</div>
+									</div>
+									<div class="row">
+										<div class="col">
+											<input type="text" name="service" id="mosaicNodeService" class="input-device input-device-service" placeholder="Service">
+										</div>
+									</div>
+								</div>
+								<div class="col-4 col-xl-3">
+									<div class="row">
+										<div class="col">Ops. Owner</div>
+									</div>
+									<div class="row">
+										<div class="col">
+											<input type="text" name="owner" id="mosaicNodeOwner" class="input-device input-device-owner" placeholder="Ops. Owner">
+										</div>
+									</div>
+									<div class="row">
+										<div class="col">Manager</div>
+									</div>
+									<div class="row">
+										<div class="col">
+											<input type="text" name="manager" id="mosaicNodeManager" class="input-device input-device-manager" placeholder="Manager">
+										</div>
+									</div>
+									<div class="row">
+										<div class="col">Contact Info</div>
+									</div>
+									<div class="row">
+										<div class="col">
+											<input type="text" name="contact_info" id="mosaicNodeContact" class="input-device input-device-contact_info" placeholder="Contact Info">
+										</div>
+									</div>
+								</div>
+								<div class="col-4 col-xl-6">
+									<div class="row">
+										<div class="col">Comments</div>
+									</div>
+									<div class="row">
+										<div class="col">
+											<div class="input-device input-device-comments text-area border p-1 mr-1 mr-xl-2 rounded border-dark" id="mosaicNodeComments"
+												contenteditable="true"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="row mt-2">
+								<div class="col">
+									<button type="submit" class="btn btn-primary btn-sm btn-apply-settings" data-action="update">Apply</button>
+									<button type="submit" class="btn btn-primary btn-sm btn-add-device" data-action="add">Add</button>
+									<button type="reset" class="btn btn-warning btn-sm btn-clear-settings">Clear</button>
+								</div>
+							</div>
+						</form>
+					</div>
+					<table class="devices-all-table table table-hover table-sm table-striped table-bordered compact no-footer" id="devicesMosaic">
+						<thead>
+							<tr>
+								<th class="exportable">Node</th>
+								<th class="exportable">Platform</th>
+								<th class="exportable">Service</th>
+								<th class="exportable">Ops. owner</th>
+								<th class="exportable">Contact Info</th>
+								<th class="exportable">Manager</th>
+								<th class="exportable">Comments</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody class="devices-all-body">
+						</tbody>
+					</table>
+				</div>
 			</section>
 		</container>
 	</main>

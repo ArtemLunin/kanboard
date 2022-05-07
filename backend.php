@@ -11,6 +11,9 @@ require_once 'db_conf.php';
 require_once 'classDatabase.php';
 require_once 'classKanboard.php';
 
+
+mb_internal_encoding("UTF-8");
+
 $out_res = [];
 $param_error_msg['answer'] = [];
 
@@ -22,12 +25,12 @@ $filename = tempnam(sys_get_temp_dir(), 'xls');
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
 $params = $paramJSON['params'] ?? $_REQUEST ?? 0;
+$env = $paramJSON['env'] ?? 'kanboard';
 
 $params['id']  = $params['id'] ?? 0;
 $date_ts = setDateStarted($params['date_started'] ?? 0);
 
 $linksToTask = preg_replace('/jsonrpc\.php/', '?controller=TaskViewController&action=show&', KANBOARD_CITE);
-
 
 $db_object = new mySQLDatabaseUtils\databaseUtils();
 
@@ -52,8 +55,71 @@ if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
 	$rights = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
 }
 
-$section = $params['section'] ?? '';
+$section = $params['section'] ?? $env;
 $accessType = $db_object->getAccessType($rights, $section);
+
+if ($env === 'services') {
+	require_once 'db_conf_mosaic.php';
+
+	$call = $paramJSON['call'] ?? null;
+	$param_error_msg['answer'] = false;
+
+	$data_fields = [
+		'name'	=> '', 
+		'platform'	=> '', 
+		'service'	=> '', 
+		'owner'	=> '', 
+		'contact_info'	=> '', 
+		'manager'	=> '', 
+		'comments'	=> '',
+	];
+	
+	foreach ($data_fields as $key => $value) {
+		if(isset($paramJSON[$key])) {
+			$data_fields[$key] = $db_object->removeBadSymbols($paramJSON[$key]);
+		}
+	}
+
+	if ($call == 'doGetDevicesAll' && $accessType !== false)
+	{
+		$param_error_msg['answer'] = $db_object->doGetDevicesAll();	
+	}
+	elseif ($call == 'doAddDevice' && $accessType === 'admin') 
+	{
+		$param_error_msg['answer'] = $db_object->doAddDevice([
+			'name'		=> $data_fields['name'],
+			'platform'	=> $data_fields['platform'],
+			'service'	=> $data_fields['service'],
+			'owner'		=> $data_fields['owner'],
+			'contact_info'	=> $data_fields['contact_info'],
+			'manager'	=> $data_fields['manager'],
+			'comments'	=> $data_fields['comments'],
+		]);
+	}
+	elseif ($call == 'doApplyDeviceSettings' && $accessType === 'admin') 
+	{
+		$param_error_msg['answer'] = $db_object->doApplyDeviceSettings([
+			'name'		=> $data_fields['name'],
+			'platform'	=> $data_fields['platform'],
+			'service'	=> $data_fields['service'],
+			'owner'		=> $data_fields['owner'],
+			'contact_info'	=> $data_fields['contact_info'],
+			'manager'	=> $data_fields['manager'],
+			'comments'	=> $data_fields['comments'],
+			'id'		=> $paramJSON['id'] ?? 0,
+		]);
+	}
+	elseif ($call == 'doDeleteDevice' && $accessType === 'admin') 
+	{
+		$param_error_msg['answer'] = $db_object->doDeleteDevice($paramJSON['id'] ?? 0);
+	}
+	$out_res = ['success' => $param_error_msg];	
+
+	header('Content-type: application/json');
+	echo json_encode($out_res);
+
+	exit;
+}
 
 
 if ($projectID !== false && $method !== 0)
@@ -71,6 +137,7 @@ if ($projectID !== false && $method !== 0)
 		$param_error_msg['answer'] = [
 			'user' => $kanboardUserName,
 			'rights' => $rights,
+			'docsHref' => DOCUMENTATION_HREF,
 		];
 	} elseif ($method === 'logout') {
 		$_SESSION = array();
@@ -81,6 +148,7 @@ if ($projectID !== false && $method !== 0)
 		$param_error_msg['answer'] = [
 			'user'	 => $currentUser,
 			'rights' => $rights,
+			'docsHref' => DOCUMENTATION_HREF,
 		];
 	} elseif ($method === 'addUser' && $params !== 0 && strlen(trim($params['userName'])) > 2 && strlen($params['password']) > 2) {
 		$param_error_msg['answer'] = $db_object->addUser(trim($params['userName']), $params['password']);

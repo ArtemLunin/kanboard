@@ -2,6 +2,7 @@ vendor/
 dima/
 kanboard_upd/
 templates/
+unused/
 *.zip
 *test.php
 config.php

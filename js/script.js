@@ -21,6 +21,7 @@ const sections = [
 	'excel',
 	'statistics',
 	'automator',
+	'services',
 	'action',
 ];
 
@@ -43,8 +44,11 @@ let previousElem = null;
 
 let dayStartExcel, dayEndExcel = 0;
 
-const table_statistics_selector = 'table_statistics';
-const exportStatistics_selector = 'exportStatistics';
+const table_statistics_selector = 'table_statistics',
+	exportStatistics_selector = 'exportStatistics',
+	devicesMosaic_selector = 'devicesMosaic',
+	exportMosaic_selector = 'exportMosaic';
+
 const table_excel_selector = 'table_excel';
 const exportExcel_selector = 'exportExcel';
 
@@ -242,8 +246,23 @@ window.addEventListener('DOMContentLoaded', () => {
 			errorMsgAutomator = document.querySelector('#upload_error'),
 			errorMsgDevices = document.querySelector('#upload_devices_error'),
 			modalCommand = document.querySelector('#btnDialogModal'),
-			// btnTemplateSelect = document.querySelector('#buttonTemplateSelect'),
 			btnDevicesSelect = document.querySelector('#buttonDevicesSelect');
+		// mosaic elements
+		const mainContainer = document.querySelector('.main-mosaic-container'),
+			modifyContainer = mainContainer.querySelector('.modify-mosaic-container'),
+			mosaicForm = modifyContainer.querySelector('#mosaicForm'),
+			// dividerArrow = mainContainer.querySelector('.divider-arrow'),
+			devicesAllBody = mainContainer.querySelector('.devices-all-body'),
+			titleDialogModal = document.querySelector('#titleDialogModal'),
+			questionDialogModal = document.querySelector('#questionDialogModal'),
+			// triangle = document.querySelector('.triangle'),
+			// btnApplySettings = document.querySelector('.btn-apply-settings'),
+			btnDialogModal = document.querySelector('#btnDialogModal');
+
+	let showMosaicEditItems = localStorage.getItem('showMosaicEditItems');
+	if (!showMosaicEditItems) {
+		showMosaicEditItems = '0';
+	}
 
 	const periodChange = (e, buttonApi, dataTable, node, config) => {
 		const target = buttonApi.nodes()[0];
@@ -277,14 +296,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const dataTableStatistics = $(`#${table_statistics_selector}`)
 		.on('init.dt', function () {
-				// const btnExcel = document.querySelector(`#${exportStatistics_selector}`);
-				// btnExcel.className = "";
-				// const img = document.createElement('img');
-				// img.src = 'img/file-excel.svg';
-				// img.classList.add("icon-excel");
-				// btnExcel.append(img);
 				const btnExcel = document.querySelector(`.native-excel`);
-				// btnExcel.className = "";
 				const img = document.createElement('img');
 				img.src = 'img/file-excel.svg';
 				img.classList.add("icon-excel");
@@ -311,19 +323,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 				},
 				buttons: [
-					// {
-					// 	text: null,
-					// 	action: function (e, dt, node, config) {
-					// 		e.preventDefault();
-					// 		document.location.href = `./${requestURL}?method=doDataExport&status=all&section=statistics`;
-					// 	},
-					// 	attr: {
-					// 		title: 'Export to Excel',
-					// 		id: exportStatistics_selector
-					// 	},
-					// 	tag: 'a',
-					// 	className: null,
-					// },
 					{
 						extend: "excel",
 						text: '',
@@ -483,24 +482,10 @@ window.addEventListener('DOMContentLoaded', () => {
 					},
 					className: 'hideNoDate btn-secondary',
 				},
-				// {
-				// 	text: null,
-				// 	action: function (e, dt, node, config) {
-				// 		e.preventDefault();
-				// 		document.location.href = `./${requestURL}?method=doDataExport&status=all&section=excel&days=${periodDays}`;
-				// 	},
-				// 	attr: {
-				// 		title: 'Export to Excel',
-				// 		id: exportExcel_selector
-				// 	},
-				// 	tag: 'a',
-				// 	className: null,
-				// },
 				{
 					extend: "excel",
 					text: '',
 					title: null,
-					// className: 'native-excel',
 					filename: '* Excel Export',
 					attr: {
 						title: 'Export to Excel',
@@ -545,6 +530,76 @@ window.addEventListener('DOMContentLoaded', () => {
 	})
 	.on('buttons-action', periodChange);
 	
+	const dataTableMosaic = $(`#${devicesMosaic_selector}`)
+		.on('init.dt', function () {
+				const btnExcel = document.querySelector(`.mosaic-excel`);
+				const img = document.createElement('img');
+				img.src = 'img/file-excel.svg';
+				img.classList.add("icon-excel");
+				btnExcel.append(img);
+		})
+		.DataTable({
+			dom: '<"mosaic-menu"Bft>',
+			buttons: 
+			{
+				dom: {
+					container: {
+						tag: 'div',
+						className: 'mosaic-buttons'
+					},
+					button: {
+						tag: 'button',
+						className: [
+							'btn', 'btn-sm'
+						]
+					},
+					buttonLiner: {
+						tag: null
+					}
+
+				},
+				buttons: [
+					{
+						extend: "excel",
+						text: '',
+						title: null,
+						className: 'mosaic-excel',
+						filename: '* Export',
+						attr: {
+							title: 'Export to Excel',
+							id: exportMosaic_selector
+						},
+						tag: 'a',
+						exportOptions: {
+							columns: '.exportable'
+						}
+					}
+				]
+			},
+			"autoWidth": false,
+			columns:
+			[
+				{ "width": "10%" },
+				{ "width": "10%" },
+				{ "width": "10%" },
+				{ "width": "10%" },
+				{ "width": "10%" },
+				{ "width": "10%" },
+				{ "width": "35%" },
+				{ "width": "5%" },
+			],
+			columnDefs: [
+				{ orderable: false, "targets": [6, 7] },
+			],
+			// order: [
+			// 	[1, 'desc'],
+			// 	[0, 'asc'],
+			// ],
+			paging: false,
+			searching: true,
+			stripeClasses :[],
+		});
+
 	btnUpdateTaskExcel.disabled = true;
 	btnUpdateTaskExcel.dataset['task_id'] = 0;
 	
@@ -624,6 +679,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		const body = {
 			method: 'logout',
 		};
+		location.hash = '';
+		localStorage.removeItem('showMosaicEditItems');
 		sendRequest('POST', requestURL, body).then(() => {
 			location.reload();
 		});
@@ -677,6 +734,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				document.title = 'Automator';
 				getAutomator();
 				break;
+			case 'services':
+				document.title = 'Services';
+				getMosaic();
+				break;
 			default:
 				break;
 		}
@@ -694,6 +755,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	menu.addEventListener('click', (e) => {
 		const target = e.target;
 		if (target.tagName === 'LI') {
+			if (target.dataset['section'] === 'documentation' && target.dataset.href.length > 10) {
+				window.open(target.dataset.href, '_blank');
+			}
 			if (target.dataset['section'] === 'logout') {
 				logout();
 			} else if (target.dataset['section'] === 'login') {
@@ -716,16 +780,21 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const showInterface = (data) => {
 		let loginAction = 'logout';
-		if(data) {
+		const rights = {};
+		if (data) {
 			menu.textContent = '';
-			if(!!data.success) {
+			const docsHref = (data.success) ? data.success.answer.docsHref : '';
+			if (!!data.success) {
 				if (data.success.answer.user === 'defaultUser') {
+					currentHash = '';
 					loginAction = 'login'
 				} else {
 					currentUser = data.success.answer.user;
 				}
+				
 				data.success.answer.rights.forEach(({pageName, sectionAttr, sectionName, accessType}) => {
-					if (accessType != '') {			
+					if (accessType != '') {	
+						rights[sectionName] = accessType;
 						menu.insertAdjacentHTML('beforeend', `
 						<li data-section="${sectionAttr}">${pageName}</li>
 						`);
@@ -737,17 +806,30 @@ window.addEventListener('DOMContentLoaded', () => {
 							} else {
 								toggleNoAccessRights('period-select', 'user-none', '');
 							}
+						} else if (sectionName === 'services') {
+							if (accessType === 'admin')
+							{
+								showMosaicEditItems = '1';
+							} else {
+								showMosaicEditItems = '0';
+							}
+							localStorage.setItem('showMosaicEditItems', showMosaicEditItems);
 						}
 					}
 				});
 			}
 			menu.insertAdjacentHTML('beforeend', `
+				<li data-section="documentation" data-href="${docsHref}">Documentation</li>
+			`);
+			menu.insertAdjacentHTML('beforeend', `
 				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
 			`);
 			$('#waitModal').modal('hide');
 			let section = 'main';
-			if (currentHash === 'automator') {
+			if (currentHash === 'automator' && !!rights[currentHash]) {
 				section = 'automator';
+			} else if (currentHash === 'services' && !!rights[currentHash]) {
+				section = 'services';
 			}
 			selectMenuItem(menu, section);
 			toggleSection(section);
@@ -1436,6 +1518,22 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
+	const getMosaic = () => {
+		initMosaicElems();
+		const body = {
+			env: 'services',
+			call: 'doGetDevicesAll',
+		};
+		sendRequest('POST', requestURL, body).then((data) => {
+			if (data && data.success && data.success.answer) {
+				showMosaic(data.success.answer);
+			} else {
+				location.hash = '';
+				location.reload();
+			}
+		});
+	};
+
 	const doGetTemplates = () => {
 		commonAutomatorRequest({
 			formParams: {
@@ -1536,7 +1634,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			`;
 			excelDataArray.push(tr);
 		});
-		// dataTableExcel.rows.add(excelDataArray).draw();
 		refreshBoardTable();
 	};
 
@@ -1664,6 +1761,59 @@ window.addEventListener('DOMContentLoaded', () => {
 		} else {
 			errorMsgAutomator.innerText = JSON.stringify(data);
 			errorMsgAutomator.style.display = 'block';
+		}
+	};
+
+	const showMosaic = (data) => {
+		dataTableMosaic.clear().draw();
+		if (data) {
+			let hideEditButtons = 'd-block d-xl-flex';
+			if (showMosaicEditItems == '0') {
+				hideEditButtons = 'd-none';
+			}
+			devicesAllBody.textContent = '';
+			data.forEach(function ({
+				id, name, platform, service, owner, contact_info, manager, comments
+			}) 
+			{
+				let deviceDataID = `device-data-${id}`;
+				const tr = document.createElement('tr');
+
+				tr.classList.add('mosaic-table-row');
+				tr.dataset.node_id = id;
+				tr.id = deviceDataID;
+				tr.innerHTML = `
+						<td>
+							<span class="name-text">${name}</span>
+						</td>
+						<td>
+							<span class="platform-text">${platform}</span>
+						</td>
+						<td>
+							<span class="service-text">${service}</span>
+						</td>
+						<td>
+							<span class="owner-text">${owner}</span>
+						</td>
+						<td>
+							<span class="contact_info-text">${contact_info}</span>
+						</td>
+						<td>
+							<span class="manager-text">${manager}</span>
+						</td>
+						<td>
+							<p class="comment-text crop-height">${comments.replace(/(?:\r\n|\r|\n)/g, '<br>')}</p>
+						</td>
+						<td>
+							<div class="action-buttons justify-content-center ${hideEditButtons}">
+								<a href="#"><img class="icon-edit icon-edit-sm" src="img/edit.svg"></a>
+								<a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
+							</div>
+						</td>
+				`;
+				dataTableMosaic.row.add(tr);
+			});
+			dataTableMosaic.draw();
 		}
 	};
 
@@ -1821,6 +1971,118 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const resetFilterTable = () => {
 		dataTableExcel.column('.column-status').search('').draw();
+	};
+
+	const hideEditItems = function () {
+		if (!modifyContainer.classList.contains('d-none')){
+			modifyContainer.classList.add('d-none');
+		}
+		// if (!dividerArrow.classList.contains('d-none')){
+		// 	dividerArrow.classList.add('d-none');
+		// }
+	};
+
+	const initMosaicElems = function () {
+		if (showMosaicEditItems == '1') {
+			mosaicForm.reset();
+			// modifyContainer.classList.remove('d-none');
+			// dividerArrow.classList.remove('d-none');
+		}
+		else {
+			hideEditItems();
+		}
+	};
+
+	const deviceActionMosaic = function(e) {
+		e.preventDefault();
+		const target = e.target;
+		const mosaicRow = target.closest('.mosaic-table-row');
+		let action = null;
+
+		if (target.classList.contains('icon-edit'))
+		{
+			action = 'modify';
+		} else if (target.classList.contains('icon-delete')) {
+			action = 'delete';
+		}
+		switch (action) {
+			case 'modify':
+				modifyDeviceSettings({
+					device_id: mosaicRow.dataset.node_id,
+					row_id: mosaicRow.id
+				});
+				break;
+			case 'delete':
+				reqDeleteDevice({
+					name: mosaicRow.querySelector('.name-text').innerText,
+					id: mosaicRow.dataset.node_id
+				});
+				break;
+		}
+	};
+
+	const reqDeleteDevice = (deviceParams) =>{
+		titleDialogModal.innerText = 'Delete node';
+		questionDialogModal.innerText = `Do you really want to delete the node: ${deviceParams['name']}?`;
+		btnDialogModal.setAttribute('modal-command', 'deleteDevice');
+		btnDialogModal.dataset['id'] = deviceParams['id'];
+		$('#dialogModal').modal({
+			keyboard: true
+		});
+	};
+
+	const modifyDeviceSettings = ({device_id, row_id}) => {
+		const rowDevice = document.getElementById(row_id);
+		// triangle.classList.remove('triangle-down');
+		// triangle.classList.add('triangle-up');
+		mosaicForm.querySelector('[data-action="add"]').style.display = 'none';
+		mosaicForm.querySelector('[data-action="update"]').style.display = '';
+
+		mosaicForm.querySelector('#mosaicNodeName').value = rowDevice.querySelector('.name-text').innerText;
+		mosaicForm.querySelector('#mosaicNodePlatform').value = rowDevice.querySelector('.platform-text').innerText;
+		mosaicForm.querySelector('#mosaicNodeService').value = rowDevice.querySelector('.service-text').innerText;
+		mosaicForm.querySelector('#mosaicNodeOwner').value = rowDevice.querySelector('.owner-text').innerText;
+		mosaicForm.querySelector('#mosaicNodeContact').value = rowDevice.querySelector('.contact_info-text').innerText;
+		mosaicForm.querySelector('#mosaicNodeManager').value = rowDevice.querySelector('.manager-text').innerText;
+		mosaicForm.querySelector('#mosaicNodeComments').innerText = rowDevice.querySelector('.comment-text').innerText;
+		mosaicForm.querySelector('#mosaicNodeId').value = device_id;
+		// $('.collapse').collapse('show');
+	};
+
+	// const triangleToggle = (e) => {
+	// 	const target = e.target;
+	// 	console.log(target);
+	// 	if (target.classList.contains('triangle-down'))
+	// 	{
+	// 		triangle.classList.remove('triangle-down');
+	// 		triangle.classList.add('triangle-up');
+	// 		$('.collapse').collapse('show');
+	// 	}
+	// 	else{
+	// 		triangle.classList.add('triangle-down');
+	// 		triangle.classList.remove('triangle-up');
+	// 		$('.collapse').collapse('hide');
+	// 	}
+	// };
+
+	const confirmDialog = (e) => {
+		const target = e.target;
+		const modalCommand = target.getAttribute('modal-command');
+		switch(modalCommand)
+		{
+			case 'deleteDevice':
+				deleteDevice(target.dataset['id']);
+				break;
+		}
+	};
+
+	const deleteDevice = (deviceID) => {
+		const body = {
+			env: 'services',
+			call: 'doDeleteDevice',
+			id: deviceID
+		};
+		sendRequest('POST', requestURL, body).then(getMosaic);
 	};
 
 	$('#modalTemplateUploadDialog').on('show.bs.modal', function (e) {
@@ -2176,7 +2438,37 @@ window.addEventListener('DOMContentLoaded', () => {
 			
 		}
 		
-	})
+	});
+
+	// inin mosaic
+	mosaicForm.addEventListener('reset', (e) => {
+		const target = e.target;
+		target.querySelector('#mosaicNodeComments').textContent = '';
+		target.querySelector('[data-action="update"]').style.display = 'none';
+		target.querySelector('[data-action="add"]').style.display = '';
+	});
+	mosaicForm.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		const arrData = {};
+		const formData = new FormData(e.target);
+		const btnAction = document.activeElement;
+		if (btnAction.type === 'submit') {
+			for (let [key, value] of formData.entries()) {
+				if (typeof value == 'object') continue;
+				arrData[key] = value.trim();
+			}
+			const call = (btnAction.getAttribute('data-action') === 'add') ? 'doAddDevice' : 'doApplyDeviceSettings';
+			arrData['env'] = 'services';
+			arrData['call'] = call;
+			arrData['comments'] = target.querySelector('#mosaicNodeComments').innerText.trim();
+
+			sendRequest('POST', requestURL, arrData).then(getMosaic);
+		}
+	});
+	devicesAllBody.addEventListener('click', deviceActionMosaic);
+	btnDialogModal.addEventListener('click', confirmDialog);
+	// triangle.addEventListener('click', triangleToggle);
 
 	clearInputsForms();
 	iniInterface();

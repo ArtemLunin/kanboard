@@ -123,12 +123,17 @@ p {
 	word-wrap: break-word;
 	border-radius: 6px;
 }
-.period-select, .statistics-buttons {
+.period-select, .statistics-buttons, .mosaic-buttons {
 	float: left;
 }
-.excel-menu {
+.excel-menu, .mosaic-menu {
 	margin-top: 10px;
 }
+.action-button{
+	margin-left: 2px;
+	margin-right: 2px;
+}
+
 /* .task-ticket-excel .ticket-id {
 	width: 5%;
 }

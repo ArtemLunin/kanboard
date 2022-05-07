@@ -12,16 +12,23 @@ class databaseUtils {
 		'accessType'	=> 'admin',
 	],
 	];
-	private $superRights = [[
-		'pageName' => 'Settings',
-		'sectionName' => 'settings',
-		'sectionAttr'	=> 'settings',
-		'accessType'	=> 'admin',
-	],
+	private $superRights = [
 	[
 		'pageName' => 'Automator',
 		'sectionName' => 'automator',
 		'sectionAttr'	=> 'automator',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'Services',
+		'sectionName' => 'services',
+		'sectionAttr'	=> 'services',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'Settings',
+		'sectionName' => 'settings',
+		'sectionAttr'	=> 'settings',
 		'accessType'	=> 'admin',
 	]];
 	function __construct () {
@@ -173,9 +180,89 @@ class databaseUtils {
 		}
 		return false;
 	}
+
 	function hideNoAccessRights($user_rights) {
 		return $user_rights['accessType'] != '';
 	}
+
+	function doGetDevicesAll($in_exp = FALSE)
+	{
+		$device_list = [];
+		$sql = "SELECT id, name, platform, service, owner, contact_info, manager, comments FROM devices";
+		if ($in_exp !== false) {
+			$sql .= " WHERE id IN ({$in_exp})";
+		}
+		$row = $this->pdo->prepare($sql);
+		$row->execute();
+		if($table_res = $row->fetchall())
+		{
+			foreach ($table_res as $row_res)
+			{
+				$device_list[] = [
+					'id'			=> (int)$row_res['id'],
+					'name'			=> $this->removeBadSymbols($row_res['name']),
+					'platform'		=> $this->removeBadSymbols($row_res['platform']),
+					'service'		=> $this->removeBadSymbols($row_res['service']),
+					'owner'			=> $this->removeBadSymbols($row_res['owner']),
+					'contact_info'	=> $this->removeBadSymbols($row_res['contact_info']),
+					'manager'		=> $this->removeBadSymbols($row_res['manager']),
+					'comments'		=> $this->removeBadSymbols($row_res['comments']),
+				];
+			}
+		}
+		return $device_list;
+	}
+	function doAddDevice($deviceParam)
+	{
+		$sql = "INSERT INTO devices (name, platform, service,  owner, contact_info, manager, comments) VALUES (:name, :platform, :service, :owner, :contact_info, :manager, :comments)";
+		if ($this->modSQL($sql, $deviceParam, true)) {	
+			return true;
+		}
+		// $row = $this->pdo->prepare($sql);
+		// $row->execute($deviceParam);
+		// if ($row->rowCount()) {
+		// 	return true;
+		// }
+		return false;
+	}
+	function doApplyDeviceSettings($deviceParam)
+	{
+		$sql = "UPDATE devices SET name=:name, platform=:platform, service=:service, owner=:owner, contact_info=:contact_info, manager=:manager, comments=:comments WHERE id=:id";
+		if ($this->modSQL($sql, $deviceParam, true)) {	
+			return true;
+		}
+		// $row = $this->pdo->prepare($sql);
+		// $row->execute($deviceParam);
+		
+		// if ($row->rowCount()) {
+		// 	return true;
+		// }
+		return false;
+	}
+	
+	function doDeleteDevice($id)
+	{
+		$sql = "DELETE FROM devices WHERE id=:id";
+		if ($this->modSQL($sql, [
+			'id' => $id
+		], true)) {	
+			return true;
+		}
+		// $row = $this->pdo->prepare($sql);
+		// $row->execute([
+		// 	'id' => $id,
+		// ]);
+		// if ($row->rowCount()) {
+		// 	return true;
+		// }
+		return false;
+	}
+	
+	function removeBadSymbols($str)
+	{
+		return str_replace(["\"","'","\t"]," ", $str);
+	}
+
 	function setSQLError($pdo_exception, $error_text)
 	{
 		$error_txt_info = $error_text.' Text: '.$pdo_exception->getMessage().', file: '.$pdo_exception->getFile().', line: '.$pdo_exception->getLine();
