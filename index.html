@@ -6,6 +6,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script src="js/jquery-3.4.1.min.js"></script>
 	<script src="js/popper.min.js"></script>
+	<script src="assets/tinymce.min.js" referrerpolicy="origin"></script>
 	<link rel="stylesheet" type="text/css" href="css/datatables.min.css">
 	<link rel="stylesheet" href="css/bootstrap.min.css">
 	<script src="js/bootstrap.min.js"></script>
@@ -700,6 +701,64 @@
 						<tbody class="devices-all-body">
 						</tbody>
 					</table>
+				</div>
+			</section>
+			<section class="section documentation">
+				<div class="container-documentation">
+					<div class="book-aside book-menu">
+						<div class="books">
+							<h2>Books List</h2>
+							<a href="#" class="btn_new-book">
+								<button class="button-book">+</button>
+								<span>Add a new book</span>
+							</a>
+							<ul class="list books-list"></ul>
+						</div>
+						<div class="pages d-none">
+							<h2>Pages</h2>
+							<a href="#" class="btn_new-page">
+								<button class="button-book">+</button>
+								<span>Add a new page</span>
+							</a>
+							<ul class="list pages-list"></ul>
+						</div>
+						<div class="show-books d-none">
+							<a href="#" class="btn_show-books">
+								<button class="button-book">&laquo;</button>
+								<span>Back to books</span>
+							</a>
+						</div>
+					</div>
+					<div class="book-edit">
+						<div class="page-name">
+							<span class="page-name-title">Page name</span>
+							<div class="page-name-edit" contenteditable="true" id="page_name"></div>
+						</div>
+						<form method="post" action="#" id="formPageEdit">
+							<textarea id="default"></textarea>
+						</form>
+						<div class="container-search">
+							<form action="#" method="get" id="formSearch">
+								<input type="text" name="query" id="inputQuery" placeholder="search">
+							</form>
+							<div class="search-result" style="display:none;">
+							</div>
+						</div>
+					</div>
+					<div class="book-aside book-attachments">
+						<h2>Attachments</h2>
+						<a href="#" style="display:none;" class="btn_new-attachment">
+							<button class="button-book">+</button>
+							<span>Add a new attachment</span>
+						</a>
+						<form action="#" method="post" id="formAddAttachment">
+							<input style="display:none;" type="file" name="file" id="bookFileAttachment">
+							<input type="hidden" name="name" id="bookFileName">
+							<input type="hidden" name="uploaded_to" id="uploaded_to_page">
+						</form>
+				
+						<ul class="list attachments-list"></ul>
+					</div>
 				</div>
 			</section>
 		</container>

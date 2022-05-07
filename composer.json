@@ -1,0 +1,12 @@
+{
+    "require": {
+        "guzzlehttp/guzzle": "^7.0",
+        "phpoffice/phpspreadsheet": "^1.23"
+    },
+    "autoload": {
+       "psr-4": {
+           "Bookstack\\": "Classes/Bookstack"
+       }
+   }
+
+}

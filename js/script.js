@@ -1,7 +1,7 @@
 'use strict';
 
-const requestURL = 'backend.php';
-const automatorURL = 'utils.php';
+const requestURL = 'backend.php',
+	automatorURL = 'utils.php';
 
 const entityMap = {
   '&': '&amp;',
@@ -60,6 +60,10 @@ const errorMsg = document.createElement('div');
 errorMsg.textContent = 'Username or password is incorrect';
 
 let filesTemplate, xls_files;
+
+//documentation section
+let savedPageName = 'New Page',
+	page_id = '0';
 
 // common functions
 // for sort in ORDER DESC
@@ -162,6 +166,20 @@ const escapeHTML = (string) => {
 	return String(string).replace(/[&<>"'`=\/]/g, (s) => entityMap[s]);
 };
 
+function b64EncodeUnicode(str) {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+        function toSolidBytes(match, p1) {
+            return String.fromCharCode('0x' + p1);
+    }));
+}
+
+function b64DecodeUnicode(str) {
+    return decodeURIComponent(atob(str).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+}
+
+
 const capitalize = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
 function downloadFile(dataurl) {
@@ -258,6 +276,22 @@ window.addEventListener('DOMContentLoaded', () => {
 			// triangle = document.querySelector('.triangle'),
 			// btnApplySettings = document.querySelector('.btn-apply-settings'),
 			btnDialogModal = document.querySelector('#btnDialogModal');
+		// documentation elements
+		const pageNameEdit = document.querySelector('.page-name-edit'),
+			newAttachment = document.querySelector('.btn_new-attachment'),
+			bookAttachmentsList = document.querySelector('.attachments-list'),
+			formAddAttachment = document.querySelector('#formAddAttachment'),
+			formSearch = document.querySelector('#formSearch'),
+			booksList = document.querySelector('.books-list'),
+			pagesList = document.querySelector('.pages-list'),
+			booksDiv = document.querySelector('.books'),
+			pagesDiv = document.querySelector('.pages'),
+			newPage = document.querySelector('.btn_new-page'),
+			newBook = document.querySelector('.btn_new-book'),
+			showBooksDiv = document.querySelector('.show-books'),
+			showBooks = document.querySelector('.btn_show-books'),
+			pagesTitle = pagesDiv.querySelector('h2'),
+			searchContainer = document.querySelector('.search-result');
 
 	let showMosaicEditItems = localStorage.getItem('showMosaicEditItems');
 	if (!showMosaicEditItems) {
@@ -600,6 +634,406 @@ window.addEventListener('DOMContentLoaded', () => {
 			stripeClasses :[],
 		});
 
+	const saveContent = () => {
+		const savedName = (pageNameEdit.innerText.trim() !== ''  ? pageNameEdit.innerText.trim() : prompt('Enter the Page Name', savedPageName));
+
+		if (savedName) {
+			const body = {
+				env: 'documentation',
+				book_id: newPage.dataset.book_id,
+				id: page_id,
+				action: 'savePage',
+				name: savedName,
+				html: tinymce.activeEditor.getContent(),
+			}
+			sendRequest('POST', requestURL, body).then(showPageContent);
+		}
+	};
+
+	const getBooksList = () => {
+		const body = {
+			env: 'documentation',
+			innerMethod: 'GET',
+			action: 'books'
+		}
+		sendRequest('POST', requestURL, body).then((data) => {
+			showItemList(data, booksList);
+		});
+	};
+
+	const getBook = (id) => 
+	{
+		if (id != +id) return false;
+		const body = {
+			env: 'documentation',
+			innerMethod: 'GET',
+			action: `books/${id}`
+		}
+		sendRequest('POST', requestURL, body).then((data) => {
+			if (data && data.success && data.success.answer) {
+				setBookTitle(data.success.answer.name, data.success.answer.id, pagesTitle);
+			}
+		});
+	};
+
+	const getPageList = book_id => {
+		if (book_id != +book_id) return false;
+		const body = {
+			env: 'documentation',
+			innerMethod: 'GET',
+			action: `pages?filter[book_id]=${book_id}`
+		}
+		newPage.dataset.book_id = book_id;
+		sendRequest('POST', requestURL, body).then((data) => {
+			showItemList(data, pagesList, ['id', 'book_id']);
+		});
+	};
+
+	const getPageContent = page_id => {
+		if (page_id != +page_id) return false;
+		const body = {
+			env: 'documentation',
+			innerMethod: 'GET',
+			action: `pages/${page_id}`
+		}
+		sendRequest('POST', requestURL, body).then(showPageContent);
+	};
+
+	const getAttachmentsList = page_id => {
+		if (page_id != +page_id) return false;
+		const body = {
+			env: 'documentation',
+			innerMethod: 'GET',
+			action: `attachments?filter[uploaded_to]=${page_id}`
+		}
+		newAttachment.dataset.page_id = page_id;
+		newAttachment.style.display = '';
+		sendRequest('POST', requestURL, body).then((data) => {
+			showItemList(data, bookAttachmentsList, ['id', 'uploaded_to']);
+		});
+	};
+
+	const downloadAttachment = id => {
+		if (id != +id) return false;
+		const body = {
+			env: 'documentation',
+			innerMethod: 'GET',
+			action: `attachments/${id}`
+		}
+		sendRequest('POST', requestURL, body).then((data) => {
+			if (data && data.success && data.success.answer && data.success.answer.links) {
+				try {
+						const a = document.createElement('span');
+						a.insertAdjacentHTML('beforeend', data.success.answer.links.html);
+						window.open(a.querySelector('a').href);
+				} catch (e) {
+					tinymce.activeEditor.notificationManager.open({
+						text: `An error occurred. Problem downloading file from link: ${data.success.answer.links.html}`,
+						type: 'error'
+					});
+				}
+			}
+		});
+	};
+
+	const showSearchResult = (data) => {
+		searchContainer.textContent = '';
+		if (data && data.success && data.success.answer) {
+			data.success.answer.data.forEach(item => {
+				searchContainer.insertAdjacentHTML('beforeEnd', `
+					<div class="search-result-item" data-id="${item.id}" data-type="${item.type}" data-book_id="${item.book_id ? item.book_id : '0'}">
+						<h3><span class="item-name">${item.name}</span> - <span class="search-type">${item.type}</span></h3>
+						<div class="preview-html">${item.preview_html.content}</div>
+						<a href="${item.url}" target="_blank" class="book-url" title="Open in Bookstack">${item.preview_html.name}</a>
+					</div>
+				`);
+			});
+			if (data.success.answer.total != 0) {
+				searchContainer.style.display = '';
+			}
+		}
+	};
+
+	const deleteItem = ({action, item, itemName, id, callback}) => {
+		tinymce.activeEditor.windowManager.confirm(`Do you want delete ${itemName}?`, (state) => {
+			if (state) {
+				const body = {
+					env: 'documentation',
+					id: id,
+					action: action,
+					item: item,
+				}
+			sendRequest('POST', requestURL, body).then(callback);
+			}
+		});
+	};
+
+	const saveBook = (bookName, id = 0) => {
+		const name = bookName.replace(/\n/g, " ").trim();
+		
+		if (name == '') return false;
+
+		const body = {
+			env: 'documentation',
+			action: 'saveBook',
+			id: id,
+			name: name.replace(/\n/g, ""),
+		}
+		sendRequest('POST', requestURL, body).then(() => {
+			getBooksList();
+			if (id) {
+				getBook(id);
+			}
+		});
+	};
+
+	newBook.addEventListener('click', (e) => {
+		e.preventDefault();
+		const nameNewBook = prompt('Enter the name for new book', '');
+		if (nameNewBook) {
+			saveBook(nameNewBook);
+		}
+	});
+
+	newPage.addEventListener('click', (e) => {
+		e.preventDefault();
+		clearPageContent();
+	});
+
+	newAttachment.addEventListener('click', (e) => {
+		e.preventDefault();
+		if (newAttachment.dataset.page_id && newAttachment.dataset.page_id != '0') {
+			bookFileAttachment.click();
+		}
+	});
+
+	bookFileAttachment.addEventListener('change', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		bookFileName.value = target.files[0].name;
+		uploaded_to_page.value = newAttachment.dataset.page_id;
+		formAddAttachment.requestSubmit();
+	});
+
+	formSearch.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const formData = new FormData(e.target);
+		let paramStr = '';
+		for (let [key, value] of formData.entries()) {
+			if (value.trim() != '') {
+				paramStr += `${key}=${value.trim()}&`;
+			}
+		}
+		const body = {
+			env: 'documentation',
+			innerMethod: 'GET',
+			action: `search?${paramStr}`
+		};
+		if (paramStr != '') {
+			searchContainer.style.display = 'none';
+			sendRequest('POST', requestURL, body).then(showSearchResult);
+		}
+	});
+
+	formAddAttachment.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const formData = new FormData(e.target);
+		sendPostFile(requestURL, formData).then((data) => {
+			// console.log(data);
+			if (data && data.success && data.success.answer) {
+				getAttachmentsList(data.success.answer.uploaded_to);
+			}
+		});
+	});
+
+	const switchToPageView = (bookName = null, book_id = null) => {
+		booksDiv.classList.add('d-none');
+		pagesDiv.classList.remove('d-none');
+		showBooksDiv.classList.remove('d-none');
+		setBookTitle(bookName, book_id, pagesTitle);
+	};
+
+	searchContainer.addEventListener('click', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		const divSearch = target.closest('.search-result-item');
+		if (target.closest('.book-url')) {
+			window.open(target.closest('.book-url').href, '_blank');
+			return true;
+		}
+		if (divSearch) {
+			switch (divSearch.dataset.type) {
+				case 'page':
+					getPageContent(divSearch.dataset.id);
+					getBook(divSearch.dataset.book_id);
+					switchToPageView();
+					break;
+				case 'book':
+					getPageList(divSearch.dataset.id);
+					clearPageContent({
+						bookName: divSearch.querySelector('.item-name').innerText,
+						id: divSearch.dataset.id
+					});
+					break;
+				default:
+					break;
+			}
+			
+		}
+	});
+
+	showBooks.addEventListener('click', (e) => {
+		e.preventDefault();
+		newPage.dataset.book_id = '0';
+		booksDiv.classList.remove('d-none');
+		pagesDiv.classList.add('d-none');
+		showBooksDiv.classList.add('d-none');
+		pagesTitle.innerText = '';
+		clearPageContent();
+	});
+
+	booksList.addEventListener('click', (e) => {
+		const target = e.target;
+		const parent = target.closest('li');
+		if (parent) {
+			const itemName = parent.querySelector('.list-item-name').textContent;
+			if (target.classList.contains('list-item-name')) {
+				switchToPageView(itemName, parent.dataset.id);
+				getPageList(parent.dataset.id);
+			} else if (target.classList.contains('btn_delete')) {
+				deleteItem({
+					action: 'delete',
+					item: 'books',
+					itemName: itemName,
+					id: parent.dataset.id,
+					callback: getBooksList
+				});
+			}
+		}
+	});
+
+	pagesList.addEventListener('click', (e) => {
+		const target = e.target;
+		const parent = target.closest('li');
+		if (parent) {
+			const itemName = parent.querySelector('.list-item-name').textContent;
+			if (target.classList.contains('list-item-name')) {
+				getPageContent(parent.dataset.id);
+			}
+			else if (target.classList.contains('btn_delete')) {
+				deleteItem({
+					action: 'delete',
+					item: 'pages',
+					itemName: itemName,
+					id: parent.dataset.id,
+					callback: () => {
+						getPageList(newPage.dataset.book_id);
+						clearPageContent();
+					}
+				});
+			}
+		}
+	});
+
+	bookAttachmentsList.addEventListener('click', (e) => {
+		const target = e.target;
+		const parent = target.closest('li');
+		if (parent) {
+			const itemName = parent.querySelector('.list-item-name').textContent;
+			if (target.classList.contains('list-item-name')) {
+				downloadAttachment(parent.dataset.id);
+			}
+			else if (target.classList.contains('btn_delete')) {
+				deleteItem({
+					action: 'delete',
+					item: 'attachments',
+					itemName: itemName,
+					id: parent.dataset.id,
+					callback: () => {
+						getAttachmentsList(parent.dataset.uploaded_to);
+					}
+				});
+			}
+		}
+	});
+
+	pagesTitle.addEventListener('click', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		if (!target.getAttribute('contenteditable')) {
+			target.setAttribute('contenteditable', true);
+			target.innerText = b64DecodeUnicode(target.dataset.name);
+			target.focus();
+		}
+	});
+
+	pagesTitle.addEventListener('keyup', (e) => {
+		const target = e.target;
+		if (e.code === 'Escape') {
+			target.blur();
+		} else if (e.code === 'Enter') {
+			saveBook(target.innerText, target.dataset.id);
+		}
+	});
+
+	pagesTitle.addEventListener('blur', (e) => {
+		const target = e.target;
+		target.removeAttribute('contenteditable');
+		target.innerText = b64DecodeUnicode(target.dataset.full_name);
+	});
+
+	const showItemList = (data, itemsList, attr = ['id']) => {
+		itemsList.textContent = '';
+		let datasetStr = '';
+		if (data && data.success && data.success.answer) {
+			data.success.answer.data.forEach(item => {
+				datasetStr = '';
+				attr.forEach(elem => {
+					if (item[elem]) {
+						datasetStr += ` data-${elem}="${item[elem]}"`;
+					}
+				});
+				itemsList.insertAdjacentHTML('beforeEnd', `
+					<li ${datasetStr}>
+						<div class="list-item">
+							<span class="list-item-name">${item.name}</span>
+							<button class="btn_delete">-</button>
+						</div>
+					</li>
+				`);
+			});
+		}
+	};
+
+	const showPageContent = (data) => {
+		if (data && data.success && data.success.answer) {
+			try {
+				const pageData = data.success.answer;
+				tinymce.activeEditor.setContent(pageData.html);
+				pageNameEdit.innerText = pageData.name;
+				page_id = pageData.id;
+				getPageList(pageData.book_id);
+				getAttachmentsList(pageData.id);
+			} catch (e) {
+				tinymce.activeEditor.notificationManager.open({
+					text: 'An error occurred. This page may have been removed',
+					type: 'error'
+				});
+			}
+		}
+	};
+
+	tinymce.init({
+		menubar: 'file edit insert format table tools help',
+		selector: '#default',
+		toolbar: 'save | restoredraft | undo redo | removeformat| fontsize | aligncenter alignjustify alignleft alignright | bold italic underline | pastetext | table tabledelete | tableprops tablerowprops tablecellprops | tableinsertrowbefore tableinsertrowafter tabledeleterow',
+		plugins: 'save table',
+		save_onsavecallback: saveContent,
+	})
+	.then(() => {
+		clearPageContent();
+	});
+
 	btnUpdateTaskExcel.disabled = true;
 	btnUpdateTaskExcel.dataset['task_id'] = 0;
 	
@@ -652,7 +1086,21 @@ window.addEventListener('DOMContentLoaded', () => {
 		} catch (e) {
 			console.error(e);
 		}
-	}
+	};
+
+	async function sendPostFile(url, body) {
+		try {
+			const response = await fetch(url, {
+				method: 'POST',
+				body: body,
+			});
+			const data = await response.json();
+			return data;
+		} catch (e) {
+			console.error(e);
+		}
+		return null;
+	};
 
 	const toggleSignIn = (mode) => {
 		clearInputsForms();
@@ -738,6 +1186,12 @@ window.addEventListener('DOMContentLoaded', () => {
 				document.title = 'Services';
 				getMosaic();
 				break;
+			case 'documentation':
+				document.title = 'Documentation';
+				formSearch.reset();
+				formAddAttachment.reset();
+				getBooksList();
+				break;
 			default:
 				break;
 		}
@@ -755,9 +1209,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	menu.addEventListener('click', (e) => {
 		const target = e.target;
 		if (target.tagName === 'LI') {
-			if (target.dataset['section'] === 'documentation' && target.dataset.href.length > 10) {
-				window.open(target.dataset.href, '_blank');
-			}
+			// if (target.dataset['section'] === 'documentation' && target.dataset.href.length > 10) {
+			// 	window.open(target.dataset.href, '_blank');
+			// }
 			if (target.dataset['section'] === 'logout') {
 				logout();
 			} else if (target.dataset['section'] === 'login') {
@@ -818,9 +1272,9 @@ window.addEventListener('DOMContentLoaded', () => {
 					}
 				});
 			}
-			menu.insertAdjacentHTML('beforeend', `
-				<li data-section="documentation" data-href="${docsHref}">Documentation</li>
-			`);
+			// menu.insertAdjacentHTML('beforeend', `
+			// 	<li data-section="documentation" data-href="${docsHref}">Documentation</li>
+			// `);
 			menu.insertAdjacentHTML('beforeend', `
 				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
 			`);
@@ -830,6 +1284,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				section = 'automator';
 			} else if (currentHash === 'services' && !!rights[currentHash]) {
 				section = 'services';
+			} else if (currentHash === 'documentation' && !!rights[currentHash]) {
+				section = 'documentation';
 			}
 			selectMenuItem(menu, section);
 			toggleSection(section);
@@ -1977,16 +2433,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (!modifyContainer.classList.contains('d-none')){
 			modifyContainer.classList.add('d-none');
 		}
-		// if (!dividerArrow.classList.contains('d-none')){
-		// 	dividerArrow.classList.add('d-none');
-		// }
 	};
 
 	const initMosaicElems = function () {
 		if (showMosaicEditItems == '1') {
 			mosaicForm.reset();
-			// modifyContainer.classList.remove('d-none');
-			// dividerArrow.classList.remove('d-none');
 		}
 		else {
 			hideEditItems();
@@ -2440,7 +2891,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		
 	});
 
-	// inin mosaic
+	// init mosaic
 	mosaicForm.addEventListener('reset', (e) => {
 		const target = e.target;
 		target.querySelector('#mosaicNodeComments').textContent = '';
@@ -2470,7 +2921,36 @@ window.addEventListener('DOMContentLoaded', () => {
 	btnDialogModal.addEventListener('click', confirmDialog);
 	// triangle.addEventListener('click', triangleToggle);
 
+	const clearAttachmentsArea = (container, attachmentsList) => {
+		container.dataset.page_id = null;
+		container.style.display = 'none';
+		attachmentsList.textContent = '';
+	};
+
+	const setBookTitle = (bookName, book_id, container) => {
+		if (bookName) {
+			container.innerText = `${bookName}'s pages`;
+			container.dataset.name = b64EncodeUnicode(bookName);
+			container.dataset.full_name = b64EncodeUnicode(container.innerText);
+			container.dataset.id = book_id;
+		} else {
+			container.innerText = '';
+			container.dataset.name = null;
+		}
+	};
+
+	const clearPageContent = (props = null) => {
+		tinymce.activeEditor.setContent('');
+		pageNameEdit.innerText = savedPageName;
+		page_id = '0';
+		clearAttachmentsArea(newAttachment, bookAttachmentsList);
+		if (props && props.bookName) {
+			setBookTitle(props.bookName, props.id, pagesTitle);
+		}
+	};
+
 	clearInputsForms();
 	iniInterface();
 	holdStatus.click();
+
 });

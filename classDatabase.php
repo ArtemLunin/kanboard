@@ -30,6 +30,12 @@ class databaseUtils {
 		'sectionName' => 'settings',
 		'sectionAttr'	=> 'settings',
 		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'Documentation',
+		'sectionName' => 'documentation',
+		'sectionAttr'	=> 'documentation',
+		'accessType'	=> 'admin',
 	]];
 	function __construct () {
 		try

@@ -5,6 +5,7 @@ require 'vendor/autoload.php';
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xls;
 \PhpOffice\PhpSpreadsheet\Cell\Cell::setValueBinder( new \PhpOffice\PhpSpreadsheet\Cell\AdvancedValueBinder() );
+use Bookstack\Bookstack;
 
 require_once 'config.php';
 require_once 'db_conf.php';
@@ -17,6 +18,10 @@ mb_internal_encoding("UTF-8");
 $out_res = [];
 $param_error_msg['answer'] = [];
 
+function isInt($val) {
+    return filter_var($val, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);
+}
+
 $xls_output = false;
 $file_output = false;
 $accessType = false;
@@ -26,6 +31,14 @@ $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
 $params = $paramJSON['params'] ?? $_REQUEST ?? 0;
 $env = $paramJSON['env'] ?? 'kanboard';
+
+$book_id = isInt($paramJSON['book_id'] ?? 0);
+$id = isInt($paramJSON['id'] ?? 0);
+$action = $paramJSON['action'] ?? '';
+$item = $paramJSON['item'] ?? '';
+$innerMethod = $paramJSON['innerMethod'] ?? '';
+$name = mb_substr($paramJSON['name'] ?? '', 0, 254) ;
+$html = $paramJSON['html'] ?? '';
 
 $params['id']  = $params['id'] ?? 0;
 $date_ts = setDateStarted($params['date_started'] ?? 0);
@@ -57,6 +70,67 @@ if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
 
 $section = $params['section'] ?? $env;
 $accessType = $db_object->getAccessType($rights, $section);
+
+if (count($_POST) >0 && isset($_POST['uploaded_to']) && isset($_FILES['file'])) {
+	$tmp = $_FILES['file']['tmp_name'];
+    $uploaded_to = isInt($_POST['uploaded_to'] ?? 0);
+    if ($uploaded_to && $tmp != '' && is_uploaded_file($tmp)) 
+    {   
+        // $upload_file = true;
+        $file_name = $_FILES['file']['name'];
+
+		$book = new Bookstack();
+        $response = json_decode($book->postFile($file_name, $uploaded_to, $tmp), true);
+        $param_error_msg['answer'] = $response;
+    }
+
+	$out_res = ['success' => $param_error_msg];	
+
+	header('Content-type: application/json');
+	echo json_encode($out_res);
+
+	exit;
+}
+
+if ($env === 'documentation' && $accessType !== false) {
+	$book = new Bookstack();
+
+	if ($action == 'savePage' 
+    && $book_id
+    && $name != '')
+	{
+		$actionForBook = $id ? 'update' : 'create';
+		$response = json_decode($book->postRequest('pages', [
+			"book_id" => $book_id,
+			"name" => $name,
+			"html" => $html,
+		], $actionForBook, $id), true);
+		$param_error_msg['answer'] = [
+			"id" => $response['id'],
+			"book_id" => $response['book_id'],
+			"name" => $response['name'],
+			"html" => $response['html'],
+		];
+	} elseif ($innerMethod === 'GET' && $action !== '') {
+		$response = json_decode($book->getRequest($action), true);
+		$param_error_msg['answer'] = $response;
+	} elseif ($action === 'delete' && $item !== '' && $id) {
+		$response = json_decode($book->postRequest($item, null, 'delete', $id), true);
+		$param_error_msg['answer'] = $response;
+	} elseif ($action === 'saveBook' && $name != '') {
+		$actionForBook = $id ? 'update' : 'create';
+		$response = json_decode($book->postRequest('books', [
+			"name" => $name,
+		], $actionForBook, $id), true);
+	}
+
+	$out_res = ['success' => $param_error_msg];	
+
+	header('Content-type: application/json');
+	echo json_encode($out_res);
+
+	exit;
+}
 
 if ($env === 'services') {
 	require_once 'db_conf_mosaic.php';
