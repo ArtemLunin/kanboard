@@ -131,7 +131,8 @@ class databaseUtils {
 	}
 	function getRights($user, $password, $storedSession = false) {
 		$rights = [];
-		$sql = "SELECT id, user_name, password, user_rights FROM users WHERE user_name=:user";
+		$token = null;
+		$sql = "SELECT id, user_name, password, user_rights, token FROM users WHERE user_name=:user";
 		$row = $this->pdo->prepare($sql);
 		$row->execute(['user' => $user]);
 		$result = $row->fetch();
@@ -147,6 +148,7 @@ class databaseUtils {
 					}
 				});
 			}
+			$token = $result['token'];
 			$this->unauthorized = false;
 			if ($result['user_name'] === SUPER_USER) {
 				$this->root_access = true;
@@ -163,7 +165,7 @@ class databaseUtils {
 		} else {
 			$rights = false;
 		}
-		return $rights;
+		return [$rights, $token];
 	}
 	function getAccessType($rights, $section) {
 		foreach ($rights as $item) {
@@ -173,12 +175,17 @@ class databaseUtils {
 		}
 		return false;
 	}
-	function setRights($user, $rights) {
+	function setRights($user, $rights, $tokenObj) {
 		if ($this->root_access === true) {
+			$token_str = '';
+			if (strlen(trim($tokenObj['token_id'])) > 30 && strlen(trim($tokenObj['token_secret'])) > 30) {
+				$token_str = 'Token '.trim($tokenObj['token_id']). ':'. trim($tokenObj['token_secret']);
+			}
 			$new_rights = array_merge($this->initialRights, $rights);
-			$sql = "UPDATE users SET user_rights=:rights WHERE user_name=:user";
+			$sql = "UPDATE users SET user_rights=:rights, token=:token_str WHERE user_name=:user";
 			if ($this->modSQL($sql, [
 				'rights'	=> json_encode($new_rights),
+				'token_str'	=> $token_str,
 				'user'		=> $user,
 			], true)) {	
 				return $new_rights;

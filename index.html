@@ -526,6 +526,7 @@
 									<th>Statistics</th>
 									<th>Automator</th>
 									<th>Services</th>
+									<th>Documentation</th>
 									<th>Action</th>
 								</tr>
 							</thead>
@@ -574,7 +575,18 @@
 										<option value="admin">admin</option>
 										<option value="user">user</option>
 									</select>
+									<label class="input-group-text-sm mr-1" for="docsPage">Documentation</label>
+									<select class="custom-select-sm mr-2" name="documentation" id="docsPage" data-selectname="documentation" data-control=".documentation-tokens">
+										<option value=""></option>
+										<option value="user">user</option>
+									</select>
 									<button type="submit" class="btn btn-sm btn-primary my-1 mr-2">Set</button>
+									<div class="documentation-tokens">
+										<label class="my-1 mr-2" for="token_id">Token ID</label>
+										<input type="text" class="form-control-sm my-1 mr-2" id="token_id" name="token_id" size="40" >
+										<label class="my-1 mr-2" for="token_secret">Token Secret</label>
+										<input type="text" class="form-control-sm my-1 mr-2" id="token_secret" name="token_secret" size="40">
+									</div>
 								</form>
 							</div>
 						</div>

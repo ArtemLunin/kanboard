@@ -54,6 +54,7 @@ try
 	$userID = $kanboard->userID;
 	$shownedColumnID = $kanboard->shownedColumnID;
 	$rights = $db_object->initialRights;
+	$token = null;
 	$currentUser = 'defaultUser';
 }
 catch (Exception $e) {
@@ -65,21 +66,21 @@ catch (Exception $e) {
 
 if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
 	$currentUser = $_SESSION['logged_user'];
-	$rights = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
+	list($rights, $token) = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
 }
 
 $section = $params['section'] ?? $env;
 $accessType = $db_object->getAccessType($rights, $section);
 
-if (count($_POST) >0 && isset($_POST['uploaded_to']) && isset($_FILES['file'])) {
+if (count($_POST) >0 && isset($_POST['uploaded_to']) && isset($_FILES['file']) 
+		&& $accessType !== false && $token) {
 	$tmp = $_FILES['file']['tmp_name'];
     $uploaded_to = isInt($_POST['uploaded_to'] ?? 0);
     if ($uploaded_to && $tmp != '' && is_uploaded_file($tmp)) 
     {   
-        // $upload_file = true;
         $file_name = $_FILES['file']['name'];
 
-		$book = new Bookstack();
+		$book = new Bookstack($token);
         $response = json_decode($book->postFile($file_name, $uploaded_to, $tmp), true);
         $param_error_msg['answer'] = $response;
     }
@@ -92,8 +93,8 @@ if (count($_POST) >0 && isset($_POST['uploaded_to']) && isset($_FILES['file'])) 
 	exit;
 }
 
-if ($env === 'documentation' && $accessType !== false) {
-	$book = new Bookstack();
+if ($env === 'documentation' && $accessType !== false && $token) {
+	$book = new Bookstack($token);
 
 	if ($action == 'savePage' 
     && $book_id
@@ -202,7 +203,7 @@ if ($projectID !== false && $method !== 0)
 		$kanboardUserName = trim($params['userName'] ?? 'defaultUser');
 		$kanboardUserPass = trim($params['password'] ?? '');
 		if (strlen($kanboardUserName) && strlen($kanboardUserPass)) {
-			$rights = $db_object->getRights($kanboardUserName, $kanboardUserPass);
+			list($rights, $token) = $db_object->getRights($kanboardUserName, $kanboardUserPass);
 			if ($rights) {
 				$_SESSION['logged_user'] = $kanboardUserName;
 				$currentUser = $kanboardUserName;
@@ -211,7 +212,7 @@ if ($projectID !== false && $method !== 0)
 		$param_error_msg['answer'] = [
 			'user' => $kanboardUserName,
 			'rights' => $rights,
-			'docsHref' => DOCUMENTATION_HREF,
+			// 'docsHref' => DOCUMENTATION_HREF,
 		];
 	} elseif ($method === 'logout') {
 		$_SESSION = array();
@@ -222,7 +223,7 @@ if ($projectID !== false && $method !== 0)
 		$param_error_msg['answer'] = [
 			'user'	 => $currentUser,
 			'rights' => $rights,
-			'docsHref' => DOCUMENTATION_HREF,
+			// 'docsHref' => DOCUMENTATION_HREF,
 		];
 	} elseif ($method === 'addUser' && $params !== 0 && strlen(trim($params['userName'])) > 2 && strlen($params['password']) > 2) {
 		$param_error_msg['answer'] = $db_object->addUser(trim($params['userName']), $params['password']);
@@ -230,9 +231,9 @@ if ($projectID !== false && $method !== 0)
 		$param_error_msg['answer'] = $db_object->modUser(trim($params['userName']), $params['password']);
 	} elseif ($method === 'delUser' && $params !== 0 && strlen(trim($params['userName'])) > 2) {
 		$param_error_msg['answer'] = $db_object->delUser(trim($params['userName']));
-	} elseif ($method === 'setRights' && $params !== 0 && strlen(trim($params['userName'])) > 2 && $params['rights']) {
+	} elseif ($method === 'setRights' && $params !== 0 && strlen(trim($params['userName'])) > 2 && $params['rights'] && $params['token']) {
 		if (isset($params['rights'][0]['pageName'])) {
-			$param_error_msg['answer'] = $db_object->setRights(trim($params['userName']), $params['rights']);
+			$param_error_msg['answer'] = $db_object->setRights(trim($params['userName']), $params['rights'], $params['token']);
 		}
 	} elseif ($method === 'getKanboardUsers') {
 		$param_error_msg['answer'] = $db_object->getKanboardUsers();

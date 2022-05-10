@@ -22,6 +22,7 @@ const sections = [
 	'statistics',
 	'automator',
 	'services',
+	'documentation',
 	'action',
 ];
 
@@ -219,7 +220,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		usersList = document.querySelector('.users-list'),
 		tableUsers = document.querySelector('.table-users'),
 		taskMain_id = document.querySelector('#task_id'),
-		setRightsContainer = document.querySelector('.set-rights');
+		setRightsContainer = document.querySelector('.set-rights'),
+		tokensContainer = document.querySelector('.documentation-tokens'),
+		docsPage = document.querySelector('#docsPage');
 	// excel elements
 	const ticketExcelForm = document.querySelector('#ticketExcelForm'),
 		holdStatus = document.querySelector('#holdStatus'),
@@ -839,7 +842,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		e.preventDefault();
 		const formData = new FormData(e.target);
 		sendPostFile(requestURL, formData).then((data) => {
-			// console.log(data);
 			if (data && data.success && data.success.answer) {
 				getAttachmentsList(data.success.answer.uploaded_to);
 			}
@@ -985,7 +987,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	const showItemList = (data, itemsList, attr = ['id']) => {
 		itemsList.textContent = '';
 		let datasetStr = '';
-		if (data && data.success && data.success.answer) {
+		if (data && data.success && data.success.answer && data.success.answer.data) {
 			data.success.answer.data.forEach(item => {
 				datasetStr = '';
 				attr.forEach(elem => {
@@ -1001,6 +1003,11 @@ window.addEventListener('DOMContentLoaded', () => {
 						</div>
 					</li>
 				`);
+			});
+		} else {
+			tinymce.activeEditor.notificationManager.open({
+				text: 'An error occurred. You may not have permission to access the section',
+				type: 'error'
 			});
 		}
 	};
@@ -1237,7 +1244,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		const rights = {};
 		if (data) {
 			menu.textContent = '';
-			const docsHref = (data.success) ? data.success.answer.docsHref : '';
 			if (!!data.success) {
 				if (data.success.answer.user === 'defaultUser') {
 					currentHash = '';
@@ -1272,9 +1278,6 @@ window.addEventListener('DOMContentLoaded', () => {
 					}
 				});
 			}
-			// menu.insertAdjacentHTML('beforeend', `
-			// 	<li data-section="documentation" data-href="${docsHref}">Documentation</li>
-			// `);
 			menu.insertAdjacentHTML('beforeend', `
 				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
 			`);
@@ -1367,12 +1370,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		sendRequest('POST', requestURL, body).then(getKanboardUsers);
 	};
 
-	const modRights = (userName, newRights) => {
+	const modRights = (userName, newRights, token) => {
 		const body = {
 			method: 'setRights',
 			params: {
 				'userName': userName,
 				'rights': newRights,
+				'token': token,
 			}
 		};
 		sendRequest('POST', requestURL, body).then(showModifiedRights);
@@ -1885,6 +1889,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						newUsernameInput.readOnly = true;
 						newPasswordInput.value = '';
 						setRightsContainer.style.display = 'block';
+						docsPage.dispatchEvent(new Event('change'));
 					}
 				}
 				
@@ -1897,6 +1902,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		const select = document.querySelector(`select[data-selectname="${selectName}"]`);
 		if (!!select) {
 			select.value = selectMode;
+			// if (select.dataset['control']) {
+				// if (select.value === '') {
+				// 	document.querySelector(select.dataset['control']).classList.add('d-none');
+				// } else {
+				// 	document.querySelector(select.dataset['control']).classList.remove('d-none');
+				// }
+			// }
 		}
 	};
 
@@ -2606,12 +2618,12 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function showUsers(data) {
-		if(!!data.success) {
+		if (data.success && data.success.answer) {
 			clearInputsForms();
 			usersList.textContent = '';
 			data.success.answer.forEach((item) => {
 				usersList.insertAdjacentHTML('beforeend', `
-						${fillUserRights(item)}
+					${fillUserRights(item)}
 				`);
 			}) ;
 		}
@@ -2637,7 +2649,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				});
 				let idx = sections.indexOf('action');
 				if (idx >= 0) {
-					oneUserRights[idx] = `<td>
+					oneUserRights[idx] = `
+					<td>
 						<a href="#" data-userName="${userName}" data-action="delUser" title="Delete user"><img class="icon-delete" src="img/delete.svg"></a>
 						<a href="#" data-userName="${userName}" data-action="setRights"><img class="icon-edit" src="img/edit.svg"></a>
 					</td>`;
@@ -2727,21 +2740,38 @@ window.addEventListener('DOMContentLoaded', () => {
 		e.preventDefault();
 		const formData = new FormData(e.target);
 		let newRights = [];
-		let userName = '';
+		let userName = '', 
+			token = {
+				token_id: '',
+				token_secret: '',
+				// check: 0
+			};
 		for (let [key, value] of formData.entries()) {
+			let valueClean = value.trim();
 			if (key === 'userName') {
-				userName = value;
+				userName = valueClean;
+				continue;
+			} else if (key === 'token_id' || key === 'token_secret') {
+				if (valueClean.trim().length > 30) {
+					token[key] = valueClean;
+				}
 				continue;
 			}
 			newRights.push({
 				pageName: capitalize(key),
 				sectionName: key,
 				sectionAttr: key,
-				accessType: value,
+				accessType: valueClean,
 			});
 		}
+		if (token.token_id === '' || token.token_secret === '') {
+			token = {
+				token_id: '',
+				token_secret: '',
+			};
+		}
 		if (userName != '') {
-			modRights(userName, newRights);
+			modRights(userName, newRights, token);
 		}
 	});
 
@@ -2754,6 +2784,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	rightsForm.addEventListener('reset', (e) => {
 		setRightsContainer.style.display = 'none';
+	});
+
+	docsPage.addEventListener('change', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		if (target.value !== '') {
+			tokensContainer.classList.remove('d-none');
+		} else {
+			tokensContainer.classList.add('d-none');
+		}
 	});
 
 	formsAuth.forEach(form => {

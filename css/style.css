@@ -278,7 +278,10 @@ hr.dotted {
 	width: 100%;
 	cursor: pointer;
 }
-
+.documentation-tokens {
+	display: flex;
+	flex-wrap: nowrap;
+}
 .triangle {
 	width: 0;
 	height: 0;

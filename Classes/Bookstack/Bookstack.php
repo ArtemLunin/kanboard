@@ -9,16 +9,17 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ClientException;
 
 class Bookstack {
-	private $url = 'http://public-panda.ddns.net';
-	private $token = 'Token Rp9aM5zTGltOpI8Kk92mk7NwNsWCsxaC:4mh7tbH8EVYER7vHtqxV1pS9YrJJsHqv';
+	// private $url = 'http://public-panda.ddns.net';
+	private $url = 'http://public-panda.duckdns.org';
+	// private $token = null;//'Token Rp9aM5zTGltOpI8Kk92mk7NwNsWCsxaC:4mh7tbH8EVYER7vHtqxV1pS9YrJJsHqv';
 
 	public $bookClient;
-	// public $response;
 
-	public function __construct($debug = false) {
+	public function __construct($token, $debug = false) {
+		// $this->token = $token;
 		$this->bookClient = new Client([
 			'base_uri' => $this->url,
-			'headers' => ['Authorization' => $this->token],
+			'headers' => ['Authorization' => $token],
 			'debug' => $debug,
 			'http_errors' => false,
 		]);
