@@ -1,4 +1,8 @@
 <?php
+ini_set('session.use_cookies',1);
+ini_set('session.use_only_cookies',0);
+ini_set('session.use_trans_sid',1);
+session_name('kanboardSession');
 session_start();
 require 'vendor/autoload.php';
 
@@ -30,7 +34,7 @@ $filename = tempnam(sys_get_temp_dir(), 'xls');
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
 $params = $paramJSON['params'] ?? $_REQUEST ?? 0;
-$env = $paramJSON['env'] ?? 'kanboard';
+$env = $paramJSON['env'] ?? $_REQUEST['env'] ?? 'kanboard';
 
 $book_id = isInt($paramJSON['book_id'] ?? 0);
 $id = isInt($paramJSON['id'] ?? 0);
@@ -72,60 +76,35 @@ if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
 $section = $params['section'] ?? $env;
 $accessType = $db_object->getAccessType($rights, $section);
 
-if (count($_POST) >0 && isset($_POST['uploaded_to']) && isset($_FILES['file']) 
-		&& $accessType !== false && $token) {
-	$tmp = $_FILES['file']['tmp_name'];
-    $uploaded_to = isInt($_POST['uploaded_to'] ?? 0);
-    if ($uploaded_to && $tmp != '' && is_uploaded_file($tmp)) 
-    {   
-        $file_name = $_FILES['file']['name'];
+// if (count($_POST) >0 && isset($_POST['uploaded_to']) && isset($_FILES['file']) 
+// 		&& $accessType !== false && $token) {
+// 	$tmp = $_FILES['file']['tmp_name'];
+//     $uploaded_to = isInt($_POST['uploaded_to'] ?? 0);
+//     if ($uploaded_to && $tmp != '' && is_uploaded_file($tmp)) 
+//     {   
+//         $file_name = $_FILES['file']['name'];
 
-		$book = new Bookstack($token);
-        $response = json_decode($book->postFile($file_name, $uploaded_to, $tmp), true);
-        $param_error_msg['answer'] = $response;
-    }
+// 		$book = new Bookstack($token);
+//         $response = json_decode($book->postFile($file_name, $uploaded_to, $tmp), true);
+//         $param_error_msg['answer'] = $response;
+//     }
 
-	$out_res = ['success' => $param_error_msg];	
+// 	$out_res = ['success' => $param_error_msg];	
 
-	header('Content-type: application/json');
-	echo json_encode($out_res);
+// 	header('Content-type: application/json');
+// 	echo json_encode($out_res);
 
-	exit;
-}
+// 	exit;
+// }
 
-if ($env === 'documentation' && $accessType !== false && $token) {
-	$book = new Bookstack($token);
-
-	if ($action == 'savePage' 
-    && $book_id
-    && $name != '')
-	{
-		$actionForBook = $id ? 'update' : 'create';
-		$response = json_decode($book->postRequest('pages', [
-			"book_id" => $book_id,
-			"name" => $name,
-			"html" => $html,
-		], $actionForBook, $id), true);
-		$param_error_msg['answer'] = [
-			"id" => $response['id'],
-			"book_id" => $response['book_id'],
-			"name" => $response['name'],
-			"html" => $response['html'],
-		];
-	} elseif ($innerMethod === 'GET' && $action !== '') {
-		$response = json_decode($book->getRequest($action), true);
-		$param_error_msg['answer'] = $response;
-	} elseif ($action === 'delete' && $item !== '' && $id) {
-		$response = json_decode($book->postRequest($item, null, 'delete', $id), true);
-		$param_error_msg['answer'] = $response;
-	} elseif ($action === 'saveBook' && $name != '') {
-		$actionForBook = $id ? 'update' : 'create';
-		$response = json_decode($book->postRequest('books', [
-			"name" => $name,
-		], $actionForBook, $id), true);
-	}
-
-	$out_res = ['success' => $param_error_msg];	
+if ($env === 'documentation' && $accessType !== false && isset($_SESSION['logged_user'])) {
+	
+	$login = $_SESSION['logged_user'];
+	$password = $_SESSION['password'];
+	$out_res = ['success' => [
+		'login'	=> $login,
+		'password' => $password
+	]];	
 
 	header('Content-type: application/json');
 	echo json_encode($out_res);
@@ -206,13 +185,14 @@ if ($projectID !== false && $method !== 0)
 			list($rights, $token) = $db_object->getRights($kanboardUserName, $kanboardUserPass);
 			if ($rights) {
 				$_SESSION['logged_user'] = $kanboardUserName;
+				$_SESSION['password'] = $kanboardUserPass;
 				$currentUser = $kanboardUserName;
 			}
 		}
 		$param_error_msg['answer'] = [
 			'user' => $kanboardUserName,
 			'rights' => $rights,
-			// 'docsHref' => DOCUMENTATION_HREF,
+			'docsHref' => DOCUMENTATION_HREF,
 		];
 	} elseif ($method === 'logout') {
 		$_SESSION = array();
@@ -223,7 +203,7 @@ if ($projectID !== false && $method !== 0)
 		$param_error_msg['answer'] = [
 			'user'	 => $currentUser,
 			'rights' => $rights,
-			// 'docsHref' => DOCUMENTATION_HREF,
+			'docsHref' => DOCUMENTATION_HREF,
 		];
 	} elseif ($method === 'addUser' && $params !== 0 && strlen(trim($params['userName'])) > 2 && strlen($params['password']) > 2) {
 		$param_error_msg['answer'] = $db_object->addUser(trim($params['userName']), $params['password']);

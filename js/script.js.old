@@ -3,7 +3,11 @@
 const requestURL = 'backend.php',
 	automatorURL = 'utils.php';
 
-let wikiURL = '';
+// const routes = {
+//   'privacy-policy': "/assets/pages/privacy.html",
+//   'terms-conditions': "/assets/pages/terms.html",
+//   about: "/assets/pages/about.html",
+// };
 
 const entityMap = {
   '&': '&amp;',
@@ -193,6 +197,30 @@ function downloadFile(dataurl) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+	// const path = location.pathname.slice(1);
+	// if (routes[path]) {
+	// 	const iframe = document.createElement('iframe');
+	// 	iframe.src = location.origin + routes[path];
+	// 	iframe.style = "position:absolute;left:0;right:0;bottom:0;top:0;width:100%;height:100%;border:none;";
+	// 	document.body.style = 'padding:0;overflow:hidden;';
+	// 	document.body.textContent = "";
+	// 	document.body.append(iframe);
+	// 	return;
+	// }
+
+	// const postData = async (url, data) => {
+	// 	const res = await fetch(url, {
+	// 		method: 'POST',
+	// 		headers: {
+	// 			'Content-type': 'application/json',
+	// 		},
+	// 		body: data
+	// 	});
+	// 	return await res.json();
+	// };
+
+	// const json = JSON.stringify(Object.fromEntries(formData.entries()));
+
 	const menu = document.querySelector('.menu ul'),
 		section = document.querySelectorAll('.section');
 	const loginForm = document.querySelector('#login-form'),
@@ -656,21 +684,14 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const getBooksList = () => {
-		// const body = {
-		// 	env: 'documentation',
-		// 	innerMethod: 'GET',
-		// 	action: 'books'
-		// }
-		// sendRequest('POST', requestURL, body).then((data) => {
-		// 	showItemList(data, booksList);
-		// });
-		// location.href = '../backend.php?env=documentation';
-
-		window.open(
-      `${wikiURL}/autologin.html?site=${
-        b64EncodeUnicode(location.origin + '/' + requestURL)}&s=${b64EncodeUnicode(document.cookie)}`,
-      "_blank"
-    );
+		const body = {
+			env: 'documentation',
+			innerMethod: 'GET',
+			action: 'books'
+		}
+		sendRequest('POST', requestURL, body).then((data) => {
+			showItemList(data, booksList);
+		});
 	};
 
 	const getBook = (id) => 
@@ -1154,16 +1175,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.title = startDocumentTitle;
 		location.hash = showSection;
 		let idx = 0;
-		if (showSection !== 'documentation') {
-			section.forEach((item, i) => {
-				item.style.display = "none";
-				if (showSection && item.classList.contains(showSection)) {
+		section.forEach((item, i) => {
+			item.style.display = 'none';
+			if (showSection && item.classList.contains(showSection)) {
 				idx = i;
-				}
-			});
-			section[idx].style.display = "block";
-		}
-		
+			}
+		});
+		section[idx].style.display = 'block';
 
 		clearOldData(showSection);
 		switch (showSection) {
@@ -1206,9 +1224,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				getMosaic();
 				break;
 			case 'documentation':
-				// document.title = 'Documentation';
-				// formSearch.reset();
-				// formAddAttachment.reset();
+				document.title = 'Documentation';
+				formSearch.reset();
+				formAddAttachment.reset();
 				getBooksList();
 				break;
 			default:
@@ -1289,7 +1307,6 @@ window.addEventListener('DOMContentLoaded', () => {
 						}
 					}
 				});
-				wikiURL = data.success.answer.docsHref;
 			}
 			menu.insertAdjacentHTML('beforeend', `
 				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
@@ -1300,9 +1317,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				section = 'automator';
 			} else if (currentHash === 'services' && !!rights[currentHash]) {
 				section = 'services';
-			} /* else if (currentHash === 'documentation' && !!rights[currentHash]) {
+			} else if (currentHash === 'documentation' && !!rights[currentHash]) {
 				section = 'documentation';
-			} */
+			}
 			selectMenuItem(menu, section);
 			toggleSection(section);
 		}
@@ -3006,5 +3023,4 @@ window.addEventListener('DOMContentLoaded', () => {
 	iniInterface();
 	holdStatus.click();
 
-	// console.log(document.cookie);
 });

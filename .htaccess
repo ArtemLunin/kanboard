@@ -1,0 +1,7 @@
+RewriteEngine on
+#RewriteRule ^[A-Za-z0-9]+$ index.html [NC]
+#RewriteRule ^privacy.*$ index.html [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /
+
