@@ -667,8 +667,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		// location.href = '../backend.php?env=documentation';
 
 		window.open(
-      `${wikiURL}/autologin.html?site=${
-        b64EncodeUnicode(location.origin + '/' + requestURL)}&s=${b64EncodeUnicode(document.cookie)}`,
+      `${wikiURL}/autologin.html?site=${b64EncodeUnicode(
+        location.origin + location.pathname + requestURL
+      )}&s=${b64EncodeUnicode(document.cookie)}`,
       "_blank"
     );
 	};
