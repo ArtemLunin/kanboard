@@ -80,7 +80,8 @@ catch (Exception $e) {
 
 if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
 	$currentUser = $_SESSION['logged_user'];
-	list($rights, $token) = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
+	// list($rights, $token) = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
+	$rights = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
 }
 
 $section = $params['section'] ?? $env;
@@ -192,7 +193,8 @@ if ($projectID !== false && $method !== 0)
 		$kanboardUserName = trim($params['userName'] ?? 'defaultUser');
 		$kanboardUserPass = trim($params['password'] ?? '');
 		if (strlen($kanboardUserName) && strlen($kanboardUserPass)) {
-			list($rights, $token) = $db_object->getRights($kanboardUserName, $kanboardUserPass);
+			// list($rights, $token) = $db_object->getRights($kanboardUserName, $kanboardUserPass);
+			$rights = $db_object->getRights($kanboardUserName, $kanboardUserPass);
 			if ($rights) {
 				$_SESSION['logged_user'] = $kanboardUserName;
 				$_SESSION['password'] = $kanboardUserPass;
@@ -218,9 +220,9 @@ if ($projectID !== false && $method !== 0)
 		$param_error_msg['answer'] = $db_object->modUser(trim($params['userName']), $params['password']);
 	} elseif ($method === 'delUser' && $params !== 0 && strlen(trim($params['userName'])) > 2) {
 		$param_error_msg['answer'] = $db_object->delUser(trim($params['userName']));
-	} elseif ($method === 'setRights' && $params !== 0 && strlen(trim($params['userName'])) > 2 && $params['rights'] && $params['token']) {
+	} elseif ($method === 'setRights' && $params !== 0 && strlen(trim($params['userName'])) > 2 && $params['rights']) {
 		if (isset($params['rights'][0]['pageName'])) {
-			$param_error_msg['answer'] = $db_object->setRights(trim($params['userName']), $params['rights'], $params['token']);
+			$param_error_msg['answer'] = $db_object->setRights(trim($params['userName']), $params['rights']);
 		}
 	} elseif ($method === 'getKanboardUsers') {
 		$param_error_msg['answer'] = $db_object->getKanboardUsers();

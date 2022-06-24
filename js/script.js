@@ -24,7 +24,7 @@ const sections = [
 	'statistics',
 	'automator',
 	'services',
-	'documentation',
+	// 'documentation',
 	'action',
 ];
 
@@ -223,8 +223,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		tableUsers = document.querySelector('.table-users'),
 		taskMain_id = document.querySelector('#task_id'),
 		setRightsContainer = document.querySelector('.set-rights'),
-		tokensContainer = document.querySelector('.documentation-tokens'),
-		docsPage = document.querySelector('#docsPage');
+		tokensContainer = document.querySelector('.documentation-tokens');
 	// excel elements
 	const ticketExcelForm = document.querySelector('#ticketExcelForm'),
 		holdStatus = document.querySelector('#holdStatus'),
@@ -1245,27 +1244,31 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 				
 				data.success.answer.rights.forEach(({pageName, sectionAttr, sectionName, accessType}) => {
-					if (accessType != '') {	
-						rights[sectionName] = accessType;
-						menu.insertAdjacentHTML('beforeend', `
-						<li data-section="${sectionAttr}">${pageName}</li>
-						`);
-						if (sectionName === 'excel')
-						{
-							if (accessType === 'user')
+					if (pageName !== 'Documentation')
+					{
+						// console.log(pageName);
+						if (accessType != '') {	
+							rights[sectionName] = accessType;
+							menu.insertAdjacentHTML('beforeend', `
+							<li data-section="${sectionAttr}">${pageName}</li>
+							`);
+							if (sectionName === 'excel')
 							{
-								toggleNoAccessRights('period-select', 'user-none', 'none');
-							} else {
-								toggleNoAccessRights('period-select', 'user-none', '');
+								if (accessType === 'user')
+								{
+									toggleNoAccessRights('period-select', 'user-none', 'none');
+								} else {
+									toggleNoAccessRights('period-select', 'user-none', '');
+								}
+							} else if (sectionName === 'services') {
+								if (accessType === 'admin')
+								{
+									showMosaicEditItems = '1';
+								} else {
+									showMosaicEditItems = '0';
+								}
+								localStorage.setItem('showMosaicEditItems', showMosaicEditItems);
 							}
-						} else if (sectionName === 'services') {
-							if (accessType === 'admin')
-							{
-								showMosaicEditItems = '1';
-							} else {
-								showMosaicEditItems = '0';
-							}
-							localStorage.setItem('showMosaicEditItems', showMosaicEditItems);
 						}
 					}
 				});
@@ -1883,7 +1886,6 @@ window.addEventListener('DOMContentLoaded', () => {
 						newUsernameInput.readOnly = true;
 						newPasswordInput.value = '';
 						setRightsContainer.style.display = 'block';
-						docsPage.dispatchEvent(new Event('change'));
 					}
 				}
 				
@@ -2778,16 +2780,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	rightsForm.addEventListener('reset', (e) => {
 		setRightsContainer.style.display = 'none';
-	});
-
-	docsPage.addEventListener('change', (e) => {
-		e.preventDefault();
-		const target = e.target;
-		if (target.value !== '') {
-			tokensContainer.classList.remove('d-none');
-		} else {
-			tokensContainer.classList.add('d-none');
-		}
 	});
 
 	formsAuth.forEach(form => {
