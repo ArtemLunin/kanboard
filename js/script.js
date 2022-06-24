@@ -3,7 +3,7 @@
 const requestURL = 'backend.php',
 	automatorURL = 'utils.php';
 
-let wikiURL = '';
+let wikiURL = '', wikiLDAPAuth = 0;
 
 const entityMap = {
   '&': '&amp;',
@@ -656,22 +656,12 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const getBooksList = () => {
-		// const body = {
-		// 	env: 'documentation',
-		// 	innerMethod: 'GET',
-		// 	action: 'books'
-		// }
-		// sendRequest('POST', requestURL, body).then((data) => {
-		// 	showItemList(data, booksList);
-		// });
-		// location.href = '../backend.php?env=documentation';
-
 		window.open(
-      `${wikiURL}/autologin.html?site=${b64EncodeUnicode(
-        location.origin + location.pathname + requestURL
-      )}&s=${b64EncodeUnicode(document.cookie)}`,
-      "_blank"
-    );
+			`${wikiURL}/autologin.html?site=${b64EncodeUnicode(
+				location.origin + location.pathname + requestURL
+			)}&s=${b64EncodeUnicode(document.cookie)}&ldap=${wikiLDAPAuth}`,
+			"_blank"
+		);
 	};
 
 	const getBook = (id) => 
@@ -1040,17 +1030,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	tinymce.init({
-		menubar: 'file edit insert format table tools help',
-		selector: '#default',
-		toolbar: 'save | restoredraft | undo redo | removeformat| fontsize | aligncenter alignjustify alignleft alignright | bold italic underline | pastetext | table tabledelete | tableprops tablerowprops tablecellprops | tableinsertrowbefore tableinsertrowafter tabledeleterow',
-		plugins: 'save table',
-		save_onsavecallback: saveContent,
-	})
-	.then(() => {
-		clearPageContent();
-	});
-
 	btnUpdateTaskExcel.disabled = true;
 	btnUpdateTaskExcel.dataset['task_id'] = 0;
 	
@@ -1291,6 +1270,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					}
 				});
 				wikiURL = data.success.answer.docsHref;
+				wikiLDAPAuth = data.success.answer.doscLDAP;
 			}
 			menu.insertAdjacentHTML('beforeend', `
 				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
@@ -2011,7 +1991,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				showMosaic(data.success.answer);
 			} else {
 				location.hash = '';
-				location.reload();
+				// location.reload();
 			}
 		});
 	};

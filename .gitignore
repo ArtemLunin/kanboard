@@ -3,6 +3,7 @@ dima/
 kanboard_upd/
 templates/
 unused/
+wiki/
 *.zip
 *test.php
 config.php

@@ -9,7 +9,7 @@ require 'vendor/autoload.php';
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xls;
 \PhpOffice\PhpSpreadsheet\Cell\Cell::setValueBinder( new \PhpOffice\PhpSpreadsheet\Cell\AdvancedValueBinder() );
-use Bookstack\Bookstack;
+// use Bookstack\Bookstack;
 
 require_once 'config.php';
 require_once 'db_conf.php';
@@ -24,6 +24,16 @@ $param_error_msg['answer'] = [];
 
 function isInt($val) {
     return filter_var($val, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);
+}
+
+function getRightsAnswer($user, $rights) {
+	return 
+	[
+		'user' => $user,
+		'rights' => $rights,
+		'docsHref' => DOCUMENTATION_HREF,
+		'doscLDAP' => DOCUMENTATION_LDAP
+	];
 }
 
 $xls_output = false;
@@ -99,8 +109,8 @@ $accessType = $db_object->getAccessType($rights, $section);
 
 if ($env === 'documentation' && $accessType !== false && isset($_SESSION['logged_user'])) {
 	
-	$login = $_SESSION['logged_user'];
-	$password = $_SESSION['password'];
+	$login = $_SESSION['logged_user'] ?? false;
+	$password = $_SESSION['password'] ?? false;
 	$out_res = ['success' => [
 		'login'	=> $login,
 		'password' => $password
@@ -189,22 +199,19 @@ if ($projectID !== false && $method !== 0)
 				$currentUser = $kanboardUserName;
 			}
 		}
-		$param_error_msg['answer'] = [
-			'user' => $kanboardUserName,
-			'rights' => $rights,
-			'docsHref' => DOCUMENTATION_HREF,
-		];
+		$param_error_msg['answer'] = getRightsAnswer($kanboardUserName, $rights);
 	} elseif ($method === 'logout') {
 		$_SESSION = array();
 		$param_error_msg['answer'] = [
 			'logout' => true,
 		];
 	} elseif ($method === 'getRights') {
-		$param_error_msg['answer'] = [
-			'user'	 => $currentUser,
-			'rights' => $rights,
-			'docsHref' => DOCUMENTATION_HREF,
-		];
+		$param_error_msg['answer'] = getRightsAnswer($currentUser, $rights);
+		// $param_error_msg['answer'] = [
+		// 	'user'	 => $currentUser,
+		// 	'rights' => $rights,
+		// 	'docsHref' => DOCUMENTATION_HREF,
+		// ];
 	} elseif ($method === 'addUser' && $params !== 0 && strlen(trim($params['userName'])) > 2 && strlen($params['password']) > 2) {
 		$param_error_msg['answer'] = $db_object->addUser(trim($params['userName']), $params['password']);
 	} elseif ($method === 'modUser' && $params !== 0 && strlen(trim($params['userName'])) > 2 && strlen($params['password']) > 2) {
@@ -470,7 +477,7 @@ if ($projectID !== false && $method !== 0)
 				}
 			}
 		}
-		elseif($method === 'getBoard')
+		elseif ($method === 'getBoard')
 		{
 			if (($section === 'excel' || $section === 'status' || $section === 'statistics') && 
 				($accessType === 'user' || $accessType === 'admin')) {
@@ -484,18 +491,18 @@ if ($projectID !== false && $method !== 0)
 						$all_column = true;
 					}
 					foreach ($taskResult['result'][0]['columns'] as $key => $column) {
-						if($shownedColumnID != $column['id'] && !$all_column) continue;
+						if ($shownedColumnID != $column['id'] && !$all_column) continue;
 						foreach ($column['tasks'] as $key => $task) {
 							if ($task['is_active'] == 1 && ($section !== 'status' || $task['creator_id'] == $userID)) {
 								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
-								// if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
-								// {
-								// 	continue;
-								// }
+								if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
+								{
+									continue;
+								}
 								$task_version = $taskMetadata['result']['version'] ?? false;
 								$task_origin_id = $taskMetadata['result']['origintask'] ?? 0;
 								$projectName = $kanboard->getTaskProjectName($task['id']);
-								if($assignee_name === '') {
+								if ($assignee_name === '') {
 									$assignee_name = $task['assignee_username'] ?? 'not assigned';
 								}
 								if ($task_origin_id == 0 || ($task_origin_id === $task['id'])){
@@ -542,7 +549,7 @@ if ($projectID !== false && $method !== 0)
 				}
 			}
 		}
-		elseif($method === 'getColumns')
+		elseif ($method === 'getColumns')
 		{
 			foreach(array_values($kanboard->getColumnsNames()) as $result_object) {
 				$param_error_msg['answer'][] = $result_object;
