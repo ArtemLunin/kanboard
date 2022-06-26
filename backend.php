@@ -32,7 +32,7 @@ function getRightsAnswer($user, $rights) {
 		'user' => $user,
 		'rights' => $rights,
 		'docsHref' => DOCUMENTATION_HREF,
-		'doscLDAP' => DOCUMENTATION_LDAP
+		'doscLDAP' => 0
 	];
 }
 
@@ -41,8 +41,15 @@ $file_output = false;
 $accessType = false;
 $filename = tempnam(sys_get_temp_dir(), 'xls');
 
+$noCheckedKanboardMethods = [
+	'getRights',
+	'signIn',
+	'logout',
+];
+
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
+$splitProjects = $paramJSON['splitProjects'] ?? $_REQUEST['splitProjects'] ?? null;
 $params = $paramJSON['params'] ?? $_REQUEST ?? 0;
 $env = $paramJSON['env'] ?? $_REQUEST['env'] ?? 'kanboard';
 
@@ -61,12 +68,24 @@ $linksToTask = preg_replace('/jsonrpc\.php/', '?controller=TaskViewController&ac
 
 $db_object = new mySQLDatabaseUtils\databaseUtils();
 
+$projectID = 0;
+$userID = 0;
+$shownedColumnID = 0;
+
+if (!isset($kanboardProjectsID)) {
+	error_log('Warning: kanboardProjectsID not set, use default value ('.KANBOARD_PROJECT_IDENTIFIER.')');
+	$kanboardProjectsID[0] = KANBOARD_PROJECT_IDENTIFIER;
+}
+
 try
 {
-	$kanboard = new Kanboard;
-	$projectID = $kanboard->projectID;
-	$userID = $kanboard->userID;
-	$shownedColumnID = $kanboard->shownedColumnID;
+	if (!in_array($method, $noCheckedKanboardMethods)) {
+		$kanboard = new Kanboard;
+		$projectID = $kanboard->projectID;
+		$userID = $kanboard->userID;
+		$shownedColumnID = $kanboard->shownedColumnID;
+	}
+
 	$rights = $db_object->initialRights;
 	$token = null;
 	$currentUser = 'defaultUser';
@@ -269,6 +288,15 @@ if ($projectID !== false && $method !== 0)
 		elseif ($method === 'createTask' && $params !== 0 && (trim($params['title'] ?? "") != ''))
 		{
 			$taskCreator = trim($params['creator'] ?? "");
+			if (isset($params['groupName']) && in_array($params['groupName'], $kanboardProjectsID)) {
+				$projectResult = $kanboard->callKanboardAPI('getProjectByIdentifier', 
+						['identifier' => $params['groupName']]
+					);
+				if (isset($projectResult['result']) && count($projectResult['result'])) {
+					$projectID = $projectResult['result']['id'];
+					$kanboard->setProjectID($projectID);
+				}
+			}
 			// имя создателя приходит от фронта
 			// if ($currentUser !== 'defaultUser' || isset($params['section']) && $section === 'status') {
 			// 	$taskCreator = $currentUser;
@@ -313,7 +341,7 @@ if ($projectID !== false && $method !== 0)
 				$taskResult = $kanboard->callKanboardAPI($method, $arr_params);
 				if (isset($taskResult['result']))
 				{
-					if(isset($params['projectName']) && trim($params['projectName']) !== '') {
+					if (isset($params['projectName']) && trim($params['projectName']) !== '') {
 						$kanboard->setTaskProjectName((int)$taskResult['result'], trim($params['projectName']));
 					}
 					$kanboard->setTaskMetadata((int)$taskResult['result'], 
@@ -483,53 +511,65 @@ if ($projectID !== false && $method !== 0)
 		{
 			if (($section === 'excel' || $section === 'status' || $section === 'statistics') && 
 				($accessType === 'user' || $accessType === 'admin')) {
-				$taskResult = $kanboard->callKanboardAPI('getBoard', [
-				$projectID,
-			]);
-				if (isset($taskResult['result']) && count($taskResult['result'])) {
-					$assignee_name = '';
-					$all_column = false;
-					if ($params !== 0 && $params['status'] == 'all') {
-						$all_column = true;
-					}
-					foreach ($taskResult['result'][0]['columns'] as $key => $column) {
-						if ($shownedColumnID != $column['id'] && !$all_column) continue;
-						foreach ($column['tasks'] as $key => $task) {
-							if ($task['is_active'] == 1 && ($section !== 'status' || $task['creator_id'] == $userID)) {
-								$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
-								if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
-								{
-									continue;
+				$arrProjects = [];
+				foreach($kanboardProjectsID as $projectIdentifier) {
+					$projectResult = $kanboard->callKanboardAPI('getProjectByIdentifier', 
+						['identifier' => $projectIdentifier]
+					);
+					if (isset($projectResult['result']) && count($projectResult['result'])) {
+						$arrProjects[$projectResult['result']['identifier']] = $projectResult['result']['name'];
+						$taskResult = $kanboard->callKanboardAPI('getBoard', [
+							$projectResult['result']['id'],
+						]);
+						if (isset($taskResult['result']) && count($taskResult['result'])) {
+							$assignee_name = '';
+							$all_column = false;
+							if ($params !== 0 && $params['status'] == 'all') {
+								$all_column = true;
+							}
+							foreach($taskResult['result'][0]['columns'] as $key => $column) {
+								if ($shownedColumnID != $column['id'] && !$all_column) continue;
+								foreach ($column['tasks'] as $key => $task) {
+									if ($task['is_active'] == 1 && ($section !== 'status' || $task['creator_id'] == $userID)) {
+										$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
+										if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
+										{
+											continue;
+										}
+										$task_version = $taskMetadata['result']['version'] ?? false;
+										$task_origin_id = $taskMetadata['result']['origintask'] ?? 0;
+										$projectName = $kanboard->getTaskProjectName($task['id']);
+										if ($assignee_name === '') {
+											$assignee_name = $task['assignee_username'] ?? 'not assigned';
+										}
+										if ($task_origin_id == 0 || ($task_origin_id === $task['id'])){
+											$task_version = false;
+										}
+										$param_error_msg['answer'][] = [
+											'id'			=> (int)$task['id'],
+											'date_due'		=> (int)$task['date_due'],
+											'date_creation'	=> (int)$task['date_creation'],
+											'date_started'	=> (int)$task['date_started'],
+											'title'			=> $task['title']. (($task_version != false) ? '_v'.$task_version : ''),
+											'status'		=> $column['title'],
+											'reference'		=> $task['reference'],
+											'description'	=> $task['description'],
+											'project_name'	=> $projectName,
+											'url'			=> $linksToTask . 'task_id=' . $task['id'] . '&project_id='.$projectResult['result']['id'],
+											'assignee_name'	=> $assignee_name,
+											'fields'		=> $kanboard->getMetadataFields($taskMetadata['result']),
+											'editable'		=> ($accessType === 'user') ? 0 : 1,
+											'kanboard_project_name' => $projectResult['result']['name'],
+											'kanboard_project_id' => $projectResult['result']['identifier']
+										];
+										$assignee_name = '';
+									}
 								}
-								$task_version = $taskMetadata['result']['version'] ?? false;
-								$task_origin_id = $taskMetadata['result']['origintask'] ?? 0;
-								$projectName = $kanboard->getTaskProjectName($task['id']);
-								if ($assignee_name === '') {
-									$assignee_name = $task['assignee_username'] ?? 'not assigned';
-								}
-								if ($task_origin_id == 0 || ($task_origin_id === $task['id'])){
-									$task_version = false;
-								}
-								$param_error_msg['answer'][] = [
-									'id'			=> (int)$task['id'],
-									'date_due'		=> (int)$task['date_due'],
-									'date_creation'	=> (int)$task['date_creation'],
-									'date_started'	=> (int)$task['date_started'],
-									'title'			=> $task['title']. (($task_version != false) ? '_v'.$task_version : ''),
-									'status'		=> $column['title'],
-									'reference'		=> $task['reference'],
-									'description'	=> $task['description'],
-									'project_name'	=> $projectName,
-									'url'			=> $linksToTask . 'task_id=' . $task['id'] . '&project_id='.$projectID,
-									'assignee_name'	=> $assignee_name,
-									'fields'		=> $kanboard->getMetadataFields($taskMetadata['result']),
-									'editable'		=> ($accessType === 'user') ? 0 : 1,
-								];
-								$assignee_name = '';
 							}
 						}
 					}
 				}
+				$param_error_msg['answer'][] = $arrProjects;
 			}
 		}
 		elseif( ($method === 'getTagsByProject' || $method === 'getAssignableUsers'))
@@ -539,14 +579,32 @@ if ($projectID !== false && $method !== 0)
 			} else {
 				$field_name = 'user';
 			}
-			$result = $kanboard->callKanboardAPI($method, [$projectID]);
+			if ($method === 'getTagsByProject' && $splitProjects && $splitProjects == '1') {
+				foreach($kanboardProjectsID as $projectIdentifier) {
+					$projectResult = $kanboard->callKanboardAPI('getProjectByIdentifier', 
+						['identifier' => $projectIdentifier]
+					);
+					if (isset($projectResult['result']) && count($projectResult['result'])) {
+						$result = $kanboard->callKanboardAPI($method, [$projectResult['result']['id']]);
+						if (isset($result['result']) && count($result['result'])) {
+							foreach($result['result'] as $result_object) {
+								$param_error_msg['answer'][] = [
+									$projectResult['result']['identifier'] => $result_object[$field_name]
+								];
+							}
+						}
+					}
+				}
+			} else {
+				$result = $kanboard->callKanboardAPI($method, [$projectID]);
 
-			if (isset($result['result']) && count($result['result'])) {
-				foreach($result['result'] as $result_object) {
-					if ($field_name == 'user') {
-						$param_error_msg['answer'][] = $result_object;
-					} else {
-						$param_error_msg['answer'][] = $result_object[$field_name];
+				if (isset($result['result']) && count($result['result'])) {
+					foreach($result['result'] as $result_object) {
+						if ($field_name == 'user') {
+							$param_error_msg['answer'][] = $result_object;
+						} else {
+							$param_error_msg['answer'][] = $result_object[$field_name];
+						}
 					}
 				}
 			}
@@ -714,7 +772,7 @@ if ($projectID !== false && $method !== 0)
 	}
 	
 }
-if ($projectID) {
+if ($projectID !== false) {
 	$out_res = ['success' => $param_error_msg];	
 } else {
 	$out_res = ['error' => $param_error_msg];	

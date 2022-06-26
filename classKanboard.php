@@ -35,6 +35,7 @@ class Kanboard {
 	}
 	function getField($params)
 	{
+		error_log(__FUNCTION__.', '.$this->projectID);
 		['method' => $method, 'paramObj' => $paramObj, 'additionalParam' => $additionalParam, 'fieldName' => $fieldName, 'defaultVal' => $defaultVal] = $params;
 		$this->kanboardRequest['method'] = $method;
 		$this->kanboardRequest['params'] = $paramObj;
@@ -61,6 +62,9 @@ class Kanboard {
 			// }
 		}
 		return $fieldVal;
+	}
+	function setProjectID($projectID) {
+		$this->projectID = $projectID;
 	}
 	function __get($name) {
 		return $this->$name;
@@ -111,15 +115,10 @@ class Kanboard {
 		return $task;
 	}
 	function fieldsTask($task_id, $convert_nl = true, $task_version = false) {
+		error_log(__FUNCTION__.', '.$this->projectID);
 		$task = $this->callKanboardAPI('getTask', ['task_id' => $task_id]);
 		if (isset($task['result'])) {
 			$statusColumn = '';
-			// if (count($this->kanboardColumns) > 0) {
-			// 	$statusColumn = $this->kanboardColumns[(int)$task['result']['column_id']];
-			// } else {
-				
-			// 	error_log('columns query');
-			// }
 			$column_names = $this->getColumnsNames();
 			$statusColumn = $column_names[(int)$task['result']['column_id']] ?? 'undefined';
 			$task = [
@@ -132,9 +131,7 @@ class Kanboard {
 				'reference'		=> $task['result']['reference'],
 				'description'	=> $convert_nl ? nl2br($task['result']['description'], FALSE) : $task['result']['description'],
 				'title'			=> $task['result']['title'] . (($task_version !== false) ? '_v'.$task_version : ''),
-				// 'status'		=> $column_names[(int)$task['result']['column_id']] ?? 'undefined',
 				'status'		=> $statusColumn,
-				// 'assignee_name'	=> $this->getFieldInfo('getUser', 'user_id', (int)$task['result']['owner_id'], 'username', ''),
 				'assignee_name'	=> $this->getField([
 					'method'	=> 'getUser', 
 					'paramObj'	=> ['user_id' => (int)$task['result']['owner_id']],
@@ -150,8 +147,10 @@ class Kanboard {
 	}
 	function getColumnsNames() {
 		if (count($this->kanboardColumns) > 0) {
+			error_log(__FUNCTION__.', '.$this->projectID);
 			return $this->kanboardColumns;
 		}
+		
 		$column_names = [];
 		$columns = $this->callKanboardAPI('getColumns', [
 			$this->projectID,

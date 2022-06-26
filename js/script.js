@@ -69,11 +69,14 @@ let savedPageName = 'New Page',
 	page_id = '0';
 
 // common functions
-// for sort in ORDER DESC
-const byField = (field) => {
-	return (a, b) => a[field] > b[field] ? -1 : 1;
+// for sort in ORDER DESC by default
+const byField = (field, asc = false) => {
+	let min = -1, max = 1;
+	if (asc) {
+		min = 1; max = -1;
+	}
+	return (a, b) => a[field] > b[field] ? min : max;
 };
-
 
 const timestampToDate = (timestampValue, timeOut = true) => {
 	if(!timestampValue) {
@@ -244,7 +247,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		taskExcel_id = document.querySelector('#taskExcel_id'),
 		btnCreateTaskFileExcel= document.querySelector('#attachFileExcel'),
 		attachmentsContainerExcel = document.querySelector('.attachments-container-excel');
-	// status elements
+	// request elements
 		const formNewTaskStatus = document.querySelector('#formNewTaskStatus'),
 			btnUpdateTaskStatus = document.querySelector('.btn-update-task-status'),
 			btnAddTaskStatus = document.querySelector('.btn-add-task-status'),
@@ -252,6 +255,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			btnCreateTaskFileStatus = document.querySelector('#attachFileStatus'),
 			attachmentsContainerStatus = document.querySelector('.attachments-container-status'),
 			ticketProjectNameStatus = document.querySelector('#inputProjectStatus'),
+			inputGroupRequest = document.querySelector('#inputGroupRequest'),
 			taskStatus_id = document.querySelector('#taskStatus_id'),
 			attachmentsAreaStatus = document.querySelector('.attachments-area-status'),
 			tableStatus = document.querySelector('.table-request'),
@@ -1130,6 +1134,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const toggleSection = (showSection) => {
+		if (showSection == '') return;
 		document.title = startDocumentTitle;
 		location.hash = showSection;
 		let idx = 0;
@@ -1244,7 +1249,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 				
 				data.success.answer.rights.forEach(({pageName, sectionAttr, sectionName, accessType}) => {
-					if (pageName !== 'Documentation')
+					if (pageName !== 'Documentation' && sectionName !== 'main')
 					{
 						// console.log(pageName);
 						if (accessType != '') {	
@@ -1279,12 +1284,15 @@ window.addEventListener('DOMContentLoaded', () => {
 				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
 			`);
 			$('#waitModal').modal('hide');
-			let section = 'main';
+			let section = '';
 			if (currentHash === 'automator' && !!rights[currentHash]) {
 				section = 'automator';
 			} else if (currentHash === 'services' && !!rights[currentHash]) {
 				section = 'services';
-			} /* else if (currentHash === 'documentation' && !!rights[currentHash]) {
+			} else if (currentHash === 'status' && !!rights[currentHash]) {
+				section = 'status';
+			}
+			/* else if (currentHash === 'documentation' && !!rights[currentHash]) {
 				section = 'documentation';
 			} */
 			selectMenuItem(menu, section);
@@ -1321,8 +1329,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const apiCallbackProps = {
-		'getTagsByProject': function (data, container) {
-			fillSelect(data, container);
+		'getTagsByProject': function (data, container, addParameters) {
+			fillSelect(data, container, addParameters);
 		},
 		'getColumns': function (data, container) {
 			fillSelect(data, container);
@@ -1461,17 +1469,27 @@ window.addEventListener('DOMContentLoaded', () => {
 		sendRequest('POST', requestURL, body).then(showUsers);
 	}
 
-	const getDataFromKanboard = (apiName, apiProps, container) => {
+	const getDataFromKanboard = (apiName, apiProps, container, addParameters = null) => {
 		const body = {
 			method: apiName,
+		};
+		if (addParameters) {
+			try {
+				for (const [key, value] of Object.entries(addParameters)) {
+					body[key] = value;
+				}
+			} catch (e) {}
 		}
 		sendRequest('POST', requestURL, body).then((data) => {
-			apiProps[apiName](data, container);
+			apiProps[apiName](data, container, addParameters);
 		});
 	};
 
-	const fillSelect = (data, elemList) => {
-		if(!!data.success) {
+	const fillSelect = (data, elemList, addParameters = null) => {
+		if (!!data.success) {
+			if (addParameters) {
+				return fillObjSelect(data.success.answer, elemList, true);
+			}
 			elemList.innerHTML = '<option value="" selected disabled hidden>Choose...</option>';
 			data.success.answer.forEach(function (item) {
 				elemList.insertAdjacentHTML('beforeend', `
@@ -1482,12 +1500,33 @@ window.addEventListener('DOMContentLoaded', () => {
 		elemList.value = '';
 	};
 
+	const fillObjSelect = (data, elemList, keyAsAttr = false) => {
+		elemList.innerHTML = '<option value="" selected disabled hidden>Choose...</option>';
+		try {
+			data.forEach((item) => {
+				for (const [key, value] of Object.entries(item)) {
+					if (keyAsAttr) {
+						elemList.insertAdjacentHTML('beforeend', `
+						<option value="${value}" data-project="${key}">${value}</option>
+					`);
+					} else {
+						elemList.insertAdjacentHTML('beforeend', `
+						<option value="${key}">${value}</option>
+					`);
+					}
+				}
+			});
+		}
+		catch (e) {}
+		elemList.value = '';
+	};
+
 	const editExcelTask = (e) => {
 		e.preventDefault();
 		const target = e.target;
 		if (target.classList.contains('icon-edit')) {
 			const taskTicket = target.closest('.task-ticket-excel');
-			if(!!taskTicket) {
+			if (!!taskTicket) {
 				clearExcelTicketFields();
 				toggleToUpdateMode(btnUpdateTaskExcel, btnAddTaskExcel);
 				selectTR('.task-ticket-excel', taskTicket);
@@ -1943,7 +1982,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const getTaskStatus = () => {
 		formNewTaskStatus.reset();
-		getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectNameStatus);
+		getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectNameStatus, {'splitProjects': '1'});
 		getBoard('status');
 		ticketCreatorStatus.defaultValue = currentUser;
 	};
@@ -2033,7 +2072,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	function showAllTasks(data)
 	{
-		if(data && data.success) {
+		if (data && data.success) {
 			getDataFromKanboard('getTagsByProject', apiCallbackProps, ticketProjectName);
 			ticketsContainer.textContent = '';
 			data.success.answer.sort(byField('date_creation'));
@@ -2067,6 +2106,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		excelDataArray.length = 0;
 	
 		let {dayStart, dayEnd} = tsPeriodDays(periodDays);
+		const projects = data.success.answer.pop();
 		data.success.answer.forEach(function ({
 			id, date_started, title, reference, description, project_name, fields, assignee_name, status, editable
 		}) {
@@ -2104,6 +2144,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	const showStatisticsTable = (data) => {
 		dataTableStatistics.clear().draw();
 		if (!!data.success) {
+			const projects = data.success.answer.pop();
 			data.success.answer.forEach(function ({project_name, title, url, date_creation, fields}) {
 				const tr = document.createElement('tr');
 				tr.innerHTML = `
@@ -2127,8 +2168,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const showStatusTable = (data) => {
 		if (!!data.success) {
-			data.success.answer.sort(byField('date_creation'));
-			data.success.answer.forEach(function ({id, title, assignee_name, status, date_creation, date_started, reference, description, project_name, fields}) {
+			const projects = data.success.answer.pop();
+			fillObjSelect([projects], inputGroupRequest);
+			// data.success.answer.sort(byField('date_creation'));
+			data.success.answer.sort(byField('kanboard_project_id', true));
+			data.success.answer.forEach(function ({ id, title, assignee_name, status, date_creation, date_started, reference, description, project_name, fields, kanboard_project_name, kanboard_project_id }) {
 				const submitted_name = getField(fields, 'creator', '');
 				const originTaskID = getField(fields, 'origintask', id);
 				tableStatus.insertAdjacentHTML('beforeend', `
@@ -2137,6 +2181,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						<td data-item_value="${title}" data-item_id="titleStatus">${title}</td>
 						<td data-item_value="${submitted_name}" data-item_id="creatorStatus">${submitted_name}</td>
 						<td data-item_value="${getOTL(fields)}" data-item_id="OTLStatus">${assignee_name}</td>
+						<td data-item_value="${kanboard_project_id}" data-item_id="inputGroupRequest">${kanboard_project_name}</td>
 						<td>${timestampToDate(date_creation, false)}</td>
 						<td>${timestampToDate(date_started, false)}</td>
 						<td data-item_value="${description}" data-item_id="ticketDescriptionStatus">${reference}</td>
@@ -2870,6 +2915,23 @@ window.addEventListener('DOMContentLoaded', () => {
 		btnAddTaskStatus.classList.remove('d-none');
 		previousElem = null;
 		selectTR('.task-ticket-status');
+	});
+
+	inputGroupRequest.addEventListener('change', function() {
+		const slaveSelect = document.querySelector('#' + this.dataset['slave']);
+		const projectID = this.value;
+		slaveSelect.value = '';
+		if (slaveSelect) {
+			slaveSelect.querySelectorAll('option').forEach((item) => {
+				if (!item.disabled) {
+					if (item.dataset['project'] == projectID) {
+						item.classList.remove('d-none');
+					} else {
+						item.classList.add('d-none');
+					}
+				}
+			});
+		}
 	});
 
 	formNewTaskStatus.addEventListener('submit', (e) => {
