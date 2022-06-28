@@ -35,7 +35,7 @@ class Kanboard {
 	}
 	function getField($params)
 	{
-		error_log(__FUNCTION__.', '.$this->projectID);
+		// error_log(__FUNCTION__.', '.$this->projectID);
 		['method' => $method, 'paramObj' => $paramObj, 'additionalParam' => $additionalParam, 'fieldName' => $fieldName, 'defaultVal' => $defaultVal] = $params;
 		$this->kanboardRequest['method'] = $method;
 		$this->kanboardRequest['params'] = $paramObj;
@@ -115,7 +115,7 @@ class Kanboard {
 		return $task;
 	}
 	function fieldsTask($task_id, $convert_nl = true, $task_version = false) {
-		error_log(__FUNCTION__.', '.$this->projectID);
+		// error_log(__FUNCTION__.', '.$this->projectID);
 		$task = $this->callKanboardAPI('getTask', ['task_id' => $task_id]);
 		if (isset($task['result'])) {
 			$statusColumn = '';
@@ -147,7 +147,7 @@ class Kanboard {
 	}
 	function getColumnsNames() {
 		if (count($this->kanboardColumns) > 0) {
-			error_log(__FUNCTION__.', '.$this->projectID);
+			// error_log(__FUNCTION__.', '.$this->projectID);
 			return $this->kanboardColumns;
 		}
 		

@@ -385,7 +385,7 @@ if ($projectID !== false && $method !== 0)
 							]);
 			if (isset($taskResult['result']))
 			{
-				if(isset($params['projectName']) && trim($params['projectName']) !== '') {
+				if (isset($params['projectName']) && trim($params['projectName']) !== '') {
 					$kanboard->setTaskProjectName((int)$params['id'], trim($params['projectName']));
 				}
 				$kanboard->setTaskMetadata((int)$params['id'], 
@@ -513,6 +513,9 @@ if ($projectID !== false && $method !== 0)
 				($accessType === 'user' || $accessType === 'admin')) {
 				$arrProjects = [];
 				foreach($kanboardProjectsID as $projectIdentifier) {
+					if ($section !== 'status' && $projectIdentifier !== KANBOARD_PROJECT_IDENTIFIER) {
+						continue;
+					}
 					$projectResult = $kanboard->callKanboardAPI('getProjectByIdentifier', 
 						['identifier' => $projectIdentifier]
 					);

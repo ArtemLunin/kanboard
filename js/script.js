@@ -1251,7 +1251,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				data.success.answer.rights.forEach(({pageName, sectionAttr, sectionName, accessType}) => {
 					if (pageName !== 'Documentation' && sectionName !== 'main')
 					{
-						// console.log(pageName);
 						if (accessType != '') {	
 							rights[sectionName] = accessType;
 							menu.insertAdjacentHTML('beforeend', `
@@ -1285,13 +1284,16 @@ window.addEventListener('DOMContentLoaded', () => {
 			`);
 			$('#waitModal').modal('hide');
 			let section = '';
-			if (currentHash === 'automator' && !!rights[currentHash]) {
-				section = 'automator';
-			} else if (currentHash === 'services' && !!rights[currentHash]) {
-				section = 'services';
-			} else if (currentHash === 'status' && !!rights[currentHash]) {
-				section = 'status';
+			if (!!rights[currentHash]) {
+				section = currentHash;
 			}
+			// if (currentHash === 'automator' && !!rights[currentHash]) {
+			// 	section = 'automator';
+			// } else if (currentHash === 'services' && !!rights[currentHash]) {
+			// 	section = 'services';
+			// } else if (currentHash === 'status' && !!rights[currentHash]) {
+			// 	section = 'status';
+			// }
 			/* else if (currentHash === 'documentation' && !!rights[currentHash]) {
 				section = 'documentation';
 			} */
@@ -2170,6 +2172,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (!!data.success) {
 			const projects = data.success.answer.pop();
 			fillObjSelect([projects], inputGroupRequest);
+			inputGroupRequest.dispatchEvent(selectCnange);
 			// data.success.answer.sort(byField('date_creation'));
 			data.success.answer.sort(byField('kanboard_project_id', true));
 			data.success.answer.forEach(function ({ id, title, assignee_name, status, date_creation, date_started, reference, description, project_name, fields, kanboard_project_name, kanboard_project_id }) {
@@ -2537,8 +2540,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const modifyDeviceSettings = ({device_id, row_id}) => {
 		const rowDevice = document.getElementById(row_id);
-		// triangle.classList.remove('triangle-down');
-		// triangle.classList.add('triangle-up');
+
 		mosaicForm.querySelector('[data-action="add"]').style.display = 'none';
 		mosaicForm.querySelector('[data-action="update"]').style.display = '';
 
@@ -2550,24 +2552,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		mosaicForm.querySelector('#mosaicNodeManager').value = rowDevice.querySelector('.manager-text').innerText;
 		mosaicForm.querySelector('#mosaicNodeComments').innerText = rowDevice.querySelector('.comment-text').innerText;
 		mosaicForm.querySelector('#mosaicNodeId').value = device_id;
-		// $('.collapse').collapse('show');
 	};
-
-	// const triangleToggle = (e) => {
-	// 	const target = e.target;
-	// 	console.log(target);
-	// 	if (target.classList.contains('triangle-down'))
-	// 	{
-	// 		triangle.classList.remove('triangle-down');
-	// 		triangle.classList.add('triangle-up');
-	// 		$('.collapse').collapse('show');
-	// 	}
-	// 	else{
-	// 		triangle.classList.add('triangle-down');
-	// 		triangle.classList.remove('triangle-up');
-	// 		$('.collapse').collapse('hide');
-	// 	}
-	// };
 
 	const confirmDialog = (e) => {
 		const target = e.target;
@@ -3040,6 +3025,4 @@ window.addEventListener('DOMContentLoaded', () => {
 	clearInputsForms();
 	iniInterface();
 	holdStatus.click();
-
-	// console.log(document.cookie);
 });
