@@ -419,7 +419,7 @@ if ($projectID !== false && $method !== 0)
 				$arr_params['owner_id'] = $kanboardUserID;
 			}
 			$taskResult = $kanboard->callKanboardAPI('updateTask', $arr_params);
-			if(isset($taskResult['result']) && $taskResult['result']) {
+			if (isset($taskResult['result']) && $taskResult['result']) {
 				if (isset($params['projectName']) && trim($params['projectName']) !== '') {
 					$kanboard->setTaskProjectName((int)$params['id'], trim($params['projectName']));
 				}
@@ -448,6 +448,23 @@ if ($projectID !== false && $method !== 0)
 					$param_error_msg['answer'] = $task_out + ['fields'		=> $kanboard->getMetadataFields($taskMetadata['result'])]+ ['project_name'	=> $projectName];
 				}
 			}
+		} elseif ($method === 'updateCreator' && $accessType === 'admin' && $params !== 0 && $params['id'] != 0 && trim($params['creator']) != '') {
+			$taskResult = $kanboard->setTaskMetadata((int)$params['id'], 
+				[
+					"creator"	=> (trim($params['creator'] ?? "")),
+				]);
+			// error_log('access:'.$accessType.', id:'.$params['id'].', creator:'.$params['creator']);
+			if (isset($taskResult['result']) && $taskResult['result'] === true)
+			{
+				// $task_out = $kanboard->fieldsTask($params['id'], false);
+				// $taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$params['id']]);
+				// $projectName = $kanboard->getTaskProjectName($params['id']);
+				$param_error_msg['answer'] = [
+					'id' => $params['id'],
+					'creator' => $params['creator']
+				];
+			}
+
 		}
 		elseif ($method === 'getAllTaskFiles' && $params !== 0 && $params['id'] != 0)
 		{

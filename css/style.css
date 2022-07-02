@@ -320,6 +320,9 @@ hr.dotted {
 	width: 18px;
 	cursor: pointer;
 }
+.icon {
+	width: 18px;
+}
 .icon-edit, .icon-excel {
 	width: 18px;
 }

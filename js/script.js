@@ -260,10 +260,10 @@ window.addEventListener('DOMContentLoaded', () => {
 			attachmentsAreaStatus = document.querySelector('.attachments-area-status'),
 			tableStatus = document.querySelector('.table-request'),
 			ticketCreatorStatus = document.querySelector('#creatorStatus'),
+			// creatorApply = document.querySelector('#creatorApply'),
 			ticketOTLStatus = document.querySelector('#OTLStatus');
 		// statistics elements
-		// const tableStatistics = document.querySelector('.table-statistics');
-			// exportStatistics = document.querySelector('#exportStatistics');
+
 		// automator elements
 		const listDevices = document.querySelector('#listDevices'),
 			listTemplates = document.querySelector('#uploadedTemplates'),
@@ -1254,7 +1254,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						if (accessType != '') {	
 							rights[sectionName] = accessType;
 							menu.insertAdjacentHTML('beforeend', `
-							<li data-section="${sectionAttr}">${pageName}</li>
+							<li data-section="${sectionAttr}" data-access="${accessType}">${pageName}</li>
 							`);
 							if (sectionName === 'excel')
 							{
@@ -1607,8 +1607,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const editStatusTask = (e) => {
+		e.preventDefault();
 		const target = e.target;
-		if(target.classList.contains('icon-edit')) {
+		if (target.classList.contains('icon-edit')) {
 			if (previousElem === target) {
 				return false;
 			}
@@ -1617,6 +1618,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			ticketCreatorStatus.value = currentUser;
 			const taskID = setFieldsEditForm(target, '.task-ticket-status', taskStatus_id);
 			toggleToUpdateMode(btnUpdateTaskStatus, btnAddTaskStatus, attachmentsAreaStatus);
+			// creatorApply.classList.remove('d-none');
 			if (taskID !== 0) {
 				btnCreateTaskFileStatus.setAttribute('task_id', taskID);
 				getAllTaskFiles(taskID, attachmentsContainerStatus);
@@ -1638,7 +1640,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					extDescriptionPosition = positionCreator;
 				}
 			} else {
-				ticketCreatorStatus.value = '';
+				// ticketCreatorStatus.value = '';
 			}
 			if (extDescriptionPosition) {
 				ticketDescriptionStatus.innerText = taskDescription.substring(0, extDescriptionPosition).trim();
@@ -1653,7 +1655,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					// ticketOTLStatus.value = taskDescription.substring(positionOTL + textOTLHeader.length, endPositionOTL).trim();
 				}
 				if (positionCreator !== -1) {
-					ticketCreatorStatus.value = taskDescription.substring(positionCreator + textCreatorHeader.length, endPositionCreator).trim();	
+					// ticketCreatorStatus.value = taskDescription.substring(positionCreator + textCreatorHeader.length, endPositionCreator).trim();	
 				}
 			} else {
 				ticketDescriptionStatus.innerText = taskDescription.trim();
@@ -1674,7 +1676,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	const setFieldsEditForm = (targetElem, rowSelector, elemTaskID) => {
 		let taskID = 0, originTaskID = 0;
 		const rowTask = targetElem.closest(rowSelector);
-		if(!!rowTask) {
+		// const prevValues = {};
+		if (!!rowTask) {
 			selectTR(rowSelector, rowTask);
 			taskID = rowTask.getAttribute('data-task_id');
 			originTaskID = rowTask.getAttribute('data-origin_id');
@@ -1690,6 +1693,8 @@ window.addEventListener('DOMContentLoaded', () => {
 					} else {
 						inputElem.value = itemValue;
 					}
+					// prevValues[inputID] = itemValue;
+					// console.log(inputElem.nodeName, inputElem.innerText, inputElem.name, inputElem.value);
 					if (inputElem.getAttribute('data-disable_on_update') == '1') {
 						inputElem.readOnly = true;
 						inputElem.classList.add('text-muted');
@@ -1700,6 +1705,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (originTaskID && originTaskID != 0) {
 				elemTaskID.value = originTaskID;
 			}
+			// delete prevValues['creatorStatus'];
+			// document.querySelector('#prevValues').value = b64EncodeUnicode(JSON.stringify(prevValues));
+			ticketCreatorStatus.dataset['old_value'] = ticketCreatorStatus.value;
 		}
 		return taskID;
 	};
@@ -2201,6 +2209,21 @@ window.addEventListener('DOMContentLoaded', () => {
 			containerError.classList.remove('d-none');
 		}
 		$('#waitModal').modal('hide');
+	};
+
+	const showUpdatedCreator = (data) => {
+		// creatorApply.classList.add('d-none');
+		if (!!data.success) {
+			try {
+				const selector = `.task-ticket-status[data-task_id="${data.success.answer.id}"]`;
+				const tr = document.querySelector(selector);
+				const creatorStatus = tr.querySelector('[data-item_id="creatorStatus"]');
+				creatorStatus.innerText = data.success.answer.creator;
+				creatorStatus.dataset['item_value'] = data.success.answer.creator;
+			} catch (e) {
+				ticketCreatorStatus.value = ticketCreatorStatus.dataset['old_value'];
+			}
+		}
 	};
 
 	const showAutomator = (data) => {
@@ -2895,9 +2918,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		btnCreateTaskFileStatus.removeAttribute('task_id');
 		taskStatus_id.value = 0;
 		ticketDescriptionStatus.textContent = '';
+		ticketCreatorStatus.dataset['old_value'] = '';
 		btnUpdateTaskStatus.classList.add('d-none');
 		btnUpdateTaskStatus.disabled = true;
 		btnAddTaskStatus.classList.remove('d-none');
+		// creatorApply.classList.add('d-none');
 		previousElem = null;
 		selectTR('.task-ticket-status');
 	});
@@ -2921,23 +2946,63 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	formNewTaskStatus.addEventListener('submit', (e) => {
 		e.preventDefault();
+
 		const formData = new FormData(e.target);
 		const arrData = {};
+		// let prevValues = {};
+		// const updateCreator = document.activeElement.dataset['update_creator'];
 		let method = 'createTask';
+		let callback = attachFileStatus;
+		let updateCreator = false;
+
+		// try {
+		// 	console.log(b64DecodeUnicode(document.querySelector('#prevValues').value));
+		// 	prevValues = JSON.parse(b64DecodeUnicode(document.querySelector('#prevValues').value));
+		// 	console.log(prevValues);
+		// } catch (e) {}
+		// return true;
+
+		if (ticketCreatorStatus.dataset['old_value'] !== ticketCreatorStatus.value) {
+			updateCreator = true;
+			method = 'updateCreator';
+			callback = showUpdatedCreator;
+		}
+
 		for (let [key, value] of formData.entries()) {
 			if (typeof value == 'object') continue;
 			arrData[key] = value.trim();
 		}
 		arrData['description'] = ticketDescriptionStatus.innerText;
-		if (taskStatus_id.value != 0) {
+		if (taskStatus_id.value != 0 && !updateCreator) {
 			arrData['version'] = 1;
 		}
+
 		const body = {
 			method: method,
 			params: arrData,
 		};
-		sendRequest('POST', requestURL, body).then(attachFileStatus);
+		sendRequest('POST', requestURL, body).then(callback);
 	});
+
+	// creatorApply.addEventListener('click', (e) => {
+	// 	e.preventDefault();
+	// 	formNewTaskStatus.requestSubmit();
+	// 	return true;
+	// 	const target = e.target.closest('a');
+	// 	const inputCreatorName = document.querySelector('#' + target.dataset['input_id']);
+	// 	if (inputCreatorName) {
+	// 		console.log(taskStatus_id.value, inputCreatorName.name);
+	// 		const body = {
+	// 			method: 'updateCreator',
+	// 			params: {
+	// 				'creator': inputCreatorName.value.trim(),
+	// 				'id': taskStatus_id.value,
+	// 				'section': 'status'
+	// 			}
+	// 		};
+	// 		sendRequest('POST', requestURL, body).then(showUpdatedCreator);
+	// 	}
+	// });
 
 	// init automator
 	listTemplates.addEventListener('click', (e) => {
