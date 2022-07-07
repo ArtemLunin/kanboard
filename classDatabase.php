@@ -5,6 +5,7 @@ class databaseUtils {
 	private $unauthorized = true;
 	private $root_access = false;
 	private $pdo = null;
+	private $tableAccessError = false;
 	private $initialRights = [[
 		'pageName' => 'Main',
 		'sectionName' => 'main',
@@ -64,6 +65,30 @@ class databaseUtils {
 			}
 		} catch (\PDOException $e){
 			$this->setSQLError($e, 'SQL error. "'.$sql_query);
+		}
+		return false;
+	}
+	function modSQLInsUpd($sqlInsUpd, $params_arr, $needCount = true) {
+		if (!$this->tableAccessError) {
+			try {
+				$row = $this->pdo->prepare($sqlInsUpd['ins']);
+				$row->execute($params_arr);
+				if (!$needCount || ($row->rowCount())) {
+					return true;
+				}
+			} catch (\PDOException $e){
+				if (preg_match('/Duplicate entry/i', $e->getMessage()) == 1) {
+					$row = $this->pdo->prepare($sqlInsUpd['upd']);
+					$row->execute($params_arr);
+					if (!$needCount || ($row->rowCount())) {
+						return true;
+					}
+				}
+				else {
+					$this->tableAccessError = true;
+					$this->setSQLError($e, 'SQL error. "'.$sqlInsUpd['ins']);
+				}
+			}
 		}
 		return false;
 	}
@@ -192,6 +217,61 @@ class databaseUtils {
 		}
 		return false;
 	}
+	function getKBTaskProps($task_id) {
+		$taskProps = [
+			'metadata'	=> [],
+			'project'	=> null
+		];
+		if (!$this->tableAccessError) {
+			try {
+				$sql_query = "SELECT task_id, task_tag, task_meta FROM kanboard_cache WHERE task_id=:task_id";
+				$row = $this->pdo->prepare($sql_query);
+				$row->execute(['task_id' => $task_id]);
+				$result = $row->fetch();
+				if (isset($result['task_id'])) {
+					$taskProps['project'] = $result['task_tag'];
+					$taskProps['metadata'] = json_decode($result['task_meta'], TRUE);
+				} 
+			} catch (\PDOException $e){
+				$this->tableAccessError = true;
+				$this->setSQLError($e, 'SQL error. "'.$sql_query);
+			}
+		}
+		return $taskProps;
+	}
+	function setKBTaskProps($task_id, $taskProps) {
+		$sqlIns = "INSERT INTO kanboard_cache (task_id, task_tag, task_meta) VALUES (:task_id, :task_tag, :task_meta)";
+		$sqlUpd = "UPDATE kanboard_cache SET task_tag=:task_tag, task_meta=:task_meta WHERE task_id=:task_id";
+		$this->modSQLInsUpd(['ins' => $sqlIns, 'upd' => $sqlUpd], [
+			'task_id'	=> $task_id,
+			'task_tag'	=> $taskProps['project'],
+			'task_meta'	=> json_encode($taskProps['metadata'] ?? []),
+		], false);
+	}
+	function delKBTaskProps($task_id) {
+		$sql = "DELETE FROM kanboard_cache WHERE task_id=:task_id";
+		$this->modSQL($sql, [
+			'task_id'	=> $task_id,
+		], false);
+	}
+	function getKBProjectName($task_id) {
+		$projectName = null;
+		$sql = "SELECT task_tag FROM kanboard_cache WHERE task_id=:task_id";
+		$row = $this->pdo->prepare($sql);
+		$row->execute(['task_id' => $task_id]);
+		$result = $row->fetch();
+		if (isset($result['task_tag'])) {
+			$projectName = $result['task_tag'];
+		}
+		return $projectName;
+	}
+	function setKBProjectName($task_id, $projectName) {
+		$sql = "INSERT INTO kanboard_cache (task_id, task_tag) VALUES (:task_id, :task_tag)";
+		$this->modSQL($sql, [
+				'task_id'	=> $task_id,
+				'task_tag'	=> $projectName,
+			], false);
+	}
 
 	function hideNoAccessRights($user_rights) {
 		return $user_rights['accessType'] != '';
@@ -230,11 +310,6 @@ class databaseUtils {
 		if ($this->modSQL($sql, $deviceParam, true)) {	
 			return true;
 		}
-		// $row = $this->pdo->prepare($sql);
-		// $row->execute($deviceParam);
-		// if ($row->rowCount()) {
-		// 	return true;
-		// }
 		return false;
 	}
 	function doApplyDeviceSettings($deviceParam)
@@ -243,12 +318,6 @@ class databaseUtils {
 		if ($this->modSQL($sql, $deviceParam, true)) {	
 			return true;
 		}
-		// $row = $this->pdo->prepare($sql);
-		// $row->execute($deviceParam);
-		
-		// if ($row->rowCount()) {
-		// 	return true;
-		// }
 		return false;
 	}
 	
@@ -260,13 +329,24 @@ class databaseUtils {
 		], true)) {	
 			return true;
 		}
-		// $row = $this->pdo->prepare($sql);
-		// $row->execute([
-		// 	'id' => $id,
-		// ]);
-		// if ($row->rowCount()) {
-		// 	return true;
-		// }
+		return false;
+	}
+
+	function installCacheTable() {
+		$sql = <<<'EOD'
+DROP TABLE IF EXISTS `kanboard_cache`;
+CREATE TABLE IF NOT EXISTS `kanboard_cache` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `task_id` bigint unsigned NOT NULL DEFAULT '0',
+  `task_tag` varchar(250) NOT NULL DEFAULT '',
+  `task_meta` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `task_id_idx` (`task_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+EOD;
+		if ($this->root_access === true) {
+			return $this->modSQL($sql, [], false);
+		}
 		return false;
 	}
 	

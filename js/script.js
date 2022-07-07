@@ -200,6 +200,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		section = document.querySelectorAll('.section');
 	const loginForm = document.querySelector('#login-form'),
 		newUserForm = document.querySelector('#new-user-form'),
+		cacheForm = document.querySelector('#cache_form'),
 		btnAddUser = document.querySelector('#btnAddUser'),
 		newUsernameInput = document.querySelector('#newUsername'),
 		newPasswordInput = document.querySelector('#newPassword'),
@@ -1693,8 +1694,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					} else {
 						inputElem.value = itemValue;
 					}
-					// prevValues[inputID] = itemValue;
-					// console.log(inputElem.nodeName, inputElem.innerText, inputElem.name, inputElem.value);
+
 					if (inputElem.getAttribute('data-disable_on_update') == '1') {
 						inputElem.readOnly = true;
 						inputElem.classList.add('text-muted');
@@ -2851,6 +2851,20 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
+	cacheForm.addEventListener('submit', function (e) {
+		e.preventDefault();
+		const span = this.querySelector('span');
+		span.classList.add('d-none');
+		const body = {
+			method: 'installCacheTable',
+		}
+		sendRequest('POST', requestURL, body).then((data) => {
+			if (data && data.success && data.success.answer) {
+				span.classList.remove('d-none');
+			}
+		});
+	});
+
 	// init excel
 	tableExcel.addEventListener('click', editExcelTask);
 	inputStatus.addEventListener('change', applyFilterTable);
@@ -2949,20 +2963,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		const formData = new FormData(e.target);
 		const arrData = {};
-		// let prevValues = {};
-		// const updateCreator = document.activeElement.dataset['update_creator'];
 		let method = 'createTask';
 		let callback = attachFileStatus;
 		let updateCreator = false;
 
-		// try {
-		// 	console.log(b64DecodeUnicode(document.querySelector('#prevValues').value));
-		// 	prevValues = JSON.parse(b64DecodeUnicode(document.querySelector('#prevValues').value));
-		// 	console.log(prevValues);
-		// } catch (e) {}
-		// return true;
-
-		if (ticketCreatorStatus.dataset['old_value'] !== ticketCreatorStatus.value) {
+		if (taskStatus_id.value != 0 && ticketCreatorStatus.dataset['old_value'] !== ticketCreatorStatus.value) {
 			updateCreator = true;
 			method = 'updateCreator';
 			callback = showUpdatedCreator;

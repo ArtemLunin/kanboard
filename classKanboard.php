@@ -9,8 +9,9 @@ class Kanboard {
 		"capop", "oracle", "ticket", "otl", "creator", "version", "origintask", "master_date"
 	];
 	private $kanboardColumns = [];
+	private $dbObject;
 
-	function __construct () {
+	function __construct ($dbObject = null) {
 		$this->projectID = $this->getField([
 			'method'	=> 'getProjectByIdentifier', 
 			'paramObj'	=> ['identifier' => KANBOARD_PROJECT_IDENTIFIER],
@@ -32,6 +33,7 @@ class Kanboard {
 			'fieldName'		=> 'id',
 			'defaultVal'	=> 0
 			]);
+		$this->dbObject = $dbObject;
 	}
 	function getField($params)
 	{
@@ -95,6 +97,28 @@ class Kanboard {
 		$taskMetadata = $this->callKanboardAPI('getTaskMetadata', [$task_id]);
 		return $taskMetadata['result'][$field_name] ?? false;
 	}
+	function getTaskProps($task_id, $dataObject) {
+		$saveToBase = false;
+		$taskProps = $dataObject->getKBTaskProps($task_id);
+		if (!isset($taskProps['metadata']['result'])) {
+			$result = $this->callKanboardAPI('getTaskMetadata', [$task_id]);
+			$taskProps['metadata']  = $result ?? [];
+			$saveToBase = true;
+		}
+		if ($taskProps['project'] === null) {
+			$projectName = '';
+			$result = $this->callKanboardAPI('getTaskTags', [$task_id]);
+			if (isset($result['result']) && count($result['result'])) {
+				$projectName = $this->getProjectNameFromTag($result['result']);
+			}
+			$taskProps['project'] = $projectName ?? '';
+			$saveToBase = true;
+		}
+		if ($saveToBase) {
+			$dataObject->setKBTaskProps($task_id, $taskProps);
+		}
+		return $taskProps;
+	}
 	function setTaskProjectName($task_id, $projectName) {
 		$this->callKanboardAPI('setTaskTags', [
 			$this->projectID,
@@ -102,11 +126,20 @@ class Kanboard {
 			[$projectName]
 		]);
 	}
-	function getTaskProjectName($task_id) {
+	function getTaskProjectName($task_id, $dataObject = null) {
 		$projectName = '';
-		$taskTags = $this->callKanboardAPI('getTaskTags', [$task_id]);
-		if (isset($taskTags['result']) && count($taskTags['result'])) {
-			$projectName = $this->getProjectNameFromTag($taskTags['result']);
+		if ($dataObject !== null) {
+			$projectName = $dataObject->getKBProjectName($task_id);
+		}
+		if ($projectName === null) {
+			$projectName = '';
+			$taskTags = $this->callKanboardAPI('getTaskTags', [$task_id]);
+			if (isset($taskTags['result']) && count($taskTags['result'])) {
+				$projectName = $this->getProjectNameFromTag($taskTags['result']);
+			}
+			if ($dataObject !== null) {
+				$dataObject->setKBProjectName($task_id, $projectName);
+			}
 		}
 		return $projectName;
 	}
@@ -183,6 +216,9 @@ class Kanboard {
 		return $column_id;
 	}
 	function setTaskMetadata($task_id, $metadataFields) {
+		if (isset($this->dbObject)) {
+			$this->dbObject->delKBTaskProps($task_id);
+		}
 		return $this->callKanboardAPI('saveTaskMetadata', [$task_id, $metadataFields]);
 	}
 	function getProjectNameFromTag($tags_arr) {

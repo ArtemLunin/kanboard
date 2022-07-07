@@ -26,11 +26,12 @@ function isInt($val) {
     return filter_var($val, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);
 }
 
-function getRightsAnswer($user, $rights) {
+function getRightsAnswer($user, $rights, $root_access) {
 	return 
 	[
 		'user' => $user,
 		'rights' => $rights,
+		'cache_setup' => $root_access,
 		'docsHref' => DOCUMENTATION_HREF,
 		'doscLDAP' => 0
 	];
@@ -46,6 +47,8 @@ $noCheckedKanboardMethods = [
 	'signIn',
 	'logout',
 ];
+
+// error_log('commonStart:'.microtime(true));
 
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
@@ -80,7 +83,7 @@ if (!isset($kanboardProjectsID)) {
 try
 {
 	if (!in_array($method, $noCheckedKanboardMethods)) {
-		$kanboard = new Kanboard;
+		$kanboard = new Kanboard($db_object);
 		$projectID = $kanboard->projectID;
 		$userID = $kanboard->userID;
 		$shownedColumnID = $kanboard->shownedColumnID;
@@ -220,14 +223,14 @@ if ($projectID !== false && $method !== 0)
 				$currentUser = $kanboardUserName;
 			}
 		}
-		$param_error_msg['answer'] = getRightsAnswer($kanboardUserName, $rights);
+		$param_error_msg['answer'] = getRightsAnswer($kanboardUserName, $rights, $db_object->root_access);
 	} elseif ($method === 'logout') {
 		$_SESSION = array();
 		$param_error_msg['answer'] = [
 			'logout' => true,
 		];
 	} elseif ($method === 'getRights') {
-		$param_error_msg['answer'] = getRightsAnswer($currentUser, $rights);
+		$param_error_msg['answer'] = getRightsAnswer($currentUser, $rights, $db_object->root_access);
 		// $param_error_msg['answer'] = [
 		// 	'user'	 => $currentUser,
 		// 	'rights' => $rights,
@@ -245,6 +248,8 @@ if ($projectID !== false && $method !== 0)
 		}
 	} elseif ($method === 'getKanboardUsers') {
 		$param_error_msg['answer'] = $db_object->getKanboardUsers();
+	} elseif ($method === 'installCacheTable') {
+		$param_error_msg['answer'] = $db_object->installCacheTable();
 	}
 	elseif ($projectID) 
 	{
@@ -370,6 +375,7 @@ if ($projectID !== false && $method !== 0)
 			]);
 			if (isset($taskResult['result']))
 			{
+				$kanboard->dbObject->delKBTaskProps($params['id']);
 				$param_error_msg['answer'] = [
 					'id'	=> (int)$params['id'],
 				];
@@ -435,7 +441,6 @@ if ($projectID !== false && $method !== 0)
 				$taskResult = $kanboard->setTaskMetadata($params['id'], 
 					[
 						"otl"		=> trim($params['OTL'] ?? ""),
-						// "oracle"	=> trim($params['oracle'] ?? ""),
 						"capop"		=> trim($params['capop'] ?? ""),
 						"creator"	=> $taskCreator,
 						"master_date" => $date_ts,
@@ -453,12 +458,8 @@ if ($projectID !== false && $method !== 0)
 				[
 					"creator"	=> (trim($params['creator'] ?? "")),
 				]);
-			// error_log('access:'.$accessType.', id:'.$params['id'].', creator:'.$params['creator']);
 			if (isset($taskResult['result']) && $taskResult['result'] === true)
 			{
-				// $task_out = $kanboard->fieldsTask($params['id'], false);
-				// $taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$params['id']]);
-				// $projectName = $kanboard->getTaskProjectName($params['id']);
 				$param_error_msg['answer'] = [
 					'id' => $params['id'],
 					'creator' => $params['creator']
@@ -550,15 +551,20 @@ if ($projectID !== false && $method !== 0)
 							foreach($taskResult['result'][0]['columns'] as $key => $column) {
 								if ($shownedColumnID != $column['id'] && !$all_column) continue;
 								foreach ($column['tasks'] as $key => $task) {
-									if ($task['is_active'] == 1 && ($section !== 'status' || $task['creator_id'] == $userID)) {
-										$taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
+									if ($task['is_active'] == 1 /* && ($section !== 'status' || $task['creator_id'] == $userID) */) {
+										$taskProps = $kanboard->getTaskProps($task['id'], $db_object);
+
+										// $taskMetadata = $kanboard->callKanboardAPI('getTaskMetadata', [$task['id']]);
+										$taskMetadata = $taskProps['metadata'];
+
 										if ($accessType === 'user' && ($taskMetadata['result']['creator'] ?? '') !== $currentUser)
 										{
 											continue;
 										}
 										$task_version = $taskMetadata['result']['version'] ?? false;
 										$task_origin_id = $taskMetadata['result']['origintask'] ?? 0;
-										$projectName = $kanboard->getTaskProjectName($task['id']);
+										// $projectName = $kanboard->getTaskProjectName($task['id'], $db_object);
+										$projectName = $taskProps['project'];
 										if ($assignee_name === '') {
 											$assignee_name = $task['assignee_username'] ?? 'not assigned';
 										}
@@ -577,7 +583,7 @@ if ($projectID !== false && $method !== 0)
 											'project_name'	=> $projectName,
 											'url'			=> $linksToTask . 'task_id=' . $task['id'] . '&project_id='.$projectResult['result']['id'],
 											'assignee_name'	=> $assignee_name,
-											'fields'		=> $kanboard->getMetadataFields($taskMetadata['result']),
+											'fields'		=> $kanboard->getMetadataFields($taskMetadata['result'] ?? []),
 											'editable'		=> ($accessType === 'user') ? 0 : 1,
 											'kanboard_project_name' => $projectResult['result']['name'],
 											'kanboard_project_id' => $projectResult['result']['identifier']
@@ -819,4 +825,5 @@ if ($xls_output !== false) {
 	header('Content-type: application/json');
 	echo json_encode($out_res);
 }
+// error_log('commonEnd:'.microtime(true));
 ?>
