@@ -1617,7 +1617,10 @@ window.addEventListener('DOMContentLoaded', () => {
 			formNewTaskStatus.reset();
 			previousElem = target;
 			ticketCreatorStatus.value = currentUser;
+
 			const taskID = setFieldsEditForm(target, '.task-ticket-status', taskStatus_id);
+
+			inputGroupRequest.dispatchEvent(selectCnange);
 			toggleToUpdateMode(btnUpdateTaskStatus, btnAddTaskStatus, attachmentsAreaStatus);
 			// creatorApply.classList.remove('d-none');
 			if (taskID !== 0) {
@@ -1677,7 +1680,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	const setFieldsEditForm = (targetElem, rowSelector, elemTaskID) => {
 		let taskID = 0, originTaskID = 0;
 		const rowTask = targetElem.closest(rowSelector);
-		// const prevValues = {};
 		if (!!rowTask) {
 			selectTR(rowSelector, rowTask);
 			taskID = rowTask.getAttribute('data-task_id');
@@ -2944,11 +2946,15 @@ window.addEventListener('DOMContentLoaded', () => {
 	inputGroupRequest.addEventListener('change', function() {
 		const slaveSelect = document.querySelector('#' + this.dataset['slave']);
 		const projectID = this.value;
-		slaveSelect.value = '';
 		if (slaveSelect) {
+			const oldValue = slaveSelect.value;
+			slaveSelect.value = '';
 			slaveSelect.querySelectorAll('option').forEach((item) => {
 				if (!item.disabled) {
 					if (item.dataset['project'] == projectID) {
+						if (oldValue == item.value) {
+							slaveSelect.value = oldValue;
+						}
 						item.classList.remove('d-none');
 					} else {
 						item.classList.add('d-none');
