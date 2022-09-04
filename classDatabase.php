@@ -333,21 +333,22 @@ class databaseUtils {
 	}
 
 	function installCacheTable() {
-		$sql = <<<'EOD'
-DROP TABLE IF EXISTS `kanboard_cache`;
-CREATE TABLE IF NOT EXISTS `kanboard_cache` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `task_id` bigint unsigned NOT NULL DEFAULT '0',
-  `task_tag` varchar(250) NOT NULL DEFAULT '',
-  `task_meta` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `task_id_idx` (`task_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-EOD;
+		$sqls = [
+			"DROP TABLE IF EXISTS `kanboard_cache`",
+			"CREATE TABLE IF NOT EXISTS `kanboard_cache` (`id` bigint unsigned NOT NULL AUTO_INCREMENT,`task_id` bigint unsigned NOT NULL DEFAULT '0',`task_tag` varchar(250) NOT NULL DEFAULT '',`task_meta` text CHARACTER SET utf8mb4 NOT NULL,PRIMARY KEY (`id`),UNIQUE KEY `task_id_idx` (`task_id`)) DEFAULT CHARSET=utf8mb4"
+			];
+
+		$common_result = null;
 		if ($this->root_access === true) {
-			return $this->modSQL($sql, [], false);
+			foreach ($sqls as $sql) {
+				if (!isset($common_result) || $common_result) {
+					$common_result = $this->modSQL($sql, [], false);
+				} else {
+					break;
+				}
+			}
 		}
-		return false;
+		return $common_result ?? false;
 	}
 	
 	function removeBadSymbols($str)
