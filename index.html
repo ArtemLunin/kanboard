@@ -4,6 +4,7 @@
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 	<script src="js/jquery-3.4.1.min.js"></script>
 	<script src="js/popper.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="css/datatables.min.css">
@@ -541,6 +542,9 @@
 									<th>Statistics</th>
 									<th>Automator</th>
 									<th>Services</th>
+									<th>Template</th>
+									<th>MOP</th>
+									<th>DIP</th>
 									<th>Action</th>
 								</tr>
 							</thead>
@@ -585,6 +589,23 @@
 									</select>
 									<label class="input-group-text-sm mr-1" for="servicesPage">Services</label>
 									<select class="custom-select-sm mr-2" name="services" id="servicesPage" data-selectname="services">
+										<option value=""></option>
+										<option value="admin">admin</option>
+										<option value="user">user</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="templatePage">Template</label>
+									<select class="custom-select-sm mr-2" name="template" id="templatePage" data-selectname="template">
+										<option value=""></option>
+										<option value="admin">admin</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="mopPage">MOP</label>
+									<select class="custom-select-sm mr-2" name="mop" id="mopPage" data-selectname="mop">
+										<option value=""></option>
+										<option value="admin">admin</option>
+										<option value="user">user</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="mopPage">DIP</label>
+									<select class="custom-select-sm mr-2" name="dip" id="mopPage" data-selectname="dip">
 										<option value=""></option>
 										<option value="admin">admin</option>
 										<option value="user">user</option>
@@ -722,6 +743,580 @@
 					</table>
 				</div>
 			</section>
+			<section class="section template">
+				<div class="container" id="render_mop">
+					<div class="params">
+						<form action="mop_rest.php" method="POST" id="formAdmin">
+							<fieldset>
+								<legend>NCT OGPA Classification</legend>
+								<div class="param param-full renderOnly">
+									<label class="switch">
+										<input type="checkbox" id="showAll">
+										<span class="slider round"></span>
+									</label>
+									Show all fields
+								</div>
+								<div class="param param-half">
+									<input type="text" name="actField31" class="mop renderData text" data-value_name="actField31" id="actField31" value="Organization" readonly>
+								</div>
+								<div class="param param-half">
+									<input type="text" name="actField33" class="mop renderData text" data-value_name="actField33" id="actField33" value="Group" readonly>
+								</div>
+								<div class="param param-half">
+									<input type="text" name="actField32" class="mop renderData" data-value_name="actField32" id="actField32" value="Network Management and Ops" readonly>
+								</div>
+								<div class="param param-half">
+									<input type="text" name="actField34" class="mop renderData" data-value_name="actField34" id="actField34" value="RHSI and Service Delivery Environment" readonly>
+								</div>
+								<div class="param param-50">
+									<label for="primeElement">Prime Element</label>
+									<div>
+										<input type="hidden" name="actField35" class="mop renderData" data-value_name="actField35" id="actField35" value="Prime Element" readonly>
+										<select class="mop select-btns renderData ogpa-new" name="primeElement" id="primeElement" data-value_name="actField36">
+											<option value="" selected></option>
+										</select>
+										<button type="button" class="mop action admin-view hidden" id="btnDelPrimeElem" title="Delete">-</button>
+										<button type="button" class="mop action admin-view hidden" id="btnEditPrimeElem" data-elem_name_id="newPrimeElement"
+										data-btn_new_id="btnNewPrimeElem" title="Rename">
+											<span class="material-symbols-outlined" style="font-size: 14px;">
+											edit_square
+											</span>
+										</button>
+									</div>
+									<input type="text" class="mop admin-view ogpa-new hidden" name="newPrimeElement" id="newPrimeElement" value="">
+									<button type="button" class="mop admin-view hidden" id="btnNewPrimeElem" data-type="new">Add new</button>
+								</div>
+								<div class="param param-50">
+									<label for="activity">Activity</label>
+									<div>
+										<input type="hidden" name="actField37" class="mop renderData" data-value_name="actField37" id="actField37" value="Activity" readonly>
+										<select class="mop select-btns renderData ogpa-new" name="activity" id="activity" data-value_name="actField38">
+											<option value="null" selected>Not selected</option>
+										</select>
+										<button type="button" class="mop action admin-view hidden" id="btnDelActivity" title="Delete">-</button>
+										<button type="button" class="mop action admin-view hidden" id="btnEditActivity" data-elem_name_id="newActivity"
+										data-btn_new_id="btnNewActivity" title="Rename">
+											<span class="material-symbols-outlined" style="font-size: 14px;">
+											edit_square
+											</span>
+										</button>
+									</div>
+									<input type="text" class="mop admin-view ogpa-new hidden" name="newActivity" id="newActivity" value="">
+									<button type="button" class="mop admin-view hidden" id="btnNewActivity">Add new</button>
+								</div>
+							</fieldset>
+						</form>
+						<form method="post" action="mop_render.php" id="formFields" enctype="multipart/form-data">
+							<input type="hidden" name="docTitle" id="docTitle" value="Method of Procedure (MOP)">
+							<fieldset id="group3" class="">
+								<legend>Project Info</legend>
+								<div class="param param-half">
+									<label for="projectNumber">Project Number</label>
+									<input type="text" class="mop" name="projectNumber" id="projectNumber" value="">
+									
+								</div>
+								<div class="param param-half">
+									<label for="projectName">Project Name</label>
+									<input type="text" class="mop" name="projectName" id="projectName" value="Corrective Activity">
+								</div>
+								<div class="param param-half">
+									<label for="projectType">Project Type</label>
+									<input type="text" class="mop" name="projectType" id="projectType" value="Corrective Activity">
+								</div>
+								<div class="param param-half">
+									<label for="OTLCode">OTL code</label>
+									<input type="text" class="mop" name="OTLCode" id="OTLCode" value="">
+								</div>
+								<div class="param param-half">
+									<label for="targetDate">Target Implementation Date</label>
+									<input type="text" class="mop" name="targetDate" id="targetDate" value="ASAP">
+								</div>
+								<div class="param param-half">
+									<label for="regionsInvolved">Regions Involved</label>
+										<input type="text" class="mop" name="regionsInvolved" id="regionsInvolved" value="">
+								</div>
+								<div class="param param-half">
+									<label for="revisionNumber">Revision Number</label>
+									<input type="text" class="mop" name="revisionNumber" id="revisionNumber" value="1.0" size="10">
+								</div>
+								<div class="param param-half">
+									<label for="projectDetail">Project Detail</label>
+									<input type="text" class="mop" name="projectDetail" id="projectDetail" value="" size="50">
+								</div>
+								<div class="param param-half">
+									<label for="author">Author</label>
+									<input type="text" class="mop" name="author" id="author" value="Dmitry Kisialeu">
+								</div>
+								<div class="param param-half">
+									<label for="department">Department</label>
+									<input type="text" class="mop" name="department" id="department" value="SDE Cloud Ops">
+								</div>
+								<div class="param param-half">
+									<label for="contributors">Contributors</label>
+									<input type="text" class="mop" name="contributors" id="contributors" value="Fahad Syed">
+								</div>
+								<div class="param param-half">
+									<label for="authorized">Authorized By Operation</label>
+									<input type="text" class="mop" name="authorized" id="authorized" value="Fahad Syed">
+								</div>
+								<div class="param param-half">
+									<label for="distributed">Distributed To</label>
+									<input type="text" class="mop" name="distributed" id="distributed" value="SDE Cloud Ops">
+								</div>
+							</fieldset>
+							<fieldset id="group15" class="">
+								<legend>Document Version History</legend>
+								<div class="param param-half">
+									<label for="versionNum">Version</label>
+									<input type="text" class="mop" name="versionNum" id="versionNum" value="1.0" required>
+								</div>
+								<div class="param param-half">
+									<label for="changeReason">Change reason</label>
+									<input type="text" class="mop" name="changeReason" id="changeReason" value="Original Version" required>
+								</div>
+							</fieldset>
+							<fieldset id="group16" class="hidden">
+								<legend>Scope of Work (NCT – Description)</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param param-100">
+									<label for="changeRequired">Why is this change required?</label>
+									<textarea class="mop" name="changeRequired" id="changeRequired" cols="30" rows="5"></textarea>
+								</div>
+								<div class="param param-100">
+									<label for="implementationSteps">Provide a high-level description of the implementation steps</label>
+									<textarea class="mop" name="implementationSteps" id="implementationSteps" cols="30" rows="5"></textarea>
+								</div>
+								<div class="param param-full">
+									<label for="prePostChecks">Summarize the Pre & Post Checks</label>
+									<input type="text" class="mop" name="prePostChecks" id="prePostChecks" value="Pre-check, post-check and monitoring will be completed by SDE Cloud Ops" size="70" required>
+								</div>
+								<div class="param param-100">
+									<label for="facilitatedServices">Which Services or Customers are facilitated by the nodes/elements?</label>
+									<input type="text" class="mop" name="facilitatedServices" id="facilitatedServices" value="Wireline"  size="50" required>
+								</div>
+								<div class="param-row">
+									<div class="param param-fourth">
+										<label for="firstImplementation">First Implementation</label>
+										<select name="firstImplementation" id="firstImplementation" class="mop">
+											<option value="YES">YES</option>
+											<option value="NO" selected>NO</option>
+										</select>
+									</div>
+									<div class="param param-fourth">
+										<label for="restrictedEmbargo">Restricted During Embargo?</label>
+										<select name="restrictedEmbargo" id="restrictedEmbargo" class="mop">
+											<option value="YES">YES</option>
+											<option value="NO" selected>NO</option>
+										</select>
+									</div>
+									<div class="param param-fourth">
+										<label for="testedInLab">Tested in the Lab</label>
+										<select name="testedInLab" id="testedInLab" class="mop">
+											<option value="YES" selected>YES</option>
+											<option value="NO">NO</option>
+										</select>
+									</div>
+									<div class="param param-fourth">
+										<label for="impactingCustomers">Impacting R4B/EBU Customers?</label>
+										<select name="impactingCustomers" id="impactingCustomers" class="mop">
+											<option value="YES">YES</option>
+											<option value="NO" selected>NO</option>
+										</select>
+									</div>
+									<div class="param param-fourth">
+										<label for="introducingNewSystem">Is the Change introducing a net new system or technology?</label>
+										<select name="introducingNewSystem" id="introducingNewSystem" class="mop">
+											<option value="YES">YES</option>
+											<option value="NO" selected>NO</option>
+										</select>
+									</div>
+									<div class="param param-fourth">
+										<label for="alteringService">Is this Change altering any Service or Network Design?</label>
+										<select name="alteringService" id="alteringService" class="mop">
+											<option value="YES">YES</option>
+											<option value="NO" selected>NO</option>
+										</select>
+									</div>
+								</div>
+								
+							</fieldset>
+							<fieldset id="group1" class="hidden">
+								<legend>Functional Area and Responsibilities (NCT – Roles/Resources)</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<input type="hidden" name="rows_ceilArea" id="rows_ceilArea" data-id="ceilArea" data-parent="self" value="1">
+								<input type="hidden" name="ceilArea[]" id="ceilArea">
+									<div class="param-row">
+										<div class="param param-25">
+											<label for="ceil_area_1">Functional Area</label>
+										</div>
+										<div class="param param-25">
+											<label for="ceil_role_1">Role</label>
+										</div>
+										<div class="param param-25">
+											<label for="ceil_responsibility_1">Responsibility</label>
+										</div>
+										<div class="param param-25">
+											<label for="ceil_time_1">Time Commitment</label>
+										</div>
+									</div>
+								<div class="param-row multirows">
+									<div class="param param-fourth">
+										<input type="text" class="mop" name="ceil_area_1" id="ceil_area_1" data-name="ceilArea" data-id="1" value="SDE Cloud Ops" required>
+									</div>
+									<div class="param param-fourth">
+										<input type="text" class="mop" name="ceil_role_1" id="ceil_role_1" data-name="ceilRole" data-id="1" value="Implementer" required>
+									</div>          
+									<div class="param param-fourth">
+										<input type="text" class="mop" name="ceil_responsibility_1" id="ceil_responsibility_1" data-name="ceilResponsibility" data-id="1" value="Validation" size="35" required>
+									</div>
+									<div class="param param-fourth">
+										<input type="text" class="mop" name="ceil_time_1" id="ceil_time_1" data-name="ceilTime" data-id="1" value="2h" size="6" required>
+									</div>
+								</div>
+								<button id="ceil_area_append" class="mop action  renderOnly" type="button" title="Add row">+</button>
+							</fieldset>
+							<fieldset id="group17" class="hidden">
+								<legend>Diagram and Service Flows</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<input type="file" class="mop renderOnly" id="diagram" name="diagram" accept="image/png, image/jpeg" />
+							</fieldset>
+							<fieldset id="group2" class="hidden">
+								<legend>Impact Classification</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param param-fourth">
+									<label for="impactClassService">Service Impact</label>
+										<input type="text" class="mop" name="impactClassService" id="impactClassService" value="None" size="6" required>
+								</div>
+								<div class="param param-fourth">
+									<label for="impactClassOutage">Outage Duration</label>
+										<input type="text" class="mop" name="impactClassOutage" id="impactClassOutage" value="0" size="6" required>
+								</div>
+								<div class="param param-fourth">
+									<label for="impactClassNetwork">Network Impact</label>
+										<input type="text" class="mop" name="impactClassNetwork" id="impactClassNetwork" value="None" size="6" required>
+								</div>
+								<div class="param param-fourth">
+									<label for="impactClassCustomer">Customer Impact</label>
+										<input type="text" class="mop" name="impactClassCustomer" id="impactClassCustomer" value="Small" size="6" required>
+								</div>
+							</fieldset>
+							<fieldset id="group4" class="hidden">
+								<legend>Impact Check list</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param">
+									<label for="impactCheckService">Service?</label>
+									<select name="impactCheckService" id="impactCheckService" class="mop">
+										<option value="YES">YES</option>
+										<option value="NO" selected>NO</option>
+									</select>
+								</div>
+								<div class="param">
+									<label for="impactCheckBilling">Billing?</label>
+									<select name="impactCheckBilling" id="impactCheckBilling" class="mop">
+										<option value="YES">YES</option>
+										<option value="NO" selected>NO</option>
+									</select>
+								</div>
+								<div class="param">
+									<label for="impactCheckProvisioning">Provisioning?</label>
+									<select name="impactCheckProvisioning" id="impactCheckProvisioning" class="mop">
+										<option value="YES">YES</option>
+										<option value="NO" selected>NO</option>
+									</select>
+								</div>
+								<div class="param">
+									<label for="impactCheckNetwork">Network?</label>
+									<select name="impactCheckNetwork" id="impactCheckNetwork" class="mop">
+										<option value="YES">YES</option>
+										<option value="NO" selected>NO</option>
+									</select>
+								</div>
+								<div class="param">
+									<label for="impactCheckInternal">Internal?</label>
+									<select name="impactCheckInternal" id="impactCheckInternal" class="mop">
+										<option value="YES">YES</option>
+										<option value="NO" selected>NO</option>
+									</select>
+								</div>
+								<div class="param">
+									<label for="impactCheckExternal">External?</label>
+									<select name="impactCheckExternal" id="impactCheckExternal" class="mop">
+										<option value="YES">YES</option>
+										<option value="NO" selected>NO</option>
+									</select>
+								</div>
+							</fieldset>
+							<fieldset id="group5" class="hidden">
+								<legend>Impact Details and Customers (NCT – Impacts)</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param param-50">
+									<label for="actField431">Impact details</label>
+									<input type="text" class="mop" name="actField431" id="actField431" value="None" required>
+									
+								</div>
+								<div class="param param-50">
+									<label for="actField432">Customer Count</label>
+									<input type="text" class="mop" name="actField432" id="actField432" value="None" required>
+								</div>
+							</fieldset>
+							<fieldset id="group6" class="hidden">
+								<legend>Impacted Network Elements (NCT – Elements)</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param">
+									<label for="impactedNCT">Affected network elements
+										<textarea class="mop" name="impactedNCT:nctList" id="impactedNCT" cols="30" rows="5"></textarea>
+									</label>
+								</div>
+							</fieldset>
+							<fieldset id="group7" class="hidden">
+								<legend>Summary of Overall Timelines (Duration)</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param">
+									<label for="activityDuration">Activity</label>
+									<input type="text" class="mop" name="activityDuration" id="activityDuration" value="2h" size="6" required>
+								</div>
+								<div class="param">
+									<label for="prepDuration">Prep Time</label>
+									<input type="text" class="mop" name="prepDuration" id="prepDuration" value="0.5h" size="6" required>
+								</div>
+								<div class="param">
+									<label for="implementationDuration">Implementation</label>
+									<input type="text" class="mop" name="implementationDuration" id="implementationDuration" value="1h" size="6" required>
+								</div>
+								<div class="param">
+									<label for="validationDuration">Validation</label>
+									<input type="text" class="mop" name="validationDuration" id="validationDuration" value="0.5h" size="6" required>
+								</div>
+								<div class="param">
+									<label for="rollbackDuration">Roll-Back</label>
+									<input type="text" class="mop" name="rollbackDuration" id="rollbackDuration" value="10min" size="6" required>
+								</div>
+							</fieldset>
+							<fieldset id="group8" class="hidden">
+								<legend>Pre-Implementation (Pre-Checks & Preparation Steps)</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param">
+									<label for="preCommandList">Steps
+										<textarea class="mop" name="preCommandList:preCheckList" id="preCommandList" cols="50" rows="20" required>
+			show inter terse | no-more
+			show ospf nei | no-more
+			show ospf inter
+			show pim nei
+			show pim join | no-more
+			show route table inet.1 | no-more
+			show multicast route | no-more
+			show configuration | display set | no-more
+			show chassis hardware | no-more
+			show chassis fabric plane-location 
+			show chassis power
+			show chassis fpc | no-more
+			show chassis alarms | no-more
+			show chassis craft-interface  | no-more
+			show log messages | no-more
+			show system core-dumps
+										</textarea>
+									</label>
+								</div>
+							</fieldset>
+							<fieldset id="group9" class="hidden">
+								<legend>Implementation Steps</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param">
+									<label for="implementationCommandList">Steps
+										<textarea class="mop" name="implementationCommandList:implementationCheckList" id="implementationCommandList" cols="50" rows="30" required>
+			- complete pre-check
+			- ask headend to replace faulty hardware
+			- complete post-check
+										</textarea>
+									</label>
+								</div>
+								<input type="file" class="mop renderOnly" id="implFile" name="implFile" accept=".txt" />
+							</fieldset>
+							<fieldset id="group10" class="hidden">
+								<legend>Final Verification & Validation</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param">
+									<label for="finalCommandList">Steps
+										<textarea class="mop" name="finalCommandList:finalCheckList" id="finalCommandList" cols="50" rows="20" required>
+			show inter terse | no-more
+			show ospf nei | no-more
+			show ospf inter
+			show pim nei
+			show pim join | no-more
+			show route table inet.1 | no-more
+			show multicast route | no-more
+			show configuration | display set | no-more
+			show chassis hardware | no-more
+			show chassis fabric plane-location 
+			show chassis power
+			show chassis fpc | no-more
+			show chassis alarms | no-more
+			show chassis craft-interface  | no-more
+			show log messages | no-more
+			show system core-dumps
+										</textarea>
+									</label>
+								</div>
+							</fieldset>
+							<fieldset id="group11" class="hidden">
+								<legend>Troubleshooting</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param">
+									<label for="troubleCommandList">Steps
+										<textarea class="mop" name="troubleCommandList:troubleCheckList" id="troubleCommandList" cols="50" rows="20" required>
+				Replace new hardware 
+				Insert new hardware again 
+				Complete validation
+			
+			show inter terse | no-more
+			show ospf nei | no-more
+			show ospf inter
+			show pim nei
+			show pim join | no-more
+			show route table inet.1 | no-more
+			show multicast route | no-more
+			show configuration | display set | no-more
+										</textarea>
+									</label>
+								</div>
+							</fieldset>
+							<fieldset id="group12" class="hidden">
+								<legend>Final Commitment Point</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param">
+									<label for="postCommandList">Steps
+										<textarea class="mop" name="postCommandList:postCheckList" id="postCommandList" cols="50" rows="4" required>
+			Complete post-check
+										</textarea>
+									</label>
+								</div>
+							</fieldset>
+							<fieldset id="group13" class="hidden">
+								<legend>Roll-Back Steps</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param">
+									<label for="rollbackCommandList">Steps
+										<textarea class="mop" name="rollbackCommandList:rollbackCheckList" id="rollbackCommandList" cols="50" rows="4" required>
+			Replace new hardware 
+										</textarea>
+									</label>
+								</div>
+							</fieldset>
+							<fieldset id="group14" class="hidden">
+								<legend>Post-Implementation (Post Checks)</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<div class="param">
+									<label for="postImplementationCommandList">Steps
+										<textarea class="mop" name="postImplementationCommandList:postImplementationCheckList" id="postImplementationCommandList" cols="50" rows="20" required>
+			show inter terse | no-more
+			show ospf nei | no-more
+			show ospf inter
+			show pim nei
+			show pim join | no-more
+			show route table inet.1 | no-more
+			show multicast route | no-more
+			show configuration | display set | no-more
+			show chassis hardware | no-more
+			show chassis fabric plane-location 
+			show chassis power
+			show chassis fpc | no-more
+			show chassis alarms | no-more
+			show chassis craft-interface  | no-more
+			show log messages | no-more
+			show system core-dumps
+										</textarea>
+									</label>
+								</div>
+							</fieldset>
+							<div class="buttons">
+								<button class="mop" type="submit" id="formSubmit">Render</button>
+								<button class="mop" type="reset" id="formReset">Reset</button>
+							</div>
+						</form>
+						   
+					</div>
+					<div class="counter renderOnly">
+						<div class="counter-pb"></div>
+					</div>
+				</div>
+			</section>
+			<section class="section mop"></section>
+			<section class="section dip"></section>
 			<section class="section documentation">
 				<div class="container-documentation" style="display:none;">
 					<div class="book-aside book-menu">

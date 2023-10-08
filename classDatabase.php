@@ -27,15 +27,33 @@ class databaseUtils {
 		'accessType'	=> 'admin',
 	],
 	[
-		'pageName' => 'Settings',
-		'sectionName' => 'settings',
-		'sectionAttr'	=> 'settings',
-		'accessType'	=> 'admin',
-	],
-	[
 		'pageName' => 'Documentation',
 		'sectionName' => 'documentation',
 		'sectionAttr'	=> 'documentation',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'Template',
+		'sectionName' => 'template',
+		'sectionAttr'	=> 'template',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'MOP',
+		'sectionName' => 'mop',
+		'sectionAttr'	=> 'mop',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'DIP',
+		'sectionName' => 'dip',
+		'sectionAttr'	=> 'dip',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'Settings',
+		'sectionName' => 'settings',
+		'sectionAttr'	=> 'settings',
 		'accessType'	=> 'admin',
 	]];
 	function __construct () {

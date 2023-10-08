@@ -4,6 +4,7 @@ kanboard_upd/
 templates/
 unused/
 wiki/
+others/
 *.zip
 *test.php
 config.php
