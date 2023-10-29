@@ -12,7 +12,9 @@ let gPrimeElementID = 0,
     gActivityID = 0,
     adminEnabled = 1,
     totalInputs = 0,
-    changedInputs = 0;
+    changedInputs = 0,
+	templateDip = 0;
+	// templateMop = 0;
 
 const entityMap = {
   '&': '&amp;',
@@ -35,6 +37,7 @@ const sections = [
 	'services',
 	'template',
 	'mop',
+	'template DIP',
 	'dip',
 	// 'documentation',
 	'action',
@@ -329,15 +332,17 @@ window.addEventListener('DOMContentLoaded', () => {
         newActivity = document.querySelector('#newActivity'),
         selActivity = document.querySelector('#activity'),
         selPrimeElement = document.querySelector('#primeElement'),
-        btnCeilAreaAppend = document.querySelector('#ceil_area_append'),
+        // btnCeilAreaAppend = document.querySelector('#ceil_area_append'),
         divCounter = document.querySelector('.counter-pb'),
 		renderMopDiv = document.querySelector('#render_mop'),
 		docTitle = document.querySelector('#docTitle'),
-        showAll = document.querySelector('#showAll');
+		// docType = document.querySelector('#docType'),
+        showAll = document.querySelector('#showAll'),
+		efcrFields = document.querySelector('#efcrFields'),
+		btnsCeilAreaAppend = document.querySelectorAll('.js-ceil-area-append');
 
 		showAll.checked = false;
 
-		
 		btnNewActivity.dataset.prime_elem_id = 0;
 
 
@@ -1196,14 +1201,16 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.title = startDocumentTitle;
 		location.hash = showSection;
 		let idx = 0;
+		showSection = showSection.replace(/\s+/g, '');
 		if (showSection !== 'documentation') {
 			section.forEach((item, i) => {
 				item.style.display = "none";
 				if (showSection && item.classList.contains(showSection)) {
-				idx = i;
+					idx = i;
 				}
 			});
 			if (showSection === 'template' || 
+				showSection === 'templateDIP' ||
 				showSection === 'mop'|| 
 				showSection === 'dip') {
 				section[idx].append(renderMopDiv);
@@ -1212,6 +1219,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 
 		clearOldData(showSection);
+
 		switch (showSection) {
 			case 'main':
 				if (!section[idx].dataset['showned']) {
@@ -1258,19 +1266,30 @@ window.addEventListener('DOMContentLoaded', () => {
 				getBooksList();
 				break;
 			case 'template':
-				document.title = 'Template';
+				document.title = 'Template MOP';
+				templateDip = 0;
+				displayMOPElements(true);
+				iniOGPA();
+				break;
+			case 'templateDIP':
+				document.title = 'Template DIP';
+				templateDip = 1;
 				displayMOPElements(true);
 				iniOGPA();
 				break;
 			case 'mop':
 				document.title = 'MOP';
 				docTitle.value = 'Method of Procedure (MOP)';
+				// docType.value = 'mop';
+				templateDip = 0;
 				displayMOPElements(false);
 				iniOGPA();
 				break;
 			case 'dip':
 				document.title = 'DIP';
 				docTitle.value = 'Design Implementation Procedure (DIP)';
+				// docType.value = 'dip';
+				templateDip = 1;
 				displayMOPElements(false);
 				iniOGPA();
 				break;
@@ -3237,6 +3256,28 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.classList.remove('hidden');
 			}
 		});
+
+		efcrFields.value = "";
+		const efcrFieldsArr = [];
+		document.querySelectorAll('.js-dipOnly').forEach(item => {
+			if (templateDip) {
+				item.disabled = false;
+				item.classList.remove('hidden');
+				item.querySelectorAll('input').forEach(inputElem => {
+					inputElem.disabled = false;
+					if (inputElem.dataset['ecfr'] == "1") {
+						efcrFieldsArr.push(inputElem.name);
+					}
+				});
+			} else {
+				item.disabled = true;
+				item.classList.add('hidden');
+				item.querySelectorAll('input').forEach(inputElem => {
+					inputElem.disabled = true;
+				});
+			}
+		});
+		efcrFields.value = JSON.stringify(efcrFieldsArr);
 		
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(({groupID, hidden, fields}) => {
@@ -3256,7 +3297,9 @@ window.addEventListener('DOMContentLoaded', () => {
 							fieldIn.classList.add(inputSelectorClass);
 						}
 						});
-						if (adminEnabled || !hidden) {
+						if (adminEnabled || 
+							(!hidden && group.classList.contains('js-dipOnly') && templateDip) || 
+							(!hidden && !group.classList.contains('js-dipOnly'))) {
 							group.classList.remove('hidden');
 						} else {
 							group.classList.add('hidden');
@@ -3457,6 +3500,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			fieldset.querySelectorAll('.multirows[data-clone="1"]').forEach(row => {
 				row.remove();
 			});
+			fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
+				ceil.value = 1;
+			})
 		});
 		formSubmit.classList.remove('edit');
 	});
@@ -3638,21 +3684,39 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	btnCeilAreaAppend.addEventListener('click', (e) => {
-		e.preventDefault();
-		const fieldset = e.target.closest('fieldset');
-		const row = fieldset.querySelector("[data-parent='self']");
-		const row_prime = fieldset.querySelector('.multirows');
-		const new_row = row_prime.cloneNode(true);
-		row.value = parseInt(row.value) + 1;
-		new_row.dataset.clone = 1;
-		new_row.querySelectorAll('input').forEach(item => {
-			item.name = `${item.dataset.name}_${row.value}`;
-			item.id = item.name;
-			item.value = '';
+	// btnCeilAreaAppend.addEventListener('click', (e) => {
+	// 	e.preventDefault();
+	// 	const fieldset = e.target.closest('fieldset');
+	// 	const row = fieldset.querySelector("[data-parent='self']");
+	// 	const row_prime = fieldset.querySelector('.multirows');
+	// 	const new_row = row_prime.cloneNode(true);
+	// 	row.value = parseInt(row.value) + 1;
+	// 	new_row.dataset.clone = 1;
+	// 	new_row.querySelectorAll('input').forEach(item => {
+	// 		item.name = `${item.dataset.name}_${row.value}`;
+	// 		item.id = item.name;
+	// 		item.value = '';
+	// 	});
+	// 	fieldset.append(new_row);
+	// 	fieldset.append(e.target);
+	// });
+
+	btnsCeilAreaAppend.forEach(item => {
+		item.addEventListener('click', (e) => {
+			const fieldset = e.target.closest('fieldset');
+			const row = fieldset.querySelector("[data-parent='self']");
+			const row_prime = fieldset.querySelector('.multirows');
+			const new_row = row_prime.cloneNode(true);
+			row.value = parseInt(row.value) + 1;
+			new_row.dataset.clone = 1;
+			new_row.querySelectorAll('input').forEach(item => {
+				item.name = `${item.dataset.name}_${row.value}`;
+				item.id = item.name;
+				item.value = '';
+			});
+			fieldset.append(new_row);
+			fieldset.append(e.target);
 		});
-		fieldset.append(new_row);
-		fieldset.append(e.target);
 	});
 
 	clearInputsForms();

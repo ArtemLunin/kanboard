@@ -40,13 +40,19 @@ class databaseUtils {
 	],
 	[
 		'pageName' => 'MOP',
-		'sectionName' => 'MOP',
+		'sectionName' => 'mop',
 		'sectionAttr'	=> 'mop',
 		'accessType'	=> 'admin',
 	],
 	[
+		'pageName' => 'Template DIP',
+		'sectionName' => 'templateDIP',
+		'sectionAttr'	=> 'templateDIP',
+		'accessType'	=> 'admin',
+	],
+	[
 		'pageName' => 'DIP',
-		'sectionName' => 'DIP',
+		'sectionName' => 'dip',
 		'sectionAttr'	=> 'dip',
 		'accessType'	=> 'admin',
 	],

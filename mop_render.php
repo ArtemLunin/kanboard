@@ -4,15 +4,28 @@ require 'vendor/autoload.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/mop_template.docx');
+$efcrFile = file('template/eFCR.txt');
 
 $filename = tempnam(sys_get_temp_dir(), 'docx');
 $resultFileName = "work_mop.docx";
 $implFile = false;
+$efcrFieldsArr = [];
+$efcrOutput = [];
+$ercfProcess = [];
+
 
 function getLinesFromTextArea($taText) {
     return array_filter(explode("\r\n", trim($taText)), function ($arrStr) {
         return strlen($arrStr);
     });
+}
+
+
+if (isset($_POST['efcrFields']) && $efcrFile) {
+    $efcrFieldsArr = json_decode($_POST['efcrFields'], true);
+    if (!$efcrFieldsArr || !(is_array($efcrFieldsArr)) || count($efcrFieldsArr) == 0) {
+        $efcrFile = false;
+    }
 }
 
 //search textarea fields for clone block
@@ -26,8 +39,12 @@ foreach ($_POST as $param => $value) {
         ];
     }
 }
-
+// $templateProcessor->cloneBlock('testReplaceBlock', 0, true, true);
 foreach ($_POST as $param => $value) {
+    if (in_array($param, $efcrFieldsArr)) {
+        $ercfProcess[$param] = $value;
+        continue;
+    }
     if (is_array($value)) {
         $values = json_decode($value[0], true);
         $templateProcessor->cloneRowAndSetValues($param, $values);
@@ -41,6 +58,10 @@ foreach ($_POST as $param => $value) {
                 $arrayBlocks[$param]["taName"] => $line
             ];
         }
+        if($efcrFile && $arrayBlocks[$param]["blockName"] == 'implementationCheckList')
+        {
+            continue;
+        }
         $templateProcessor->cloneBlock($arrayBlocks[$param]["blockName"], 0, true, false, $replacements);
     }
     if ($param === 'projectDetail') {
@@ -50,6 +71,33 @@ foreach ($_POST as $param => $value) {
             $resultFileName = "untitled.docx";
         }
     }
+}
+
+if ($efcrFile) {
+    $ip_arrs = json_decode($ercfProcess['ceilIP'], true);
+    foreach ($efcrFile as $efcr_str) {
+        $dipStartIndex = intval($ercfProcess['dipStartIndex']);
+        foreach ($ip_arrs as $ip_address) {
+            $dipStartIndex++;
+            $new_str = str_replace([
+                '%dipeFCRNumber%',
+                '%dipCompanyName%',
+                '%dipCountryName%',
+                '%dipStartIndex%',
+                '%ceilIP%'
+            ], [
+                $ercfProcess['dipeFCRNumber'],
+                $ercfProcess['dipCompanyName'],
+                $ercfProcess['dipCountryName'],
+                $dipStartIndex,
+                $ip_address['ceilIP'],
+            ], $efcr_str);
+            $efcrOutput[] = ['implementationCommandList' => $new_str];
+            if (!str_contains($efcr_str, '%dipStartIndex%'))
+                break;
+        }
+    }
+    $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, $efcrOutput);
 }
 
 

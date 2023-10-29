@@ -4,6 +4,11 @@
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="cache-control" content="max-age=0">
+	<meta http-equiv="cache-control" content="no-cache">
+	<meta http-equiv="expires" content="-1">
+	<meta http-equiv="expires" content="Tue, 01 Jan 1980 11:00:00 GMT">
+	<meta http-equiv="pragma" content="no-cache">
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 	<script src="js/jquery-3.4.1.min.js"></script>
 	<script src="js/popper.min.js"></script>
@@ -542,8 +547,9 @@
 									<th>Statistics</th>
 									<th>Automator</th>
 									<th>Services</th>
-									<th>Template</th>
+									<th>Template MOP</th>
 									<th>MOP</th>
+									<th>Template DIP</th>
 									<th>DIP</th>
 									<th>Action</th>
 								</tr>
@@ -593,7 +599,7 @@
 										<option value="admin">admin</option>
 										<option value="user">user</option>
 									</select>
-									<label class="input-group-text-sm mr-1" for="templatePage">Template</label>
+									<label class="input-group-text-sm mr-1" for="templatePage">Template MOP</label>
 									<select class="custom-select-sm mr-2" name="template" id="templatePage" data-selectname="template">
 										<option value=""></option>
 										<option value="admin">admin</option>
@@ -603,6 +609,11 @@
 										<option value=""></option>
 										<option value="admin">admin</option>
 										<option value="user">user</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="templatePageDIP">Template DIP</label>
+									<select class="custom-select-sm mr-2" name="template DIP" id="templatePageDIP" data-selectname="template DIP">
+										<option value=""></option>
+										<option value="admin">admin</option>
 									</select>
 									<label class="input-group-text-sm mr-1" for="dipPage">DIP</label>
 									<select class="custom-select-sm mr-2" name="dip" id="dipPage" data-selectname="dip">
@@ -808,6 +819,45 @@
 						</form>
 						<form method="post" action="mop_render.php" id="formFields" enctype="multipart/form-data">
 							<input type="hidden" name="docTitle" id="docTitle" value="Method of Procedure (MOP)">
+							<input type="hidden" name="efcrFields" id="efcrFields" value="">
+							<fieldset id="group18" class="js-dipOnly">
+								<legend>eFCR</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<input type="hidden" name="rows_ceilIP" id="rows_ceilIP" data-id="ceilIP" data-parent="self" value="1">
+								<input type="hidden" name="ceilIP" id="ceilIP" data-ecfr="1">
+								<div class="param param-half">
+									<label for="dipeFCRNumber">eFCR Number</label>
+									<input type="text" class="mop" name="dipeFCRNumber" id="dipeFCRNumber" value="" disabled data-ecfr="1">
+								</div>
+								<div class="param param-half">
+									<label for="dipCompanyName">Company Name</label>
+									<input type="text" class="mop" name="dipCompanyName" id="dipCompanyName" value="" disabled data-ecfr="1">
+								</div>
+								<div class="param param-half">
+									<label for="dipCountryName">Country Name</label>
+									<input type="text" class="mop" name="dipCountryName" id="dipCountryName" value="" disabled data-ecfr="1">
+								</div>
+								<div class="param param-half">
+									<label for="dipStartIndex">Start Index</label>
+									<input type="number" min="0" class="mop" name="dipStartIndex" id="dipStartIndex" value="" disabled data-ecfr="1">
+								</div>
+								<div class="param-row">
+									<div class="param param-25">
+										<label for="ceil_ip_1">IP Address</label>
+									</div>
+								</div>
+								<div class="param-row multirows">
+									<div class="param param-25">
+										<input type="text" class="mop" name="ceil_ip_1" id="ceil_ip_1" data-name="ceilIP" data-id="1" value="">
+									</div>
+								</div>
+								<button id="" class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
+							</fieldset>
 							<fieldset id="group3" class="">
 								<legend>Project Info</legend>
 								<div class="param param-half">
@@ -983,7 +1033,7 @@
 										<input type="text" class="mop" name="ceil_time_1" id="ceil_time_1" data-name="ceilTime" data-id="1" value="2h" size="6" required>
 									</div>
 								</div>
-								<button id="ceil_area_append" class="mop action  renderOnly" type="button" title="Add row">+</button>
+								<button id="ceil_area_append" class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
 							</fieldset>
 							<fieldset id="group17" class="hidden">
 								<legend>Diagram and Service Flows</legend>
@@ -1316,6 +1366,7 @@
 				</div>
 			</section>
 			<section class="section mop"></section>
+			<section class="section templateDIP"></section>
 			<section class="section dip"></section>
 			<section class="section documentation">
 				<div class="container-documentation" style="display:none;">
