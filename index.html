@@ -819,15 +819,16 @@
 						</form>
 						<form method="post" action="mop_render.php" id="formFields" enctype="multipart/form-data">
 							<input type="hidden" name="docTitle" id="docTitle" value="Method of Procedure (MOP)">
-							<input type="hidden" name="efcrFields" id="efcrFields" value="">
 							<fieldset id="group18" class="js-dipOnly">
 								<legend>eFCR</legend>
 								<div class="param param-full admin-view hidden">
 									<label class="switch">
-										<input type="checkbox">
+										<input type="checkbox" class="js-pinned">
 										<span class="slider round"></span>
 									</label>
+									Pin to current OGPA
 								</div>
+								<input type="hidden" name="efcrFields" id="efcrFields" class="renderOnly" value="" data-dip-only="1">
 								<input type="hidden" name="rows_ceilIP" id="rows_ceilIP" data-id="ceilIP" data-parent="self" value="1">
 								<input type="hidden" name="ceilIP" id="ceilIP" data-ecfr="1">
 								<div class="param param-half">

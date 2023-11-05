@@ -3272,6 +3272,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else {
 				item.disabled = true;
 				item.classList.add('hidden');
+				// console.log(item);
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = true;
 				});
@@ -3280,7 +3281,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		efcrFields.value = JSON.stringify(efcrFieldsArr);
 		
 		if (data && data.success && data.success.answer) {
-			data.success.answer.forEach(({groupID, hidden, fields}) => {
+			data.success.answer.forEach(({groupID, hidden, fields, disabled=false}) => {
 				try {
 					const group = document.querySelector(`#${groupID}`);
 					try {
@@ -3292,17 +3293,28 @@ window.addEventListener('DOMContentLoaded', () => {
 					if (group) {
 						fields.forEach(field => {
 							const fieldIn = document.querySelector(`#${field.fieidID}`);
-						if (field) {
-							fieldIn.value = field.default;
-							fieldIn.classList.add(inputSelectorClass);
-						}
+							if (field) {
+								fieldIn.value = field.default;
+								fieldIn.classList.add(inputSelectorClass);
+							}
 						});
-						if (adminEnabled || 
-							(!hidden && group.classList.contains('js-dipOnly') && templateDip) || 
-							(!hidden && !group.classList.contains('js-dipOnly'))) {
+						if ((adminEnabled && !group.classList.contains('js-dipOnly')) || 
+						 (adminEnabled && group.classList.contains('js-dipOnly') && templateDip) || 
+						 (!hidden && group.classList.contains('js-dipOnly') && templateDip) || 
+						 (!hidden && !group.classList.contains('js-dipOnly'))) {
 							group.classList.remove('hidden');
 						} else {
 							group.classList.add('hidden');
+							// group.disabled = false;
+							// 	group.querySelectorAll("[data-dip-only='1']").forEach(item => {
+							// 		item.disabled = false;
+							// 	});
+							if (disabled) {
+								group.disabled = true;
+								// group.querySelectorAll("[data-dip-only='1']").forEach(item => {
+								// 	item.disabled = true;
+								// });
+							}
 						}
 					}
 				} catch (e) {
@@ -3416,6 +3428,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			let fieldGroup = {};
 			fieldGroup.groupID = fieldset.id;
 			fieldGroup.hidden = 0;
+			fieldGroup.disabled = 0;
 			let fieldsArr = [];
 			for (let fieldEl of fieldset.elements) {
 				if (fieldEl.tagName === 'INPUT' || 
@@ -3424,6 +3437,12 @@ window.addEventListener('DOMContentLoaded', () => {
 					let fieldValue = fieldEl.value;
 					if (fieldEl.type === 'checkbox') {
 						fieldGroup.hidden = fieldEl.checked ? 0 : 1;
+						if (fieldEl.classList.contains('js-pinned') && fieldGroup.hidden) {
+							fieldGroup.disabled = true;
+						}
+						continue;
+					}
+					if (fieldEl.classList.contains('renderOnly')) {
 						continue;
 					}
 					fieldsArr.push({

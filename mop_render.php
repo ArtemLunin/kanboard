@@ -26,6 +26,8 @@ if (isset($_POST['efcrFields']) && $efcrFile) {
     if (!$efcrFieldsArr || !(is_array($efcrFieldsArr)) || count($efcrFieldsArr) == 0) {
         $efcrFile = false;
     }
+} else {
+    $efcrFile = false;
 }
 
 //search textarea fields for clone block
