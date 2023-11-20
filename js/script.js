@@ -10,11 +10,17 @@ let wikiURL = '', wikiLDAPAuth = 0;
 
 let gPrimeElementID = 0,
     gActivityID = 0,
+	gActivityName = '',
+	gCounterMode = "",
     adminEnabled = 1,
     totalInputs = 0,
     changedInputs = 0,
 	templateDip = 0;
 	// templateMop = 0;
+
+const hardCodeDesign = {
+	'Add/Change/Remove Roaming': 'js-eFCR-view'
+};
 
 const entityMap = {
   '&': '&amp;',
@@ -42,6 +48,16 @@ const sections = [
 	// 'documentation',
 	'action',
 ];
+
+const sectionChildren = {
+	'dip': {
+		'Roaming FCR': 
+		[
+			'Firewall',
+			'Add/Change/Remove Roaming'
+		]
+	}
+};
 
 const defaultUserRights = [];
 
@@ -336,7 +352,6 @@ window.addEventListener('DOMContentLoaded', () => {
         divCounter = document.querySelector('.counter-pb'),
 		renderMopDiv = document.querySelector('#render_mop'),
 		docTitle = document.querySelector('#docTitle'),
-		// docType = document.querySelector('#docType'),
         showAll = document.querySelector('#showAll'),
 		efcrFields = document.querySelector('#efcrFields'),
 		btnsCeilAreaAppend = document.querySelectorAll('.js-ceil-area-append');
@@ -356,14 +371,16 @@ window.addEventListener('DOMContentLoaded', () => {
 		adminEnabled = adminView;
 		if (adminView) {
 			adminViewElems.forEach((elem) => {
-				elem.classList.remove('hidden');
-				elem.disabled = false;
+				// elem.classList.remove('hidden');
+				// elem.disabled = false;
+				setAvailFormElements(elem, false);
 			});
 			formSubmit.innerText = 'Apply';
 		} else {
 			adminViewElems.forEach((elem) => {
-				elem.classList.add('hidden');
-				elem.disabled = true;
+				// elem.classList.add('hidden');
+				// elem.disabled = true;
+				setAvailFormElements(elem, true);
 			});
 			formSubmit.innerText = 'Create';
 		}
@@ -1196,7 +1213,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const toggleSection = (showSection) => {
+	const toggleSection = (showSection, addParams = {}) => {
 		if (showSection == '') return;
 		document.title = startDocumentTitle;
 		location.hash = showSection;
@@ -1280,18 +1297,23 @@ window.addEventListener('DOMContentLoaded', () => {
 			case 'mop':
 				document.title = 'MOP';
 				docTitle.value = 'Method of Procedure (MOP)';
-				// docType.value = 'mop';
 				templateDip = 0;
+				gCounterMode = "mopCounter";
 				displayMOPElements(false);
 				iniOGPA();
 				break;
 			case 'dip':
 				document.title = 'DIP';
 				docTitle.value = 'Design Implementation Procedure (DIP)';
-				// docType.value = 'dip';
 				templateDip = 1;
+				gCounterMode = "dipCounter";
 				displayMOPElements(false);
-				iniOGPA();
+				if (addParams['element']) {
+					document.title = addParams['visibleName'];
+					iniOGPA(addParams);
+				} else {
+					iniOGPA();
+				}
 				break;
 			default:
 				break;
@@ -1313,13 +1335,16 @@ window.addEventListener('DOMContentLoaded', () => {
 			// if (target.dataset['section'] === 'documentation' && target.dataset.href.length > 10) {
 			// 	window.open(target.dataset.href, '_blank');
 			// }
-			if (target.dataset['section'] === 'logout') {
+			if (target.dataset.section === 'logout') {
 				logout();
-			} else if (target.dataset['section'] === 'login') {
+			} else if (target.dataset.section === 'login') {
 				toggleSignIn('show');
 			} else {
-				selectMenuItem(target.parentNode, target.dataset['section']);
-				toggleSection(target.dataset['section']);
+				selectMenuItem(target.parentNode, target.dataset.section);
+				toggleSection(target.dataset.section, 
+				{'element': (target.dataset.element === undefined) ? false : target.dataset.element, 
+				'activity': (target.dataset.activity === undefined) ? false : target.dataset.activity,
+				'visibleName': (target.dataset.visibleName === undefined) ? false : target.dataset.visibleName});
 			}
 		}
 	});
@@ -1357,6 +1382,14 @@ window.addEventListener('DOMContentLoaded', () => {
 							menu.insertAdjacentHTML('beforeend', `
 							<li data-section="${sectionAttr}" data-access="${accessType}">${pageName}</li>
 							`);
+							if (!!sectionChildren[sectionName]) {
+								for (const [key, value] of Object.entries (sectionChildren[sectionName])) {
+									menu.insertAdjacentHTML('beforeend', `<li data-section="${sectionAttr}" 
+									data-visible-name="${key}" 
+									data-access="${accessType}" data-element="${value[0]}" data-activity="${value[1]}" class="children-menu">- ${key}</li>
+									`);
+								}
+							}
 							if (sectionName === 'excel')
 							{
 								if (accessType === 'user')
@@ -2616,6 +2649,17 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
+	const setAvailFormElements = (element, disableMode = false) => 
+	{
+		if (disableMode == false) {
+			element.classList.remove('hidden');
+			element.disabled = false;
+		} else if (disableMode == true) {
+			element.classList.add('hidden');
+			element.disabled = true;
+		}
+	};
+
 	const initMosaicElems = function () {
 		if (showMosaicEditItems == '1') {
 			mosaicForm.reset();
@@ -3038,7 +3082,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		btnUpdateTaskStatus.classList.add('d-none');
 		btnUpdateTaskStatus.disabled = true;
 		btnAddTaskStatus.classList.remove('d-none');
-		// creatorApply.classList.add('d-none');
 		previousElem = null;
 		selectTR('.task-ticket-status');
 	});
@@ -3102,7 +3145,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	// 	const target = e.target.closest('a');
 	// 	const inputCreatorName = document.querySelector('#' + target.dataset['input_id']);
 	// 	if (inputCreatorName) {
-	// 		console.log(taskStatus_id.value, inputCreatorName.name);
 	// 		const body = {
 	// 			method: 'updateCreator',
 	// 			params: {
@@ -3203,13 +3245,17 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(item => {
 				let selected = '';
-				if (extends_data === item.element) {
+				if (extends_data['element'] === item.element) {
 					selected = 'selected';
 				}
+				
 				selPrimeElement.insertAdjacentHTML('beforeend', `
 					<option data-id="${item.id}" value="${item.element}" ${selected}>${item.element}</option>
 				`);
-			}); 
+			});
+			if (activity !== '') {
+				selPrimeElement.dataset.activity = (extends_data['activity'] === undefined) ? '' : extends_data['activity'];
+			}
 		} else {
 			selPrimeElement.insertAdjacentHTML('beforeend', `
 				<option value="" selected></option>
@@ -3223,7 +3269,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(item => {
 				let selected = '';
-				if (extends_data === item.element) {
+				if (extends_data['activity'] === item.element) {
 					selected = 'selected';
 				}
 				selActivity.insertAdjacentHTML('beforeend', `
@@ -3248,21 +3294,20 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 		});
 		document.querySelectorAll('.renderOnly').forEach(item => {
-			if (adminEnabled) {
-				item.disabled = true;
-				item.classList.add('hidden');
-			} else {
-				item.disabled = false;
-				item.classList.remove('hidden');
+			if (!item.classList.contains('js-hard-code-design')) {
+				setAvailFormElements(item, !!adminEnabled);
 			}
 		});
 
 		efcrFields.value = "";
 		const efcrFieldsArr = [];
-		document.querySelectorAll('.js-dipOnly').forEach(item => {
+		// 
+		// document.querySelectorAll('.js-dipOnly').forEach(item => {
+		document.querySelectorAll('.js-eFCR-view').forEach(item => {
 			if (templateDip) {
-				item.disabled = false;
-				item.classList.remove('hidden');
+				// item.disabled = false;
+				// item.classList.remove('hidden');
+				// setAvailFormElements(item, false);
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = false;
 					if (inputElem.dataset['ecfr'] == "1") {
@@ -3270,16 +3315,15 @@ window.addEventListener('DOMContentLoaded', () => {
 					}
 				});
 			} else {
-				item.disabled = true;
-				item.classList.add('hidden');
-				// console.log(item);
+				// item.disabled = true;
+				// item.classList.add('hidden');
+				// setAvailFormElements(item, true);
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = true;
 				});
 			}
 		});
 		efcrFields.value = JSON.stringify(efcrFieldsArr);
-		
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(({groupID, hidden, fields, disabled=false}) => {
 				try {
@@ -3298,10 +3342,12 @@ window.addEventListener('DOMContentLoaded', () => {
 								fieldIn.classList.add(inputSelectorClass);
 							}
 						});
-						if ((adminEnabled && !group.classList.contains('js-dipOnly')) || 
-						 (adminEnabled && group.classList.contains('js-dipOnly') && templateDip) || 
-						 (!hidden && group.classList.contains('js-dipOnly') && templateDip) || 
-						 (!hidden && !group.classList.contains('js-dipOnly'))) {
+						if ((adminEnabled && !group.classList.contains('renderOnly')) || 
+						(!hidden && !group.classList.contains('js-hard-code-design'))) {
+						// if ((adminEnabled && !group.classList.contains('js-dipOnly')) || 
+						//  (adminEnabled && group.classList.contains('js-dipOnly') && templateDip) || 
+						//  (!hidden && group.classList.contains('js-dipOnly') && templateDip) || 
+						//  (!hidden && !group.classList.contains('js-dipOnly'))) {
 							group.classList.remove('hidden');
 						} else {
 							group.classList.add('hidden');
@@ -3322,9 +3368,12 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 			checkInputsData(`.${inputSelectorClass}`);
 		}
+
+		if (!!hardCodeDesign[gActivityName] && !adminEnabled) {
+			showHardCodeDesign(hardCodeDesign[gActivityName].split(','));
+		}
 	};
 
-	// const refresh
 	const iniOGPA = (extends_data = '') => {
 		const body = {
 			method: 'getOGPA',
@@ -3343,6 +3392,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 	const getActivityFields = (activityID) => {
+		resetHardCodeDesign();
 		const body = {
 			method: 'getActivityFields',
 			id: activityID
@@ -3428,7 +3478,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			let fieldGroup = {};
 			fieldGroup.groupID = fieldset.id;
 			fieldGroup.hidden = 0;
-			fieldGroup.disabled = 0;
+			fieldGroup.disabled = false;
 			let fieldsArr = [];
 			for (let fieldEl of fieldset.elements) {
 				if (fieldEl.tagName === 'INPUT' || 
@@ -3464,7 +3514,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const submitRenderForm = (renderForm) => {
+	const submitRenderForm = (renderForm, gActivityID) => {
 		formAdmin.querySelectorAll('.renderData').forEach(item => {
 			const added_input = document.createElement("input");
 			added_input.name = item.dataset['value_name'];
@@ -3472,6 +3522,18 @@ window.addEventListener('DOMContentLoaded', () => {
 			added_input.type = "hidden";
 			renderForm.append(added_input);
 		});
+		const added_ActivityID = document.createElement("input");
+		added_ActivityID.name = 'activityID';
+		added_ActivityID.value = gActivityID;
+		added_ActivityID.type = "hidden";
+		const added_counterMode = document.createElement("input");
+		added_counterMode.name = 'counterMode';
+		added_counterMode.value = gCounterMode;
+		added_counterMode.type = "hidden";
+		
+		renderForm.append(added_ActivityID);
+		renderForm.append(added_counterMode);
+		
 		const rows_object = {}
 		renderForm.querySelectorAll("[data-parent='self']").forEach(item => {
 			const rows_arr = [];
@@ -3509,6 +3571,31 @@ window.addEventListener('DOMContentLoaded', () => {
 		divCounter.innerText = `${progress}% (${changedInputs} of ${totalInputs})`;
 	};
 
+	const resetHardCodeDesign = () => {
+		for (const value of Object.values(hardCodeDesign)) {
+			const classesHide = value.split(',');
+			classesHide.forEach(item => {
+				try {
+					const fieldset = document.querySelector(`.${item.trim()}`);
+					// fieldset.classList.add('hidden');
+					// fieldset.disabled = true;
+					setAvailFormElements(fieldset, true);
+				} catch (e) {
+				}
+			});
+		}
+	};
+
+	const showHardCodeDesign = (classesList) => {
+		classesList.forEach(item => {
+			try {
+				const fieldset = document.querySelector(`.${item.trim()}`);
+				setAvailFormElements(fieldset, false);
+			} catch (e) {
+			}
+		});
+	}
+
 	formAdmin.addEventListener('reset', (e) => {
 		const target = e.target;
 	});
@@ -3532,7 +3619,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (adminEnabled) {
 			submitAdminForm(target, gActivityID);
 		} else {
-			submitRenderForm(target);
+			submitRenderForm(target, gActivityID);
 		}
 	});
 
@@ -3579,7 +3666,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
 			if (data && data.success && data.success.answer) {
-				showOGPA(data, newPrimeElem.value);
+				showOGPA(data, {'element':newPrimeElem.value});
 				newPrimeElem.value = '';
 			}
 		});
@@ -3637,7 +3724,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
 			if (data && data.success && data.success.answer) {
-				showOGPAActivity(data, newActivity.value);
+				showOGPAActivity(data, {'activity':newActivity.value});
 				newActivity.value = '';
 			}
 		});
@@ -3651,8 +3738,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			btnNewActivity.dataset.prime_elem_id = id;
 			btnNewPrimeElem.dataset.prime_elem_id = id;
 			gPrimeElementID = id;
+			const activity = target.dataset.activity;
 			switchToNew(btnEditPrimeElem);
-			iniOGPAActivity(id);
+			iniOGPAActivity(id, {'activity':activity});
 		} catch (e) {
 			showActivityFields(null);
 		}
@@ -3668,6 +3756,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		} catch (e) {
 		}
 		gActivityID = id;
+		gActivityName = target.value;
 		newActivity.value = '';
 		switchBtnMode({
 			elem: btnEditActivity,

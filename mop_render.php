@@ -1,7 +1,11 @@
 <?php
 require 'vendor/autoload.php';
+require_once 'db_conf.php';
+require_once 'classDatabase.php';
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$db_object = new mySQLDatabaseUtils\databaseUtilsMOP();
 
 $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/mop_template.docx');
 $efcrFile = file('template/eFCR.txt');
@@ -12,6 +16,8 @@ $implFile = false;
 $efcrFieldsArr = [];
 $efcrOutput = [];
 $ercfProcess = [];
+$activityID = 0;
+$counterMode = 0;
 
 
 function getLinesFromTextArea($taText) {
@@ -41,10 +47,18 @@ foreach ($_POST as $param => $value) {
         ];
     }
 }
-// $templateProcessor->cloneBlock('testReplaceBlock', 0, true, true);
+
 foreach ($_POST as $param => $value) {
     if (in_array($param, $efcrFieldsArr)) {
         $ercfProcess[$param] = $value;
+        continue;
+    }
+    if ($param === 'activityID') {
+        $activityID = (int)$value;
+        continue;
+    }
+    if ($param === 'counterMode') {
+        $counterMode = $value;
         continue;
     }
     if (is_array($value)) {
@@ -154,6 +168,12 @@ $templateProcessor->setValues([
 
 
 $templateProcessor->saveAs($filename);
+
+if ($counterMode !=0 ) {
+    $db_object->incActivityCounter($activityID, $counterMode);
+}
+// $db_object->getActivitiesCounter($activityID);
+
 
 // write file to embedded docx
 if ($implFile != false) {
