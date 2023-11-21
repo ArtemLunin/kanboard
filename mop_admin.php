@@ -18,6 +18,8 @@ $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
 $value = $paramJSON['value'] ?? $_REQUEST['value'] ?? 0;
 $parentId = $paramJSON['parentId'] ?? $_REQUEST['parentId'] ?? 0;
 $id = $paramJSON['id'] ?? $_REQUEST['id'] ?? 0;
+$activity = $paramJSON['activity'] ?? $_REQUEST['activity'] ?? 0;
+$element = $paramJSON['element'] ?? $_REQUEST['element'] ?? 0;
 
 // $db_object = new databaseUtils();
 $db_object = new mySQLDatabaseUtils\databaseUtilsMOP();
@@ -44,6 +46,8 @@ if ($method !== 0)
 		$param_error_msg['answer'] = $db_object->getActivityFields($id);
 	} elseif ($method === 'setActivityFields' && $id && is_array($value)) {
 		$param_error_msg['answer'] = $db_object->setActivityFields($value, $id);
+	} elseif ($method === 'exportToSQL' && $element && $activity) {
+		$param_error_msg['answer'] = $db_object->exportActivity($element, $activity);
 	}
     $out_res = ['success' => $param_error_msg];
 }

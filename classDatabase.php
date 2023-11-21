@@ -655,4 +655,28 @@ class databaseUtilsMOP {
 		    $this->errorLog($error_txt_info, 1);
 		}
 	}
+
+	function exportActivity($element, $activity) {
+		$sql = 'SELECT pe.element, act.activity, mf.field_json_props FROM prime_element AS pe, activities AS act, mop_fields AS mf WHERE pe.element=:element AND act.activity=:activity AND act.id_parent_element=pe.id AND mf.id_parent_activity=act.id';
+		try {
+            if ($table_res = $this->getSQL($sql, [
+				'element'	=> $element,
+				'activity'	=> $activity,
+			]))
+            {
+				$field_json_props = [];
+				$field_json_props['fields'] = json_decode($table_res[0]['field_json_props'], true);
+				$exportFile = fopen('temp/ogpa_export.json','w');
+				$field_json_props['primeElement'] = $element;
+				$field_json_props['activity'] = $activity;
+
+				fwrite($exportFile, json_encode($field_json_props));
+				fclose($exportFile);
+				return pathinfo('temp/ogpa_export.json', PATHINFO_BASENAME);
+			}
+		} catch (Throwable $e) {
+			$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
+		    $this->errorLog($error_txt_info, 1);
+		}
+	}
 }

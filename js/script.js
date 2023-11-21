@@ -354,7 +354,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		docTitle = document.querySelector('#docTitle'),
         showAll = document.querySelector('#showAll'),
 		efcrFields = document.querySelector('#efcrFields'),
-		btnsCeilAreaAppend = document.querySelectorAll('.js-ceil-area-append');
+		btnsCeilAreaAppend = document.querySelectorAll('.js-ceil-area-append'),
+		visibleSuperOnly = document.querySelectorAll('.js-superOnly'),
+		aExport = document.querySelector('#a_export');
 
 		showAll.checked = false;
 
@@ -1191,6 +1193,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		currentUser = '';
 		clearEditableFields();
 		clearAllSection('data-showned');
+		hideSuperUserElems();
 		let body = {
 			method: 'getRights',
 		};
@@ -1431,6 +1434,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			/* else if (currentHash === 'documentation' && !!rights[currentHash]) {
 				section = 'documentation';
 			} */
+			if (currentUser === 'super') {
+				showSuperUserElems();
+			}
 			selectMenuItem(menu, section);
 			toggleSection(section);
 		}
@@ -2655,6 +2661,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			element.classList.remove('hidden');
 			element.disabled = false;
 		} else if (disableMode == true) {
+			console.log(element);
 			element.classList.add('hidden');
 			element.disabled = true;
 		}
@@ -3287,7 +3294,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	const showActivityFields = (data) => {
 		formFields.reset();
 		document.querySelectorAll('fieldset.hidden').forEach(item => {
-			if (adminEnabled) {
+			if (adminEnabled && !item.classList.contains('js-hard-code-design')) {
+				console.log(item);
 				item.classList.remove('hidden');
 			} else {
 				item.classList.add('hidden');
@@ -3295,7 +3303,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 		document.querySelectorAll('.renderOnly').forEach(item => {
 			if (!item.classList.contains('js-hard-code-design')) {
+				// console.log(item, !!adminEnabled);
 				setAvailFormElements(item, !!adminEnabled);
+			} else {
+				// setAvailFormElements(item, !!adminEnabled);
 			}
 		});
 
@@ -3305,9 +3316,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		// document.querySelectorAll('.js-dipOnly').forEach(item => {
 		document.querySelectorAll('.js-eFCR-view').forEach(item => {
 			if (templateDip) {
-				// item.disabled = false;
-				// item.classList.remove('hidden');
-				// setAvailFormElements(item, false);
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = false;
 					if (inputElem.dataset['ecfr'] == "1") {
@@ -3315,9 +3323,6 @@ window.addEventListener('DOMContentLoaded', () => {
 					}
 				});
 			} else {
-				// item.disabled = true;
-				// item.classList.add('hidden');
-				// setAvailFormElements(item, true);
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = true;
 				});
@@ -3368,8 +3373,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 			checkInputsData(`.${inputSelectorClass}`);
 		}
-
-		if (!!hardCodeDesign[gActivityName] && !adminEnabled) {
+		if (!!hardCodeDesign[gActivityName] && !adminEnabled && document.title == 'Roaming FCR') {
 			showHardCodeDesign(hardCodeDesign[gActivityName].split(','));
 		}
 	};
@@ -3577,8 +3581,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			classesHide.forEach(item => {
 				try {
 					const fieldset = document.querySelector(`.${item.trim()}`);
-					// fieldset.classList.add('hidden');
-					// fieldset.disabled = true;
+					console.log(fieldset);
 					setAvailFormElements(fieldset, true);
 				} catch (e) {
 				}
@@ -3588,12 +3591,26 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const showHardCodeDesign = (classesList) => {
 		classesList.forEach(item => {
+			console.log(item);
 			try {
 				const fieldset = document.querySelector(`.${item.trim()}`);
+				console.log(fieldset);
 				setAvailFormElements(fieldset, false);
 			} catch (e) {
 			}
 		});
+	};
+
+	const showSuperUserElems = () => {
+		visibleSuperOnly.forEach(item => {
+			item.classList.remove('hidden');
+		});
+	};
+
+	const hideSuperUserElems = () => {
+		visibleSuperOnly.forEach(item => {
+			item.classList.add('hidden');
+		});	
 	}
 
 	formAdmin.addEventListener('reset', (e) => {
@@ -3790,6 +3807,18 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.classList.remove('showned');
 			});
 		}
+	});
+
+	aExport.addEventListener('click', (e) => {
+		e.preventDefault();
+		const body = {
+			method: 'exportToSQL',
+			element: selPrimeElement.value,
+			activity: selActivity.value,
+		};
+		sendRequest('POST', requestURLTemplate, body).then((data) => {
+			console.log(data);
+		});
 	});
 
 	// btnCeilAreaAppend.addEventListener('click', (e) => {
