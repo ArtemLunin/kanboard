@@ -11,7 +11,7 @@ function exceptions_error_handler($severity, $message, $filename, $lineno) {
 set_error_handler('exceptions_error_handler');
 
 $out_res = [];
-$param_error_msg['answer'] = [];
+$param_error_msg['answer'] = false;
 
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
@@ -19,9 +19,17 @@ $value = $paramJSON['value'] ?? $_REQUEST['value'] ?? 0;
 $parentId = $paramJSON['parentId'] ?? $_REQUEST['parentId'] ?? 0;
 $id = $paramJSON['id'] ?? $_REQUEST['id'] ?? 0;
 $activity = $paramJSON['activity'] ?? $_REQUEST['activity'] ?? 0;
-$element = $paramJSON['element'] ?? $_REQUEST['element'] ?? 0;
+$element = $paramJSON['primeElement'] ?? $_REQUEST['primeElement'] ?? 0;
+$fileJSON = 0;
+$importOGPAData = 0;
 
-// $db_object = new databaseUtils();
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$paramJSON) {
+	if (isset($_FILES['importFileJSON']) && is_uploaded_file($_FILES['importFileJSON']['tmp_name'])) {
+		$fileJSON = file_get_contents($_FILES['importFileJSON']['tmp_name']);
+		$importOGPAData = json_decode($fileJSON, true);
+	}
+}
+
 $db_object = new mySQLDatabaseUtils\databaseUtilsMOP();
 
 if ($method !== 0)
@@ -46,8 +54,10 @@ if ($method !== 0)
 		$param_error_msg['answer'] = $db_object->getActivityFields($id);
 	} elseif ($method === 'setActivityFields' && $id && is_array($value)) {
 		$param_error_msg['answer'] = $db_object->setActivityFields($value, $id);
-	} elseif ($method === 'exportToSQL' && $element && $activity) {
+	} elseif ($method === 'exportToJSON' && $element && $activity) {
 		$param_error_msg['answer'] = $db_object->exportActivity($element, $activity);
+	} elseif ($method === 'importFromJSON' && isset($importOGPAData['fields']) && $element && $activity) {
+		$param_error_msg['answer'] = $db_object->importActivity($importOGPAData['fields'], $element, $activity);
 	}
     $out_res = ['success' => $param_error_msg];
 }

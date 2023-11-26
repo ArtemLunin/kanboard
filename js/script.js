@@ -21,6 +21,15 @@ let gPrimeElementID = 0,
 const hardCodeDesign = {
 	'Add/Change/Remove Roaming': 'js-eFCR-view'
 };
+const sectionChildren = {
+	'dip': {
+		'Roaming FCR': 
+		[
+			'Firewall',
+			'Add/Change/Remove Roaming'
+		]
+	}
+};
 
 const entityMap = {
   '&': '&amp;',
@@ -49,15 +58,6 @@ const sections = [
 	'action',
 ];
 
-const sectionChildren = {
-	'dip': {
-		'Roaming FCR': 
-		[
-			'Firewall',
-			'Add/Change/Remove Roaming'
-		]
-	}
-};
 
 const defaultUserRights = [];
 
@@ -355,8 +355,10 @@ window.addEventListener('DOMContentLoaded', () => {
         showAll = document.querySelector('#showAll'),
 		efcrFields = document.querySelector('#efcrFields'),
 		btnsCeilAreaAppend = document.querySelectorAll('.js-ceil-area-append'),
+		exportDownload = document.querySelector('.js-export-download'),
 		visibleSuperOnly = document.querySelectorAll('.js-superOnly'),
-		aExport = document.querySelector('#a_export');
+		aExport = document.querySelector('#a_export'),
+		aImport = document.querySelector('#importFileJSON');
 
 		showAll.checked = false;
 
@@ -373,15 +375,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		adminEnabled = adminView;
 		if (adminView) {
 			adminViewElems.forEach((elem) => {
-				// elem.classList.remove('hidden');
-				// elem.disabled = false;
-				setAvailFormElements(elem, false);
+				if (!elem.classList.contains('js-superOnly') || 
+				(currentUser === 'super' && elem.classList.contains('js-superOnly'))) {
+					setAvailFormElements(elem, false);
+				}
 			});
 			formSubmit.innerText = 'Apply';
 		} else {
 			adminViewElems.forEach((elem) => {
-				// elem.classList.add('hidden');
-				// elem.disabled = true;
 				setAvailFormElements(elem, true);
 			});
 			formSubmit.innerText = 'Create';
@@ -1434,9 +1435,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			/* else if (currentHash === 'documentation' && !!rights[currentHash]) {
 				section = 'documentation';
 			} */
-			if (currentUser === 'super') {
-				showSuperUserElems();
-			}
 			selectMenuItem(menu, section);
 			toggleSection(section);
 		}
@@ -2504,6 +2502,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (previousModal) {
 			$(previousModal).modal('hide');
 		}
+		// console.log(dialogModalProps.selector);
 		$(dialogModalProps.selector).modal({
   			keyboard: true
 		});
@@ -2614,7 +2613,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		return OTLStatus;
 	};
 
-
 	const selectStatus = (e) => {
 		e.preventDefault();
 		const target = e.target;
@@ -2661,7 +2659,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			element.classList.remove('hidden');
 			element.disabled = false;
 		} else if (disableMode == true) {
-			console.log(element);
+			// console.log(element);
 			element.classList.add('hidden');
 			element.disabled = true;
 		}
@@ -2737,6 +2735,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		{
 			case 'deleteDevice':
 				deleteDevice(target.dataset['id']);
+				break;
+			case 'importOGPA':
+				importOGPA({
+					'element': target.dataset.element,
+					'acivity': target.dataset.activity
+				});
 				break;
 		}
 	};
@@ -3271,7 +3275,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		selPrimeElement.dispatchEvent(new Event('change'));
 	};
 
-	const showOGPAActivity = (data, extends_data) => {
+	const showOGPAActivity = (data, extends_data = {}) => {
 		selActivity.textContent = '';
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(item => {
@@ -3295,7 +3299,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		formFields.reset();
 		document.querySelectorAll('fieldset.hidden').forEach(item => {
 			if (adminEnabled && !item.classList.contains('js-hard-code-design')) {
-				console.log(item);
 				item.classList.remove('hidden');
 			} else {
 				item.classList.add('hidden');
@@ -3303,17 +3306,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 		document.querySelectorAll('.renderOnly').forEach(item => {
 			if (!item.classList.contains('js-hard-code-design')) {
-				// console.log(item, !!adminEnabled);
 				setAvailFormElements(item, !!adminEnabled);
 			} else {
-				// setAvailFormElements(item, !!adminEnabled);
 			}
 		});
 
 		efcrFields.value = "";
 		const efcrFieldsArr = [];
-		// 
-		// document.querySelectorAll('.js-dipOnly').forEach(item => {
+
 		document.querySelectorAll('.js-eFCR-view').forEach(item => {
 			if (templateDip) {
 				item.querySelectorAll('input').forEach(inputElem => {
@@ -3349,22 +3349,11 @@ window.addEventListener('DOMContentLoaded', () => {
 						});
 						if ((adminEnabled && !group.classList.contains('renderOnly')) || 
 						(!hidden && !group.classList.contains('js-hard-code-design'))) {
-						// if ((adminEnabled && !group.classList.contains('js-dipOnly')) || 
-						//  (adminEnabled && group.classList.contains('js-dipOnly') && templateDip) || 
-						//  (!hidden && group.classList.contains('js-dipOnly') && templateDip) || 
-						//  (!hidden && !group.classList.contains('js-dipOnly'))) {
 							group.classList.remove('hidden');
 						} else {
 							group.classList.add('hidden');
-							// group.disabled = false;
-							// 	group.querySelectorAll("[data-dip-only='1']").forEach(item => {
-							// 		item.disabled = false;
-							// 	});
 							if (disabled) {
 								group.disabled = true;
-								// group.querySelectorAll("[data-dip-only='1']").forEach(item => {
-								// 	item.disabled = true;
-								// });
 							}
 						}
 					}
@@ -3581,7 +3570,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			classesHide.forEach(item => {
 				try {
 					const fieldset = document.querySelector(`.${item.trim()}`);
-					console.log(fieldset);
+					// console.log(fieldset);
 					setAvailFormElements(fieldset, true);
 				} catch (e) {
 				}
@@ -3591,10 +3580,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const showHardCodeDesign = (classesList) => {
 		classesList.forEach(item => {
-			console.log(item);
 			try {
 				const fieldset = document.querySelector(`.${item.trim()}`);
-				console.log(fieldset);
 				setAvailFormElements(fieldset, false);
 			} catch (e) {
 			}
@@ -3612,6 +3599,23 @@ window.addEventListener('DOMContentLoaded', () => {
 			item.classList.add('hidden');
 		});	
 	}
+
+	const showRequestError = (errorMessage) => {
+		containerError.innerText = errorMessage;
+		containerError.classList.remove('d-none');
+	}
+
+	const importOGPA = ({element, acivity}) => { 
+		const formData = new FormData(formAdmin);
+		formData.append('method', 'importFromJSON');
+		formData.append('primeElement', element);
+		formData.append('acivity', acivity);
+
+		sendFile('POST', requestURLTemplate, formData).then((data) => {
+			showActivityFields(data);
+		});
+
+	};
 
 	formAdmin.addEventListener('reset', (e) => {
 		const target = e.target;
@@ -3812,12 +3816,34 @@ window.addEventListener('DOMContentLoaded', () => {
 	aExport.addEventListener('click', (e) => {
 		e.preventDefault();
 		const body = {
-			method: 'exportToSQL',
-			element: selPrimeElement.value,
+			method: 'exportToJSON',
+			primeElement: selPrimeElement.value,
 			activity: selActivity.value,
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
-			console.log(data);
+			exportDownload.classList.add('hidden');
+			if (data && data.success && data.success.answer) {
+				const temp_href = exportDownload.querySelector('A');
+				temp_href.href = data.success.answer;
+				temp_href.click();
+			} else {
+				showRequestError('Export to JSON unsuccessful');
+			}
+		});
+	});
+
+	aImport.addEventListener('change', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		showModalDialog({
+			attributes: [
+				{'modal-command': 'importOGPA'},
+				// {'data-file-name': target.files[0].name},
+				{'data-element': selPrimeElement.value},
+				{'data-activity': selActivity.value},
+			],
+			dialogTitle: 'Import OGPA config',
+			dialogQuestion: `Do you want to import OGPA from JSON (current settings will be overwritten)?`,
 		});
 	});
 

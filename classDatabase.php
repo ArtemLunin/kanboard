@@ -398,6 +398,8 @@ class databaseUtils {
 
 class databaseUtilsMOP {
     private $pdo = null;
+	private const OGPAEXPORTFILE = 'ogpa_export.json';
+	private const PATHEXPORTFILE = 'temp'; 
 
     function __construct () {
 		try
@@ -648,7 +650,7 @@ class databaseUtilsMOP {
 					}
 				}
 			}
-			error_log("ogpa:\n".print_r($ogpaCounters, true));
+			// error_log("ogpa:\n".print_r($ogpaCounters, true));
 			return $ogpaCounters;
 		} catch (Throwable $e) {
 			$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
@@ -666,17 +668,39 @@ class databaseUtilsMOP {
             {
 				$field_json_props = [];
 				$field_json_props['fields'] = json_decode($table_res[0]['field_json_props'], true);
-				$exportFile = fopen('temp/ogpa_export.json','w');
+				if (!is_dir(self::PATHEXPORTFILE)) {
+					if (!mkdir(self::PATHEXPORTFILE)) {
+						return false;
+					}
+				}
+				$exportFile = fopen(self::PATHEXPORTFILE.'/'.self::OGPAEXPORTFILE,'w');
 				$field_json_props['primeElement'] = $element;
 				$field_json_props['activity'] = $activity;
 
 				fwrite($exportFile, json_encode($field_json_props));
 				fclose($exportFile);
-				return pathinfo('temp/ogpa_export.json', PATHINFO_BASENAME);
+				return self::PATHEXPORTFILE.'/'.self::OGPAEXPORTFILE;
 			}
 		} catch (Throwable $e) {
 			$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
 		    $this->errorLog($error_txt_info, 1);
 		}
 	}
+
+	function importActivity($importOGPAData, $element, $activity) {
+		$sql = 'SELECT act.id FROM prime_element AS pe, activities AS act WHERE pe.element=:element AND act.activity=:activity';
+		try {
+            if ($table_res = $this->getSQL($sql, [
+				'element'	=> $element,
+				'activity'	=> $activity,
+			]))
+            {
+				return $this->setActivityFields($importOGPAData, $table_res[0]['id']);
+			}
+		} catch (Throwable $e) {
+			$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
+		    $this->errorLog($error_txt_info, 1);
+		}
+	}
+	
 }

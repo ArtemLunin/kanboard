@@ -397,6 +397,11 @@ button[type="button"] {
     color: white;
     margin-top: 10px;
 }
+button[type="button"].import-json {
+    background-color: hsl(33, 50%, 50%);
+    color: white;
+    margin-top: 10px;
+}
 button:active {
     -webkit-box-shadow: inset 1px 1px 10px #333;
     -moz-box-shadow:    inset 1px 1px 10px #333;
