@@ -26,13 +26,10 @@ const sectionChildren = {
 		'Roaming FCR': 
 		[
 			'Firewall',
-			'Add/Change/Remove Roaming',
-			'fcr'
+			'Add/Change/Remove Roaming'
 		]
 	}
 };
-
-const subMenuClass = 'children-menu';
 
 const entityMap = {
   '&': '&amp;',
@@ -1347,7 +1344,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else if (target.dataset.section === 'login') {
 				toggleSignIn('show');
 			} else {
-				selectMenuItem(target.parentNode, target.dataset.section, (!!target.dataset.subsection) ? target.dataset.subsection : false);
+				selectMenuItem(target.parentNode, target.dataset.section);
 				toggleSection(target.dataset.section, 
 				{'element': (target.dataset.element === undefined) ? false : target.dataset.element, 
 				'activity': (target.dataset.activity === undefined) ? false : target.dataset.activity,
@@ -1356,25 +1353,18 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	const selectMenuItem = (menu, section, subsection = false) => {
+	const selectMenuItem = (menu, section) => {
 		Array.from(menu.children).forEach(item => {
 			item.style.backgroundColor = '';
 		});
 		try {
-			if (subsection) {
-				menu.querySelector(`[data-section="${section}"][data-subsection="${subsection}"]`).style.backgroundColor = 'rgba(0,0,0,0.1)';
-			} else {
-				menu.querySelector(`[data-section="${section}"]`).style.backgroundColor = 'rgba(0,0,0,0.1)';
-			}
-			
-		} catch (e) {
-		};
+			menu.querySelector(`[data-section="${section}"]`).style.backgroundColor = 'rgba(0,0,0,0.1)';
+		} catch (e) {};
 	};
 
 	const showInterface = (data) => {
 		let loginAction = 'logout';
 		const rights = {};
-		let subMenuClass_ = '';
 		if (data) {
 			menu.textContent = '';
 			if (!!data.success) {
@@ -1393,7 +1383,6 @@ window.addEventListener('DOMContentLoaded', () => {
 						}
 						if (accessType != '') {	
 							rights[sectionName] = accessType;
-							// console.log(sectionName);
 							menu.insertAdjacentHTML('beforeend', `
 							<li data-section="${sectionAttr}" data-access="${accessType}">${pageName}</li>
 							`);
@@ -1401,11 +1390,9 @@ window.addEventListener('DOMContentLoaded', () => {
 								for (const [key, value] of Object.entries (sectionChildren[sectionName])) {
 									menu.insertAdjacentHTML('beforeend', `<li data-section="${sectionAttr}" 
 									data-visible-name="${key}" 
-									data-access="${accessType}" data-element="${value[0]}" data-activity="${value[1]}"
-									data-subsection="${value[2]} class="${subMenuClass}">- ${key}</li>
+									data-access="${accessType}" data-element="${value[0]}" data-activity="${value[1]}" class="children-menu">- ${key}</li>
 									`);
 								}
-								// subMenuClass_ = '.' + subMenuClass;
 							}
 							if (sectionName === 'excel')
 							{
@@ -1448,7 +1435,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			/* else if (currentHash === 'documentation' && !!rights[currentHash]) {
 				section = 'documentation';
 			} */
-
 			selectMenuItem(menu, section);
 			toggleSection(section);
 		}

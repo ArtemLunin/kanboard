@@ -11,8 +11,7 @@ $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/mop_temp
 $efcrFile = file('template/eFCR.txt');
 
 $filename = tempnam(sys_get_temp_dir(), 'docx');
-$resultFileName = "untitled";
-$fileNamePart1 = $fileNamePart2 = "";
+$resultFileName = "work_mop.docx";
 $implFile = false;
 $efcrFieldsArr = [];
 $efcrOutput = [];
@@ -81,26 +80,14 @@ foreach ($_POST as $param => $value) {
         }
         $templateProcessor->cloneBlock($arrayBlocks[$param]["blockName"], 0, true, false, $replacements);
     }
-    if ($param === 'projectNumber') {
+    if ($param === 'projectDetail') {
         if (trim($value) !== '') {
-            $fileNamePart1 = $value;
-            // .".docx";
-        }
-        // } else {
-        //     $resultFileName = "untitled.docx";
-        // }
-    }
-    if ($param === 'projectName') {
-        if (trim($value) !== '') {
-            $fileNamePart2 = $value;
+            $resultFileName = $value.".docx";
+        } else {
+            $resultFileName = "untitled.docx";
         }
     }
 }
-if ($fileNamePart1 !== "" || $fileNamePart2 !== "") {
-    $resultFileName = $fileNamePart1."-".$fileNamePart2;
-}
-
-$resultFileName .= ".docx";
 
 if ($efcrFile) {
     $ip_arrs = json_decode($ercfProcess['ceilIP'], true);
