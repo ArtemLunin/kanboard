@@ -23,6 +23,12 @@ const hardCodeDesign = {
 };
 const sectionChildren = {
 	'dip': {
+		// 'Capacity':
+		// [
+		// 	'Capacity',
+		// 	'Capacity',
+		// 	'capacity'
+		// ],
 		'Roaming FCR': 
 		[
 			'Firewall',
@@ -57,6 +63,8 @@ const sections = [
 	'mop',
 	'template DIP',
 	'dip',
+	'capacity',
+	'inventory',
 	// 'documentation',
 	'action',
 ];
@@ -101,6 +109,8 @@ let filesTemplate, xls_files;
 //documentation section
 let savedPageName = 'New Page',
 	page_id = '0';
+
+const inventoryTagsSet = new Set(['one', 'two', 'three']);
 
 // common functions
 // for sort in ORDER DESC by default
@@ -362,6 +372,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		visibleSuperOnly = document.querySelectorAll('.js-superOnly'),
 		aExport = document.querySelector('#a_export'),
 		aImport = document.querySelector('#importFileJSON');
+
+		// inventory elements
+	const tableInventory = document.querySelector('#table-inventory'),
+		tableParts = document.querySelector('#table-parts'),
+		tableTags = document.querySelector('#table-tags'),
+		inventoryTags = document.querySelector('.inventory-tags');
+		// newTag = document.querySelector('.new-tag');
 
 		showAll.checked = false;
 
@@ -1227,6 +1244,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		let idx = 0;
 		showSection = showSection.replace(/\s+/g, '');
 		if (showSection !== 'documentation') {
+			// section is document.querySelectorAll('.section');
 			section.forEach((item, i) => {
 				item.style.display = "none";
 				if (showSection && item.classList.contains(showSection)) {
@@ -1316,8 +1334,13 @@ window.addEventListener('DOMContentLoaded', () => {
 				gCounterMode = "dipCounter";
 				displayMOPElements(false);
 				if (addParams['element']) {
-					document.title = addParams['visibleName'];
-					iniOGPA(addParams);
+					if (addParams['element'] === 'Capacity') {
+						document.title = addParams['visibleName'];
+						// console.log('capacity');
+					} else {
+						document.title = addParams['visibleName'];
+						iniOGPA(addParams);
+					}
 				} else {
 					iniOGPA();
 				}
@@ -1402,7 +1425,7 @@ window.addEventListener('DOMContentLoaded', () => {
 									menu.insertAdjacentHTML('beforeend', `<li data-section="${sectionAttr}" 
 									data-visible-name="${key}" 
 									data-access="${accessType}" data-element="${value[0]}" data-activity="${value[1]}"
-									data-subsection="${value[2]} class="${subMenuClass}">- ${key}</li>
+									data-subsection="${value[2]}" class="${subMenuClass}">- ${key}</li>
 									`);
 								}
 								// subMenuClass_ = '.' + subMenuClass;
@@ -2619,6 +2642,50 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
+	tableInventory.addEventListener('click', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		const expandInventory = target.closest('.js-expandInventory');
+		const deleteTag = target.closest('.delete-tag');
+		if (expandInventory) {
+			if (expandInventory.dataset['expanded'] == '1') {
+				const inventoryChilds = expandInventory.closest('table').querySelector('#inventoryChilds');
+				try {
+					inventoryChilds.remove();
+				} catch (e) {
+				}
+				tableParts.classList.add('hidden');
+				tableTags.classList.add('hidden');
+				expandInventory.dataset['expanded'] = '0';
+			} else {
+				const rowIndex = expandInventory.closest('tr').rowIndex;
+				const newRow = expandInventory.closest('table').insertRow(rowIndex+1);
+				newRow.id = 'inventoryChilds';
+				const newCell = newRow.insertCell();
+				newCell.colSpan = expandInventory.closest('tr').cells.length;
+				newCell.append(tableParts, tableTags);
+				tableParts.classList.remove('hidden');
+				tableTags.classList.remove('hidden');
+				expandInventory.dataset['expanded'] = '1';
+				fillInventoryTags(inventoryTagsSet);
+			}
+		} else if (deleteTag) {
+			inventoryTagsSet.delete(deleteTag.closest('.inventory-tag').dataset.tag);
+			fillInventoryTags(inventoryTagsSet);
+		}
+	});
+
+	inventoryTags.addEventListener("keydown", (event) => {
+		const newTag = event.target.closest('.new-tag');
+		if (newTag) {
+			if (event.code === 'Enter') {
+				event.preventDefault();
+				inventoryTagsSet.add(newTag.innerText);
+				fillInventoryTags(inventoryTagsSet);
+			}
+		}
+	});
+
 	const getOTL = (fieldsKanboard) => {
 		let OTLStatus = '';
 		if (!!fieldsKanboard['otl'] && fieldsKanboard['otl'] !== '') {
@@ -2673,7 +2740,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			element.classList.remove('hidden');
 			element.disabled = false;
 		} else if (disableMode == true) {
-			// console.log(element);
 			element.classList.add('hidden');
 			element.disabled = true;
 		}
@@ -3584,7 +3650,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			classesHide.forEach(item => {
 				try {
 					const fieldset = document.querySelector(`.${item.trim()}`);
-					// console.log(fieldset);
 					setAvailFormElements(fieldset, true);
 				} catch (e) {
 				}
@@ -3629,6 +3694,20 @@ window.addEventListener('DOMContentLoaded', () => {
 			showActivityFields(data);
 		});
 
+	};
+
+	const fillInventoryTags = (tags) => {
+		inventoryTags.textContent = '';
+		for (let tag of tags) {
+			inventoryTags.insertAdjacentHTML('beforeend', `
+				<span class="inventory-tag" data-tag="${tag}">${tag}
+					<a href="#" class="delete-tag">x</a>
+				</span>
+			`);
+		}
+		inventoryTags.insertAdjacentHTML('beforeend', `
+			<span class="inventory-tag new-tag" contenteditable>&nbsp;</span>
+		`);
 	};
 
 	formAdmin.addEventListener('reset', (e) => {

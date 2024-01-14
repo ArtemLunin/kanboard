@@ -532,3 +532,23 @@ input:read-only {
 .slider.round:before {
     border-radius: 50%;
 }
+.inventory-head {
+	margin-bottom: 5px;
+	padding: 5px;
+	font-weight: bold;
+	color: #495057;
+	background-color: #e9ecef;
+}
+.inventory-tag {
+	border: 1px solid #d5d5d5;
+	padding: 5px;
+	border-radius: 5px;
+	display: inline-block;
+	overflow: hidden;
+}
+.inventory-tag a {
+	margin-left: 10px;
+}
+.inventory-tag.new-tag {
+	width: 200px;
+}

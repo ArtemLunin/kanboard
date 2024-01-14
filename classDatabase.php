@@ -57,6 +57,18 @@ class databaseUtils {
 		'accessType'	=> 'admin',
 	],
 	[
+		'pageName' => 'Capacity',
+		'sectionName' => 'capacity',
+		'sectionAttr'	=> 'capacity',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'Inventory',
+		'sectionName' => 'inventory',
+		'sectionAttr'	=> 'inventory',
+		'accessType'	=> 'admin',
+	],
+	[
 		'pageName' => 'Settings',
 		'sectionName' => 'settings',
 		'sectionAttr'	=> 'settings',

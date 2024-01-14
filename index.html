@@ -1378,6 +1378,102 @@
 			<section class="section mop"></section>
 			<section class="section templateDIP"></section>
 			<section class="section dip"></section>
+			<section class="section capacity">
+				<fieldset class="">
+					<legend>Uplink/Downlink Information</legend>
+					<div class="param param-half">
+					</div>
+					<div class="param param-half">
+					</div>
+				</fieldset>
+				<fieldset class="">
+					<legend>SDE Crosslink Information</legend>
+					<div class="param param-half">
+					</div>
+					<div class="param param-half">
+					</div>
+				</fieldset>
+				<fieldset class="">
+					<legend>IP Core Crosslink Information</legend>
+					<div class="param param-half">
+					</div>
+					<div class="param param-half">
+					</div>
+				</fieldset>
+			</section>
+			<section class="section inventory">
+				<div class="container" id="inventory">
+					<table class="table table-hover table-sm table-striped table-bordered compact mt-2" id="table-inventory">
+						<thead class="thead-light">
+							<tr>
+								<th>Name</th>
+								<th>Vendor</th>
+								<th>Model</th>
+								<th>Software</th>
+								<th>Software expected</th>
+								<th>Serial</th>
+								<th>Year</th>
+								<th>Comment</th>
+								<th></th>
+							</tr>
+						</thead>	
+						<tbody class="t-inventory">
+							<tr>
+								<td>T-name</td>
+								<td>T-vendor</td>
+								<td>T-model</td>
+								<td>T-software</td>
+								<td>T-expected</td>
+								<td>T-serial</td>
+								<td>T-year</td>
+								<td>T-comment</td>
+								<td>
+									<a href="#"><img class="icon-edit icon-edit-sm js-expandInventory" src="img/edit.svg"></a>
+								</td>
+							</tr>
+						</tbody>		
+					</table>
+					<table class="table table-hover table-striped table-bordered compact mt-2 hidden" >
+						<thead class="thead-light">
+							<tr>
+								<!-- <th>Model</th> -->
+								<th>Tag</th>
+							</tr>
+						</thead>
+						<tbody class="t-parts">
+							<tr>
+								<td>
+									<span class="inventory-tag">one</span>
+									<span class="inventory-tag">two</span>
+									<span class="inventory-tag">three</span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<div class="hidden" id="table-parts">
+						<div class="inventory-head">Tags</div>
+						<div class="inventory-tags" data-tags="">
+							<!-- <span class="inventory-tag">one<a href="#" class="delete-tag">x</a></span>
+							<span class="inventory-tag">two<a href="#" class="delete-tag">x</a></span>
+							<span class="inventory-tag">three<a href="#" class="delete-tag">x</a></span>
+							<span class="inventory-tag new-tag" contenteditable>&nbsp;</span> -->
+						</div>
+					</div>
+					<table class="table table-hover table-sm table-striped table-bordered compact mt-2 hidden" id="table-tags">
+						<thead class="thead-light">
+							<tr>
+								<!-- <th>Model</th> -->
+								<th>Part</th>
+							</tr>
+						</thead>
+						<tbody class="t-tags">
+							<tr>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
 			<section class="section documentation">
 				<div class="container-documentation" style="display:none;">
 					<div class="book-aside book-menu">
