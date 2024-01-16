@@ -58,6 +58,8 @@ if ($method !== 0)
 		$param_error_msg['answer'] = $db_object->exportActivity($element, $activity);
 	} elseif ($method === 'importFromJSON' && isset($importOGPAData['fields']) && $element && $activity) {
 		$param_error_msg['answer'] = $db_object->importActivity($importOGPAData['fields'], $element, $activity);
+	} elseif ($method === 'getInventory') {
+		$param_error_msg['answer'] = $db_object->getInventory();
 	}
     $out_res = ['success' => $param_error_msg];
 }

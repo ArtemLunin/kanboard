@@ -714,5 +714,34 @@ class databaseUtilsMOP {
 		    $this->errorLog($error_txt_info, 1);
 		}
 	}
+
+	function getInventory() {
+		if ($this->pdo) {
+			$dataset = [];
+			$sql = "SELECT id, chassis_name, vendor, model, software, serial, year_service, comment FROM chassis";
+			try {
+				if ($table_res = $this->getSQL($sql, [])) {
+					foreach ($table_res as $result)
+					{
+						$dataset[] = [
+							'id' => (int)$result['id'],
+							'chassis_name'	=> $result['chassis_name'],
+							'vendor'		=> $result['vendor'],
+							'model'			=> $result['model'],
+							'software'		=> $result['software'],
+							'serial'		=> $result['serial'],
+							'year_service'	=> $result['year_service'],
+							'comment'		=> $result['comment'],
+						];
+					}
+				}
+				return $dataset;
+			} catch (Throwable $e) {
+				$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
+				$this->errorLog($error_txt_info, 1);
+			}
+			return null;
+		}
+	}
 	
 }

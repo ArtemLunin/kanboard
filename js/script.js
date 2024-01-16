@@ -377,7 +377,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	const tableInventory = document.querySelector('#table-inventory'),
 		tableParts = document.querySelector('#table-parts'),
 		tableTags = document.querySelector('#table-tags'),
-		inventoryTags = document.querySelector('.inventory-tags');
+		inventoryTags = document.querySelector('.inventory-tags'),
+		tInventory = document.querySelector('.t-inventory');
 		// newTag = document.querySelector('.new-tag');
 
 		showAll.checked = false;
@@ -1345,6 +1346,8 @@ window.addEventListener('DOMContentLoaded', () => {
 					iniOGPA();
 				}
 				break;
+			case 'inventory':
+				iniInventory();
 			default:
 				break;
 		}
@@ -3447,6 +3450,29 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
+	const showInventory = (data) => {
+		tInventory.textContent = '';
+		if (data && data.success && data.success.answer) {
+			data.success.answer.forEach(({id, chassis_name, vendor, model, software, serial, year_service, comment}) => {
+				tInventory.insertAdjacentHTML('beforeend', `
+				<tr>
+					<td>${chassis_name}</td>
+					<td>${vendor}</td>
+					<td>${model}</td>
+					<td>${software}</td>
+					<td>${serial}</td>
+					<td>${year_service}</td>
+					<td>${comment}</td>
+					<td>
+						<a href="#" data-id="${id}"><img class="icon-edit icon-edit-sm js-expandInventory" src="img/edit.svg"></a>
+					</td>
+				</tr>
+			`);
+			});
+			
+		}
+	};
+
 	const iniOGPA = (extends_data = '') => {
 		const body = {
 			method: 'getOGPA',
@@ -3472,6 +3498,15 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
 			showActivityFields(data);
+		});
+	};
+
+	const iniInventory = () => {
+		const body = {
+			method: 'getInventory',
+		};
+		sendRequest('POST', requestURLTemplate, body).then((data) => {
+			showInventory(data);
 		});
 	};
 
