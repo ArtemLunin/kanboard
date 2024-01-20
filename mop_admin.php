@@ -60,6 +60,10 @@ if ($method !== 0)
 		$param_error_msg['answer'] = $db_object->importActivity($importOGPAData['fields'], $element, $activity);
 	} elseif ($method === 'getInventory') {
 		$param_error_msg['answer'] = $db_object->getInventory();
+	} elseif ($method === 'getChassisTags' && $id) {
+		$param_error_msg['answer'] = $db_object->getChassisTags($id);
+	} elseif ($method === 'setChassisTags' && $id && is_array($value)) {
+		$param_error_msg['answer'] = $db_object->setChassisTags($id, $value);
 	}
     $out_res = ['success' => $param_error_msg];
 }

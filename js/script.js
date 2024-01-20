@@ -110,7 +110,7 @@ let filesTemplate, xls_files;
 let savedPageName = 'New Page',
 	page_id = '0';
 
-const inventoryTagsSet = new Set(['one', 'two', 'three']);
+const inventoryTagsSet = new Set();
 
 // common functions
 // for sort in ORDER DESC by default
@@ -2650,6 +2650,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const target = e.target;
 		const expandInventory = target.closest('.js-expandInventory');
 		const deleteTag = target.closest('.delete-tag');
+		const saveTags = target.closest('.js-saveTags');
 		if (expandInventory) {
 			if (expandInventory.dataset['expanded'] == '1') {
 				const inventoryChilds = expandInventory.closest('table').querySelector('#inventoryChilds');
@@ -2662,19 +2663,23 @@ window.addEventListener('DOMContentLoaded', () => {
 				expandInventory.dataset['expanded'] = '0';
 			} else {
 				const rowIndex = expandInventory.closest('tr').rowIndex;
-				const newRow = expandInventory.closest('table').insertRow(rowIndex+1);
+				const newRow = expandInventory.closest('table').insertRow(rowIndex + 1);
+				const chassisID = target.closest('A').dataset.id;
 				newRow.id = 'inventoryChilds';
+				newRow.dataset.id = chassisID;
 				const newCell = newRow.insertCell();
 				newCell.colSpan = expandInventory.closest('tr').cells.length;
 				newCell.append(tableParts, tableTags);
 				tableParts.classList.remove('hidden');
 				tableTags.classList.remove('hidden');
 				expandInventory.dataset['expanded'] = '1';
-				fillInventoryTags(inventoryTagsSet);
+				getChassisTags(chassisID);
 			}
 		} else if (deleteTag) {
 			inventoryTagsSet.delete(deleteTag.closest('.inventory-tag').dataset.tag);
 			fillInventoryTags(inventoryTagsSet);
+		} else if (saveTags) {
+			setChassisTags(saveTags.closest('#inventoryChilds').dataset.id);
 		}
 	});
 
@@ -3469,8 +3474,18 @@ window.addEventListener('DOMContentLoaded', () => {
 				</tr>
 			`);
 			});
-			
 		}
+	};
+
+	const showChassisTags = (data) => {
+		inventoryTagsSet.clear();
+		if (data && data.success && data.success.answer) {
+			data.success.answer.forEach(({id, tag}) => {
+				inventoryTagsSet.add(tag);
+			});
+		}
+		fillInventoryTags(inventoryTagsSet);
+
 	};
 
 	const iniOGPA = (extends_data = '') => {
@@ -3507,6 +3522,27 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
 			showInventory(data);
+		});
+	};
+
+	const getChassisTags = (chassis_id) => {
+		const body = {
+			method: 'getChassisTags',
+			id: chassis_id,
+		};
+		sendRequest('POST', requestURLTemplate, body).then((data) => {
+			showChassisTags(data);
+		});
+	};
+
+	const setChassisTags = (chassis_id) => {
+		const body = {
+			method: 'setChassisTags',
+			id: chassis_id,
+			value: [...inventoryTagsSet],
+		};
+		sendRequest('POST', requestURLTemplate, body).then((data) => {
+			showChassisTags(data);
 		});
 	};
 

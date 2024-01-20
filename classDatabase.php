@@ -573,7 +573,6 @@ class databaseUtilsMOP {
 			$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
 		    $this->errorLog($error_txt_info, 1);
 		}
-		
 	}
 
 	function getActivityFields($id) {
@@ -662,7 +661,6 @@ class databaseUtilsMOP {
 					}
 				}
 			}
-			// error_log("ogpa:\n".print_r($ogpaCounters, true));
 			return $ogpaCounters;
 		} catch (Throwable $e) {
 			$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
@@ -744,4 +742,44 @@ class databaseUtilsMOP {
 		}
 	}
 	
+	function getChassisTags($chassis_id) {
+		$sql = "SELECT id, tag FROM chassis_tags WHERE chassis_id=:chassis_id";
+		$dataset = [];
+		try {
+			if ($table_res = $this->getSQL($sql, [
+				'chassis_id' => $chassis_id,
+			])) {
+				foreach ($table_res as $result)
+				{
+					$dataset[] = [
+						'id'	=> (int)$result['id'],
+						'tag'	=> $result['tag']
+					];
+				}
+			}
+			return $dataset;
+		}
+		catch (Throwable $e) {
+			$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
+			$this->errorLog($error_txt_info, 1);
+		}
+		return null;
+	}
+
+	function setChassisTags($chassis_id, $tags) {
+		if (is_array($tags)) {
+			$sql = "DELETE FROM chassis_tags WHERE chassis_id=:chassis_id";
+			$sql_ins = "INSERT INTO chassis_tags (tag, chassis_id) VALUES (:tag, :chassis_id)";
+			$this->modSQL($sql, [
+					'chassis_id' => $chassis_id,
+			]);
+			foreach ($tags as $tag) {
+				$this->modSQL($sql_ins, [
+					'tag'			=> $tag,
+					'chassis_id'	=> $chassis_id,
+				]);
+			}
+		}
+		return $this->getChassisTags($chassis_id);
+	}
 }
