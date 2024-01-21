@@ -19,4 +19,6 @@ excel.html
 statistics.html
 tickets_status.html
 ALTER TABLE mop_fields.sql
+*.sql
+
 

@@ -782,4 +782,30 @@ class databaseUtilsMOP {
 		}
 		return $this->getChassisTags($chassis_id);
 	}
+
+	function setChassisData($chassis_id, $chassis_data) {
+		if (is_array($chassis_data)) {
+			$sql_inj = ''; $sql_inj2 = '';
+			foreach ($chassis_data as $key => $value) {
+				if ($chassis_id == "0") {
+					$sql_inj .= "$key,";
+					$sql_inj2 .= ":$key,";
+				} else {
+					$sql_inj .= "$key=:$key,";
+				}
+			}
+			
+			$sql_inj = rtrim($sql_inj, ', ');
+			$sql_inj2 = rtrim($sql_inj2, ', ');
+
+			if ($chassis_id == "0") {
+				$sql = "INSERT INTO chassis (" . $sql_inj . ") VALUES (" . $sql_inj2 . ")";
+			} else {
+				$sql = "UPDATE chassis SET " . $sql_inj . " WHERE id=:chassis_id";
+				$chassis_data['chassis_id'] = $chassis_id;
+			}
+			$this->modSQL($sql, $chassis_data);
+		}
+		return $this->getInventory();
+	}
 }

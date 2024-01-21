@@ -377,6 +377,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	const tableInventory = document.querySelector('#table-inventory'),
 		tableParts = document.querySelector('#table-parts'),
 		tableTags = document.querySelector('#table-tags'),
+		// bntNewChassis = document.querySelector('#table-tags'),
 		inventoryTags = document.querySelector('.inventory-tags'),
 		tInventory = document.querySelector('.t-inventory');
 		// newTag = document.querySelector('.new-tag');
@@ -745,6 +746,11 @@ window.addEventListener('DOMContentLoaded', () => {
 			searching: true,
 			stripeClasses :[],
 		});
+
+	// new DataTable('#table-inventory', {
+	// 	order: [[0, 'desc']],
+	// 	"autoWidth": false,
+	// });
 
 	const saveContent = () => {
 		const savedName = (pageNameEdit.innerText.trim() !== ''  ? pageNameEdit.innerText.trim() : prompt('Enter the Page Name', savedPageName));
@@ -2645,41 +2651,118 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	tableInventory.addEventListener('click', (e) => {
+	tableInventory.addEventListener('click', function (e) {
 		e.preventDefault();
 		const target = e.target;
 		const expandInventory = target.closest('.js-expandInventory');
 		const deleteTag = target.closest('.delete-tag');
 		const saveTags = target.closest('.js-saveTags');
+		const newChassis = target.closest('.js-newChassis');
+		const undoNewChassis = target.closest('.js-undoNewChassis');
+		
 		if (expandInventory) {
-			if (expandInventory.dataset['expanded'] == '1') {
+			const parent_tr = expandInventory.closest('tr');
+			const parent_a = expandInventory.closest('a');
+			const chassisID = parent_tr.dataset.id;
+			if (expandInventory.dataset.collapse != null) {
 				const inventoryChilds = expandInventory.closest('table').querySelector('#inventoryChilds');
 				try {
 					inventoryChilds.remove();
 				} catch (e) {
 				}
-				tableParts.classList.add('hidden');
+				// tableParts.classList.add('hidden');
 				tableTags.classList.add('hidden');
-				expandInventory.dataset['expanded'] = '0';
-			} else {
-				const rowIndex = expandInventory.closest('tr').rowIndex;
+				// expandInventory.dataset['expanded'] = '0';
+				expandInventory.closest('a').querySelector('[data-expand]').classList.remove('hidden');
+				expandInventory.classList.add('hidden');
+			} else if (expandInventory.dataset.expand != null){
+				const rowIndex = parent_tr.rowIndex;
 				const newRow = expandInventory.closest('table').insertRow(rowIndex + 1);
-				const chassisID = target.closest('A').dataset.id;
 				newRow.id = 'inventoryChilds';
 				newRow.dataset.id = chassisID;
 				const newCell = newRow.insertCell();
-				newCell.colSpan = expandInventory.closest('tr').cells.length;
+				newCell.colSpan = parent_tr.cells.length;
 				newCell.append(tableParts, tableTags);
-				tableParts.classList.remove('hidden');
+				// tableParts.classList.remove('hidden');
 				tableTags.classList.remove('hidden');
-				expandInventory.dataset['expanded'] = '1';
+				expandInventory.closest('a').querySelector('[data-collapse]').classList.remove('hidden');
+				expandInventory.classList.add('hidden');
 				getChassisTags(chassisID);
+			} if (expandInventory.dataset.edit != null) {
+				const selfCell = expandInventory.closest('td');
+				expandInventory.closest('tr').querySelectorAll('td').forEach((item) => {
+					if (item !== selfCell) {
+						item.setAttribute('contenteditable', true);
+					}
+				});
+				expandInventory.closest('a').querySelector('[data-undo]').classList.remove('hidden');
+				expandInventory.closest('a').querySelector('[data-done]').classList.remove('hidden');
+				expandInventory.classList.add('hidden');
+			} if (expandInventory.dataset.undo != null) {
+				if (+chassisID) {
+					expandInventory.closest('tr').querySelectorAll('td').forEach((item) => {
+						const selfCell = expandInventory.closest('td');
+						if (item !== selfCell) {
+							item.removeAttribute('contenteditable');
+							item.textContent = item.dataset.value;
+						}
+					});
+					expandInventory.closest('a').querySelector('[data-edit]').classList.remove('hidden');
+					expandInventory.closest('a').querySelector('[data-done]').classList.add('hidden');
+					expandInventory.classList.add('hidden');
+				} else {
+					tInventory.querySelector('[data-id="0"]').remove();
+					this.querySelector('.js-newChassis').classList.remove('hidden');
+					this.querySelector('.js-undoNewChassis').classList.add('hidden');
+				}
+			} if (expandInventory.dataset.done != null) {
+				const selfCell = expandInventory.closest('td');
+				const newData = {};
+				expandInventory.closest('tr').querySelectorAll('td').forEach((item) => {
+					if (item !== selfCell) {
+						newData[item.dataset.field] = item.textContent.trim();
+						item.removeAttribute('contenteditable');
+					}
+				});
+				setChassisData(chassisID, newData);
+				expandInventory.closest('a').querySelector('[data-edit]').classList.remove('hidden');
+				expandInventory.closest('a').querySelector('[data-undo]').classList.add('hidden');
+				expandInventory.classList.add('hidden');
+				this.querySelector('.js-newChassis').classList.remove('hidden');
+				this.querySelector('.js-undoNewChassis').classList.add('hidden');
 			}
 		} else if (deleteTag) {
 			inventoryTagsSet.delete(deleteTag.closest('.inventory-tag').dataset.tag);
 			fillInventoryTags(inventoryTagsSet);
 		} else if (saveTags) {
 			setChassisTags(saveTags.closest('#inventoryChilds').dataset.id);
+		} else if (newChassis) {
+			tInventory.insertAdjacentHTML('afterbegin', `
+				<tr data-id="0">
+					<td data-field="chassis_name" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="vendor" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="model" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="software" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="serial" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="year_service" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="comment" data-value="" contenteditable>&nbsp;</td>
+					<td>
+						<a href="#">
+							<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-edit src="img/edit.svg" title="Edit">
+							<img class="icon-edit icon-edit-sm js-expandInventory" data-undo src="img/undo.svg" title="Undo">
+							<img class="icon-edit icon-edit-sm js-expandInventory" data-done src="img/done.svg" title="Done">
+							<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-expand src="img/expand_content.svg" title="Detail">
+							<img class="icon-edit icon-edit-sm hidden js-expandInventory" data-collapse src="img/collapse_content.svg">
+						</a>
+					</td>
+				</tr>
+			`);
+			newChassis.closest('a').querySelector('.js-undoNewChassis').classList.remove('hidden');
+			target.classList.add('hidden');
+		} else if (undoNewChassis) {
+			tInventory.querySelector('[data-id="0"]').remove();
+			undoNewChassis.closest('a').querySelector('.js-newChassis').classList.remove('hidden');
+			target.classList.add('hidden');
 		}
 	});
 
@@ -3460,16 +3543,22 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(({id, chassis_name, vendor, model, software, serial, year_service, comment}) => {
 				tInventory.insertAdjacentHTML('beforeend', `
-				<tr>
-					<td>${chassis_name}</td>
-					<td>${vendor}</td>
-					<td>${model}</td>
-					<td>${software}</td>
-					<td>${serial}</td>
-					<td>${year_service}</td>
-					<td>${comment}</td>
+				<tr data-id="${id}">
+					<td data-field="chassis_name" data-value="${chassis_name}">${chassis_name}</td>
+					<td data-field="vendor" data-value="${vendor}">${vendor}</td>
+					<td data-field="model" data-value="${model}">${model}</td>
+					<td data-field="software" data-value="${software}">${software}</td>
+					<td data-field="serial" data-value="${serial}">${serial}</td>
+					<td data-field="year_service" data-value="${year_service}">${year_service}</td>
+					<td data-field="comment" data-value="${comment}">${comment}</td>
 					<td>
-						<a href="#" data-id="${id}"><img class="icon-edit icon-edit-sm js-expandInventory" src="img/edit.svg"></a>
+						<a href="#">
+							<img class="icon-edit icon-edit-sm js-expandInventory" data-edit src="img/edit.svg" title="Edit">
+							<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-undo src="img/undo.svg" title="Undo">
+							<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-done src="img/done.svg" title="Done">
+							<img class="icon-edit icon-edit-sm js-expandInventory" data-expand src="img/expand_content.svg" title="Detail">
+							<img class="icon-edit icon-edit-sm hidden js-expandInventory" data-collapse src="img/collapse_content.svg">
+						</a>
 					</td>
 				</tr>
 			`);
@@ -3543,6 +3632,17 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
 			showChassisTags(data);
+		});
+	};
+
+	const setChassisData = (chassis_id, chassis_data) => {
+		const body = {
+			method: 'setChassisData',
+			id: chassis_id,
+			value: chassis_data,
+		};
+		sendRequest('POST', requestURLTemplate, body).then((data) => {
+			showInventory(data);
 		});
 	};
 

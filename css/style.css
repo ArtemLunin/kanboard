@@ -552,3 +552,6 @@ input:read-only {
 .inventory-tag.new-tag {
 	width: 200px;
 }
+a>img:hover  {
+	background-color: gray;
+}

@@ -1403,7 +1403,7 @@
 			</section>
 			<section class="section inventory">
 				<div class="container" id="inventory">
-					<table class="table table-hover table-sm table-striped table-bordered compact mt-2" id="table-inventory">
+					<table class="table table-sm table-bordered compact mt-2" id="table-inventory">
 						<thead class="thead-light">
 							<tr>
 								<th>Name</th>
@@ -1414,29 +1414,21 @@
 								<th>Serial</th>
 								<th>Year</th>
 								<th>Comment</th>
-								<th></th>
+								<th>
+									<a href="#" data-id="">
+										<img class="icon-edit icon-edit-sm js-newChassis" src="img/add_circle.svg" title="New">
+										<img class="icon-edit icon-edit-sm js-undoNewChassis hidden" data-undo src="img/undo.svg" title="Undo">
+										</a>
+								</th>
 							</tr>
 						</thead>	
 						<tbody class="t-inventory">
-							<!-- <tr>
-								<td>T-name</td>
-								<td>T-vendor</td>
-								<td>T-model</td>
-								<td>T-software</td>
-								<td>T-expected</td>
-								<td>T-serial</td>
-								<td>T-year</td>
-								<td>T-comment</td>
-								<td>
-									<a href="#"><img class="icon-edit icon-edit-sm js-expandInventory" src="img/edit.svg"></a>
-								</td>
-							</tr> -->
 						</tbody>		
 					</table>
-					<table class="table table-hover table-striped table-bordered compact mt-2 hidden" >
+					<!-- <table class="table table-hover table-striped table-bordered compact mt-2 hidden" >
 						<thead class="thead-light">
 							<tr>
-								<!-- <th>Model</th> -->
+								<th>Model</th>
 								<th>Tag</th>
 							</tr>
 						</thead>
@@ -1449,14 +1441,14 @@
 								</td>
 							</tr>
 						</tbody>
-					</table>
+					</table> -->
 					<div class="hidden" id="table-tags">
-						<div class="inventory-head">Tags <a href="#" data-id="" title="Save tags"><img class="icon-edit icon-edit-sm js-saveTags" src="img/save.svg"></a></div>
+						<div class="inventory-head">Tags 
+							<a href="#" data-id="" title="Save tags">
+							<img class="icon-edit icon-edit-sm js-saveTags" src="img/save.svg">
+							</a>
+						</div>
 						<div class="inventory-tags" data-tags="">
-							<!-- <span class="inventory-tag">one<a href="#" class="delete-tag">x</a></span>
-							<span class="inventory-tag">two<a href="#" class="delete-tag">x</a></span>
-							<span class="inventory-tag">three<a href="#" class="delete-tag">x</a></span>
-							<span class="inventory-tag new-tag" contenteditable>&nbsp;</span> -->
 						</div>
 					</div>
 					<table class="table table-hover table-sm table-striped table-bordered compact mt-2 hidden" id="table-parts">
