@@ -92,6 +92,17 @@ class databaseUtils {
 	function __get($name) {
 		return $this->$name;
 	}
+	function getSQL($sql_query, $params_arr) {
+        try {
+			$row = $this->pdo->prepare($sql_query);
+			$row->execute($params_arr);
+			return $row->fetchall();
+		} catch (\PDOException $e){
+			$this->setSQLError($e, 'SQL error. "'.$sql_query);
+		}
+		return null;
+    }
+
 	function modSQL($sql_query, $params_arr, $needCount = true) {
 		try {
 			$row = $this->pdo->prepare($sql_query);
@@ -313,7 +324,7 @@ class databaseUtils {
 		return $user_rights['accessType'] != '';
 	}
 
-	function doGetDevicesAll($in_exp = FALSE)
+	function doGetDevicesAll_old($in_exp = FALSE)
 	{
 		$device_list = [];
 		$sql = "SELECT id, name, platform, service, owner, contact_info, manager, comments FROM devices";
@@ -340,6 +351,49 @@ class databaseUtils {
 		}
 		return $device_list;
 	}
+
+	function doGetDevicesAll() 
+	{
+		$device_list = [];
+		$sql = "SELECT id, name, port, descr, platform, comments FROM devices_new";
+		$sql_tags = "SELECT id, tag, device_id FROM devices_tags WHERE device_id=:device_id";
+		$sql_owner = "SELECT id, group_name, manager, contacts, device_id FROM devices_owners WHERE device_id=:device_id";
+
+		if ($table_res = $this->getSQL($sql, [])) {
+			foreach ($table_res as $result)
+			{
+				$tags = [];
+				$table_tags = $this->getSQL($sql_tags, [
+					'device_id' => $result['id'],
+				]);
+				foreach ($table_tags as $tag) {
+					$tags[] = $tag;
+				}
+				$group = ''; $manager = ''; $contacts = '';
+				if ($table_owners = $this->getSQL($sql_owner, [
+					'device_id' => $result['id'],
+				])) {
+					$group = $table_owners[0]['group'];
+					$manager = $table_owners[0]['manager'];
+					$contacts = $table_owners[0]['contacts'];
+				}
+
+				$device_list[] = [
+					'id' 		=> (int)$result['id'],
+					'name'		=> $result['name'],
+					'port'		=> $result['port'],
+					'description'	=> $result['descr'] ?? '',
+					'platform'	=> $result['platform'] ?? '',
+					'tags'		=> $tags,
+					'group'		=> $group,
+					'owner'		=> $manager,
+					'comments'	=> $this->removeBadSymbols($result['comments']),
+				];
+			}
+		}
+		return $device_list;
+	}
+
 	function doAddDevice($deviceParam)
 	{
 		$sql = "INSERT INTO devices (name, platform, service,  owner, contact_info, manager, comments) VALUES (:name, :platform, :service, :owner, :contact_info, :manager, :comments)";

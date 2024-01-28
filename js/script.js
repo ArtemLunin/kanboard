@@ -361,13 +361,13 @@ window.addEventListener('DOMContentLoaded', () => {
         newActivity = document.querySelector('#newActivity'),
         selActivity = document.querySelector('#activity'),
         selPrimeElement = document.querySelector('#primeElement'),
-        // btnCeilAreaAppend = document.querySelector('#ceil_area_append'),
         divCounter = document.querySelector('.counter-pb'),
 		renderMopDiv = document.querySelector('#render_mop'),
 		docTitle = document.querySelector('#docTitle'),
         showAll = document.querySelector('#showAll'),
 		efcrFields = document.querySelector('#efcrFields'),
 		btnsCeilAreaAppend = document.querySelectorAll('.js-ceil-area-append'),
+		btnsCeilAreaRemove = document.querySelectorAll('.js-ceil-area-remove'),
 		exportDownload = document.querySelector('.js-export-download'),
 		visibleSuperOnly = document.querySelectorAll('.js-superOnly'),
 		aExport = document.querySelector('#a_export'),
@@ -382,7 +382,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		tInventory = document.querySelector('.t-inventory');
 		// newTag = document.querySelector('.new-tag');
 
-		showAll.checked = false;
+		// showAll.checked = false;
 
 		btnNewActivity.dataset.prime_elem_id = 0;
 
@@ -1343,7 +1343,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				if (addParams['element']) {
 					if (addParams['element'] === 'Capacity') {
 						document.title = addParams['visibleName'];
-						// console.log('capacity');
 					} else {
 						document.title = addParams['visibleName'];
 						iniOGPA(addParams);
@@ -2484,7 +2483,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const showMosaic = (data) => {
+	const showMosaic_old = (data) => {
 		dataTableMosaic.clear().draw();
 		if (data) {
 			let hideEditButtons = 'd-block d-xl-flex';
@@ -2530,6 +2529,66 @@ window.addEventListener('DOMContentLoaded', () => {
 								<a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
 							</div>
 						</td>
+				`;
+				dataTableMosaic.row.add(tr);
+			});
+			dataTableMosaic.draw();
+		}
+	};
+
+	const showMosaic = (data) => {
+		dataTableMosaic.clear().draw();
+		if (data) {
+			let hideEditButtons = 'd-block d-xl-flex';
+			if (showMosaicEditItems == '0') {
+				hideEditButtons = 'd-none';
+			}
+			// devicesAllBody.textContent = '';
+			data.forEach(function ({
+				id, name, port, description, platform, tags, group, owner, comments
+			}) 
+			{
+				// let deviceDataID = `device-data-${id}`;
+				const tr = document.createElement('tr');
+
+				tr.classList.add('mosaic-table-row');
+				tr.dataset.node_id = id;
+				tr.id = `device-data-${id}`;
+				tr.innerHTML = `
+					<td>
+						<span class="name-text">${name}</span>
+					</td>
+					<td>
+						<span class="name-text">${port}</span>
+					</td>
+					<td>
+						<span class="name-text">${description}</span>
+					</td>
+					<td>
+						<span class="name-text editable" data-value="${platform}">${platform}</span>
+					</td>
+					<td>
+						<span class="name-text editable" data-value="${tags}">${tags}</span>
+					</td>
+					<td>
+						<span class="name-text editable" data-value="${group}">${group}</span>
+					</td>
+					<td>
+						<span class="name-text editable" data-value="${owner}">${owner}</span>
+					</td>
+					<td>
+						<span class="name-text">${comments}</span>
+					</td>
+					<td>
+						<div class="action-buttons justify-content-center ${hideEditButtons}">
+							<a href="#">
+								<img class="icon-edit icon-edit-sm" data-edit src="img/edit.svg">
+								<img class="icon icon-edit-sm hidden" data-undo src="img/undo.svg" title="Undo">
+								<img class="icon icon-edit-sm hidden" data-done src="img/done.svg" title="Done">
+							</a>
+							<a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
+						</div>
+					</td>
 				`;
 				dataTableMosaic.row.add(tr);
 			});
@@ -2856,6 +2915,11 @@ window.addEventListener('DOMContentLoaded', () => {
 			action = 'modify';
 		} else if (target.classList.contains('icon-delete')) {
 			action = 'delete';
+		} else if (target.dataset.undo != null) {
+			target.closest('a').querySelector('[data-edit]').classList.remove('hidden');
+			target.closest('a').querySelector('[data-done]').classList.add('hidden');
+			target.classList.add('hidden');
+			mosaicRow.querySelectorAll('span.editable').forEach(resetEdit);
 		}
 		switch (action) {
 			case 'modify':
@@ -2870,7 +2934,21 @@ window.addEventListener('DOMContentLoaded', () => {
 					id: mosaicRow.dataset.node_id
 				});
 				break;
+			// case 'undo':
+				
+			// 	break;
 		}
+	};
+
+	const resetEdit = (item) => {
+		item.removeAttribute('contenteditable');
+		item.classList.remove('new-tag');
+		item.textContent = item.dataset.value;
+	};
+
+	const setEdit = (item) => {
+		item.setAttribute('contenteditable', true);
+		item.classList.add('new-tag');
 	};
 
 	const reqDeleteDevice = (deviceParams) =>{
@@ -2883,7 +2961,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const modifyDeviceSettings = ({device_id, row_id}) => {
+	const modifyDeviceSettings_old = ({device_id, row_id}) => {
 		const rowDevice = document.getElementById(row_id);
 
 		mosaicForm.querySelector('[data-action="add"]').style.display = 'none';
@@ -2897,6 +2975,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		mosaicForm.querySelector('#mosaicNodeManager').value = rowDevice.querySelector('.manager-text').innerText;
 		mosaicForm.querySelector('#mosaicNodeComments').innerText = rowDevice.querySelector('.comment-text').innerText;
 		mosaicForm.querySelector('#mosaicNodeId').value = device_id;
+	};
+
+	const modifyDeviceSettings = ({device_id, row_id}) => {
+		const rowDevice = document.querySelector(`#${row_id}`);
+		rowDevice.querySelectorAll('span.editable').forEach(setEdit);
+		rowDevice.querySelector('[data-edit]').classList.add('hidden');
+		rowDevice.querySelector('[data-undo]').classList.remove('hidden');
+		rowDevice.querySelector('[data-done]').classList.remove('hidden');
 	};
 
 	const confirmDialog = (e) => {
@@ -3489,6 +3575,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (templateDip) {
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = false;
+					inputElem.classList.add(inputSelectorClass);
 					if (inputElem.dataset['ecfr'] == "1") {
 						efcrFieldsArr.push(inputElem.name);
 					}
@@ -3496,6 +3583,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else {
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = true;
+					inputElem.classList.remove(inputSelectorClass);
 				});
 			}
 		});
@@ -3896,6 +3984,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			})
 		});
 		formSubmit.classList.remove('edit');
+		showAll.checked = false;
 	});
 
 	formFields.addEventListener('submit', (e) => {
@@ -4066,8 +4155,15 @@ window.addEventListener('DOMContentLoaded', () => {
 	showAll.addEventListener('click', (e) => {
 		if (e.target.checked) {
 			document.querySelectorAll('fieldset.hidden').forEach(item => {
-				item.classList.remove('hidden');
-				item.classList.add('showned');
+				// if (!item.classList.contains('js-eFCR-view') ||
+				//  (item.classList.contains('js-eFCR-view') && 
+				//  document.title == 'Roaming FCR')) 
+				if (!item.classList.contains('js-hard-code-design'))
+				{
+					// console.log(item);
+					item.classList.remove('hidden');
+					item.classList.add('showned');
+				}
 			});
 		} else {
 			document.querySelectorAll('fieldset.showned').forEach(item => {
@@ -4111,23 +4207,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
-	// btnCeilAreaAppend.addEventListener('click', (e) => {
-	// 	e.preventDefault();
-	// 	const fieldset = e.target.closest('fieldset');
-	// 	const row = fieldset.querySelector("[data-parent='self']");
-	// 	const row_prime = fieldset.querySelector('.multirows');
-	// 	const new_row = row_prime.cloneNode(true);
-	// 	row.value = parseInt(row.value) + 1;
-	// 	new_row.dataset.clone = 1;
-	// 	new_row.querySelectorAll('input').forEach(item => {
-	// 		item.name = `${item.dataset.name}_${row.value}`;
-	// 		item.id = item.name;
-	// 		item.value = '';
-	// 	});
-	// 	fieldset.append(new_row);
-	// 	fieldset.append(e.target);
-	// });
-
 	btnsCeilAreaAppend.forEach(item => {
 		item.addEventListener('click', (e) => {
 			const fieldset = e.target.closest('fieldset');
@@ -4142,7 +4221,19 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.value = '';
 			});
 			fieldset.append(new_row);
-			fieldset.append(e.target);
+			fieldset.append(e.target.closest('.ceil-btns'));
+			checkInputsData(`.${inputSelectorClass}`, false);
+		});
+	});
+
+	btnsCeilAreaRemove.forEach(item => {
+		item.addEventListener('click', (e) => {
+			const fieldset = e.target.closest('fieldset');
+			const cloned_rows = fieldset.querySelectorAll("[data-clone='1']");
+			if (cloned_rows.length) {
+				cloned_rows[cloned_rows.length - 1].remove();
+			}
+			checkInputsData(`.${inputSelectorClass}`, false);
 		});
 	});
 

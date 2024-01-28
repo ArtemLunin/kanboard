@@ -468,6 +468,9 @@ button.pressed {
     flex-flow: row wrap;
     align-items: center;
 }
+.param-row button {
+	margin-right: 5px;
+}
 .hidden {
     display: none;
 }
@@ -551,6 +554,14 @@ input:read-only {
 }
 .inventory-tag.new-tag {
 	width: 200px;
+}
+.editable.new-tag {
+	border: 1px solid #d5d5d5;
+	padding: 5px;
+	border-radius: 5px;
+	display: inline-block;
+	overflow: hidden;
+	width: 100px;
 }
 a>img:hover  {
 	background-color: gray;

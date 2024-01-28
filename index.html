@@ -737,7 +737,7 @@
 						</form>
 					</div>
 					<table class="devices-all-table table table-hover table-sm table-striped table-bordered compact no-footer" id="devicesMosaic">
-						<thead>
+						<!-- <thead>
 							<tr>
 								<th class="exportable">Node</th>
 								<th class="exportable">Platform</th>
@@ -746,6 +746,19 @@
 								<th class="exportable">Contact Info</th>
 								<th class="exportable">Manager</th>
 								<th class="exportable">Comments</th>
+								<th>Actions</th>
+							</tr>
+						</thead> -->
+						<thead>
+							<tr>
+								<th class="exportable">Node</th>
+								<th class="exportable">Interface</th>
+								<th class="exportable">Description</th>
+								<th class="exportable">Platform</th>
+								<th class="exportable">Tag</th>
+								<th class="exportable">Group</th>
+								<th class="exportable">Owner</th>
+								<th class="exportable">Note</th>
 								<th>Actions</th>
 							</tr>
 						</thead>
@@ -842,19 +855,19 @@
 								<input type="hidden" name="ceilIP" id="ceilIP" data-ecfr="1">
 								<div class="param param-half">
 									<label for="dipeFCRNumber">eFCR Number</label>
-									<input type="text" class="mop" name="dipeFCRNumber" id="dipeFCRNumber" value="" disabled data-ecfr="1">
+									<input type="text" class="mop input-edit" name="dipeFCRNumber" id="dipeFCRNumber" value="" disabled data-ecfr="1">
 								</div>
 								<div class="param param-half">
 									<label for="dipCompanyName">Company Name</label>
-									<input type="text" class="mop" name="dipCompanyName" id="dipCompanyName" value="" disabled data-ecfr="1">
+									<input type="text" class="mop input-edit" name="dipCompanyName" id="dipCompanyName" value="" disabled data-ecfr="1">
 								</div>
 								<div class="param param-half">
 									<label for="dipCountryName">Country Name</label>
-									<input type="text" class="mop" name="dipCountryName" id="dipCountryName" value="" disabled data-ecfr="1">
+									<input type="text" class="mop input-edit" name="dipCountryName" id="dipCountryName" value="" disabled data-ecfr="1">
 								</div>
 								<div class="param param-half">
 									<label for="dipStartIndex">Start Index</label>
-									<input type="number" min="0" class="mop" name="dipStartIndex" id="dipStartIndex" value="" disabled data-ecfr="1">
+									<input type="number" min="0" class="mop input-edit" name="dipStartIndex" id="dipStartIndex" value="" disabled data-ecfr="1">
 								</div>
 								<div class="param-row">
 									<div class="param param-25">
@@ -863,10 +876,13 @@
 								</div>
 								<div class="param-row multirows">
 									<div class="param param-25">
-										<input type="text" class="mop" name="ceil_ip_1" id="ceil_ip_1" data-name="ceilIP" data-id="1" value="">
+										<input type="text" class="mop input-edit" name="ceil_ip_1" id="ceil_ip_1" data-name="ceilIP" data-id="1" value="">
 									</div>
 								</div>
-								<button id="" class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
+								<div class="param-row ceil-btns">
+									<button class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
+									<button class="mop action renderOnly js-ceil-area-remove hidden" type="button" title="Remove row">-</button>
+								</div>
 							</fieldset>
 							<fieldset id="group3" class="">
 								<legend>Project Info</legend>
@@ -1043,7 +1059,11 @@
 										<input type="text" class="mop" name="ceil_time_1" id="ceil_time_1" data-name="ceilTime" data-id="1" value="2h" size="6" required>
 									</div>
 								</div>
-								<button id="ceil_area_append" class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
+								<div class="param-row ceil-btns">
+									<button class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
+									<button class="mop action renderOnly js-ceil-area-remove hidden" type="button" title="Remove row">-</button>
+								</div>
+								
 							</fieldset>
 							<fieldset id="group17" class="hidden">
 								<legend>Diagram and Service Flows</legend>
