@@ -160,10 +160,23 @@ if ($env === 'services') {
 		'manager'	=> '', 
 		'comments'	=> '',
 	];
+
+	$devices_data = [
+		'platform'	=> '',
+		'tags'		=> '',
+		'group'		=> '',
+		'owner'		=> '',
+	];
 	
 	foreach ($data_fields as $key => $value) {
 		if(isset($paramJSON[$key])) {
 			$data_fields[$key] = $db_object->removeBadSymbols($paramJSON[$key]);
+		}
+	}
+
+	foreach ($devices_data as $key => $value) {
+		if(isset($paramJSON[$key])) {
+			$devices_data[$key] = $db_object->removeBadSymbols($paramJSON[$key]);
 		}
 	}
 
@@ -194,6 +207,13 @@ if ($env === 'services') {
 			'manager'	=> $data_fields['manager'],
 			'comments'	=> $data_fields['comments'],
 			'id'		=> $paramJSON['id'] ?? 0,
+		]);
+	} elseif ($call == 'updateDevicesData' && $accessType === 'admin') {
+		$param_error_msg['answer'] = $db_object->updateDevicesData([
+			'platform'	=> $devices_data['platform'],
+			'tags'	=> $devices_data['tags'],
+			'group'	=> $devices_data['group'],
+			'owner'		=> $devices_data['owner'],
 		]);
 	}
 	elseif ($call == 'doDeleteDevice' && $accessType === 'admin') 

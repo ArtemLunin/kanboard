@@ -362,18 +362,18 @@ class databaseUtils {
 		if ($table_res = $this->getSQL($sql, [])) {
 			foreach ($table_res as $result)
 			{
-				$tags = [];
+				$tags = '';
 				$table_tags = $this->getSQL($sql_tags, [
 					'device_id' => $result['id'],
 				]);
 				foreach ($table_tags as $tag) {
-					$tags[] = $tag;
+					$tags .= ' ' . $tag['tag'];
 				}
 				$group = ''; $manager = ''; $contacts = '';
 				if ($table_owners = $this->getSQL($sql_owner, [
 					'device_id' => $result['id'],
 				])) {
-					$group = $table_owners[0]['group'];
+					$group = $table_owners[0]['group_name'];
 					$manager = $table_owners[0]['manager'];
 					$contacts = $table_owners[0]['contacts'];
 				}
@@ -384,7 +384,7 @@ class databaseUtils {
 					'port'		=> $result['port'],
 					'description'	=> $result['descr'] ?? '',
 					'platform'	=> $result['platform'] ?? '',
-					'tags'		=> $tags,
+					'tags'		=> trim($tags),
 					'group'		=> $group,
 					'owner'		=> $manager,
 					'comments'	=> $this->removeBadSymbols($result['comments']),
@@ -409,6 +409,40 @@ class databaseUtils {
 			return true;
 		}
 		return false;
+	}
+
+	function updateDevicesData($deviceParam)
+	{
+		// $this->errorLog(print_r($deviceParam,true));
+		$sql = "SELECT id, descr FROM devices_new WHERE platform=:platform";
+		$sql_upd = "UPDATE devices_new SET platform=:platform WHERE id=:id";
+		$sql_tags = "INSERT INTO devices_tags (tag, device_id) VALUES (:tag,:device_id)";
+		$sql_ins_owner = "INSERT INTO devices_owners (group_name, manager,device_id) VALUES (:group_name,:manager,:device_id)";
+		$tags = strtolower($deviceParam['tags']);
+		$sql_upd_owner = "UPDATE devices_owners SET group_name=:group_name,manager=:manager WHERE device_id=:device_id";
+		if ($table_res = $this->getSQL($sql, [
+			'platform' => '',
+		])) {
+			foreach ($table_res as $result)
+			{
+				if (str_contains(strtolower($result['descr']), $tags)) {
+					$this->modSQL($sql_upd, [
+						'platform'	=> $deviceParam['platform'],
+						'id'		=> $result['id'],
+					], false);
+					$this->modSQL($sql_tags, [
+						'tag'	=> $tags,
+						'device_id'	=> $result['id'],
+					], false);
+					$this->modSQLInsUpd(['ins' => $sql_ins_owner, 'upd' => $sql_upd_owner], [
+						'group_name'=> $deviceParam['group'],
+						'manager'	=> $deviceParam['owner'],
+						'device_id' => $result['id'],
+					], false);
+				}
+			}
+		}
+		return $this->doGetDevicesAll();
 	}
 	
 	function doDeleteDevice($id)
@@ -456,7 +490,7 @@ class databaseUtils {
 	{
 		if ($debug_mode === 1)
 		{
-			error_log($error_message);
+			error_log(date("Y-m-d H:i:s") . " ". $error_message);
 		}
 		return TRUE;
 	}

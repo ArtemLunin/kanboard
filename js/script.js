@@ -730,9 +730,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				{ "width": "10%" },
 				{ "width": "10%" },
 				{ "width": "10%" },
+				{ "width": "15%" },
 				{ "width": "10%" },
 				{ "width": "10%" },
-				{ "width": "35%" },
+				{ "width": "10%" },
 				{ "width": "5%" },
 			],
 			columnDefs: [
@@ -2231,6 +2232,20 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
+	const updateDevicesData = (args) => {
+		const body = {
+			env: 'services',
+			call: 'updateDevicesData',
+		};
+		sendRequest('POST', requestURL, Object.assign(body, args)).then((data) => {
+			if (data && data.success && data.success.answer) {
+				showMosaic(data.success.answer);
+			} else {
+				location.hash = '';
+			}
+		});
+	};
+
 	const doGetTemplates = () => {
 		commonAutomatorRequest({
 			formParams: {
@@ -2565,16 +2580,16 @@ window.addEventListener('DOMContentLoaded', () => {
 						<span class="name-text">${description}</span>
 					</td>
 					<td>
-						<span class="name-text editable" data-value="${platform}">${platform}</span>
+						<span class="name-text editable" data-name="platform" data-value="${platform}">${platform}</span>
 					</td>
 					<td>
-						<span class="name-text editable" data-value="${tags}">${tags}</span>
+						<span class="name-text editable" data-name="tags" data-value="${tags}">${tags}</span>
 					</td>
 					<td>
-						<span class="name-text editable" data-value="${group}">${group}</span>
+						<span class="name-text editable" data-name="group" data-value="${group}">${group}</span>
 					</td>
 					<td>
-						<span class="name-text editable" data-value="${owner}">${owner}</span>
+						<span class="name-text editable" data-name="owner" data-value="${owner}">${owner}</span>
 					</td>
 					<td>
 						<span class="name-text">${comments}</span>
@@ -2908,6 +2923,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		e.preventDefault();
 		const target = e.target;
 		const mosaicRow = target.closest('.mosaic-table-row');
+		const parent_a = target.closest('a');
 		let action = null;
 
 		if (target.classList.contains('icon-edit'))
@@ -2916,10 +2932,21 @@ window.addEventListener('DOMContentLoaded', () => {
 		} else if (target.classList.contains('icon-delete')) {
 			action = 'delete';
 		} else if (target.dataset.undo != null) {
-			target.closest('a').querySelector('[data-edit]').classList.remove('hidden');
-			target.closest('a').querySelector('[data-done]').classList.add('hidden');
+			parent_a.querySelector('[data-edit]').classList.remove('hidden');
+			parent_a.querySelector('[data-done]').classList.add('hidden');
 			target.classList.add('hidden');
 			mosaicRow.querySelectorAll('span.editable').forEach(resetEdit);
+		} else if (target.dataset.done != null) {
+			const args = {};
+			target.closest('tr').querySelectorAll('.editable').forEach(item => {
+				args[item.dataset.name] = item.textContent;
+			});
+			updateDevicesData(args);
+			parent_a.querySelector('[data-edit]').classList.remove('hidden');
+			parent_a.querySelector('[data-done]').classList.add('hidden');
+			target.classList.add('hidden');
+			mosaicRow.querySelectorAll('span.editable').forEach(resetEdit);
+
 		}
 		switch (action) {
 			case 'modify':
@@ -2934,9 +2961,6 @@ window.addEventListener('DOMContentLoaded', () => {
 					id: mosaicRow.dataset.node_id
 				});
 				break;
-			// case 'undo':
-				
-			// 	break;
 		}
 	};
 
