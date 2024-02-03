@@ -8,6 +8,7 @@ require 'vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xls;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 \PhpOffice\PhpSpreadsheet\Cell\Cell::setValueBinder( new \PhpOffice\PhpSpreadsheet\Cell\AdvancedValueBinder() );
 // use Bookstack\Bookstack;
 
@@ -148,7 +149,7 @@ if ($env === 'documentation' && $accessType !== false && isset($_SESSION['logged
 if ($env === 'services') {
 	require_once 'db_conf_mosaic.php';
 
-	$call = $paramJSON['call'] ?? null;
+	$call = $paramJSON['call'] ?? $_REQUEST['call'] ?? null;
 	$param_error_msg['answer'] = false;
 
 	$data_fields = [
@@ -162,10 +163,14 @@ if ($env === 'services') {
 	];
 
 	$devices_data = [
+		'id'		=> '0',
+		'locked'	=> '1',
 		'platform'	=> '',
 		'tags'		=> '',
 		'group'		=> '',
 		'owner'		=> '',
+		'contacts'	=> '',
+		'comments'	=> '',
 	];
 	
 	foreach ($data_fields as $key => $value) {
@@ -176,7 +181,7 @@ if ($env === 'services') {
 
 	foreach ($devices_data as $key => $value) {
 		if(isset($paramJSON[$key])) {
-			$devices_data[$key] = $db_object->removeBadSymbols($paramJSON[$key]);
+			$devices_data[$key] = trim($db_object->removeBadSymbols($paramJSON[$key]));
 		}
 	}
 
@@ -210,15 +215,37 @@ if ($env === 'services') {
 		]);
 	} elseif ($call == 'updateDevicesData' && $accessType === 'admin') {
 		$param_error_msg['answer'] = $db_object->updateDevicesData([
+			'id'		=> $devices_data['id'],
+			'locked'	=> $devices_data['locked'],
 			'platform'	=> $devices_data['platform'],
-			'tags'	=> $devices_data['tags'],
-			'group'	=> $devices_data['group'],
+			'tags'		=> $devices_data['tags'],
+			'group'		=> $devices_data['group'],
 			'owner'		=> $devices_data['owner'],
+			// 'contacts'	=> $devices_data['contacts'],
+			'contacts'	=> '',
+			'comments'	=> $devices_data['comments'],
 		]);
 	}
 	elseif ($call == 'doDeleteDevice' && $accessType === 'admin') 
 	{
 		$param_error_msg['answer'] = $db_object->doDeleteDevice($paramJSON['id'] ?? 0);
+	} elseif ($call == 'loadData' && $accessType === 'admin') {
+		$tmp = $_FILES['file']['tmp_name'];
+			if (($tmp!='') && is_uploaded_file($tmp)) 
+			{  
+				$reader = new Xlsx();
+				$reader->setReadDataOnly(true);
+				$spreadsheet = $reader->load($tmp);
+				$worksheet = $spreadsheet->getActiveSheet();
+				$rows = $worksheet->toArray();
+
+				$param_error_msg['answer'] = $db_object->loadData($rows);
+				// foreach ($rows as $row) {
+				// 	// error_log(print_r($row,true));
+				// }
+			}
+	} elseif ($call == 'clearDevicesDataTemp' && $accessType === 'admin') {
+		$param_error_msg['answer'] = $db_object->clearDevicesDataTemp();
 	}
 	$out_res = ['success' => $param_error_msg];	
 

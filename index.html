@@ -659,7 +659,7 @@
 			</section>
 			<section class="section services">
 				<div class="main-mosaic-container container-xl mx-lg-4 mx-md-2 mx-sm-1">
-					<div class="border border-dark mt-2 p-2 modify-mosaic-container">
+					<div class="border border-dark mt-2 p-2 modify-mosaic-container hidden">
 						<form action="#" method="POST" id="mosaicForm">
 							<input type="hidden" name="id" id="mosaicNodeId">
 							<div class="row">
@@ -736,6 +736,12 @@
 							</div>
 						</form>
 					</div>
+					<form action="#" method="POST" id="mosaicFormLoadData" enctype="multipart/form-data">
+						<label for="loadExcelData" class="file-input-show btn btn-info btn-sm">Load Data</label>
+						<input type="file" class="form-control-file-excel file-input-hidden" id="loadExcelData" name="file" accept=".xlsx">
+						<label for="btnClearData" class="file-input-show btn btn-secondary btn-sm">Clear Data (test only mode)</label>
+						<button type="button" class="hidden" id="btnClearData" title="Clear Data"></button>
+					</form>
 					<table class="devices-all-table table table-hover table-sm table-striped table-bordered compact no-footer" id="devicesMosaic">
 						<!-- <thead>
 							<tr>

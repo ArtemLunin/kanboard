@@ -115,6 +115,7 @@ class databaseUtils {
 		}
 		return false;
 	}
+
 	function modSQLInsUpd($sqlInsUpd, $params_arr, $needCount = true) {
 		if (!$this->tableAccessError) {
 			try {
@@ -125,9 +126,13 @@ class databaseUtils {
 				}
 			} catch (\PDOException $e){
 				if (preg_match('/Duplicate entry/i', $e->getMessage()) == 1) {
-					$row = $this->pdo->prepare($sqlInsUpd['upd']);
-					$row->execute($params_arr);
-					if (!$needCount || ($row->rowCount())) {
+					if ($sqlInsUpd['upd'] !== null && $sqlInsUpd['upd'] !== '') {
+						$row = $this->pdo->prepare($sqlInsUpd['upd']);
+						$row->execute($params_arr);
+						if (!$needCount || ($row->rowCount())) {
+							return true;
+						}
+					} else {
 						return true;
 					}
 				}
@@ -355,28 +360,28 @@ class databaseUtils {
 	function doGetDevicesAll() 
 	{
 		$device_list = [];
-		$sql = "SELECT id, name, port, descr, platform, comments FROM devices_new";
-		$sql_tags = "SELECT id, tag, device_id FROM devices_tags WHERE device_id=:device_id";
-		$sql_owner = "SELECT id, group_name, manager, contacts, device_id FROM devices_owners WHERE device_id=:device_id";
+		$sql = "SELECT id, name, port, descr, platform,group_name,manager,contacts,tags, comments FROM devices_new";
+		// $sql_tags = "SELECT id, tag, device_id FROM devices_tags WHERE device_id=:device_id";
+		// $sql_owner = "SELECT id, group_name, manager, contacts, device_id FROM devices_owners WHERE device_id=:device_id";
 
 		if ($table_res = $this->getSQL($sql, [])) {
 			foreach ($table_res as $result)
 			{
-				$tags = '';
-				$table_tags = $this->getSQL($sql_tags, [
-					'device_id' => $result['id'],
-				]);
-				foreach ($table_tags as $tag) {
-					$tags .= ' ' . $tag['tag'];
-				}
-				$group = ''; $manager = ''; $contacts = '';
-				if ($table_owners = $this->getSQL($sql_owner, [
-					'device_id' => $result['id'],
-				])) {
-					$group = $table_owners[0]['group_name'];
-					$manager = $table_owners[0]['manager'];
-					$contacts = $table_owners[0]['contacts'];
-				}
+				// $tags = '';
+				// $table_tags = $this->getSQL($sql_tags, [
+				// 	'device_id' => $result['id'],
+				// ]);
+				// foreach ($table_tags as $tag) {
+				// 	$tags .= ' ' . $tag['tag'];
+				// }
+				// $group = ''; $manager = ''; $contacts = '';
+				// if ($table_owners = $this->getSQL($sql_owner, [
+				// 	'device_id' => $result['id'],
+				// ])) {
+				// 	$group = $table_owners[0]['group_name'];
+				// 	$manager = $table_owners[0]['manager'];
+				// 	$contacts = $table_owners[0]['contacts'];
+				// }
 
 				$device_list[] = [
 					'id' 		=> (int)$result['id'],
@@ -384,9 +389,9 @@ class databaseUtils {
 					'port'		=> $result['port'],
 					'description'	=> $result['descr'] ?? '',
 					'platform'	=> $result['platform'] ?? '',
-					'tags'		=> trim($tags),
-					'group'		=> $group,
-					'owner'		=> $manager,
+					'tags'		=> $result['tags'],
+					'group'		=> $result['group_name'],
+					'owner'		=> $result['manager'],
 					'comments'	=> $this->removeBadSymbols($result['comments']),
 				];
 			}
@@ -413,47 +418,104 @@ class databaseUtils {
 
 	function updateDevicesData($deviceParam)
 	{
-		// $this->errorLog(print_r($deviceParam,true));
-		$sql = "SELECT id, descr FROM devices_new WHERE platform=:platform";
-		$sql_upd = "UPDATE devices_new SET platform=:platform WHERE id=:id";
-		$sql_tags = "INSERT INTO devices_tags (tag, device_id) VALUES (:tag,:device_id)";
-		$sql_ins_owner = "INSERT INTO devices_owners (group_name, manager,device_id) VALUES (:group_name,:manager,:device_id)";
-		$tags = strtolower($deviceParam['tags']);
-		$sql_upd_owner = "UPDATE devices_owners SET group_name=:group_name,manager=:manager WHERE device_id=:device_id";
+		$group = $deviceParam['group'];
+		$manager = $deviceParam['owner'];
+
+		$sql = "SELECT id, descr,platform,group_name,manager FROM devices_new WHERE platform=:filter";
+		$filter = '';
+		if ($deviceParam['locked'] == '1') {
+			$sql = "SELECT id, descr,platform,group_name,manager FROM devices_new WHERE id=:filter";
+			$filter = $deviceParam['id'];
+		} elseif ($deviceParam['group'] == '') {
+			$sql_pre = "SELECT id, descr,platform,group_name,manager FROM devices_new WHERE platform=:filter LIMIT 1";
+			if ($table_res = $this->getSQL($sql_pre, [
+				'filter' => $deviceParam['platform'],
+			])) {
+				$group = $table_res[0]['group_name'];
+				$manager = $table_res[0]['manager'];
+				$filter = $deviceParam['platform'];
+			}
+		}
+		// $sql_upd = "UPDATE devices_new SET platform=:platform WHERE id=:id";
+		// $sql_tags = "INSERT INTO devices_tags (tag, device_id) VALUES (:tag,:device_id)";
+		// $sql_ins_owner = "INSERT INTO devices_owners (group_name, manager,device_id) VALUES (:group_name,:manager,:device_id)";
+		// $sql_upd_owner = "UPDATE devices_owners SET group_name=:group_name,manager=:manager WHERE device_id=:device_id";
+		// $tags = strtolower($deviceParam['tags']);
+		$tags = explode(" ", trim(strtolower($deviceParam['tags'])));
+
+		$sql_upd = "UPDATE devices_new SET platform=:platform,group_name=:group_name,manager=:manager,contacts=:contacts,tags=:tags WHERE id=:id";
+		$sql_udp_note = "UPDATE devices_new SET comments=:comments WHERE id=:id";
+
 		if ($table_res = $this->getSQL($sql, [
-			'platform' => '',
+			'filter' => $filter,
 		])) {
 			foreach ($table_res as $result)
 			{
-				if (str_contains(strtolower($result['descr']), $tags)) {
-					$this->modSQL($sql_upd, [
-						'platform'	=> $deviceParam['platform'],
-						'id'		=> $result['id'],
-					], false);
-					$this->modSQL($sql_tags, [
-						'tag'	=> $tags,
-						'device_id'	=> $result['id'],
-					], false);
-					$this->modSQLInsUpd(['ins' => $sql_ins_owner, 'upd' => $sql_upd_owner], [
-						'group_name'=> $deviceParam['group'],
-						'manager'	=> $deviceParam['owner'],
-						'device_id' => $result['id'],
-					], false);
+				foreach ($tags as $tag) {
+					if (str_contains(strtolower($result['descr']), $tag)) {
+						$this->modSQL($sql_upd, [
+							'platform'		=> $deviceParam['platform'],
+							'group_name'	=> $group,
+							'manager'		=> $manager ,
+							'contacts'		=> $deviceParam['contacts'],
+							'tags'			=> $deviceParam['tags'],
+							'id'			=> $result['id'],
+						], false);
+						// $this->modSQL($sql_tags, [
+						// 	'tag'	=> $tags,
+						// 	'device_id'	=> $result['id'],
+						// ], false);
+						// $this->modSQLInsUpd(['ins' => $sql_ins_owner, 'upd' => $sql_upd_owner], [
+						// 	'group_name'=> $deviceParam['group'],
+						// 	'manager'	=> $deviceParam['owner'],
+						// 	'device_id' => $result['id'],
+						// ], false);
+						break;
+					}
 				}
 			}
+		}
+		$this->modSQL($sql_udp_note, [
+			'comments'	=> $deviceParam['comments'],
+			'id'		=> $deviceParam['id'],
+		], false);
+		return $this->doGetDevicesAll();
+	}
+
+	function loadData($rows)
+	{
+		// $sql_fresh = "DELETE FROM devices_new WHERE id<>0";
+		// $this->modSQL($sql_fresh, [], false);
+		$sql = "INSERT INTO devices_new (name,port,descr,platform,group_name,manager,tags,comments) VALUES (:name,:port,:descr,:platform,:group_name,:manager,:tags,:comments)";
+		foreach ($rows as $row) {
+			$this->modSQLInsUpd(['ins' => $sql, 'upd' => null], [
+				'name'		=> $row[0],
+				'port'		=> $row[1],
+				'descr' 	=> $row[2],
+				'platform'	=> $row[3] ?? '',
+				'tags'		=> $row[4] ?? '',
+				'group_name' => $row[5] ?? '',
+				'manager'	=> $row[6] ?? '',
+				'comments'	=> $row[7] ?? '',
+			], false);
 		}
 		return $this->doGetDevicesAll();
 	}
 	
 	function doDeleteDevice($id)
 	{
-		$sql = "DELETE FROM devices WHERE id=:id";
+		$sql = "DELETE FROM devices_new WHERE id=:id";
 		if ($this->modSQL($sql, [
 			'id' => $id
 		], true)) {	
-			return true;
+			return $this->doGetDevicesAll();
 		}
 		return false;
+	}
+
+	function clearDevicesDataTemp() {
+		$sql = "DELETE FROM devices_new WHERE id<>0";
+		return $this->modSQL($sql, [], false);
 	}
 
 	function installCacheTable() {
@@ -477,7 +539,7 @@ class databaseUtils {
 	
 	function removeBadSymbols($str)
 	{
-		return str_replace(["\"","'","\t"]," ", $str);
+		return str_replace(["\"","'","\t"]," ", $str ?? '');
 	}
 
 	function setSQLError($pdo_exception, $error_text)

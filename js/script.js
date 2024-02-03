@@ -322,10 +322,13 @@ window.addEventListener('DOMContentLoaded', () => {
 	const mainContainer = document.querySelector('.main-mosaic-container'),
 		modifyContainer = mainContainer.querySelector('.modify-mosaic-container'),
 		mosaicForm = modifyContainer.querySelector('#mosaicForm'),
+		mosaicFormLoadData = document.querySelector('#mosaicFormLoadData'),
 		// dividerArrow = mainContainer.querySelector('.divider-arrow'),
 		devicesAllBody = mainContainer.querySelector('.devices-all-body'),
 		titleDialogModal = document.querySelector('#titleDialogModal'),
 		questionDialogModal = document.querySelector('#questionDialogModal'),
+		loadExcelData = document.querySelector('#loadExcelData'),
+		btnClearData = document.querySelector('#btnClearData'),
 		// triangle = document.querySelector('.triangle'),
 		// btnApplySettings = document.querySelector('.btn-apply-settings'),
 		btnDialogModal = document.querySelector('#btnDialogModal');
@@ -726,23 +729,23 @@ window.addEventListener('DOMContentLoaded', () => {
 			"autoWidth": false,
 			columns:
 			[
-				{ "width": "10%" },
-				{ "width": "10%" },
-				{ "width": "10%" },
-				{ "width": "10%" },
+				{ "width": "8%" },
+				{ "width": "8%" },
+				{ "width": "15%" },
+				{ "width": "8%" },
 				{ "width": "15%" },
 				{ "width": "10%" },
 				{ "width": "10%" },
+				{ "width": "16%" },
 				{ "width": "10%" },
-				{ "width": "5%" },
 			],
 			columnDefs: [
-				{ orderable: false, "targets": [6, 7] },
+				{ orderable: false, "targets": [6, 7,8] },
 			],
-			// order: [
-			// 	[1, 'desc'],
-			// 	[0, 'asc'],
-			// ],
+			order: [
+				// [0, 'desc'],
+				// [1, 'asc'],
+			],
 			paging: false,
 			searching: true,
 			stripeClasses :[],
@@ -2206,6 +2209,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	
+
 	const getAutomator = () => {
 		commonAutomatorRequest({
 			formParams: {
@@ -2227,9 +2232,16 @@ window.addEventListener('DOMContentLoaded', () => {
 				showMosaic(data.success.answer);
 			} else {
 				location.hash = '';
-				// location.reload();
 			}
 		});
+	};
+
+	const clearDevicesDataTemp = () => {
+		const body = {
+			env: 'services',
+			call: 'clearDevicesDataTemp',
+		};
+		sendRequest('POST', requestURL, body).then(getMosaic);
 	};
 
 	const updateDevicesData = (args) => {
@@ -2592,14 +2604,16 @@ window.addEventListener('DOMContentLoaded', () => {
 						<span class="name-text editable" data-name="owner" data-value="${owner}">${owner}</span>
 					</td>
 					<td>
-						<span class="name-text">${comments}</span>
+						<span class="name-text editable "data-name="comments" data-value="${comments}">${comments}</span>
 					</td>
 					<td>
 						<div class="action-buttons justify-content-center ${hideEditButtons}">
-							<a href="#">
+							<a href="#" data-locked='1'>
 								<img class="icon-edit icon-edit-sm" data-edit src="img/edit.svg">
 								<img class="icon icon-edit-sm hidden" data-undo src="img/undo.svg" title="Undo">
 								<img class="icon icon-edit-sm hidden" data-done src="img/done.svg" title="Done">
+								<img class="icon icon-edit-sm hidden" data-lock src="img/lock.svg" title="Switch to All">
+								<img class="icon icon-edit-sm hidden" data-open src="img/lock_open.svg" title="Switch to one">
 							</a>
 							<a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
 						</div>
@@ -2622,7 +2636,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (previousModal) {
 			$(previousModal).modal('hide');
 		}
-		// console.log(dialogModalProps.selector);
 		$(dialogModalProps.selector).modal({
   			keyboard: true
 		});
@@ -2664,6 +2677,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const target = e.target;
 		xls_files = target.files;
 	});
+
 
 	document.querySelector('#deleteDevices').addEventListener('click', function()
 	{
@@ -2934,6 +2948,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		} else if (target.dataset.undo != null) {
 			parent_a.querySelector('[data-edit]').classList.remove('hidden');
 			parent_a.querySelector('[data-done]').classList.add('hidden');
+			parent_a.querySelector('[data-lock]').classList.add('hidden');
+			parent_a.querySelector('[data-open]').classList.add('hidden');
 			target.classList.add('hidden');
 			mosaicRow.querySelectorAll('span.editable').forEach(resetEdit);
 		} else if (target.dataset.done != null) {
@@ -2941,12 +2957,23 @@ window.addEventListener('DOMContentLoaded', () => {
 			target.closest('tr').querySelectorAll('.editable').forEach(item => {
 				args[item.dataset.name] = item.textContent;
 			});
+			args['id'] = target.closest('tr').dataset.node_id;
+			args['locked'] = parent_a.dataset.locked;
 			updateDevicesData(args);
 			parent_a.querySelector('[data-edit]').classList.remove('hidden');
 			parent_a.querySelector('[data-done]').classList.add('hidden');
+			parent_a.querySelector('[data-lock]').classList.add('hidden');
+			parent_a.querySelector('[data-open]').classList.add('hidden');
 			target.classList.add('hidden');
 			mosaicRow.querySelectorAll('span.editable').forEach(resetEdit);
-
+		} else if (target.dataset.lock != null) {
+			parent_a.dataset.locked = '0';
+			parent_a.querySelector('[data-open]').classList.remove('hidden');
+			target.classList.add('hidden');
+		} else if (target.dataset.open != null) {
+			parent_a.dataset.locked = '1';
+			parent_a.querySelector('[data-lock]').classList.remove('hidden');
+			target.classList.add('hidden');
 		}
 		switch (action) {
 			case 'modify':
@@ -3007,6 +3034,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		rowDevice.querySelector('[data-edit]').classList.add('hidden');
 		rowDevice.querySelector('[data-undo]').classList.remove('hidden');
 		rowDevice.querySelector('[data-done]').classList.remove('hidden');
+		rowDevice.querySelector('[data-lock]').classList.remove('hidden');
+		rowDevice.querySelector('[data-open]').classList.add('hidden');
 	};
 
 	const confirmDialog = (e) => {
@@ -3032,7 +3061,11 @@ window.addEventListener('DOMContentLoaded', () => {
 			call: 'doDeleteDevice',
 			id: deviceID
 		};
-		sendRequest('POST', requestURL, body).then(getMosaic);
+		sendRequest('POST', requestURL, body).then((data) => {
+			if (data && data.success && data.success.answer) {
+				showMosaic(data.success.answer);
+			}
+		});
 	};
 
 	$('#modalTemplateUploadDialog').on('show.bs.modal', function (e) {
@@ -3221,6 +3254,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		createTaskFileNew(e, btnCreateTaskFileExcel, attachmentsContainerExcel, callback);
 	});
 
+	loadExcelData.addEventListener('change', function(e) {
+		mosaicFormLoadData.requestSubmit();
+	});
+
+	btnClearData.addEventListener('click', function(e) {
+		clearDevicesDataTemp();
+	});
 
 	tableUsers.addEventListener('click', actionForUsers);
 	rightsForm.addEventListener('submit', (e) => {
@@ -3481,6 +3521,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		target.querySelector('[data-action="update"]').style.display = 'none';
 		target.querySelector('[data-action="add"]').style.display = '';
 	});
+
 	mosaicForm.addEventListener('submit', (e) => {
 		e.preventDefault();
 		const target = e.target;
@@ -3500,6 +3541,18 @@ window.addEventListener('DOMContentLoaded', () => {
 			sendRequest('POST', requestURL, arrData).then(getMosaic);
 		}
 	});
+
+	mosaicFormLoadData.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const formData = new FormData(e.target);
+		formData.append('env', 'services');
+		formData.append('call', 'loadData');
+
+		sendFile('POST', requestURL, formData).then((data) => {
+			showMosaic(data.success.answer);
+		});
+	});
+
 	devicesAllBody.addEventListener('click', deviceActionMosaic);
 	btnDialogModal.addEventListener('click', confirmDialog);
 	// triangle.addEventListener('click', triangleToggle);
