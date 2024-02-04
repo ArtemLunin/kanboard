@@ -96,6 +96,7 @@ const table_statistics_selector = 'table_statistics',
 
 const table_excel_selector = 'table_excel';
 const exportExcel_selector = 'exportExcel';
+const mosaicTtableSelector = 'mosaic-table-row';
 
 const excelDataArray = [];
 
@@ -2525,7 +2526,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				let deviceDataID = `device-data-${id}`;
 				const tr = document.createElement('tr');
 
-				tr.classList.add('mosaic-table-row');
+				tr.classList.add(mosaicTtableSelector);
 				tr.dataset.node_id = id;
 				tr.id = deviceDataID;
 				tr.innerHTML = `
@@ -2578,9 +2579,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				// let deviceDataID = `device-data-${id}`;
 				const tr = document.createElement('tr');
 
-				tr.classList.add('mosaic-table-row');
+				tr.classList.add(mosaicTtableSelector);
 				tr.dataset.node_id = id;
 				tr.id = `device-data-${id}`;
+				tr.dataset.locked='1';
 				tr.innerHTML = `
 					<td>
 						<span class="name-text">${name}</span>
@@ -2865,6 +2867,17 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
+	// inventoryTags.addEventListener("keydown", (event) => {
+	// 	const newTag = event.target.closest('.new-tag');
+	// 	if (newTag) {
+	// 		if (event.code === 'Enter') {
+	// 			event.preventDefault();
+	// 			inventoryTagsSet.add(newTag.innerText);
+	// 			fillInventoryTags(inventoryTagsSet);
+	// 		}
+	// 	}
+	// });
+
 	const getOTL = (fieldsKanboard) => {
 		let OTLStatus = '';
 		if (!!fieldsKanboard['otl'] && fieldsKanboard['otl'] !== '') {
@@ -2936,7 +2949,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	const deviceActionMosaic = function(e) {
 		e.preventDefault();
 		const target = e.target;
-		const mosaicRow = target.closest('.mosaic-table-row');
+		const mosaicRow = target.closest(`.${mosaicTtableSelector}`);
 		const parent_a = target.closest('a');
 		let action = null;
 
@@ -2968,10 +2981,12 @@ window.addEventListener('DOMContentLoaded', () => {
 			mosaicRow.querySelectorAll('span.editable').forEach(resetEdit);
 		} else if (target.dataset.lock != null) {
 			parent_a.dataset.locked = '0';
+			mosaicRow.dataset.locked = '0';
 			parent_a.querySelector('[data-open]').classList.remove('hidden');
 			target.classList.add('hidden');
 		} else if (target.dataset.open != null) {
 			parent_a.dataset.locked = '1';
+			mosaicRow.dataset.locked = '1';
 			parent_a.querySelector('[data-lock]').classList.remove('hidden');
 			target.classList.add('hidden');
 		}
@@ -2988,6 +3003,36 @@ window.addEventListener('DOMContentLoaded', () => {
 					id: mosaicRow.dataset.node_id
 				});
 				break;
+		}
+	};
+
+	const deviceKeyDown = function(e) {
+		const target = e.target;
+		const newTag = target.closest('.new-tag');
+		if (newTag) {
+			if (e.code === 'Enter') {
+				e.preventDefault();
+				const mosaicRow = target.closest(`.${mosaicTtableSelector}`);
+
+				if (target.dataset.name === 'owner' && target.innerText.trim() != '' && target.dataset.value != '' && target.innerText.trim() != target.dataset.value)
+				{
+					// const args = {};
+					// args['id'] = mosaicRow.dataset.node_id;
+					// args['locked'] = mosaicRow.dataset.locked;
+
+					titleDialogModal.innerText = 'Change Owner';
+					questionDialogModal.innerText = `Do you really want to change owner from : ${target.dataset.value} to ${target.innerText.trim()}?`;
+					btnDialogModal.setAttribute('modal-command', 'changeOwner');
+					btnDialogModal.dataset['id'] = mosaicRow.dataset.node_id;
+					btnDialogModal.dataset['locked'] = mosaicRow.dataset.locked;
+					btnDialogModal.dataset['oldOwner'] = target.dataset.value;
+					btnDialogModal.dataset['newOwner'] = target.innerText.trim();
+
+					$('#dialogModal').modal({
+						keyboard: true
+					});
+				}
+			}
 		}
 	};
 
@@ -3052,6 +3097,14 @@ window.addEventListener('DOMContentLoaded', () => {
 					'acivity': target.dataset.activity
 				});
 				break;
+			case 'changeOwner':
+				changeOwner({
+					'oldOwner': target.dataset.oldOwner, 
+					'owner': target.dataset.newOwner,
+					'id': target.dataset.id,
+					'locked': target.dataset.locked,
+				});
+				break;
 		}
 	};
 
@@ -3067,6 +3120,23 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 		});
 	};
+
+	const changeOwner = ({id, locked, oldOwner, owner}) => {
+		const body = {
+			'env': 'services',
+			'call': 'doChangeOwner',
+			'id': id,
+			'locked': locked,
+			'oldOwner': oldOwner,
+			'owner': owner,
+		};
+		sendRequest('POST', requestURL, body).then((data) => {
+			if (data && data.success && data.success.answer) {
+				showMosaic(data.success.answer);
+			}
+		});
+	};
+
 
 	$('#modalTemplateUploadDialog').on('show.bs.modal', function (e) {
 		formTeplateUpload.reset();
@@ -3554,6 +3624,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	devicesAllBody.addEventListener('click', deviceActionMosaic);
+	devicesAllBody.addEventListener('keydown', deviceKeyDown);
 	btnDialogModal.addEventListener('click', confirmDialog);
 	// triangle.addEventListener('click', triangleToggle);
 

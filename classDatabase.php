@@ -482,6 +482,26 @@ class databaseUtils {
 		return $this->doGetDevicesAll();
 	}
 
+	function changeOwner($deviceParam) {
+		$sql = "UPDATE devices_new SET manager=:manager WHERE manager=:oldManager";
+		if ($deviceParam['locked'] == '1') {
+			$sql .= " AND id=:id";
+			$this->modSQL($sql, [
+				'manager'	=> $deviceParam['owner'],
+				'oldManager'=> $deviceParam['oldOwner'],
+				'id'		=> $deviceParam['id'],
+			], false);
+		} else {
+			$this->modSQL($sql, [
+				'manager'	=> $deviceParam['owner'],
+				'oldManager'=> $deviceParam['oldOwner'],
+			], false);
+		}
+
+		
+		return $this->doGetDevicesAll();
+	}
+
 	function loadData($rows)
 	{
 		// $sql_fresh = "DELETE FROM devices_new WHERE id<>0";

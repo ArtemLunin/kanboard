@@ -171,6 +171,7 @@ if ($env === 'services') {
 		'owner'		=> '',
 		'contacts'	=> '',
 		'comments'	=> '',
+		'oldOwner'	=> '',
 	];
 	
 	foreach ($data_fields as $key => $value) {
@@ -224,6 +225,13 @@ if ($env === 'services') {
 			// 'contacts'	=> $devices_data['contacts'],
 			'contacts'	=> '',
 			'comments'	=> $devices_data['comments'],
+		]);
+	} elseif ($call == 'doChangeOwner' && $accessType === 'admin' && $devices_data['owner'] != '' && $devices_data['oldOwner'] != '') {
+		$param_error_msg['answer'] = $db_object->changeOwner([
+			'owner'		=> $devices_data['owner'],
+			'oldOwner'	=> $devices_data['oldOwner'],
+			'locked'	=> $devices_data['locked'],
+			'id'		=> $devices_data['id'],
 		]);
 	}
 	elseif ($call == 'doDeleteDevice' && $accessType === 'admin') 
