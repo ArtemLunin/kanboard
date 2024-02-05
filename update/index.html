@@ -659,7 +659,7 @@
 			</section>
 			<section class="section services">
 				<div class="main-mosaic-container container-xl mx-lg-4 mx-md-2 mx-sm-1">
-					<div class="border border-dark mt-2 p-2 modify-mosaic-container">
+					<div class="border border-dark mt-2 p-2 modify-mosaic-container hidden">
 						<form action="#" method="POST" id="mosaicForm">
 							<input type="hidden" name="id" id="mosaicNodeId">
 							<div class="row">
@@ -736,8 +736,14 @@
 							</div>
 						</form>
 					</div>
+					<form action="#" method="POST" id="mosaicFormLoadData" enctype="multipart/form-data">
+						<label for="loadExcelData" class="file-input-show btn btn-info btn-sm">Load Data</label>
+						<input type="file" class="form-control-file-excel file-input-hidden" id="loadExcelData" name="file" accept=".xlsx">
+						<!-- <label for="btnClearData" class="file-input-show btn btn-secondary btn-sm">Clear Data (test only mode)</label>
+						<button type="button" class="hidden" id="btnClearData" title="Clear Data"></button> -->
+					</form>
 					<table class="devices-all-table table table-hover table-sm table-striped table-bordered compact no-footer" id="devicesMosaic">
-						<thead>
+						<!-- <thead>
 							<tr>
 								<th class="exportable">Node</th>
 								<th class="exportable">Platform</th>
@@ -746,6 +752,19 @@
 								<th class="exportable">Contact Info</th>
 								<th class="exportable">Manager</th>
 								<th class="exportable">Comments</th>
+								<th>Actions</th>
+							</tr>
+						</thead> -->
+						<thead>
+							<tr>
+								<th class="exportable">Node</th>
+								<th class="exportable">Interface</th>
+								<th class="exportable">Description</th>
+								<th class="exportable">Platform</th>
+								<th class="exportable">Tag</th>
+								<th class="exportable">Group</th>
+								<th class="exportable">Owner</th>
+								<th class="exportable">Note</th>
 								<th>Actions</th>
 							</tr>
 						</thead>
@@ -842,19 +861,19 @@
 								<input type="hidden" name="ceilIP" id="ceilIP" data-ecfr="1">
 								<div class="param param-half">
 									<label for="dipeFCRNumber">eFCR Number</label>
-									<input type="text" class="mop" name="dipeFCRNumber" id="dipeFCRNumber" value="" disabled data-ecfr="1">
+									<input type="text" class="mop input-edit" name="dipeFCRNumber" id="dipeFCRNumber" value="" disabled data-ecfr="1">
 								</div>
 								<div class="param param-half">
 									<label for="dipCompanyName">Company Name</label>
-									<input type="text" class="mop" name="dipCompanyName" id="dipCompanyName" value="" disabled data-ecfr="1">
+									<input type="text" class="mop input-edit" name="dipCompanyName" id="dipCompanyName" value="" disabled data-ecfr="1">
 								</div>
 								<div class="param param-half">
 									<label for="dipCountryName">Country Name</label>
-									<input type="text" class="mop" name="dipCountryName" id="dipCountryName" value="" disabled data-ecfr="1">
+									<input type="text" class="mop input-edit" name="dipCountryName" id="dipCountryName" value="" disabled data-ecfr="1">
 								</div>
 								<div class="param param-half">
 									<label for="dipStartIndex">Start Index</label>
-									<input type="number" min="0" class="mop" name="dipStartIndex" id="dipStartIndex" value="" disabled data-ecfr="1">
+									<input type="number" min="0" class="mop input-edit" name="dipStartIndex" id="dipStartIndex" value="" disabled data-ecfr="1">
 								</div>
 								<div class="param-row">
 									<div class="param param-25">
@@ -863,10 +882,13 @@
 								</div>
 								<div class="param-row multirows">
 									<div class="param param-25">
-										<input type="text" class="mop" name="ceil_ip_1" id="ceil_ip_1" data-name="ceilIP" data-id="1" value="">
+										<input type="text" class="mop input-edit" name="ceil_ip_1" id="ceil_ip_1" data-name="ceilIP" data-id="1" value="">
 									</div>
 								</div>
-								<button id="" class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
+								<div class="param-row ceil-btns">
+									<button class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
+									<button class="mop action renderOnly js-ceil-area-remove hidden" type="button" title="Remove row">-</button>
+								</div>
 							</fieldset>
 							<fieldset id="group3" class="">
 								<legend>Project Info</legend>
@@ -899,10 +921,10 @@
 									<label for="revisionNumber">Revision Number</label>
 									<input type="text" class="mop" name="revisionNumber" id="revisionNumber" value="1.0" size="10">
 								</div>
-								<div class="param param-half">
+								<!-- <div class="param param-half">
 									<label for="projectDetail">Project Detail</label>
 									<input type="text" class="mop" name="projectDetail" id="projectDetail" value="" size="50">
-								</div>
+								</div> -->
 								<div class="param param-half">
 									<label for="author">Author</label>
 									<input type="text" class="mop" name="author" id="author" value="Dmitry Kisialeu">
@@ -1043,7 +1065,11 @@
 										<input type="text" class="mop" name="ceil_time_1" id="ceil_time_1" data-name="ceilTime" data-id="1" value="2h" size="6" required>
 									</div>
 								</div>
-								<button id="ceil_area_append" class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
+								<div class="param-row ceil-btns">
+									<button class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
+									<button class="mop action renderOnly js-ceil-area-remove hidden" type="button" title="Remove row">-</button>
+								</div>
+								
 							</fieldset>
 							<fieldset id="group17" class="hidden">
 								<legend>Diagram and Service Flows</legend>
@@ -1378,6 +1404,94 @@
 			<section class="section mop"></section>
 			<section class="section templateDIP"></section>
 			<section class="section dip"></section>
+			<section class="section capacity">
+				<fieldset class="">
+					<legend>Uplink/Downlink Information</legend>
+					<div class="param param-half">
+					</div>
+					<div class="param param-half">
+					</div>
+				</fieldset>
+				<fieldset class="">
+					<legend>SDE Crosslink Information</legend>
+					<div class="param param-half">
+					</div>
+					<div class="param param-half">
+					</div>
+				</fieldset>
+				<fieldset class="">
+					<legend>IP Core Crosslink Information</legend>
+					<div class="param param-half">
+					</div>
+					<div class="param param-half">
+					</div>
+				</fieldset>
+			</section>
+			<section class="section inventory">
+				<div class="container" id="inventory">
+					<table class="table table-sm table-bordered compact mt-2" id="table-inventory">
+						<thead class="thead-light">
+							<tr>
+								<th>Name</th>
+								<th>Vendor</th>
+								<th>Model</th>
+								<th>Software</th>
+								<!-- <th>Software expected</th> -->
+								<th>Serial</th>
+								<th>Year</th>
+								<th>Comment</th>
+								<th>
+									<a href="#" data-id="">
+										<img class="icon-edit icon-edit-sm js-newChassis" src="img/add_circle.svg" title="New">
+										<img class="icon-edit icon-edit-sm js-undoNewChassis hidden" data-undo src="img/undo.svg" title="Undo">
+										</a>
+								</th>
+							</tr>
+						</thead>	
+						<tbody class="t-inventory">
+						</tbody>		
+					</table>
+					<!-- <table class="table table-hover table-striped table-bordered compact mt-2 hidden" >
+						<thead class="thead-light">
+							<tr>
+								<th>Model</th>
+								<th>Tag</th>
+							</tr>
+						</thead>
+						<tbody class="t-parts">
+							<tr>
+								<td>
+									<span class="inventory-tag">one</span>
+									<span class="inventory-tag">two</span>
+									<span class="inventory-tag">three</span>
+								</td>
+							</tr>
+						</tbody>
+					</table> -->
+					<div class="hidden" id="table-tags">
+						<div class="inventory-head">Tags 
+							<a href="#" data-id="" title="Save tags">
+							<img class="icon-edit icon-edit-sm js-saveTags" src="img/save.svg">
+							</a>
+						</div>
+						<div class="inventory-tags" data-tags="">
+						</div>
+					</div>
+					<table class="table table-hover table-sm table-striped table-bordered compact mt-2 hidden" id="table-parts">
+						<thead class="thead-light">
+							<tr>
+								<!-- <th>Model</th> -->
+								<th>Part</th>
+							</tr>
+						</thead>
+						<tbody class="t-tags">
+							<tr>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
 			<section class="section documentation">
 				<div class="container-documentation" style="display:none;">
 					<div class="book-aside book-menu">

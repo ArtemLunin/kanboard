@@ -2237,13 +2237,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const clearDevicesDataTemp = () => {
-		const body = {
-			env: 'services',
-			call: 'clearDevicesDataTemp',
-		};
-		sendRequest('POST', requestURL, body).then(getMosaic);
-	};
+	// const clearDevicesDataTemp = () => {
+	// 	const body = {
+	// 		env: 'services',
+	// 		call: 'clearDevicesDataTemp',
+	// 	};
+	// 	sendRequest('POST', requestURL, body).then(getMosaic);
+	// };
 
 	const updateDevicesData = (args) => {
 		const body = {
@@ -3013,13 +3013,13 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (e.code === 'Enter') {
 				e.preventDefault();
 				const mosaicRow = target.closest(`.${mosaicTtableSelector}`);
+				const platformName = mosaicRow.querySelector('[data-name="platform"]').dataset.value;
+				const groupName = mosaicRow.querySelector('[data-name="group"]').dataset.value;
+				const ownerName = mosaicRow.querySelector('[data-name="owner"]').dataset.value;
+
 
 				if (target.dataset.name === 'owner' && target.innerText.trim() != '' && target.dataset.value != '' && target.innerText.trim() != target.dataset.value)
 				{
-					// const args = {};
-					// args['id'] = mosaicRow.dataset.node_id;
-					// args['locked'] = mosaicRow.dataset.locked;
-
 					titleDialogModal.innerText = 'Change Owner';
 					questionDialogModal.innerText = `Do you really want to change owner from : ${target.dataset.value} to ${target.innerText.trim()}?`;
 					btnDialogModal.setAttribute('modal-command', 'changeOwner');
@@ -3027,6 +3027,20 @@ window.addEventListener('DOMContentLoaded', () => {
 					btnDialogModal.dataset['locked'] = mosaicRow.dataset.locked;
 					btnDialogModal.dataset['oldOwner'] = target.dataset.value;
 					btnDialogModal.dataset['newOwner'] = target.innerText.trim();
+					btnDialogModal.dataset['group'] = groupName;
+
+					$('#dialogModal').modal({
+						keyboard: true
+					});
+				} else if (target.dataset.name === 'group' && target.innerText.trim() != '' && target.dataset.value != '' && target.innerText.trim() != target.dataset.value) {
+					titleDialogModal.innerText = 'Change Group';
+					questionDialogModal.innerText = `Do you really want to change group from : ${target.dataset.value} to ${target.innerText.trim()}?`;
+					btnDialogModal.setAttribute('modal-command', 'changeGroup');
+					btnDialogModal.dataset['id'] = mosaicRow.dataset.node_id;
+					btnDialogModal.dataset['locked'] = mosaicRow.dataset.locked;
+					btnDialogModal.dataset['oldGroup'] = target.dataset.value;
+					btnDialogModal.dataset['group'] = target.innerText.trim();;
+					btnDialogModal.dataset['platform'] = platformName;
 
 					$('#dialogModal').modal({
 						keyboard: true
@@ -3099,10 +3113,20 @@ window.addEventListener('DOMContentLoaded', () => {
 				break;
 			case 'changeOwner':
 				changeOwner({
-					'oldOwner': target.dataset.oldOwner, 
-					'owner': target.dataset.newOwner,
 					'id': target.dataset.id,
 					'locked': target.dataset.locked,
+					'oldOwner': target.dataset.oldOwner, 
+					'owner': target.dataset.newOwner,
+					'group': target.dataset.group,
+				});
+				break;
+			case 'changeGroup':
+				changeGroup({
+					'id': target.dataset.id,
+					'locked': target.dataset.locked,
+					'oldGroup': target.dataset.oldGroup, 
+					'group': target.dataset.group,
+					'platform': target.dataset.platform,
 				});
 				break;
 		}
@@ -3121,7 +3145,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const changeOwner = ({id, locked, oldOwner, owner}) => {
+	const changeOwner = ({id, locked, oldOwner, owner, group}) => {
 		const body = {
 			'env': 'services',
 			'call': 'doChangeOwner',
@@ -3129,6 +3153,24 @@ window.addEventListener('DOMContentLoaded', () => {
 			'locked': locked,
 			'oldOwner': oldOwner,
 			'owner': owner,
+			'group': group,
+		};
+		sendRequest('POST', requestURL, body).then((data) => {
+			if (data && data.success && data.success.answer) {
+				showMosaic(data.success.answer);
+			}
+		});
+	};
+
+	const changeGroup = ({id, locked, oldGroup, group, platform}) => {
+		const body = {
+			'env': 'services',
+			'call': 'doChangeGroup',
+			'id': id,
+			'locked': locked,
+			'oldGroup': oldGroup,
+			'group': group,
+			'platform': platform,
 		};
 		sendRequest('POST', requestURL, body).then((data) => {
 			if (data && data.success && data.success.answer) {
@@ -3328,9 +3370,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		mosaicFormLoadData.requestSubmit();
 	});
 
-	btnClearData.addEventListener('click', function(e) {
-		clearDevicesDataTemp();
-	});
+	// btnClearData.addEventListener('click', function(e) {
+	// 	clearDevicesDataTemp();
+	// });
 
 	tableUsers.addEventListener('click', actionForUsers);
 	rightsForm.addEventListener('submit', (e) => {

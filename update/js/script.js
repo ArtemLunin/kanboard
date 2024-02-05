@@ -23,13 +23,22 @@ const hardCodeDesign = {
 };
 const sectionChildren = {
 	'dip': {
+		// 'Capacity':
+		// [
+		// 	'Capacity',
+		// 	'Capacity',
+		// 	'capacity'
+		// ],
 		'Roaming FCR': 
 		[
 			'Firewall',
-			'Add/Change/Remove Roaming'
+			'Add/Change/Remove Roaming',
+			'fcr'
 		]
 	}
 };
+
+const subMenuClass = 'children-menu';
 
 const entityMap = {
   '&': '&amp;',
@@ -54,6 +63,8 @@ const sections = [
 	'mop',
 	'template DIP',
 	'dip',
+	'capacity',
+	'inventory',
 	// 'documentation',
 	'action',
 ];
@@ -85,6 +96,7 @@ const table_statistics_selector = 'table_statistics',
 
 const table_excel_selector = 'table_excel';
 const exportExcel_selector = 'exportExcel';
+const mosaicTtableSelector = 'mosaic-table-row';
 
 const excelDataArray = [];
 
@@ -98,6 +110,8 @@ let filesTemplate, xls_files;
 //documentation section
 let savedPageName = 'New Page',
 	page_id = '0';
+
+const inventoryTagsSet = new Set();
 
 // common functions
 // for sort in ORDER DESC by default
@@ -309,10 +323,13 @@ window.addEventListener('DOMContentLoaded', () => {
 	const mainContainer = document.querySelector('.main-mosaic-container'),
 		modifyContainer = mainContainer.querySelector('.modify-mosaic-container'),
 		mosaicForm = modifyContainer.querySelector('#mosaicForm'),
+		mosaicFormLoadData = document.querySelector('#mosaicFormLoadData'),
 		// dividerArrow = mainContainer.querySelector('.divider-arrow'),
 		devicesAllBody = mainContainer.querySelector('.devices-all-body'),
 		titleDialogModal = document.querySelector('#titleDialogModal'),
 		questionDialogModal = document.querySelector('#questionDialogModal'),
+		loadExcelData = document.querySelector('#loadExcelData'),
+		btnClearData = document.querySelector('#btnClearData'),
 		// triangle = document.querySelector('.triangle'),
 		// btnApplySettings = document.querySelector('.btn-apply-settings'),
 		btnDialogModal = document.querySelector('#btnDialogModal');
@@ -348,19 +365,28 @@ window.addEventListener('DOMContentLoaded', () => {
         newActivity = document.querySelector('#newActivity'),
         selActivity = document.querySelector('#activity'),
         selPrimeElement = document.querySelector('#primeElement'),
-        // btnCeilAreaAppend = document.querySelector('#ceil_area_append'),
         divCounter = document.querySelector('.counter-pb'),
 		renderMopDiv = document.querySelector('#render_mop'),
 		docTitle = document.querySelector('#docTitle'),
         showAll = document.querySelector('#showAll'),
 		efcrFields = document.querySelector('#efcrFields'),
 		btnsCeilAreaAppend = document.querySelectorAll('.js-ceil-area-append'),
+		btnsCeilAreaRemove = document.querySelectorAll('.js-ceil-area-remove'),
 		exportDownload = document.querySelector('.js-export-download'),
 		visibleSuperOnly = document.querySelectorAll('.js-superOnly'),
 		aExport = document.querySelector('#a_export'),
 		aImport = document.querySelector('#importFileJSON');
 
-		showAll.checked = false;
+		// inventory elements
+	const tableInventory = document.querySelector('#table-inventory'),
+		tableParts = document.querySelector('#table-parts'),
+		tableTags = document.querySelector('#table-tags'),
+		// bntNewChassis = document.querySelector('#table-tags'),
+		inventoryTags = document.querySelector('.inventory-tags'),
+		tInventory = document.querySelector('.t-inventory');
+		// newTag = document.querySelector('.new-tag');
+
+		// showAll.checked = false;
 
 		btnNewActivity.dataset.prime_elem_id = 0;
 
@@ -704,26 +730,32 @@ window.addEventListener('DOMContentLoaded', () => {
 			"autoWidth": false,
 			columns:
 			[
+				{ "width": "8%" },
+				{ "width": "8%" },
+				{ "width": "15%" },
+				{ "width": "8%" },
+				{ "width": "15%" },
 				{ "width": "10%" },
 				{ "width": "10%" },
+				{ "width": "16%" },
 				{ "width": "10%" },
-				{ "width": "10%" },
-				{ "width": "10%" },
-				{ "width": "10%" },
-				{ "width": "35%" },
-				{ "width": "5%" },
 			],
 			columnDefs: [
-				{ orderable: false, "targets": [6, 7] },
+				{ orderable: false, "targets": [6, 7,8] },
 			],
-			// order: [
-			// 	[1, 'desc'],
-			// 	[0, 'asc'],
-			// ],
+			order: [
+				// [0, 'desc'],
+				// [1, 'asc'],
+			],
 			paging: false,
 			searching: true,
 			stripeClasses :[],
 		});
+
+	// new DataTable('#table-inventory', {
+	// 	order: [[0, 'desc']],
+	// 	"autoWidth": false,
+	// });
 
 	const saveContent = () => {
 		const savedName = (pageNameEdit.innerText.trim() !== ''  ? pageNameEdit.innerText.trim() : prompt('Enter the Page Name', savedPageName));
@@ -1224,6 +1256,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		let idx = 0;
 		showSection = showSection.replace(/\s+/g, '');
 		if (showSection !== 'documentation') {
+			// section is document.querySelectorAll('.section');
 			section.forEach((item, i) => {
 				item.style.display = "none";
 				if (showSection && item.classList.contains(showSection)) {
@@ -1313,12 +1346,18 @@ window.addEventListener('DOMContentLoaded', () => {
 				gCounterMode = "dipCounter";
 				displayMOPElements(false);
 				if (addParams['element']) {
-					document.title = addParams['visibleName'];
-					iniOGPA(addParams);
+					if (addParams['element'] === 'Capacity') {
+						document.title = addParams['visibleName'];
+					} else {
+						document.title = addParams['visibleName'];
+						iniOGPA(addParams);
+					}
 				} else {
 					iniOGPA();
 				}
 				break;
+			case 'inventory':
+				iniInventory();
 			default:
 				break;
 		}
@@ -1344,7 +1383,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else if (target.dataset.section === 'login') {
 				toggleSignIn('show');
 			} else {
-				selectMenuItem(target.parentNode, target.dataset.section);
+				selectMenuItem(target.parentNode, target.dataset.section, (!!target.dataset.subsection) ? target.dataset.subsection : false);
 				toggleSection(target.dataset.section, 
 				{'element': (target.dataset.element === undefined) ? false : target.dataset.element, 
 				'activity': (target.dataset.activity === undefined) ? false : target.dataset.activity,
@@ -1353,18 +1392,25 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	const selectMenuItem = (menu, section) => {
+	const selectMenuItem = (menu, section, subsection = false) => {
 		Array.from(menu.children).forEach(item => {
 			item.style.backgroundColor = '';
 		});
 		try {
-			menu.querySelector(`[data-section="${section}"]`).style.backgroundColor = 'rgba(0,0,0,0.1)';
-		} catch (e) {};
+			if (subsection) {
+				menu.querySelector(`[data-section="${section}"][data-subsection="${subsection}"]`).style.backgroundColor = 'rgba(0,0,0,0.1)';
+			} else {
+				menu.querySelector(`[data-section="${section}"]`).style.backgroundColor = 'rgba(0,0,0,0.1)';
+			}
+			
+		} catch (e) {
+		};
 	};
 
 	const showInterface = (data) => {
 		let loginAction = 'logout';
 		const rights = {};
+		let subMenuClass_ = '';
 		if (data) {
 			menu.textContent = '';
 			if (!!data.success) {
@@ -1383,6 +1429,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						}
 						if (accessType != '') {	
 							rights[sectionName] = accessType;
+							// console.log(sectionName);
 							menu.insertAdjacentHTML('beforeend', `
 							<li data-section="${sectionAttr}" data-access="${accessType}">${pageName}</li>
 							`);
@@ -1390,9 +1437,11 @@ window.addEventListener('DOMContentLoaded', () => {
 								for (const [key, value] of Object.entries (sectionChildren[sectionName])) {
 									menu.insertAdjacentHTML('beforeend', `<li data-section="${sectionAttr}" 
 									data-visible-name="${key}" 
-									data-access="${accessType}" data-element="${value[0]}" data-activity="${value[1]}" class="children-menu">- ${key}</li>
+									data-access="${accessType}" data-element="${value[0]}" data-activity="${value[1]}"
+									data-subsection="${value[2]}" class="${subMenuClass}">- ${key}</li>
 									`);
 								}
+								// subMenuClass_ = '.' + subMenuClass;
 							}
 							if (sectionName === 'excel')
 							{
@@ -1435,6 +1484,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			/* else if (currentHash === 'documentation' && !!rights[currentHash]) {
 				section = 'documentation';
 			} */
+
 			selectMenuItem(menu, section);
 			toggleSection(section);
 		}
@@ -2160,6 +2210,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	
+
 	const getAutomator = () => {
 		commonAutomatorRequest({
 			formParams: {
@@ -2181,7 +2233,28 @@ window.addEventListener('DOMContentLoaded', () => {
 				showMosaic(data.success.answer);
 			} else {
 				location.hash = '';
-				// location.reload();
+			}
+		});
+	};
+
+	// const clearDevicesDataTemp = () => {
+	// 	const body = {
+	// 		env: 'services',
+	// 		call: 'clearDevicesDataTemp',
+	// 	};
+	// 	sendRequest('POST', requestURL, body).then(getMosaic);
+	// };
+
+	const updateDevicesData = (args) => {
+		const body = {
+			env: 'services',
+			call: 'updateDevicesData',
+		};
+		sendRequest('POST', requestURL, Object.assign(body, args)).then((data) => {
+			if (data && data.success && data.success.answer) {
+				showMosaic(data.success.answer);
+			} else {
+				location.hash = '';
 			}
 		});
 	};
@@ -2438,7 +2511,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const showMosaic = (data) => {
+	const showMosaic_old = (data) => {
 		dataTableMosaic.clear().draw();
 		if (data) {
 			let hideEditButtons = 'd-block d-xl-flex';
@@ -2453,7 +2526,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				let deviceDataID = `device-data-${id}`;
 				const tr = document.createElement('tr');
 
-				tr.classList.add('mosaic-table-row');
+				tr.classList.add(mosaicTtableSelector);
 				tr.dataset.node_id = id;
 				tr.id = deviceDataID;
 				tr.innerHTML = `
@@ -2491,6 +2564,69 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
+	const showMosaic = (data) => {
+		dataTableMosaic.clear().draw();
+		if (data) {
+			let hideEditButtons = 'd-block d-xl-flex';
+			if (showMosaicEditItems == '0') {
+				hideEditButtons = 'd-none';
+			}
+			// devicesAllBody.textContent = '';
+			data.forEach(function ({
+				id, name, port, description, platform, tags, group, owner, comments
+			}) 
+			{
+				// let deviceDataID = `device-data-${id}`;
+				const tr = document.createElement('tr');
+
+				tr.classList.add(mosaicTtableSelector);
+				tr.dataset.node_id = id;
+				tr.id = `device-data-${id}`;
+				tr.dataset.locked='1';
+				tr.innerHTML = `
+					<td>
+						<span class="name-text">${name}</span>
+					</td>
+					<td>
+						<span class="name-text">${port}</span>
+					</td>
+					<td>
+						<span class="name-text">${description}</span>
+					</td>
+					<td>
+						<span class="name-text editable" data-name="platform" data-value="${platform}">${platform}</span>
+					</td>
+					<td>
+						<span class="name-text editable" data-name="tags" data-value="${tags}">${tags}</span>
+					</td>
+					<td>
+						<span class="name-text editable" data-name="group" data-value="${group}">${group}</span>
+					</td>
+					<td>
+						<span class="name-text editable" data-name="owner" data-value="${owner}">${owner}</span>
+					</td>
+					<td>
+						<span class="name-text editable "data-name="comments" data-value="${comments}">${comments}</span>
+					</td>
+					<td>
+						<div class="action-buttons justify-content-center ${hideEditButtons}">
+							<a href="#" data-locked='1'>
+								<img class="icon-edit icon-edit-sm" data-edit src="img/edit.svg">
+								<img class="icon icon-edit-sm hidden" data-undo src="img/undo.svg" title="Undo">
+								<img class="icon icon-edit-sm hidden" data-done src="img/done.svg" title="Done">
+								<img class="icon icon-edit-sm hidden" data-lock src="img/lock.svg" title="Switch to All">
+								<img class="icon icon-edit-sm hidden" data-open src="img/lock_open.svg" title="Switch to one">
+							</a>
+							<a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
+						</div>
+					</td>
+				`;
+				dataTableMosaic.row.add(tr);
+			});
+			dataTableMosaic.draw();
+		}
+	};
+
 	const showModalDialog = ({attributes, dialogTitle, dialogQuestion, previousModal = null}, dialogModalProps = {selector:'#dialogModal', titleSelector:'#titleDialogModal', questionSelector: '#questionDialogModal'}) => {
 		attributes.forEach(item => {
 			for (const [attrName, attrValue] of Object.entries(item)) {
@@ -2502,7 +2638,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (previousModal) {
 			$(previousModal).modal('hide');
 		}
-		// console.log(dialogModalProps.selector);
 		$(dialogModalProps.selector).modal({
   			keyboard: true
 		});
@@ -2544,6 +2679,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const target = e.target;
 		xls_files = target.files;
 	});
+
 
 	document.querySelector('#deleteDevices').addEventListener('click', function()
 	{
@@ -2605,6 +2741,143 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
+	tableInventory.addEventListener('click', function (e) {
+		e.preventDefault();
+		const target = e.target;
+		const expandInventory = target.closest('.js-expandInventory');
+		const deleteTag = target.closest('.delete-tag');
+		const saveTags = target.closest('.js-saveTags');
+		const newChassis = target.closest('.js-newChassis');
+		const undoNewChassis = target.closest('.js-undoNewChassis');
+		
+		if (expandInventory) {
+			const parent_tr = expandInventory.closest('tr');
+			const parent_a = expandInventory.closest('a');
+			const chassisID = parent_tr.dataset.id;
+			if (expandInventory.dataset.collapse != null) {
+				const inventoryChilds = expandInventory.closest('table').querySelector('#inventoryChilds');
+				try {
+					inventoryChilds.remove();
+				} catch (e) {
+				}
+				// tableParts.classList.add('hidden');
+				tableTags.classList.add('hidden');
+				// expandInventory.dataset['expanded'] = '0';
+				expandInventory.closest('a').querySelector('[data-expand]').classList.remove('hidden');
+				expandInventory.classList.add('hidden');
+			} else if (expandInventory.dataset.expand != null){
+				const rowIndex = parent_tr.rowIndex;
+				const newRow = expandInventory.closest('table').insertRow(rowIndex + 1);
+				newRow.id = 'inventoryChilds';
+				newRow.dataset.id = chassisID;
+				const newCell = newRow.insertCell();
+				newCell.colSpan = parent_tr.cells.length;
+				newCell.append(tableParts, tableTags);
+				// tableParts.classList.remove('hidden');
+				tableTags.classList.remove('hidden');
+				expandInventory.closest('a').querySelector('[data-collapse]').classList.remove('hidden');
+				expandInventory.classList.add('hidden');
+				getChassisTags(chassisID);
+			} if (expandInventory.dataset.edit != null) {
+				const selfCell = expandInventory.closest('td');
+				expandInventory.closest('tr').querySelectorAll('td').forEach((item) => {
+					if (item !== selfCell) {
+						item.setAttribute('contenteditable', true);
+					}
+				});
+				expandInventory.closest('a').querySelector('[data-undo]').classList.remove('hidden');
+				expandInventory.closest('a').querySelector('[data-done]').classList.remove('hidden');
+				expandInventory.classList.add('hidden');
+			} if (expandInventory.dataset.undo != null) {
+				if (+chassisID) {
+					expandInventory.closest('tr').querySelectorAll('td').forEach((item) => {
+						const selfCell = expandInventory.closest('td');
+						if (item !== selfCell) {
+							item.removeAttribute('contenteditable');
+							item.textContent = item.dataset.value;
+						}
+					});
+					expandInventory.closest('a').querySelector('[data-edit]').classList.remove('hidden');
+					expandInventory.closest('a').querySelector('[data-done]').classList.add('hidden');
+					expandInventory.classList.add('hidden');
+				} else {
+					tInventory.querySelector('[data-id="0"]').remove();
+					this.querySelector('.js-newChassis').classList.remove('hidden');
+					this.querySelector('.js-undoNewChassis').classList.add('hidden');
+				}
+			} if (expandInventory.dataset.done != null) {
+				const selfCell = expandInventory.closest('td');
+				const newData = {};
+				expandInventory.closest('tr').querySelectorAll('td').forEach((item) => {
+					if (item !== selfCell) {
+						newData[item.dataset.field] = item.textContent.trim();
+						item.removeAttribute('contenteditable');
+					}
+				});
+				setChassisData(chassisID, newData);
+				expandInventory.closest('a').querySelector('[data-edit]').classList.remove('hidden');
+				expandInventory.closest('a').querySelector('[data-undo]').classList.add('hidden');
+				expandInventory.classList.add('hidden');
+				this.querySelector('.js-newChassis').classList.remove('hidden');
+				this.querySelector('.js-undoNewChassis').classList.add('hidden');
+			}
+		} else if (deleteTag) {
+			inventoryTagsSet.delete(deleteTag.closest('.inventory-tag').dataset.tag);
+			fillInventoryTags(inventoryTagsSet);
+		} else if (saveTags) {
+			setChassisTags(saveTags.closest('#inventoryChilds').dataset.id);
+		} else if (newChassis) {
+			tInventory.insertAdjacentHTML('afterbegin', `
+				<tr data-id="0">
+					<td data-field="chassis_name" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="vendor" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="model" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="software" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="serial" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="year_service" data-value="" contenteditable>&nbsp;</td>
+					<td data-field="comment" data-value="" contenteditable>&nbsp;</td>
+					<td>
+						<a href="#">
+							<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-edit src="img/edit.svg" title="Edit">
+							<img class="icon-edit icon-edit-sm js-expandInventory" data-undo src="img/undo.svg" title="Undo">
+							<img class="icon-edit icon-edit-sm js-expandInventory" data-done src="img/done.svg" title="Done">
+							<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-expand src="img/expand_content.svg" title="Detail">
+							<img class="icon-edit icon-edit-sm hidden js-expandInventory" data-collapse src="img/collapse_content.svg">
+						</a>
+					</td>
+				</tr>
+			`);
+			newChassis.closest('a').querySelector('.js-undoNewChassis').classList.remove('hidden');
+			target.classList.add('hidden');
+		} else if (undoNewChassis) {
+			tInventory.querySelector('[data-id="0"]').remove();
+			undoNewChassis.closest('a').querySelector('.js-newChassis').classList.remove('hidden');
+			target.classList.add('hidden');
+		}
+	});
+
+	inventoryTags.addEventListener("keydown", (event) => {
+		const newTag = event.target.closest('.new-tag');
+		if (newTag) {
+			if (event.code === 'Enter') {
+				event.preventDefault();
+				inventoryTagsSet.add(newTag.innerText);
+				fillInventoryTags(inventoryTagsSet);
+			}
+		}
+	});
+
+	// inventoryTags.addEventListener("keydown", (event) => {
+	// 	const newTag = event.target.closest('.new-tag');
+	// 	if (newTag) {
+	// 		if (event.code === 'Enter') {
+	// 			event.preventDefault();
+	// 			inventoryTagsSet.add(newTag.innerText);
+	// 			fillInventoryTags(inventoryTagsSet);
+	// 		}
+	// 	}
+	// });
+
 	const getOTL = (fieldsKanboard) => {
 		let OTLStatus = '';
 		if (!!fieldsKanboard['otl'] && fieldsKanboard['otl'] !== '') {
@@ -2659,7 +2932,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			element.classList.remove('hidden');
 			element.disabled = false;
 		} else if (disableMode == true) {
-			// console.log(element);
 			element.classList.add('hidden');
 			element.disabled = true;
 		}
@@ -2677,7 +2949,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	const deviceActionMosaic = function(e) {
 		e.preventDefault();
 		const target = e.target;
-		const mosaicRow = target.closest('.mosaic-table-row');
+		const mosaicRow = target.closest(`.${mosaicTtableSelector}`);
+		const parent_a = target.closest('a');
 		let action = null;
 
 		if (target.classList.contains('icon-edit'))
@@ -2685,6 +2958,37 @@ window.addEventListener('DOMContentLoaded', () => {
 			action = 'modify';
 		} else if (target.classList.contains('icon-delete')) {
 			action = 'delete';
+		} else if (target.dataset.undo != null) {
+			parent_a.querySelector('[data-edit]').classList.remove('hidden');
+			parent_a.querySelector('[data-done]').classList.add('hidden');
+			parent_a.querySelector('[data-lock]').classList.add('hidden');
+			parent_a.querySelector('[data-open]').classList.add('hidden');
+			target.classList.add('hidden');
+			mosaicRow.querySelectorAll('span.editable').forEach(resetEdit);
+		} else if (target.dataset.done != null) {
+			const args = {};
+			target.closest('tr').querySelectorAll('.editable').forEach(item => {
+				args[item.dataset.name] = item.textContent;
+			});
+			args['id'] = target.closest('tr').dataset.node_id;
+			args['locked'] = parent_a.dataset.locked;
+			updateDevicesData(args);
+			parent_a.querySelector('[data-edit]').classList.remove('hidden');
+			parent_a.querySelector('[data-done]').classList.add('hidden');
+			parent_a.querySelector('[data-lock]').classList.add('hidden');
+			parent_a.querySelector('[data-open]').classList.add('hidden');
+			target.classList.add('hidden');
+			mosaicRow.querySelectorAll('span.editable').forEach(resetEdit);
+		} else if (target.dataset.lock != null) {
+			parent_a.dataset.locked = '0';
+			mosaicRow.dataset.locked = '0';
+			parent_a.querySelector('[data-open]').classList.remove('hidden');
+			target.classList.add('hidden');
+		} else if (target.dataset.open != null) {
+			parent_a.dataset.locked = '1';
+			mosaicRow.dataset.locked = '1';
+			parent_a.querySelector('[data-lock]').classList.remove('hidden');
+			target.classList.add('hidden');
 		}
 		switch (action) {
 			case 'modify':
@@ -2702,6 +3006,61 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
+	const deviceKeyDown = function(e) {
+		const target = e.target;
+		const newTag = target.closest('.new-tag');
+		if (newTag) {
+			if (e.code === 'Enter') {
+				e.preventDefault();
+				const mosaicRow = target.closest(`.${mosaicTtableSelector}`);
+				const platformName = mosaicRow.querySelector('[data-name="platform"]').dataset.value;
+				const groupName = mosaicRow.querySelector('[data-name="group"]').dataset.value;
+				const ownerName = mosaicRow.querySelector('[data-name="owner"]').dataset.value;
+
+
+				if (target.dataset.name === 'owner' && target.innerText.trim() != '' && target.dataset.value != '' && target.innerText.trim() != target.dataset.value)
+				{
+					titleDialogModal.innerText = 'Change Owner';
+					questionDialogModal.innerText = `Do you really want to change owner from : ${target.dataset.value} to ${target.innerText.trim()}?`;
+					btnDialogModal.setAttribute('modal-command', 'changeOwner');
+					btnDialogModal.dataset['id'] = mosaicRow.dataset.node_id;
+					btnDialogModal.dataset['locked'] = mosaicRow.dataset.locked;
+					btnDialogModal.dataset['oldOwner'] = target.dataset.value;
+					btnDialogModal.dataset['newOwner'] = target.innerText.trim();
+					btnDialogModal.dataset['group'] = groupName;
+
+					$('#dialogModal').modal({
+						keyboard: true
+					});
+				} else if (target.dataset.name === 'group' && target.innerText.trim() != '' && target.dataset.value != '' && target.innerText.trim() != target.dataset.value) {
+					titleDialogModal.innerText = 'Change Group';
+					questionDialogModal.innerText = `Do you really want to change group from : ${target.dataset.value} to ${target.innerText.trim()}?`;
+					btnDialogModal.setAttribute('modal-command', 'changeGroup');
+					btnDialogModal.dataset['id'] = mosaicRow.dataset.node_id;
+					btnDialogModal.dataset['locked'] = mosaicRow.dataset.locked;
+					btnDialogModal.dataset['oldGroup'] = target.dataset.value;
+					btnDialogModal.dataset['group'] = target.innerText.trim();;
+					btnDialogModal.dataset['platform'] = platformName;
+
+					$('#dialogModal').modal({
+						keyboard: true
+					});
+				}
+			}
+		}
+	};
+
+	const resetEdit = (item) => {
+		item.removeAttribute('contenteditable');
+		item.classList.remove('new-tag');
+		item.textContent = item.dataset.value;
+	};
+
+	const setEdit = (item) => {
+		item.setAttribute('contenteditable', true);
+		item.classList.add('new-tag');
+	};
+
 	const reqDeleteDevice = (deviceParams) =>{
 		titleDialogModal.innerText = 'Delete node';
 		questionDialogModal.innerText = `Do you really want to delete the node: ${deviceParams['name']}?`;
@@ -2712,7 +3071,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const modifyDeviceSettings = ({device_id, row_id}) => {
+	const modifyDeviceSettings_old = ({device_id, row_id}) => {
 		const rowDevice = document.getElementById(row_id);
 
 		mosaicForm.querySelector('[data-action="add"]').style.display = 'none';
@@ -2726,6 +3085,16 @@ window.addEventListener('DOMContentLoaded', () => {
 		mosaicForm.querySelector('#mosaicNodeManager').value = rowDevice.querySelector('.manager-text').innerText;
 		mosaicForm.querySelector('#mosaicNodeComments').innerText = rowDevice.querySelector('.comment-text').innerText;
 		mosaicForm.querySelector('#mosaicNodeId').value = device_id;
+	};
+
+	const modifyDeviceSettings = ({device_id, row_id}) => {
+		const rowDevice = document.querySelector(`#${row_id}`);
+		rowDevice.querySelectorAll('span.editable').forEach(setEdit);
+		rowDevice.querySelector('[data-edit]').classList.add('hidden');
+		rowDevice.querySelector('[data-undo]').classList.remove('hidden');
+		rowDevice.querySelector('[data-done]').classList.remove('hidden');
+		rowDevice.querySelector('[data-lock]').classList.remove('hidden');
+		rowDevice.querySelector('[data-open]').classList.add('hidden');
 	};
 
 	const confirmDialog = (e) => {
@@ -2742,6 +3111,24 @@ window.addEventListener('DOMContentLoaded', () => {
 					'acivity': target.dataset.activity
 				});
 				break;
+			case 'changeOwner':
+				changeOwner({
+					'id': target.dataset.id,
+					'locked': target.dataset.locked,
+					'oldOwner': target.dataset.oldOwner, 
+					'owner': target.dataset.newOwner,
+					'group': target.dataset.group,
+				});
+				break;
+			case 'changeGroup':
+				changeGroup({
+					'id': target.dataset.id,
+					'locked': target.dataset.locked,
+					'oldGroup': target.dataset.oldGroup, 
+					'group': target.dataset.group,
+					'platform': target.dataset.platform,
+				});
+				break;
 		}
 	};
 
@@ -2751,8 +3138,47 @@ window.addEventListener('DOMContentLoaded', () => {
 			call: 'doDeleteDevice',
 			id: deviceID
 		};
-		sendRequest('POST', requestURL, body).then(getMosaic);
+		sendRequest('POST', requestURL, body).then((data) => {
+			if (data && data.success && data.success.answer) {
+				showMosaic(data.success.answer);
+			}
+		});
 	};
+
+	const changeOwner = ({id, locked, oldOwner, owner, group}) => {
+		const body = {
+			'env': 'services',
+			'call': 'doChangeOwner',
+			'id': id,
+			'locked': locked,
+			'oldOwner': oldOwner,
+			'owner': owner,
+			'group': group,
+		};
+		sendRequest('POST', requestURL, body).then((data) => {
+			if (data && data.success && data.success.answer) {
+				showMosaic(data.success.answer);
+			}
+		});
+	};
+
+	const changeGroup = ({id, locked, oldGroup, group, platform}) => {
+		const body = {
+			'env': 'services',
+			'call': 'doChangeGroup',
+			'id': id,
+			'locked': locked,
+			'oldGroup': oldGroup,
+			'group': group,
+			'platform': platform,
+		};
+		sendRequest('POST', requestURL, body).then((data) => {
+			if (data && data.success && data.success.answer) {
+				showMosaic(data.success.answer);
+			}
+		});
+	};
+
 
 	$('#modalTemplateUploadDialog').on('show.bs.modal', function (e) {
 		formTeplateUpload.reset();
@@ -2940,6 +3366,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		createTaskFileNew(e, btnCreateTaskFileExcel, attachmentsContainerExcel, callback);
 	});
 
+	loadExcelData.addEventListener('change', function(e) {
+		mosaicFormLoadData.requestSubmit();
+	});
+
+	// btnClearData.addEventListener('click', function(e) {
+	// 	clearDevicesDataTemp();
+	// });
 
 	tableUsers.addEventListener('click', actionForUsers);
 	rightsForm.addEventListener('submit', (e) => {
@@ -3200,6 +3633,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		target.querySelector('[data-action="update"]').style.display = 'none';
 		target.querySelector('[data-action="add"]').style.display = '';
 	});
+
 	mosaicForm.addEventListener('submit', (e) => {
 		e.preventDefault();
 		const target = e.target;
@@ -3219,7 +3653,20 @@ window.addEventListener('DOMContentLoaded', () => {
 			sendRequest('POST', requestURL, arrData).then(getMosaic);
 		}
 	});
+
+	mosaicFormLoadData.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const formData = new FormData(e.target);
+		formData.append('env', 'services');
+		formData.append('call', 'loadData');
+
+		sendFile('POST', requestURL, formData).then((data) => {
+			showMosaic(data.success.answer);
+		});
+	});
+
 	devicesAllBody.addEventListener('click', deviceActionMosaic);
+	devicesAllBody.addEventListener('keydown', deviceKeyDown);
 	btnDialogModal.addEventListener('click', confirmDialog);
 	// triangle.addEventListener('click', triangleToggle);
 
@@ -3318,6 +3765,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (templateDip) {
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = false;
+					inputElem.classList.add(inputSelectorClass);
 					if (inputElem.dataset['ecfr'] == "1") {
 						efcrFieldsArr.push(inputElem.name);
 					}
@@ -3325,6 +3773,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else {
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = true;
+					inputElem.classList.remove(inputSelectorClass);
 				});
 			}
 		});
@@ -3367,6 +3816,45 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
+	const showInventory = (data) => {
+		tInventory.textContent = '';
+		if (data && data.success && data.success.answer) {
+			data.success.answer.forEach(({id, chassis_name, vendor, model, software, serial, year_service, comment}) => {
+				tInventory.insertAdjacentHTML('beforeend', `
+				<tr data-id="${id}">
+					<td data-field="chassis_name" data-value="${chassis_name}">${chassis_name}</td>
+					<td data-field="vendor" data-value="${vendor}">${vendor}</td>
+					<td data-field="model" data-value="${model}">${model}</td>
+					<td data-field="software" data-value="${software}">${software}</td>
+					<td data-field="serial" data-value="${serial}">${serial}</td>
+					<td data-field="year_service" data-value="${year_service}">${year_service}</td>
+					<td data-field="comment" data-value="${comment}">${comment}</td>
+					<td>
+						<a href="#">
+							<img class="icon-edit icon-edit-sm js-expandInventory" data-edit src="img/edit.svg" title="Edit">
+							<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-undo src="img/undo.svg" title="Undo">
+							<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-done src="img/done.svg" title="Done">
+							<img class="icon-edit icon-edit-sm js-expandInventory" data-expand src="img/expand_content.svg" title="Detail">
+							<img class="icon-edit icon-edit-sm hidden js-expandInventory" data-collapse src="img/collapse_content.svg">
+						</a>
+					</td>
+				</tr>
+			`);
+			});
+		}
+	};
+
+	const showChassisTags = (data) => {
+		inventoryTagsSet.clear();
+		if (data && data.success && data.success.answer) {
+			data.success.answer.forEach(({id, tag}) => {
+				inventoryTagsSet.add(tag);
+			});
+		}
+		fillInventoryTags(inventoryTagsSet);
+
+	};
+
 	const iniOGPA = (extends_data = '') => {
 		const body = {
 			method: 'getOGPA',
@@ -3392,6 +3880,47 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
 			showActivityFields(data);
+		});
+	};
+
+	const iniInventory = () => {
+		const body = {
+			method: 'getInventory',
+		};
+		sendRequest('POST', requestURLTemplate, body).then((data) => {
+			showInventory(data);
+		});
+	};
+
+	const getChassisTags = (chassis_id) => {
+		const body = {
+			method: 'getChassisTags',
+			id: chassis_id,
+		};
+		sendRequest('POST', requestURLTemplate, body).then((data) => {
+			showChassisTags(data);
+		});
+	};
+
+	const setChassisTags = (chassis_id) => {
+		const body = {
+			method: 'setChassisTags',
+			id: chassis_id,
+			value: [...inventoryTagsSet],
+		};
+		sendRequest('POST', requestURLTemplate, body).then((data) => {
+			showChassisTags(data);
+		});
+	};
+
+	const setChassisData = (chassis_id, chassis_data) => {
+		const body = {
+			method: 'setChassisData',
+			id: chassis_id,
+			value: chassis_data,
+		};
+		sendRequest('POST', requestURLTemplate, body).then((data) => {
+			showInventory(data);
 		});
 	};
 
@@ -3570,7 +4099,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			classesHide.forEach(item => {
 				try {
 					const fieldset = document.querySelector(`.${item.trim()}`);
-					// console.log(fieldset);
 					setAvailFormElements(fieldset, true);
 				} catch (e) {
 				}
@@ -3617,6 +4145,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	};
 
+	const fillInventoryTags = (tags) => {
+		inventoryTags.textContent = '';
+		for (let tag of tags) {
+			inventoryTags.insertAdjacentHTML('beforeend', `
+				<span class="inventory-tag" data-tag="${tag}">${tag}
+					<a href="#" class="delete-tag">x</a>
+				</span>
+			`);
+		}
+		inventoryTags.insertAdjacentHTML('beforeend', `
+			<span class="inventory-tag new-tag" contenteditable>&nbsp;</span>
+		`);
+	};
+
 	formAdmin.addEventListener('reset', (e) => {
 		const target = e.target;
 	});
@@ -3632,6 +4174,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			})
 		});
 		formSubmit.classList.remove('edit');
+		showAll.checked = false;
 	});
 
 	formFields.addEventListener('submit', (e) => {
@@ -3802,8 +4345,15 @@ window.addEventListener('DOMContentLoaded', () => {
 	showAll.addEventListener('click', (e) => {
 		if (e.target.checked) {
 			document.querySelectorAll('fieldset.hidden').forEach(item => {
-				item.classList.remove('hidden');
-				item.classList.add('showned');
+				// if (!item.classList.contains('js-eFCR-view') ||
+				//  (item.classList.contains('js-eFCR-view') && 
+				//  document.title == 'Roaming FCR')) 
+				if (!item.classList.contains('js-hard-code-design'))
+				{
+					// console.log(item);
+					item.classList.remove('hidden');
+					item.classList.add('showned');
+				}
 			});
 		} else {
 			document.querySelectorAll('fieldset.showned').forEach(item => {
@@ -3847,23 +4397,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
-	// btnCeilAreaAppend.addEventListener('click', (e) => {
-	// 	e.preventDefault();
-	// 	const fieldset = e.target.closest('fieldset');
-	// 	const row = fieldset.querySelector("[data-parent='self']");
-	// 	const row_prime = fieldset.querySelector('.multirows');
-	// 	const new_row = row_prime.cloneNode(true);
-	// 	row.value = parseInt(row.value) + 1;
-	// 	new_row.dataset.clone = 1;
-	// 	new_row.querySelectorAll('input').forEach(item => {
-	// 		item.name = `${item.dataset.name}_${row.value}`;
-	// 		item.id = item.name;
-	// 		item.value = '';
-	// 	});
-	// 	fieldset.append(new_row);
-	// 	fieldset.append(e.target);
-	// });
-
 	btnsCeilAreaAppend.forEach(item => {
 		item.addEventListener('click', (e) => {
 			const fieldset = e.target.closest('fieldset');
@@ -3878,7 +4411,19 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.value = '';
 			});
 			fieldset.append(new_row);
-			fieldset.append(e.target);
+			fieldset.append(e.target.closest('.ceil-btns'));
+			checkInputsData(`.${inputSelectorClass}`, false);
+		});
+	});
+
+	btnsCeilAreaRemove.forEach(item => {
+		item.addEventListener('click', (e) => {
+			const fieldset = e.target.closest('fieldset');
+			const cloned_rows = fieldset.querySelectorAll("[data-clone='1']");
+			if (cloned_rows.length) {
+				cloned_rows[cloned_rows.length - 1].remove();
+			}
+			checkInputsData(`.${inputSelectorClass}`, false);
 		});
 	});
 

@@ -133,7 +133,7 @@ class databaseUtils {
 							return true;
 						}
 					} else {
-						return true;
+						return null;
 					}
 				}
 				else {
@@ -144,6 +144,7 @@ class databaseUtils {
 		}
 		return false;
 	}
+
 	function getKanboardUsers() {
 		if ($this->root_access === true) {
 			$users = [];
@@ -386,7 +387,7 @@ class databaseUtils {
 				$device_list[] = [
 					'id' 		=> (int)$result['id'],
 					'name'		=> $result['name'],
-					'port'		=> $result['port'],
+					'port'		=> $result['port'] ?? '',
 					'description'	=> $result['descr'] ?? '',
 					'platform'	=> $result['platform'] ?? '',
 					'tags'		=> $result['tags'],
@@ -436,11 +437,6 @@ class databaseUtils {
 				$filter = $deviceParam['platform'];
 			}
 		}
-		// $sql_upd = "UPDATE devices_new SET platform=:platform WHERE id=:id";
-		// $sql_tags = "INSERT INTO devices_tags (tag, device_id) VALUES (:tag,:device_id)";
-		// $sql_ins_owner = "INSERT INTO devices_owners (group_name, manager,device_id) VALUES (:group_name,:manager,:device_id)";
-		// $sql_upd_owner = "UPDATE devices_owners SET group_name=:group_name,manager=:manager WHERE device_id=:device_id";
-		// $tags = strtolower($deviceParam['tags']);
 		$tags = explode(" ", trim(strtolower($deviceParam['tags'])));
 
 		$sql_upd = "UPDATE devices_new SET platform=:platform,group_name=:group_name,manager=:manager,contacts=:contacts,tags=:tags WHERE id=:id";
@@ -461,15 +457,6 @@ class databaseUtils {
 							'tags'			=> $deviceParam['tags'],
 							'id'			=> $result['id'],
 						], false);
-						// $this->modSQL($sql_tags, [
-						// 	'tag'	=> $tags,
-						// 	'device_id'	=> $result['id'],
-						// ], false);
-						// $this->modSQLInsUpd(['ins' => $sql_ins_owner, 'upd' => $sql_upd_owner], [
-						// 	'group_name'=> $deviceParam['group'],
-						// 	'manager'	=> $deviceParam['owner'],
-						// 	'device_id' => $result['id'],
-						// ], false);
 						break;
 					}
 				}
@@ -483,41 +470,74 @@ class databaseUtils {
 	}
 
 	function changeOwner($deviceParam) {
-		$sql = "UPDATE devices_new SET manager=:manager WHERE manager=:oldManager";
+		$sql = "UPDATE devices_new SET manager=:manager WHERE manager=:oldManager AND group_name=:group_name";
 		if ($deviceParam['locked'] == '1') {
 			$sql .= " AND id=:id";
 			$this->modSQL($sql, [
-				'manager'	=> $deviceParam['owner'],
 				'oldManager'=> $deviceParam['oldOwner'],
+				'manager'	=> $deviceParam['owner'],
+				'group_name'=> $deviceParam['group'],
 				'id'		=> $deviceParam['id'],
 			], false);
 		} else {
 			$this->modSQL($sql, [
-				'manager'	=> $deviceParam['owner'],
 				'oldManager'=> $deviceParam['oldOwner'],
+				'manager'	=> $deviceParam['owner'],
+				'group_name'=> $deviceParam['group'],
 			], false);
 		}
+		return $this->doGetDevicesAll();
+	}
 
-		
+	function changeGroup($deviceParam) {
+		$sql = "UPDATE devices_new SET group_name=:group_name WHERE group_name=:oldGroup AND platform=:platform";
+		if ($deviceParam['locked'] == '1') {
+			$sql .= " AND id=:id";
+			$this->modSQL($sql, [
+				'oldGroup'	=> $deviceParam['oldGroup'],
+				'group_name'=> $deviceParam['group'],
+				'platform'	=> $deviceParam['platform'],
+				'id'		=> $deviceParam['id'],
+			], false);
+		} else {
+			$this->modSQL($sql, [
+				'oldGroup'	=> $deviceParam['oldGroup'],
+				'group_name'=> $deviceParam['group'],
+				'platform'	=> $deviceParam['platform'],
+			], false);
+		}
 		return $this->doGetDevicesAll();
 	}
 
 	function loadData($rows)
 	{
-		// $sql_fresh = "DELETE FROM devices_new WHERE id<>0";
-		// $this->modSQL($sql_fresh, [], false);
 		$sql = "INSERT INTO devices_new (name,port,descr,platform,group_name,manager,tags,comments) VALUES (:name,:port,:descr,:platform,:group_name,:manager,:tags,:comments)";
 		foreach ($rows as $row) {
-			$this->modSQLInsUpd(['ins' => $sql, 'upd' => null], [
-				'name'		=> $row[0],
-				'port'		=> $row[1],
-				'descr' 	=> $row[2],
-				'platform'	=> $row[3] ?? '',
-				'tags'		=> $row[4] ?? '',
-				'group_name' => $row[5] ?? '',
-				'manager'	=> $row[6] ?? '',
-				'comments'	=> $row[7] ?? '',
+			$result = $this->modSQLInsUpd(['ins' => $sql, 'upd' => null], [
+				'name'		=> trim($row[0]),
+				'port'		=> trim($row[1]),
+				'descr' 	=> trim($row[2] ?? ''),
+				'platform'	=> trim($row[3] ?? ''),
+				'tags'		=> trim($row[4] ?? ''),
+				'group_name' => trim($row[5] ?? ''),
+				'manager'	=> trim($row[6] ?? ''),
+				'comments'	=> trim($row[7] ?? ''),
 			], false);
+			if ($result === null) {
+				$sql_descr = "SELECT id, descr FROM devices_new WHERE name=:name AND port=:port";
+				if ($table_res = $this->getSQL($sql_descr, [
+					'name' => trim($row[0]),
+					'port' => trim($row[1]),
+				])) {
+					if (trim($row[2] ?? '') != trim($table_res[0]['descr'])) {
+						$sql_upd = "UPDATE devices_new SET descr=:descr,platform='',group_name='',manager='',tags='',comments='' WHERE id=:id";
+						$this->modSQL($sql_upd, [
+							'descr'	=> trim($row[2] ?? ''),
+							'id'	=> $table_res[0]['id'],
+						], false);
+					}
+				}
+			}
 		}
 		return $this->doGetDevicesAll();
 	}

@@ -57,6 +57,18 @@ class databaseUtils {
 		'accessType'	=> 'admin',
 	],
 	[
+		'pageName' => 'Capacity',
+		'sectionName' => 'capacity',
+		'sectionAttr'	=> 'capacity',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'Inventory',
+		'sectionName' => 'inventory',
+		'sectionAttr'	=> 'inventory',
+		'accessType'	=> 'admin',
+	],
+	[
 		'pageName' => 'Settings',
 		'sectionName' => 'settings',
 		'sectionAttr'	=> 'settings',
@@ -80,6 +92,17 @@ class databaseUtils {
 	function __get($name) {
 		return $this->$name;
 	}
+	function getSQL($sql_query, $params_arr) {
+        try {
+			$row = $this->pdo->prepare($sql_query);
+			$row->execute($params_arr);
+			return $row->fetchall();
+		} catch (\PDOException $e){
+			$this->setSQLError($e, 'SQL error. "'.$sql_query);
+		}
+		return null;
+    }
+
 	function modSQL($sql_query, $params_arr, $needCount = true) {
 		try {
 			$row = $this->pdo->prepare($sql_query);
@@ -92,6 +115,7 @@ class databaseUtils {
 		}
 		return false;
 	}
+
 	function modSQLInsUpd($sqlInsUpd, $params_arr, $needCount = true) {
 		if (!$this->tableAccessError) {
 			try {
@@ -102,10 +126,14 @@ class databaseUtils {
 				}
 			} catch (\PDOException $e){
 				if (preg_match('/Duplicate entry/i', $e->getMessage()) == 1) {
-					$row = $this->pdo->prepare($sqlInsUpd['upd']);
-					$row->execute($params_arr);
-					if (!$needCount || ($row->rowCount())) {
-						return true;
+					if ($sqlInsUpd['upd'] !== null && $sqlInsUpd['upd'] !== '') {
+						$row = $this->pdo->prepare($sqlInsUpd['upd']);
+						$row->execute($params_arr);
+						if (!$needCount || ($row->rowCount())) {
+							return true;
+						}
+					} else {
+						return null;
 					}
 				}
 				else {
@@ -116,6 +144,7 @@ class databaseUtils {
 		}
 		return false;
 	}
+
 	function getKanboardUsers() {
 		if ($this->root_access === true) {
 			$users = [];
@@ -301,7 +330,7 @@ class databaseUtils {
 		return $user_rights['accessType'] != '';
 	}
 
-	function doGetDevicesAll($in_exp = FALSE)
+	function doGetDevicesAll_old($in_exp = FALSE)
 	{
 		$device_list = [];
 		$sql = "SELECT id, name, platform, service, owner, contact_info, manager, comments FROM devices";
@@ -328,6 +357,49 @@ class databaseUtils {
 		}
 		return $device_list;
 	}
+
+	function doGetDevicesAll() 
+	{
+		$device_list = [];
+		$sql = "SELECT id, name, port, descr, platform,group_name,manager,contacts,tags, comments FROM devices_new";
+		// $sql_tags = "SELECT id, tag, device_id FROM devices_tags WHERE device_id=:device_id";
+		// $sql_owner = "SELECT id, group_name, manager, contacts, device_id FROM devices_owners WHERE device_id=:device_id";
+
+		if ($table_res = $this->getSQL($sql, [])) {
+			foreach ($table_res as $result)
+			{
+				// $tags = '';
+				// $table_tags = $this->getSQL($sql_tags, [
+				// 	'device_id' => $result['id'],
+				// ]);
+				// foreach ($table_tags as $tag) {
+				// 	$tags .= ' ' . $tag['tag'];
+				// }
+				// $group = ''; $manager = ''; $contacts = '';
+				// if ($table_owners = $this->getSQL($sql_owner, [
+				// 	'device_id' => $result['id'],
+				// ])) {
+				// 	$group = $table_owners[0]['group_name'];
+				// 	$manager = $table_owners[0]['manager'];
+				// 	$contacts = $table_owners[0]['contacts'];
+				// }
+
+				$device_list[] = [
+					'id' 		=> (int)$result['id'],
+					'name'		=> $result['name'],
+					'port'		=> $result['port'] ?? '',
+					'description'	=> $result['descr'] ?? '',
+					'platform'	=> $result['platform'] ?? '',
+					'tags'		=> $result['tags'],
+					'group'		=> $result['group_name'],
+					'owner'		=> $result['manager'],
+					'comments'	=> $this->removeBadSymbols($result['comments']),
+				];
+			}
+		}
+		return $device_list;
+	}
+
 	function doAddDevice($deviceParam)
 	{
 		$sql = "INSERT INTO devices (name, platform, service,  owner, contact_info, manager, comments) VALUES (:name, :platform, :service, :owner, :contact_info, :manager, :comments)";
@@ -344,16 +416,146 @@ class databaseUtils {
 		}
 		return false;
 	}
+
+	function updateDevicesData($deviceParam)
+	{
+		$group = $deviceParam['group'];
+		$manager = $deviceParam['owner'];
+
+		$sql = "SELECT id, descr,platform,group_name,manager FROM devices_new WHERE platform=:filter";
+		$filter = '';
+		if ($deviceParam['locked'] == '1') {
+			$sql = "SELECT id, descr,platform,group_name,manager FROM devices_new WHERE id=:filter";
+			$filter = $deviceParam['id'];
+		} elseif ($deviceParam['group'] == '') {
+			$sql_pre = "SELECT id, descr,platform,group_name,manager FROM devices_new WHERE platform=:filter LIMIT 1";
+			if ($table_res = $this->getSQL($sql_pre, [
+				'filter' => $deviceParam['platform'],
+			])) {
+				$group = $table_res[0]['group_name'];
+				$manager = $table_res[0]['manager'];
+				$filter = $deviceParam['platform'];
+			}
+		}
+		$tags = explode(" ", trim(strtolower($deviceParam['tags'])));
+
+		$sql_upd = "UPDATE devices_new SET platform=:platform,group_name=:group_name,manager=:manager,contacts=:contacts,tags=:tags WHERE id=:id";
+		$sql_udp_note = "UPDATE devices_new SET comments=:comments WHERE id=:id";
+
+		if ($table_res = $this->getSQL($sql, [
+			'filter' => $filter,
+		])) {
+			foreach ($table_res as $result)
+			{
+				foreach ($tags as $tag) {
+					if (str_contains(strtolower($result['descr']), $tag)) {
+						$this->modSQL($sql_upd, [
+							'platform'		=> $deviceParam['platform'],
+							'group_name'	=> $group,
+							'manager'		=> $manager ,
+							'contacts'		=> $deviceParam['contacts'],
+							'tags'			=> $deviceParam['tags'],
+							'id'			=> $result['id'],
+						], false);
+						break;
+					}
+				}
+			}
+		}
+		$this->modSQL($sql_udp_note, [
+			'comments'	=> $deviceParam['comments'],
+			'id'		=> $deviceParam['id'],
+		], false);
+		return $this->doGetDevicesAll();
+	}
+
+	function changeOwner($deviceParam) {
+		$sql = "UPDATE devices_new SET manager=:manager WHERE manager=:oldManager AND group_name=:group_name";
+		if ($deviceParam['locked'] == '1') {
+			$sql .= " AND id=:id";
+			$this->modSQL($sql, [
+				'oldManager'=> $deviceParam['oldOwner'],
+				'manager'	=> $deviceParam['owner'],
+				'group_name'=> $deviceParam['group'],
+				'id'		=> $deviceParam['id'],
+			], false);
+		} else {
+			$this->modSQL($sql, [
+				'oldManager'=> $deviceParam['oldOwner'],
+				'manager'	=> $deviceParam['owner'],
+				'group_name'=> $deviceParam['group'],
+			], false);
+		}
+		return $this->doGetDevicesAll();
+	}
+
+	function changeGroup($deviceParam) {
+		$sql = "UPDATE devices_new SET group_name=:group_name WHERE group_name=:oldGroup AND platform=:platform";
+		if ($deviceParam['locked'] == '1') {
+			$sql .= " AND id=:id";
+			$this->modSQL($sql, [
+				'oldGroup'	=> $deviceParam['oldGroup'],
+				'group_name'=> $deviceParam['group'],
+				'platform'	=> $deviceParam['platform'],
+				'id'		=> $deviceParam['id'],
+			], false);
+		} else {
+			$this->modSQL($sql, [
+				'oldGroup'	=> $deviceParam['oldGroup'],
+				'group_name'=> $deviceParam['group'],
+				'platform'	=> $deviceParam['platform'],
+			], false);
+		}
+		return $this->doGetDevicesAll();
+	}
+
+	function loadData($rows)
+	{
+		$sql = "INSERT INTO devices_new (name,port,descr,platform,group_name,manager,tags,comments) VALUES (:name,:port,:descr,:platform,:group_name,:manager,:tags,:comments)";
+		foreach ($rows as $row) {
+			$result = $this->modSQLInsUpd(['ins' => $sql, 'upd' => null], [
+				'name'		=> trim($row[0]),
+				'port'		=> trim($row[1]),
+				'descr' 	=> trim($row[2] ?? ''),
+				'platform'	=> trim($row[3] ?? ''),
+				'tags'		=> trim($row[4] ?? ''),
+				'group_name' => trim($row[5] ?? ''),
+				'manager'	=> trim($row[6] ?? ''),
+				'comments'	=> trim($row[7] ?? ''),
+			], false);
+			if ($result === null) {
+				$sql_descr = "SELECT id, descr FROM devices_new WHERE name=:name AND port=:port";
+				if ($table_res = $this->getSQL($sql_descr, [
+					'name' => trim($row[0]),
+					'port' => trim($row[1]),
+				])) {
+					if (trim($row[2] ?? '') != trim($table_res[0]['descr'])) {
+						$sql_upd = "UPDATE devices_new SET descr=:descr,platform='',group_name='',manager='',tags='',comments='' WHERE id=:id";
+						$this->modSQL($sql_upd, [
+							'descr'	=> trim($row[2] ?? ''),
+							'id'	=> $table_res[0]['id'],
+						], false);
+					}
+				}
+			}
+		}
+		return $this->doGetDevicesAll();
+	}
 	
 	function doDeleteDevice($id)
 	{
-		$sql = "DELETE FROM devices WHERE id=:id";
+		$sql = "DELETE FROM devices_new WHERE id=:id";
 		if ($this->modSQL($sql, [
 			'id' => $id
 		], true)) {	
-			return true;
+			return $this->doGetDevicesAll();
 		}
 		return false;
+	}
+
+	function clearDevicesDataTemp() {
+		$sql = "DELETE FROM devices_new WHERE id<>0";
+		return $this->modSQL($sql, [], false);
 	}
 
 	function installCacheTable() {
@@ -377,7 +579,7 @@ class databaseUtils {
 	
 	function removeBadSymbols($str)
 	{
-		return str_replace(["\"","'","\t"]," ", $str);
+		return str_replace(["\"","'","\t"]," ", $str ?? '');
 	}
 
 	function setSQLError($pdo_exception, $error_text)
@@ -390,7 +592,7 @@ class databaseUtils {
 	{
 		if ($debug_mode === 1)
 		{
-			error_log($error_message);
+			error_log(date("Y-m-d H:i:s") . " ". $error_message);
 		}
 		return TRUE;
 	}
@@ -561,7 +763,6 @@ class databaseUtilsMOP {
 			$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
 		    $this->errorLog($error_txt_info, 1);
 		}
-		
 	}
 
 	function getActivityFields($id) {
@@ -650,7 +851,6 @@ class databaseUtilsMOP {
 					}
 				}
 			}
-			// error_log("ogpa:\n".print_r($ogpaCounters, true));
 			return $ogpaCounters;
 		} catch (Throwable $e) {
 			$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
@@ -702,5 +902,100 @@ class databaseUtilsMOP {
 		    $this->errorLog($error_txt_info, 1);
 		}
 	}
+
+	function getInventory() {
+		if ($this->pdo) {
+			$dataset = [];
+			$sql = "SELECT id, chassis_name, vendor, model, software, serial, year_service, comment FROM chassis";
+			try {
+				if ($table_res = $this->getSQL($sql, [])) {
+					foreach ($table_res as $result)
+					{
+						$dataset[] = [
+							'id' => (int)$result['id'],
+							'chassis_name'	=> $result['chassis_name'],
+							'vendor'		=> $result['vendor'],
+							'model'			=> $result['model'],
+							'software'		=> $result['software'],
+							'serial'		=> $result['serial'],
+							'year_service'	=> $result['year_service'],
+							'comment'		=> $result['comment'],
+						];
+					}
+				}
+				return $dataset;
+			} catch (Throwable $e) {
+				$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
+				$this->errorLog($error_txt_info, 1);
+			}
+			return null;
+		}
+	}
 	
+	function getChassisTags($chassis_id) {
+		$sql = "SELECT id, tag FROM chassis_tags WHERE chassis_id=:chassis_id";
+		$dataset = [];
+		try {
+			if ($table_res = $this->getSQL($sql, [
+				'chassis_id' => $chassis_id,
+			])) {
+				foreach ($table_res as $result)
+				{
+					$dataset[] = [
+						'id'	=> (int)$result['id'],
+						'tag'	=> $result['tag']
+					];
+				}
+			}
+			return $dataset;
+		}
+		catch (Throwable $e) {
+			$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
+			$this->errorLog($error_txt_info, 1);
+		}
+		return null;
+	}
+
+	function setChassisTags($chassis_id, $tags) {
+		if (is_array($tags)) {
+			$sql = "DELETE FROM chassis_tags WHERE chassis_id=:chassis_id";
+			$sql_ins = "INSERT INTO chassis_tags (tag, chassis_id) VALUES (:tag, :chassis_id)";
+			$this->modSQL($sql, [
+					'chassis_id' => $chassis_id,
+			]);
+			foreach ($tags as $tag) {
+				$this->modSQL($sql_ins, [
+					'tag'			=> $tag,
+					'chassis_id'	=> $chassis_id,
+				]);
+			}
+		}
+		return $this->getChassisTags($chassis_id);
+	}
+
+	function setChassisData($chassis_id, $chassis_data) {
+		if (is_array($chassis_data)) {
+			$sql_inj = ''; $sql_inj2 = '';
+			foreach ($chassis_data as $key => $value) {
+				if ($chassis_id == "0") {
+					$sql_inj .= "$key,";
+					$sql_inj2 .= ":$key,";
+				} else {
+					$sql_inj .= "$key=:$key,";
+				}
+			}
+			
+			$sql_inj = rtrim($sql_inj, ', ');
+			$sql_inj2 = rtrim($sql_inj2, ', ');
+
+			if ($chassis_id == "0") {
+				$sql = "INSERT INTO chassis (" . $sql_inj . ") VALUES (" . $sql_inj2 . ")";
+			} else {
+				$sql = "UPDATE chassis SET " . $sql_inj . " WHERE id=:chassis_id";
+				$chassis_data['chassis_id'] = $chassis_id;
+			}
+			$this->modSQL($sql, $chassis_data);
+		}
+		return $this->getInventory();
+	}
 }

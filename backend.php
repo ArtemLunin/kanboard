@@ -172,6 +172,7 @@ if ($env === 'services') {
 		'contacts'	=> '',
 		'comments'	=> '',
 		'oldOwner'	=> '',
+		'oldGroup'	=> '',
 	];
 	
 	foreach ($data_fields as $key => $value) {
@@ -228,10 +229,19 @@ if ($env === 'services') {
 		]);
 	} elseif ($call == 'doChangeOwner' && $accessType === 'admin' && $devices_data['owner'] != '' && $devices_data['oldOwner'] != '') {
 		$param_error_msg['answer'] = $db_object->changeOwner([
-			'owner'		=> $devices_data['owner'],
-			'oldOwner'	=> $devices_data['oldOwner'],
-			'locked'	=> $devices_data['locked'],
 			'id'		=> $devices_data['id'],
+			'locked'	=> $devices_data['locked'],
+			'oldOwner'	=> $devices_data['oldOwner'],
+			'owner'		=> $devices_data['owner'],
+			'group'		=> $devices_data['group'],
+		]);
+	} elseif ($call == 'doChangeGroup' && $accessType === 'admin' && $devices_data['group'] != '' && $devices_data['oldGroup'] != '') {
+		$param_error_msg['answer'] = $db_object->changeGroup([
+			'id'		=> $devices_data['id'],
+			'locked'	=> $devices_data['locked'],
+			'oldGroup'	=> $devices_data['oldGroup'],
+			'group'		=> $devices_data['group'],
+			'platform'		=> $devices_data['platform'],
 		]);
 	}
 	elseif ($call == 'doDeleteDevice' && $accessType === 'admin') 
@@ -252,9 +262,10 @@ if ($env === 'services') {
 				// 	// error_log(print_r($row,true));
 				// }
 			}
-	} elseif ($call == 'clearDevicesDataTemp' && $accessType === 'admin') {
-		$param_error_msg['answer'] = $db_object->clearDevicesDataTemp();
-	}
+	} 
+	// elseif ($call == 'clearDevicesDataTemp' && $accessType === 'admin') {
+	// 	$param_error_msg['answer'] = $db_object->clearDevicesDataTemp();
+	// }
 	$out_res = ['success' => $param_error_msg];	
 
 	header('Content-type: application/json');
