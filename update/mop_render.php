@@ -122,7 +122,9 @@ if ($efcrFile) {
                 $ip_address['ceilIP'],
             ], $efcr_str);
             $efcrOutput[] = ['implementationCommandList' => $new_str];
-            if (!str_contains($efcr_str, '%dipStartIndex%'))
+            // if (!str_contains($efcr_str, '%dipStartIndex%'))
+            //     break;
+            if (strpos($efcr_str, '%dipStartIndex%') === false)
                 break;
         }
     }

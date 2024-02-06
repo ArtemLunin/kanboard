@@ -448,7 +448,7 @@ class databaseUtils {
 			foreach ($table_res as $result)
 			{
 				foreach ($tags as $tag) {
-					if (str_contains(strtolower($result['descr']), $tag)) {
+					if (strpos(strtolower($result['descr'] ?? ''), $tag) !== false) {
 						$this->modSQL($sql_upd, [
 							'platform'		=> $deviceParam['platform'],
 							'group_name'	=> $group,

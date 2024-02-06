@@ -33,7 +33,7 @@ function getRightsAnswer($user, $rights, $root_access) {
 		'user' => $user,
 		'rights' => $rights,
 		'cache_setup' => $root_access,
-		'docsHref' => DOCUMENTATION_HREF,
+		'docsHref' => 'http://bookstack',
 		'doscLDAP' => 0
 	];
 }
