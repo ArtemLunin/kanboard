@@ -38,6 +38,8 @@ const sectionChildren = {
 	}
 };
 
+// const cTemplateGroup = "IP Core";
+let cTemplate = 0;
 const subMenuClass = 'children-menu';
 
 const entityMap = {
@@ -61,6 +63,8 @@ const sections = [
 	'services',
 	'template',
 	'mop',
+	'ctemplate',
+	'cmop',
 	'template DIP',
 	'dip',
 	'capacity',
@@ -1265,8 +1269,10 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 			if (showSection === 'template' || 
 				showSection === 'templateDIP' ||
+				showSection === 'ctemplate' ||
 				showSection === 'mop'|| 
-				showSection === 'dip') {
+				showSection === 'dip'|| 
+				showSection === 'cmop') {
 				section[idx].append(renderMopDiv);
 			}
 			section[idx].style.display = "block";
@@ -1274,6 +1280,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		clearOldData(showSection);
 
+		cTemplate = 0;
 		switch (showSection) {
 			case 'main':
 				if (!section[idx].dataset['showned']) {
@@ -1331,10 +1338,27 @@ window.addEventListener('DOMContentLoaded', () => {
 				displayMOPElements(true);
 				iniOGPA();
 				break;
+			case 'ctemplate':
+				document.title = 'cTemplate';
+				templateDip = 0;
+				cTemplate = 1;
+				displayMOPElements(true);
+				iniOGPA();
+				break;
+				// actField34
 			case 'mop':
 				document.title = 'MOP';
 				docTitle.value = 'Method of Procedure (MOP)';
 				templateDip = 0;
+				gCounterMode = "mopCounter";
+				displayMOPElements(false);
+				iniOGPA();
+				break;
+			case 'cmop':
+				document.title = 'cMOP';
+				docTitle.value = 'Method of Procedure (MOP)';
+				templateDip = 0;
+				cTemplate = 1;
 				gCounterMode = "mopCounter";
 				displayMOPElements(false);
 				iniOGPA();
@@ -1426,10 +1450,13 @@ window.addEventListener('DOMContentLoaded', () => {
 					{
 						if (pageName.toUpperCase() === 'MOP' || pageName.toUpperCase() === 'DIP') {
 							pageName = pageName.toUpperCase();
+						} else if (pageName === 'Ctemplate') {
+							pageName = 'cTemplate';
+						} else if (pageName === 'Cmop') {
+							pageName = 'cMOP';
 						}
 						if (accessType != '') {	
 							rights[sectionName] = accessType;
-							// console.log(sectionName);
 							menu.insertAdjacentHTML('beforeend', `
 							<li data-section="${sectionAttr}" data-access="${accessType}">${pageName}</li>
 							`);
@@ -1441,7 +1468,6 @@ window.addEventListener('DOMContentLoaded', () => {
 									data-subsection="${value[2]}" class="${subMenuClass}">- ${key}</li>
 									`);
 								}
-								// subMenuClass_ = '.' + subMenuClass;
 							}
 							if (sectionName === 'excel')
 							{
@@ -3264,7 +3290,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	function fillUserRights(userRights) {
 		let userName = '';
 		let oneUserRights = defaultUserRights.slice();
-		// 
+
 		for (const [key, value] of Object.entries(userRights)) {
 			if (key === 'user') {
 				let idx = sections.indexOf(key);
@@ -3383,7 +3409,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			token = {
 				token_id: '',
 				token_secret: '',
-				// check: 0
 			};
 		for (let [key, value] of formData.entries()) {
 			let valueClean = value.trim();
@@ -3814,6 +3839,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (!!hardCodeDesign[gActivityName] && !adminEnabled && document.title == 'Roaming FCR') {
 			showHardCodeDesign(hardCodeDesign[gActivityName].split(','));
 		}
+		formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
+			if (cTemplate) {
+				item.value = item.dataset.ctemplate.trim();
+			} else {
+				item.value = item.dataset.default.trim();
+			}
+		});
 	};
 
 	const showInventory = (data) => {
@@ -4078,7 +4110,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		totalInputs = 0;
 		changedInputs = 0;
 		document.querySelectorAll(inputsSelector).forEach(item => {
-			if (item.type !== 'hidden' && item.type !== 'file') {
+			if (item.type !== 'hidden' && item.type !== 'file' && 
+				((!JSON.parse(efcrFields.value).includes(item.name) && document.title != 'Roaming FCR') || document.title == 'Roaming FCR')) {
 				totalInputs++;
 				if (setIni) {
 					item.dataset.ini_data = item.value.trim().substring(0, 20)
@@ -4090,7 +4123,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 		const progress = Math.trunc((changedInputs / totalInputs) * 100);
 		divCounter.style.width = `${progress}%`;
-		divCounter.innerText = `${progress}% (${changedInputs} of ${totalInputs})`;
+		divCounter.innerText = `${progress}% (${changedInputs} of ${totalInputs})`;	
 	};
 
 	const resetHardCodeDesign = () => {
@@ -4350,7 +4383,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				//  document.title == 'Roaming FCR')) 
 				if (!item.classList.contains('js-hard-code-design'))
 				{
-					// console.log(item);
 					item.classList.remove('hidden');
 					item.classList.add('showned');
 				}

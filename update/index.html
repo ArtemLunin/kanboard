@@ -535,8 +535,8 @@
 			</section>
 			<section class="section settings">
 				<div class="row">
-					<div class="col-1 px-0"></div>
-					<div class="col-10">
+					<!-- <div class="col-1 px-0"></div> -->
+					<div class="col-12">
 						<table class="table table-sm table-bordered table-hover table-users">
 							<thead>
 								<tr>
@@ -549,8 +549,12 @@
 									<th>Services</th>
 									<th>Template MOP</th>
 									<th>MOP</th>
+									<th>cTemplate</th>
+									<th>cMOP</th>
 									<th>Template DIP</th>
 									<th>DIP</th>
+									<th>Capacity</th>
+									<th>Inventory</th>
 									<th>Action</th>
 								</tr>
 							</thead>
@@ -610,6 +614,17 @@
 										<option value="admin">admin</option>
 										<option value="user">user</option>
 									</select>
+									<label class="input-group-text-sm mr-1" for="ctemplatePage">cTemplate</label>
+									<select class="custom-select-sm mr-2" name="ctemplate" id="ctemplatePage" data-selectname="ctemplate">
+										<option value=""></option>
+										<option value="admin">admin</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="cmopPage">cMOP</label>
+									<select class="custom-select-sm mr-2" name="cmop" id="cmopPage" data-selectname="cmop">
+										<option value=""></option>
+										<option value="admin">admin</option>
+										<option value="user">user</option>
+									</select>
 									<label class="input-group-text-sm mr-1" for="templatePageDIP">Template DIP</label>
 									<select class="custom-select-sm mr-2" name="template DIP" id="templatePageDIP" data-selectname="template DIP">
 										<option value=""></option>
@@ -630,7 +645,7 @@
 							<span class="bg-success d-none">Cache initialized</span>
 						</form>
 					</div>
-					<div class="col-1 px-0"></div>
+					<!-- <div class="col-1 px-0"></div> -->
 				</div>
 			</section>
 			<section class="section automator">
@@ -805,7 +820,7 @@
 									<input type="text" name="actField32" class="mop renderData" data-value_name="actField32" id="actField32" value="Network Management and Ops" readonly>
 								</div>
 								<div class="param param-half">
-									<input type="text" name="actField34" class="mop renderData" data-value_name="actField34" id="actField34" value="RHSI and Service Delivery Environment" readonly>
+									<input type="text" name="actField34" class="mop renderData" data-value_name="actField34" data-ctemplate="IP Core" id="actField34" data-default="RHSI and Service Delivery Environment" readonly>
 								</div>
 								<div class="param param-50">
 									<label for="primeElement">Prime Element</label>
@@ -858,7 +873,7 @@
 								</div> -->
 								<input type="hidden" name="efcrFields" id="efcrFields" class="renderOnly" value="" data-dip-only="1">
 								<input type="hidden" name="rows_ceilIP" id="rows_ceilIP" data-id="ceilIP" data-parent="self" value="1">
-								<input type="hidden" name="ceilIP" id="ceilIP" data-ecfr="1">
+								<input type="hidden" name="ceilIP" id="ceilIP">
 								<div class="param param-half">
 									<label for="dipeFCRNumber">eFCR Number</label>
 									<input type="text" class="mop input-edit" name="dipeFCRNumber" id="dipeFCRNumber" value="" disabled data-ecfr="1">
@@ -882,7 +897,7 @@
 								</div>
 								<div class="param-row multirows">
 									<div class="param param-25">
-										<input type="text" class="mop input-edit" name="ceil_ip_1" id="ceil_ip_1" data-name="ceilIP" data-id="1" value="">
+										<input type="text" class="mop input-edit" name="ceil_ip_1" id="ceil_ip_1" data-name="ceilIP" data-id="1" value="" data-ecfr="1">
 									</div>
 								</div>
 								<div class="param-row ceil-btns">
@@ -1402,6 +1417,8 @@
 				</div>
 			</section>
 			<section class="section mop"></section>
+			<section class="section ctemplate"></section>
+			<section class="section cmop"></section>
 			<section class="section templateDIP"></section>
 			<section class="section dip"></section>
 			<section class="section capacity">

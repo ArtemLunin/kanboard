@@ -83,7 +83,7 @@ if (!isset($kanboardProjectsID)) {
 
 try
 {
-	if (!in_array($method, $noCheckedKanboardMethods)) {
+	if (!in_array($method, $noCheckedKanboardMethods) && $env !== 'services') {
 		$kanboard = new Kanboard($db_object);
 		$projectID = $kanboard->projectID;
 		$userID = $kanboard->userID;
@@ -243,9 +243,7 @@ if ($env === 'services') {
 			'group'		=> $devices_data['group'],
 			'platform'		=> $devices_data['platform'],
 		]);
-	}
-	elseif ($call == 'doDeleteDevice' && $accessType === 'admin') 
-	{
+	} elseif ($call == 'doDeleteDevice' && $accessType === 'admin') {
 		$param_error_msg['answer'] = $db_object->doDeleteDevice($paramJSON['id'] ?? 0);
 	} elseif ($call == 'loadData' && $accessType === 'admin') {
 		$tmp = $_FILES['file']['tmp_name'];
@@ -258,9 +256,6 @@ if ($env === 'services') {
 				$rows = $worksheet->toArray();
 
 				$param_error_msg['answer'] = $db_object->loadData($rows);
-				// foreach ($rows as $row) {
-				// 	// error_log(print_r($row,true));
-				// }
 			}
 	} 
 	// elseif ($call == 'clearDevicesDataTemp' && $accessType === 'admin') {

@@ -6,6 +6,11 @@ class databaseUtils {
 	private $root_access = false;
 	private $pdo = null;
 	private $tableAccessError = false;
+	private $platforms = [];
+	private $sql_ins_hash = '';
+	private $sql_upd_hash = '';
+	private $row_ins = null;
+	private $row_upd = null;
 	private $initialRights = [[
 		'pageName' => 'Main',
 		'sectionName' => 'main',
@@ -43,6 +48,18 @@ class databaseUtils {
 		'sectionName' => 'mop',
 		'sectionAttr'	=> 'mop',
 		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'cTemplate',
+		'sectionName' => 'ctemplate',
+		'sectionAttr'	=> 'ctemplate',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'cMOP',
+		'sectionName' => 'cmop',
+		'sectionAttr'	=> 'cmop',
+		'accessType'	=> 'csadmin',
 	],
 	[
 		'pageName' => 'Template DIP',
@@ -127,19 +144,36 @@ class databaseUtils {
 	}
 
 	function modSQLInsUpd($sqlInsUpd, $params_arr, $needCount = true) {
+		$sql_ins_hash = md5($sqlInsUpd['ins']);
+		$sql_upd_hash = md5($sqlInsUpd['upd'] ?? '');
+		if ($sql_ins_hash !== $this->sql_ins_hash) {
+			$this->sql_ins_hash = $sql_ins_hash;
+			$this->row_ins = $this->pdo->prepare($sqlInsUpd['ins']);
+		}
+		if ($sql_upd_hash !== $this->sql_upd_hash) {
+			$this->sql_upd_hash = $sql_upd_hash;
+			if ($sqlInsUpd['upd'] !== null && $sqlInsUpd['upd'] !== '') {
+				$this->row_upd = $this->pdo->prepare($sqlInsUpd['upt']);
+			} else {
+				$this->row_upd = null;
+			}
+		}
 		if (!$this->tableAccessError) {
 			try {
-				$row = $this->pdo->prepare($sqlInsUpd['ins']);
-				$row->execute($params_arr);
-				if (!$needCount || ($row->rowCount())) {
+				// $row = $this->pdo->prepare($sqlInsUpd['ins']);
+				// $row->execute($params_arr);
+				$this->row_ins->execute($params_arr);
+				if (!$needCount || ($this->row_ins->rowCount())) {
 					return true;
 				}
 			} catch (\PDOException $e){
 				if (preg_match('/Duplicate entry/i', $e->getMessage()) == 1) {
-					if ($sqlInsUpd['upd'] !== null && $sqlInsUpd['upd'] !== '') {
-						$row = $this->pdo->prepare($sqlInsUpd['upd']);
-						$row->execute($params_arr);
-						if (!$needCount || ($row->rowCount())) {
+					// if ($sqlInsUpd['upd'] !== null && $sqlInsUpd['upd'] !== '') {
+					if ($this->row_upd !== null) {
+						// $row = $this->pdo->prepare($sqlInsUpd['upd']);
+						// $row->execute($params_arr);
+						$this->row_upd->execute($params_arr);
+						if (!$needCount || ($this->row_upd->rowCount())) {
 							return true;
 						}
 					} else {
@@ -371,31 +405,12 @@ class databaseUtils {
 	function doGetDevicesAll() 
 	{
 		$device_list = [];
-		// $sql = "SELECT id, name, port, descr, platform,group_name,manager,contacts,tags, comments FROM devices_new";
-		$sql = "SELECT dev.id, dev.name, dev.port, dev.descr, p.platform,p.group_name,p.manager,p.contacts,dev.tags, dev.comments FROM devices_new AS dev, devices_platform AS p WHERE p.id=dev.platform_id";
-		
-		// $sql_tags = "SELECT id, tag, device_id FROM devices_tags WHERE device_id=:device_id";
-		// $sql_owner = "SELECT id, group_name, manager, contacts, device_id FROM devices_owners WHERE device_id=:device_id";
+
+		$sql = "SELECT dev.id, dev.name, dev.port, dev.descr, p.platform,p.group_name,p.manager,p.contacts,dev.tags, dev.comments FROM devices_new AS dev, devices_platform AS p WHERE p.id=dev.platform_id ORDER BY dev.id";
 
 		if ($table_res = $this->getSQL($sql, [])) {
 			foreach ($table_res as $result)
 			{
-				// $tags = '';
-				// $table_tags = $this->getSQL($sql_tags, [
-				// 	'device_id' => $result['id'],
-				// ]);
-				// foreach ($table_tags as $tag) {
-				// 	$tags .= ' ' . $tag['tag'];
-				// }
-				// $group = ''; $manager = ''; $contacts = '';
-				// if ($table_owners = $this->getSQL($sql_owner, [
-				// 	'device_id' => $result['id'],
-				// ])) {
-				// 	$group = $table_owners[0]['group_name'];
-				// 	$manager = $table_owners[0]['manager'];
-				// 	$contacts = $table_owners[0]['contacts'];
-				// }
-
 				$device_list[] = [
 					'id' 		=> (int)$result['id'],
 					'name'		=> $result['name'],
@@ -663,10 +678,21 @@ class databaseUtils {
 	function loadData($rows)
 	{
 		$sql = "INSERT INTO devices_new (name,port,descr,tags,comments,platform_id) VALUES (:name,:port,:descr,:tags,:comments,:platform_id)";
-		// $sql_get_platform = "SELECT id,group_name,manager FROM devices_platform WHERE platform=:platform";
-		// $sql_add_platform = "INSERT INTO devices_platform (platform,group_name,manager,contacts) VALUES (:platform,:group_name,:manager,:contacts)";
+		$sql_get = "SELECT id,name,port,descr,tags,platform_id FROM devices_new WHERE name=:name AND port=:port AND descr<>:descr";
+		$sql_get_tags = "SELECT id,name,port,descr,tags,platform_id FROM devices_new WHERE NOT (name=:name AND port=:port) AND tags<>''";
+		$sql_upd = "UPDATE devices_new SET descr=:descr,tags=:tags,platform_id=:platform_id WHERE id=:id";
+
+		$row_ins = $this->pdo->prepare($sql);
+		$row_get = $this->pdo->prepare($sql_get);
+		$row_get_tags = $this->pdo->prepare($sql_get_tags);
+		$row_upd = $this->pdo->prepare($sql_upd);
+
 		foreach ($rows as $row) {
+			$name = trim($row[0] ?? '');
+			$port = trim($row[1] ?? '');
+			$descr = trim($row[2] ?? '');
 			$platform = trim($row[3] ?? '');
+			$tags = trim($row[4] ?? '');
 			$group_name = trim($row[5] ?? '');
 			$manager = trim($row[6] ?? '');
 			$contacts = null;
@@ -676,29 +702,69 @@ class databaseUtils {
 				'manager'		=> $manager,
 				'contacts'		=> $contacts,
 			]);
-			// if ($table_res = $this->getSQL($sql_get_platform, [
-			// 	'platform' => $platform,
-			// ])) {
-			// 	$platform_id = $table_res[0]['id'];
-			// } else {
-			// 	$platform_id = $this->insSQL($sql_add_platform, [
-			// 		'platform'		=> $platform,
-			// 		'group_name'	=> $group_name,
-			// 		'manager'		=> $manager,
-			// 		'contacts'		=> $contacts,
-			// 	], false);
-			// }
+
 			if (!$row[0] || trim($row[0] ?? '') == '' || !$row[1] || trim($row[1] ?? '') == '') {
 				continue;
 			}
-			$this->modSQLInsUpd(['ins' => $sql, 'upd' => null], [
-				'name'	=> trim($row[0]),
-				'port'	=> trim($row[1]),
-				'descr' => trim($row[2] ?? ''),
-				'tags'	=> trim($row[4] ?? ''),
-				'comments'		=> trim($row[7] ?? ''),
-				'platform_id'	=> $platform_id,
-			]);
+			// $this->modSQLInsUpd(['ins' => $sql, 'upd' => null], [
+			// 	'name'	=> trim($row[0]),
+			// 	'port'	=> trim($row[1]),
+			// 	'descr' => trim($row[2] ?? ''),
+			// 	'tags'	=> trim($row[4] ?? ''),
+			// 	'comments'		=> trim($row[7] ?? ''),
+			// 	'platform_id'	=> $platform_id,
+			// ]);
+			try {
+				// $row = $this->pdo->prepare($sqlInsUpd['ins']);
+				// $row->execute($params_arr);
+				$row_ins->execute([
+						'name'	=> $name,
+						'port'	=> $port,
+						'descr' => $descr,
+						'tags'	=> $tags,
+						'comments'		=> trim($row[7] ?? ''),
+						'platform_id'	=> $platform_id,
+					]);
+			} catch (\PDOException $e){
+				if (preg_match('/Duplicate entry/i', $e->getMessage()) == 1) {
+					$row_get->execute([
+						'name'	=> $name,
+						'port'	=> $port,
+						'descr'	=> $descr,
+					]);
+					$result = $row_get->fetch();
+
+					if (isset($result['id'])) {
+						$new_platform_id = $result['platform_id'];
+						$new_tags = trim($result['tags']);
+						// if ($result['tags'] && trim($result['tags']) !== '') {
+							$row_get_tags->execute([
+								'name'	=> $result['name'],
+								'port'	=> $result['port'],
+								// 'tags'	=> trim($result['tags']),
+							]);
+							
+							if ($table_res = $row_get_tags->fetchall())
+							{
+								foreach ($table_res as $result_tags)
+								{
+									if (stripos($descr, $result_tags['tags']) !== false) {
+										$new_platform_id = $result_tags['platform_id'];
+										$new_tags = trim($result_tags['tags']);
+										break;
+									}
+								}
+							}
+						// }
+						$row_upd->execute([
+							'descr'			=> $descr,
+							'tags'			=> $new_tags,
+							'platform_id'	=> $new_platform_id,
+							'id'			=> $result['id'],
+						]);
+					}
+				}
+			}
 		}
 		return $this->doGetDevicesAll();
 	}
@@ -706,19 +772,25 @@ class databaseUtils {
 	function getPlatformId($platform)
 	{
 		$platform_id = null;
-		$sql_get_platform = "SELECT id,group_name,manager FROM devices_platform WHERE platform=:platform";
-		$sql_add_platform = "INSERT INTO devices_platform (platform,group_name,manager,contacts) VALUES (:platform,:group_name,:manager,:contacts)";
-		if ($table_res = $this->getSQL($sql_get_platform, [
-			'platform' => $platform['platform'],
-		])) {
-			$platform_id = $table_res[0]['id'];
+		$platform_hash = md5($platform['platform']);
+		if (array_key_exists($platform_hash, $this->platforms)) {
+			$platform_id = $this->platforms[$platform_hash];
 		} else {
-			$platform_id = $this->insSQL($sql_add_platform, [
-				'platform'		=> $platform['platform'],
-				'group_name'	=> $platform['group_name'],
-				'manager'		=> $platform['manager'],
-				'contacts'		=> $platform['contacts'],
-			], false);
+			$sql_get_platform = "SELECT id,group_name,manager FROM devices_platform WHERE platform=:platform";
+			$sql_add_platform = "INSERT INTO devices_platform (platform,group_name,manager,contacts) VALUES (:platform,:group_name,:manager,:contacts)";
+			if ($table_res = $this->getSQL($sql_get_platform, [
+				'platform' => $platform['platform'],
+			])) {
+				$platform_id = $table_res[0]['id'];
+			} else {
+				$platform_id = $this->insSQL($sql_add_platform, [
+					'platform'		=> $platform['platform'],
+					'group_name'	=> $platform['group_name'],
+					'manager'		=> $platform['manager'],
+					'contacts'		=> $platform['contacts'],
+				], false);
+			}
+			$this->platforms[$platform_hash] = $platform_id;
 		}
 		return $platform_id;
 	}
