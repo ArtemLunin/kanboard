@@ -3791,7 +3791,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = false;
 					inputElem.classList.add(inputSelectorClass);
-					if (inputElem.dataset['ecfr'] == "1") {
+					if (inputElem.dataset['efcr'] == "1") {
 						efcrFieldsArr.push(inputElem.name);
 					}
 				});

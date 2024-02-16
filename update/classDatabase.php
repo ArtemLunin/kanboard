@@ -735,8 +735,10 @@ class databaseUtils {
 					$result = $row_get->fetch();
 
 					if (isset($result['id'])) {
-						$new_platform_id = $result['platform_id'];
-						$new_tags = trim($result['tags']);
+						// $new_platform_id = $result['platform_id'];
+						// $new_tags = trim($result['tags']);
+						$new_platform_id = null;
+						$new_tags = '';
 						// if ($result['tags'] && trim($result['tags']) !== '') {
 							$row_get_tags->execute([
 								'name'	=> $result['name'],
@@ -756,6 +758,14 @@ class databaseUtils {
 								}
 							}
 						// }
+						if ($new_platform_id === null){
+							$new_platform_id = $this->getPlatformId([
+								'platform'		=> '',
+								'group_name'	=> '',
+								'manager'		=> '',
+								'contacts'		=> '',
+							]);
+						}
 						$row_upd->execute([
 							'descr'			=> $descr,
 							'tags'			=> $new_tags,

@@ -64,15 +64,20 @@ foreach ($_POST as $param => $value) {
     }
     if (is_array($value)) {
         $values = json_decode($value[0], true);
+        foreach ($values as $val_idx => $val_arr) {
+            foreach ($val_arr as $par_name => $par_value) {
+                $values[$val_idx][$par_name] = htmlentities($par_value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8");
+            }
+        }
         $templateProcessor->cloneRowAndSetValues($param, $values);
     } elseif (!isset($arrayBlocks[$param])) {
-        $templateProcessor->setValue($param, $value);
+        $templateProcessor->setValue($param, htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8"));
     } else {
         $replacements = [];
         $lines = getLinesFromTextArea($value);
         foreach ($lines as $line) {
             $replacements[] = [
-                $arrayBlocks[$param]["taName"] => $line
+                $arrayBlocks[$param]["taName"] => htmlentities($line, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8")
             ];
         }
         if($efcrFile && $arrayBlocks[$param]["blockName"] == 'implementationCheckList')
@@ -83,16 +88,12 @@ foreach ($_POST as $param => $value) {
     }
     if ($param === 'projectNumber') {
         if (trim($value) !== '') {
-            $fileNamePart1 = $value;
-            // .".docx";
+            $fileNamePart1 = htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8");
         }
-        // } else {
-        //     $resultFileName = "untitled.docx";
-        // }
     }
     if ($param === 'projectName') {
         if (trim($value) !== '') {
-            $fileNamePart2 = $value;
+            $fileNamePart2 = htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8");
         }
     }
 }
@@ -121,9 +122,7 @@ if ($efcrFile) {
                 $dipStartIndex,
                 $ip_address['ceilIP'],
             ], $efcr_str);
-            $efcrOutput[] = ['implementationCommandList' => $new_str];
-            // if (!str_contains($efcr_str, '%dipStartIndex%'))
-            //     break;
+            $efcrOutput[] = ['implementationCommandList' => htmlentities($new_str, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8")];
             if (strpos($efcr_str, '%dipStartIndex%') === false)
                 break;
         }
