@@ -688,6 +688,10 @@ class databaseUtils {
 		$row_upd = $this->pdo->prepare($sql_upd);
 
 		foreach ($rows as $row) {
+			$new_device_id = 0;
+			$new_platform_id = null;
+			$new_tags = '';
+
 			$name = trim($row[0] ?? '');
 			$port = trim($row[1] ?? '');
 			$descr = trim($row[2] ?? '');
@@ -725,7 +729,8 @@ class databaseUtils {
 						'comments'		=> trim($row[7] ?? ''),
 						'platform_id'	=> $platform_id,
 					]);
-			} catch (\PDOException $e){
+				$new_device_id = $this->pdo->lastInsertId();
+			} catch (\PDOException $e) {
 				if (preg_match('/Duplicate entry/i', $e->getMessage()) == 1) {
 					$row_get->execute([
 						'name'	=> $name,
@@ -735,42 +740,40 @@ class databaseUtils {
 					$result = $row_get->fetch();
 
 					if (isset($result['id'])) {
-						// $new_platform_id = $result['platform_id'];
-						// $new_tags = trim($result['tags']);
-						$new_platform_id = null;
-						$new_tags = '';
-						// if ($result['tags'] && trim($result['tags']) !== '') {
-							$row_get_tags->execute([
-								'name'	=> $result['name'],
-								'port'	=> $result['port'],
-								// 'tags'	=> trim($result['tags']),
-							]);
-							
-							if ($table_res = $row_get_tags->fetchall())
-							{
-								foreach ($table_res as $result_tags)
-								{
-									if (stripos($descr, $result_tags['tags']) !== false) {
-										$new_platform_id = $result_tags['platform_id'];
-										$new_tags = trim($result_tags['tags']);
-										break;
-									}
-								}
+						$new_device_id = $result['id'];
+					}
+				}
+			} finally {
+				if ($new_device_id) {
+					$row_get_tags->execute([
+						'name'	=> $name,
+						'port'	=> $port,
+					]);
+					if ($table_res = $row_get_tags->fetchall())
+					{
+						foreach ($table_res as $result_tags)
+						{
+							if (stripos($descr, $result_tags['tags']) !== false) {
+								$new_platform_id = $result_tags['platform_id'];
+								$new_tags = trim($result_tags['tags']);
+								break;
 							}
-						// }
-						if ($new_platform_id === null){
-							$new_platform_id = $this->getPlatformId([
-								'platform'		=> '',
-								'group_name'	=> '',
-								'manager'		=> '',
-								'contacts'		=> '',
-							]);
 						}
+					}
+					if ($new_platform_id === null){
+						$new_platform_id = $this->getPlatformId([
+							'platform'		=> '',
+							'group_name'	=> '',
+							'manager'		=> '',
+							'contacts'		=> '',
+						]);
+					}
+					if ($tags !== $new_tags) {
 						$row_upd->execute([
 							'descr'			=> $descr,
 							'tags'			=> $new_tags,
 							'platform_id'	=> $new_platform_id,
-							'id'			=> $result['id'],
+							'id'			=> $new_device_id,
 						]);
 					}
 				}
@@ -805,12 +808,15 @@ class databaseUtils {
 		return $platform_id;
 	}
 
-	function doDeleteDevice($id)
+	function doDeleteDevice($id, $mode = null)
 	{
 		$sql = "DELETE FROM devices_new WHERE id=:id";
 		if ($this->modSQL($sql, [
 			'id' => $id
 		], true)) {	
+			if ($mode === 'fast') {
+				return ['id' => $id];
+			}
 			return $this->doGetDevicesAll();
 		}
 		return false;

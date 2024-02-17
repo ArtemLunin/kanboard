@@ -150,6 +150,7 @@ if ($env === 'services') {
 	require_once 'db_conf_mosaic.php';
 
 	$call = $paramJSON['call'] ?? $_REQUEST['call'] ?? null;
+	$mode = $paramJSON['mode'] ?? $_REQUEST['mode'] ?? null;
 	$param_error_msg['answer'] = false;
 
 	$data_fields = [
@@ -244,7 +245,7 @@ if ($env === 'services') {
 			'platform'		=> $devices_data['platform'],
 		]);
 	} elseif ($call == 'doDeleteDevice' && $accessType === 'admin') {
-		$param_error_msg['answer'] = $db_object->doDeleteDevice($paramJSON['id'] ?? 0);
+		$param_error_msg['answer'] = $db_object->doDeleteDevice($paramJSON['id'] ?? 0, $mode);
 	} elseif ($call == 'loadData' && $accessType === 'admin') {
 		$tmp = $_FILES['file']['tmp_name'];
 			if (($tmp!='') && is_uploaded_file($tmp)) 

@@ -728,7 +728,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						exportOptions: {
 							columns: '.exportable'
 						}
-					}
+					},
 				]
 			},
 			"autoWidth": false,
@@ -3162,11 +3162,19 @@ window.addEventListener('DOMContentLoaded', () => {
 		const body = {
 			env: 'services',
 			call: 'doDeleteDevice',
+			mode: 'fast',
 			id: deviceID
 		};
 		sendRequest('POST', requestURL, body).then((data) => {
 			if (data && data.success && data.success.answer) {
-				showMosaic(data.success.answer);
+				if (data.success.answer.id !== undefined) {
+					const device_data_row = document.querySelector(`#device-data-${data.success.answer.id}`);
+					if (device_data_row) {
+						device_data_row.remove();
+					}
+				} else {
+					showMosaic(data.success.answer);
+				}
 			}
 		});
 	};
@@ -4204,6 +4212,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 			fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
 				ceil.value = 1;
+				fieldset.querySelector(`#${ceil.dataset.id}`).value = "";
 			})
 		});
 		formSubmit.classList.remove('edit');
@@ -4237,7 +4246,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	formFields.addEventListener('click', (e) => {
 		const target = e.target;
-		if (target.type ==="checkbox" && target.dataset.ini_data !== target.checked) {
+		if (target.type === "checkbox" && target.dataset.ini_data !== target.checked) {
 			formSubmit.classList.add('edit');
 		}
 	});
@@ -4441,6 +4450,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.name = `${item.dataset.name}_${row.value}`;
 				item.id = item.name;
 				item.value = '';
+				item.dataset.ini_data = '';
 			});
 			fieldset.append(new_row);
 			fieldset.append(e.target.closest('.ceil-btns'));
