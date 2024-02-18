@@ -752,40 +752,38 @@
 						</form>
 					</div>
 					<form action="#" method="POST" id="mosaicFormLoadData" enctype="multipart/form-data">
-						<label for="loadExcelData" class="file-input-show btn btn-info btn-sm">Load Data</label>
+						<!-- <label for="loadExcelData" class="file-input-show btn btn-info btn-sm">Load Data</label> -->
 						<input type="file" class="form-control-file-excel file-input-hidden" id="loadExcelData" name="file" accept=".xlsx">
-						<!-- <label for="btnClearData" class="file-input-show btn btn-secondary btn-sm">Clear Data (test only mode)</label>
-						<button type="button" class="hidden" id="btnClearData" title="Clear Data"></button> -->
+						<table class="devices-all-table table table-hover table-sm table-striped table-bordered compact no-footer" id="devicesMosaic">
+							<!-- <thead>
+								<tr>
+									<th class="exportable">Node</th>
+									<th class="exportable">Platform</th>
+									<th class="exportable">Service</th>
+									<th class="exportable">Ops. owner</th>
+									<th class="exportable">Contact Info</th>
+									<th class="exportable">Manager</th>
+									<th class="exportable">Comments</th>
+									<th>Actions</th>
+								</tr>
+							</thead> -->
+							<thead>
+								<tr>
+									<th class="exportable">Node</th>
+									<th class="exportable">Interface</th>
+									<th class="exportable">Description</th>
+									<th class="exportable">Platform</th>
+									<th class="exportable">Tag</th>
+									<th class="exportable">Group</th>
+									<th class="exportable">Owner</th>
+									<th class="exportable">Note</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody class="devices-all-body">
+							</tbody>
+						</table>
 					</form>
-					<table class="devices-all-table table table-hover table-sm table-striped table-bordered compact no-footer" id="devicesMosaic">
-						<!-- <thead>
-							<tr>
-								<th class="exportable">Node</th>
-								<th class="exportable">Platform</th>
-								<th class="exportable">Service</th>
-								<th class="exportable">Ops. owner</th>
-								<th class="exportable">Contact Info</th>
-								<th class="exportable">Manager</th>
-								<th class="exportable">Comments</th>
-								<th>Actions</th>
-							</tr>
-						</thead> -->
-						<thead>
-							<tr>
-								<th class="exportable">Node</th>
-								<th class="exportable">Interface</th>
-								<th class="exportable">Description</th>
-								<th class="exportable">Platform</th>
-								<th class="exportable">Tag</th>
-								<th class="exportable">Group</th>
-								<th class="exportable">Owner</th>
-								<th class="exportable">Note</th>
-								<th>Actions</th>
-							</tr>
-						</thead>
-						<tbody class="devices-all-body">
-						</tbody>
-					</table>
 				</div>
 			</section>
 			<section class="section template">
@@ -873,22 +871,22 @@
 								</div> -->
 								<input type="hidden" name="efcrFields" id="efcrFields" class="renderOnly" value="" data-dip-only="1">
 								<input type="hidden" name="rows_ceilIP" id="rows_ceilIP" data-id="ceilIP" data-parent="self" value="1">
-								<input type="hidden" name="ceilIP" id="ceilIP">
+								<input type="hidden" name="ceilIP" id="ceilIP" data-efcr="1">
 								<div class="param param-half">
 									<label for="dipeFCRNumber">eFCR Number</label>
-									<input type="text" class="mop input-edit" name="dipeFCRNumber" id="dipeFCRNumber" value="" disabled data-ecfr="1">
+									<input type="text" class="mop input-edit" name="dipeFCRNumber" id="dipeFCRNumber" value="" disabled data-efcr="1">
 								</div>
 								<div class="param param-half">
 									<label for="dipCompanyName">Company Name</label>
-									<input type="text" class="mop input-edit" name="dipCompanyName" id="dipCompanyName" value="" disabled data-ecfr="1">
+									<input type="text" class="mop input-edit" name="dipCompanyName" id="dipCompanyName" value="" disabled data-efcr="1">
 								</div>
 								<div class="param param-half">
 									<label for="dipCountryName">Country Name</label>
-									<input type="text" class="mop input-edit" name="dipCountryName" id="dipCountryName" value="" disabled data-ecfr="1">
+									<input type="text" class="mop input-edit" name="dipCountryName" id="dipCountryName" value="" disabled data-efcr="1">
 								</div>
 								<div class="param param-half">
 									<label for="dipStartIndex">Start Index</label>
-									<input type="number" min="0" class="mop input-edit" name="dipStartIndex" id="dipStartIndex" value="" disabled data-ecfr="1">
+									<input type="number" min="0" class="mop input-edit" name="dipStartIndex" id="dipStartIndex" value="" disabled data-efcr="1">
 								</div>
 								<div class="param-row">
 									<div class="param param-25">
@@ -897,7 +895,7 @@
 								</div>
 								<div class="param-row multirows">
 									<div class="param param-25">
-										<input type="text" class="mop input-edit" name="ceil_ip_1" id="ceil_ip_1" data-name="ceilIP" data-id="1" value="" data-ecfr="1">
+										<input type="text" class="mop input-edit" name="ceil_ip_1" id="ceil_ip_1" data-name="ceilIP" data-id="1" value="">
 									</div>
 								</div>
 								<div class="param-row ceil-btns">

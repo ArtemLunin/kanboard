@@ -236,6 +236,7 @@ p {
 }
 .period-select, .statistics-buttons, .mosaic-buttons {
 	float: left;
+	margin-bottom: .5rem;
 }
 .excel-menu, .mosaic-menu {
 	margin-top: 10px;
@@ -370,7 +371,7 @@ textarea.mop {
 .ogpa-new {
     width: 80% !important;
 }
-button.mop {
+button.mop, .btn-devices {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -381,9 +382,12 @@ button.mop {
     margin: 0;
     border: none;
 }
-button[type="submit"] {
+button[type="submit"], .btn-devices {
     background-color: hsl(213, 73%, 50%);
     color: white;
+}
+.btn-devices-export {
+	background-color: hsl(152, 50%, 50%);
 }
 button[type="submit"].edit {
     background-color: hsl(152, 50%, 50%);

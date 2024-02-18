@@ -687,11 +687,11 @@ window.addEventListener('DOMContentLoaded', () => {
 	
 	const dataTableMosaic = $(`#${devicesMosaic_selector}`)
 		.on('init.dt', function () {
-				const btnExcel = document.querySelector(`.mosaic-excel`);
-				const img = document.createElement('img');
-				img.src = 'img/file-excel.svg';
-				img.classList.add("icon-excel");
-				btnExcel.append(img);
+				// const btnExcel = document.querySelector(`.mosaic-excel`);
+				// const img = document.createElement('img');
+				// img.src = 'img/file-excel.svg';
+				// img.classList.add("icon-excel");
+				// btnExcel.append(img);
 		})
 		.DataTable({
 			dom: '<"mosaic-menu"Bft>',
@@ -704,9 +704,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					},
 					button: {
 						tag: 'button',
-						className: [
-							'btn', 'btn-sm'
-						]
+						className: []
 					},
 					buttonLiner: {
 						tag: null
@@ -716,9 +714,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				buttons: [
 					{
 						extend: "excel",
-						text: '',
+						text: 'Export Data',
 						title: null,
-						className: 'mosaic-excel',
+						className: 'mosaic-excel btn-devices btn-devices-export',
 						filename: '* Export',
 						attr: {
 							title: 'Export to Excel',
@@ -729,6 +727,20 @@ window.addEventListener('DOMContentLoaded', () => {
 							columns: '.exportable'
 						}
 					},
+					{
+						tag: 'label',
+						text: 'Import Data',
+						className: 'btn-devices',
+						attr: {
+							// title: 'Import to Services',
+							for: 'loadExcelData',
+							id: 'btnLoadExcelData',
+						},
+						action: function (e, dt, node, config) {
+							const target = e.target;
+							document.querySelector(`#${target.getAttribute('for')}`).click();
+						}
+					}
 				]
 			},
 			"autoWidth": false,

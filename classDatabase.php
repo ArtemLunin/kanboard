@@ -402,11 +402,11 @@ class databaseUtils {
 		return $device_list;
 	}
 
-	function doGetDevicesAll() 
+	function doGetDevicesAll($start = 0, $length = 100) 
 	{
 		$device_list = [];
 
-		$sql = "SELECT dev.id, dev.name, dev.port, dev.descr, p.platform,p.group_name,p.manager,p.contacts,dev.tags, dev.comments FROM devices_new AS dev, devices_platform AS p WHERE p.id=dev.platform_id ORDER BY dev.id";
+		$sql = "SELECT dev.id, dev.name, dev.port, dev.descr, p.platform,p.group_name,p.manager,p.contacts,dev.tags, dev.comments FROM devices_new AS dev, devices_platform AS p WHERE p.id=dev.platform_id ORDER BY dev.name, dev.port";
 
 		if ($table_res = $this->getSQL($sql, [])) {
 			foreach ($table_res as $result)

@@ -22,3 +22,7 @@ ALTER TABLE mop_fields.sql
 *.sql
 
 
+update/classDatabase.php
+update/index.html
+update/mop_render.php
+update/js/script.js

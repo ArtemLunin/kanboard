@@ -752,40 +752,38 @@
 						</form>
 					</div>
 					<form action="#" method="POST" id="mosaicFormLoadData" enctype="multipart/form-data">
-						<label for="loadExcelData" class="file-input-show btn btn-info btn-sm">Load Data</label>
+						<!-- <label for="loadExcelData" class="file-input-show btn btn-info btn-sm">Load Data</label> -->
 						<input type="file" class="form-control-file-excel file-input-hidden" id="loadExcelData" name="file" accept=".xlsx">
-						<!-- <label for="btnClearData" class="file-input-show btn btn-secondary btn-sm">Clear Data (test only mode)</label>
-						<button type="button" class="hidden" id="btnClearData" title="Clear Data"></button> -->
+						<table class="devices-all-table table table-hover table-sm table-striped table-bordered compact no-footer" id="devicesMosaic">
+							<!-- <thead>
+								<tr>
+									<th class="exportable">Node</th>
+									<th class="exportable">Platform</th>
+									<th class="exportable">Service</th>
+									<th class="exportable">Ops. owner</th>
+									<th class="exportable">Contact Info</th>
+									<th class="exportable">Manager</th>
+									<th class="exportable">Comments</th>
+									<th>Actions</th>
+								</tr>
+							</thead> -->
+							<thead>
+								<tr>
+									<th class="exportable">Node</th>
+									<th class="exportable">Interface</th>
+									<th class="exportable">Description</th>
+									<th class="exportable">Platform</th>
+									<th class="exportable">Tag</th>
+									<th class="exportable">Group</th>
+									<th class="exportable">Owner</th>
+									<th class="exportable">Note</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody class="devices-all-body">
+							</tbody>
+						</table>
 					</form>
-					<table class="devices-all-table table table-hover table-sm table-striped table-bordered compact no-footer" id="devicesMosaic">
-						<!-- <thead>
-							<tr>
-								<th class="exportable">Node</th>
-								<th class="exportable">Platform</th>
-								<th class="exportable">Service</th>
-								<th class="exportable">Ops. owner</th>
-								<th class="exportable">Contact Info</th>
-								<th class="exportable">Manager</th>
-								<th class="exportable">Comments</th>
-								<th>Actions</th>
-							</tr>
-						</thead> -->
-						<thead>
-							<tr>
-								<th class="exportable">Node</th>
-								<th class="exportable">Interface</th>
-								<th class="exportable">Description</th>
-								<th class="exportable">Platform</th>
-								<th class="exportable">Tag</th>
-								<th class="exportable">Group</th>
-								<th class="exportable">Owner</th>
-								<th class="exportable">Note</th>
-								<th>Actions</th>
-							</tr>
-						</thead>
-						<tbody class="devices-all-body">
-						</tbody>
-					</table>
 				</div>
 			</section>
 			<section class="section template">

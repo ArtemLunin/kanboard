@@ -687,11 +687,11 @@ window.addEventListener('DOMContentLoaded', () => {
 	
 	const dataTableMosaic = $(`#${devicesMosaic_selector}`)
 		.on('init.dt', function () {
-				const btnExcel = document.querySelector(`.mosaic-excel`);
-				const img = document.createElement('img');
-				img.src = 'img/file-excel.svg';
-				img.classList.add("icon-excel");
-				btnExcel.append(img);
+				// const btnExcel = document.querySelector(`.mosaic-excel`);
+				// const img = document.createElement('img');
+				// img.src = 'img/file-excel.svg';
+				// img.classList.add("icon-excel");
+				// btnExcel.append(img);
 		})
 		.DataTable({
 			dom: '<"mosaic-menu"Bft>',
@@ -704,9 +704,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					},
 					button: {
 						tag: 'button',
-						className: [
-							'btn', 'btn-sm'
-						]
+						className: []
 					},
 					buttonLiner: {
 						tag: null
@@ -716,9 +714,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				buttons: [
 					{
 						extend: "excel",
-						text: '',
+						text: 'Export Data',
 						title: null,
-						className: 'mosaic-excel',
+						className: 'mosaic-excel btn-devices btn-devices-export',
 						filename: '* Export',
 						attr: {
 							title: 'Export to Excel',
@@ -727,6 +725,20 @@ window.addEventListener('DOMContentLoaded', () => {
 						tag: 'a',
 						exportOptions: {
 							columns: '.exportable'
+						}
+					},
+					{
+						tag: 'label',
+						text: 'Import Data',
+						className: 'btn-devices',
+						attr: {
+							// title: 'Import to Services',
+							for: 'loadExcelData',
+							id: 'btnLoadExcelData',
+						},
+						action: function (e, dt, node, config) {
+							const target = e.target;
+							document.querySelector(`#${target.getAttribute('for')}`).click();
 						}
 					}
 				]
@@ -3162,11 +3174,19 @@ window.addEventListener('DOMContentLoaded', () => {
 		const body = {
 			env: 'services',
 			call: 'doDeleteDevice',
+			mode: 'fast',
 			id: deviceID
 		};
 		sendRequest('POST', requestURL, body).then((data) => {
 			if (data && data.success && data.success.answer) {
-				showMosaic(data.success.answer);
+				if (data.success.answer.id !== undefined) {
+					const device_data_row = document.querySelector(`#device-data-${data.success.answer.id}`);
+					if (device_data_row) {
+						device_data_row.remove();
+					}
+				} else {
+					showMosaic(data.success.answer);
+				}
 			}
 		});
 	};
@@ -3791,7 +3811,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = false;
 					inputElem.classList.add(inputSelectorClass);
-					if (inputElem.dataset['ecfr'] == "1") {
+					if (inputElem.dataset['efcr'] == "1") {
 						efcrFieldsArr.push(inputElem.name);
 					}
 				});
@@ -4204,6 +4224,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 			fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
 				ceil.value = 1;
+				fieldset.querySelector(`#${ceil.dataset.id}`).value = "";
 			})
 		});
 		formSubmit.classList.remove('edit');
@@ -4237,7 +4258,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	formFields.addEventListener('click', (e) => {
 		const target = e.target;
-		if (target.type ==="checkbox" && target.dataset.ini_data !== target.checked) {
+		if (target.type === "checkbox" && target.dataset.ini_data !== target.checked) {
 			formSubmit.classList.add('edit');
 		}
 	});
@@ -4441,6 +4462,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.name = `${item.dataset.name}_${row.value}`;
 				item.id = item.name;
 				item.value = '';
+				item.dataset.ini_data = '';
 			});
 			fieldset.append(new_row);
 			fieldset.append(e.target.closest('.ceil-btns'));
