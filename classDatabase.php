@@ -153,7 +153,7 @@ class databaseUtils {
 		if ($sql_upd_hash !== $this->sql_upd_hash) {
 			$this->sql_upd_hash = $sql_upd_hash;
 			if ($sqlInsUpd['upd'] !== null && $sqlInsUpd['upd'] !== '') {
-				$this->row_upd = $this->pdo->prepare($sqlInsUpd['upt']);
+				$this->row_upd = $this->pdo->prepare($sqlInsUpd['upd']);
 			} else {
 				$this->row_upd = null;
 			}
@@ -681,11 +681,13 @@ class databaseUtils {
 		$sql_get = "SELECT id,name,port,descr,tags,platform_id FROM devices_new WHERE name=:name AND port=:port AND descr<>:descr";
 		$sql_get_tags = "SELECT id,name,port,descr,tags,platform_id FROM devices_new WHERE NOT (name=:name AND port=:port) AND tags<>''";
 		$sql_upd = "UPDATE devices_new SET descr=:descr,tags=:tags,platform_id=:platform_id WHERE id=:id";
+		$sql_upd_descr = "UPDATE devices_new SET descr=:descr WHERE id=:id";
 
 		$row_ins = $this->pdo->prepare($sql);
 		$row_get = $this->pdo->prepare($sql_get);
 		$row_get_tags = $this->pdo->prepare($sql_get_tags);
 		$row_upd = $this->pdo->prepare($sql_upd);
+		$row_upd_descr = $this->pdo->prepare($sql_upd_descr);
 
 		foreach ($rows as $row) {
 			$new_device_id = 0;
@@ -773,6 +775,11 @@ class databaseUtils {
 							'descr'			=> $descr,
 							'tags'			=> $new_tags,
 							'platform_id'	=> $new_platform_id,
+							'id'			=> $new_device_id,
+						]);
+					} else {
+						$row_upd_descr->execute([
+							'descr'			=> $descr,
 							'id'			=> $new_device_id,
 						]);
 					}

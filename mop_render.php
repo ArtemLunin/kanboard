@@ -66,18 +66,18 @@ foreach ($_POST as $param => $value) {
         $values = json_decode($value[0], true);
         foreach ($values as $val_idx => $val_arr) {
             foreach ($val_arr as $par_name => $par_value) {
-                $values[$val_idx][$par_name] = htmlentities($par_value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8");
+                $values[$val_idx][$par_name] = htmlentities($par_value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8");
             }
         }
         $templateProcessor->cloneRowAndSetValues($param, $values);
     } elseif (!isset($arrayBlocks[$param])) {
-        $templateProcessor->setValue($param, htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8"));
+        $templateProcessor->setValue($param, htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
     } else {
         $replacements = [];
         $lines = getLinesFromTextArea($value);
         foreach ($lines as $line) {
             $replacements[] = [
-                $arrayBlocks[$param]["taName"] => htmlentities($line, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8")
+                $arrayBlocks[$param]["taName"] => htmlentities($line, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8")
             ];
         }
         if($efcrFile && $arrayBlocks[$param]["blockName"] == 'implementationCheckList')
@@ -88,12 +88,12 @@ foreach ($_POST as $param => $value) {
     }
     if ($param === 'projectNumber') {
         if (trim($value) !== '') {
-            $fileNamePart1 = htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8");
+            $fileNamePart1 = htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8");
         }
     }
     if ($param === 'projectName') {
         if (trim($value) !== '') {
-            $fileNamePart2 = htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8");
+            $fileNamePart2 = htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8");
         }
     }
 }
@@ -122,7 +122,7 @@ if ($efcrFile) {
                 $dipStartIndex,
                 $ip_address['ceilIP'],
             ], $efcr_str);
-            $efcrOutput[] = ['implementationCommandList' => htmlentities($new_str, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, "UTF-8")];
+            $efcrOutput[] = ['implementationCommandList' => htmlentities($new_str, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8")];
             if (strpos($efcr_str, '%dipStartIndex%') === false)
                 break;
         }
