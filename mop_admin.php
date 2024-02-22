@@ -15,6 +15,7 @@ $param_error_msg['answer'] = false;
 
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
+$ogpa_group = $paramJSON['ogpa_group'] ?? $_REQUEST['ogpa_group'] ?? 0;
 $value = $paramJSON['value'] ?? $_REQUEST['value'] ?? 0;
 $parentId = $paramJSON['parentId'] ?? $_REQUEST['parentId'] ?? 0;
 $id = $paramJSON['id'] ?? $_REQUEST['id'] ?? 0;
@@ -35,19 +36,19 @@ $db_object = new mySQLDatabaseUtils\databaseUtilsMOP();
 if ($method !== 0)
 {
     if ($method === 'getOGPA') {
-        $param_error_msg['answer'] = $db_object->getOGPA();
+        $param_error_msg['answer'] = $db_object->getOGPA($ogpa_group);
     } elseif ($method === 'getOGPAActivity' && $value && is_string($value)) {
 		$param_error_msg['answer'] = $db_object->getOGPAActivity($value);
 	} elseif ($method === 'addPrimeElement' && $value && is_string($value)) {
-		$param_error_msg['answer'] = $db_object->addPrimeElement($value);
+		$param_error_msg['answer'] = $db_object->addPrimeElement($value, $ogpa_group);
 	} elseif ($method === 'modPrimeElement' && $value && is_string($value) && $id) {
-		$param_error_msg['answer'] = $db_object->modPrimeElement($value, $id);
+		$param_error_msg['answer'] = $db_object->modPrimeElement($value, $id, $ogpa_group);
 	} elseif ($method === 'addActivity' && $value && $parentId) {
 		$param_error_msg['answer'] = $db_object->addActivity($value, $parentId);
 	} elseif ($method === 'modActivity' && $value && is_string($value) && $id && $parentId) {
 		$param_error_msg['answer'] = $db_object->modActivity($value, $id,  $parentId);
 	} elseif ($method === 'delPrimeElement' && $value && is_string($value)) {
-		$param_error_msg['answer'] = $db_object->delPrimeElement($value);
+		$param_error_msg['answer'] = $db_object->delPrimeElement($value, $ogpa_group);
 	} elseif ($method === 'delActivity' && $value && is_string($value)) {
 		$param_error_msg['answer'] = $db_object->delActivity($value);
 	} elseif ($method === 'getActivityFields' && $id) {

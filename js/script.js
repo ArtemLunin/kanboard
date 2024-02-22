@@ -38,7 +38,10 @@ const sectionChildren = {
 	}
 };
 
-// const cTemplateGroup = "IP Core";
+// const cTemplateGroups = {
+// 	0: "RHSI and Service Delivery Environment",
+// 	1: "IP Core",
+// };
 let cTemplate = 0;
 const subMenuClass = 'children-menu';
 
@@ -377,9 +380,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		btnsCeilAreaAppend = document.querySelectorAll('.js-ceil-area-append'),
 		btnsCeilAreaRemove = document.querySelectorAll('.js-ceil-area-remove'),
 		exportDownload = document.querySelector('.js-export-download'),
-		visibleSuperOnly = document.querySelectorAll('.js-superOnly'),
-		aExport = document.querySelector('#a_export'),
-		aImport = document.querySelector('#importFileJSON');
+		visibleSuperOnly = document.querySelectorAll('.js-superOnly');
+		// aExport = document.querySelector('#a_export'),
+		// aImport = document.querySelector('#importFileJSON');
 
 		// inventory elements
 	const tableInventory = document.querySelector('#table-inventory'),
@@ -3748,7 +3751,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(item => {
 				let selected = '';
-				if (extends_data['element'] === item.element) {
+				if (!!extends_data && extends_data['element'] === item.element) {
 					selected = 'selected';
 				}
 				
@@ -3757,7 +3760,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				`);
 			});
 			if (activity !== '') {
-				selPrimeElement.dataset.activity = (extends_data['activity'] === undefined) ? '' : extends_data['activity'];
+				selPrimeElement.dataset.activity = (typeof extends_data === 'undefined' || extends_data['activity'] === undefined) ? '' : extends_data['activity'];
 			}
 		} else {
 			selPrimeElement.insertAdjacentHTML('beforeend', `
@@ -3910,6 +3913,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	const iniOGPA = (extends_data = '') => {
 		const body = {
 			method: 'getOGPA',
+			ogpa_group: cTemplate,
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
 			showOGPA(data, extends_data);
@@ -3979,7 +3983,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	const delElement = (method, callback, value) => {
 		const body = {
 			method: method,
-			value: value
+			value: value,
+			ogpa_group: cTemplate,
 		};
 		sendRequest('POST', requestURLTemplate, body).then(callback);
 	};
@@ -4280,6 +4285,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const body = {
 			method: methodName,
 			value: newPrimeElem.value,
+			ogpa_group: cTemplate,
 			id: id,
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
@@ -4360,6 +4366,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			switchToNew(btnEditPrimeElem);
 			iniOGPAActivity(id, {'activity':activity});
 		} catch (e) {
+			iniOGPAActivity(0);
 			showActivityFields(null);
 		}
 	});
@@ -4416,39 +4423,39 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	aExport.addEventListener('click', (e) => {
-		e.preventDefault();
-		const body = {
-			method: 'exportToJSON',
-			primeElement: selPrimeElement.value,
-			activity: selActivity.value,
-		};
-		sendRequest('POST', requestURLTemplate, body).then((data) => {
-			exportDownload.classList.add('hidden');
-			if (data && data.success && data.success.answer) {
-				const temp_href = exportDownload.querySelector('A');
-				temp_href.href = data.success.answer;
-				temp_href.click();
-			} else {
-				showRequestError('Export to JSON unsuccessful');
-			}
-		});
-	});
+	// aExport.addEventListener('click', (e) => {
+	// 	e.preventDefault();
+	// 	const body = {
+	// 		method: 'exportToJSON',
+	// 		primeElement: selPrimeElement.value,
+	// 		activity: selActivity.value,
+	// 	};
+	// 	sendRequest('POST', requestURLTemplate, body).then((data) => {
+	// 		exportDownload.classList.add('hidden');
+	// 		if (data && data.success && data.success.answer) {
+	// 			const temp_href = exportDownload.querySelector('A');
+	// 			temp_href.href = data.success.answer;
+	// 			temp_href.click();
+	// 		} else {
+	// 			showRequestError('Export to JSON unsuccessful');
+	// 		}
+	// 	});
+	// });
 
-	aImport.addEventListener('change', (e) => {
-		e.preventDefault();
-		const target = e.target;
-		showModalDialog({
-			attributes: [
-				{'modal-command': 'importOGPA'},
-				// {'data-file-name': target.files[0].name},
-				{'data-element': selPrimeElement.value},
-				{'data-activity': selActivity.value},
-			],
-			dialogTitle: 'Import OGPA config',
-			dialogQuestion: `Do you want to import OGPA from JSON (current settings will be overwritten)?`,
-		});
-	});
+	// aImport.addEventListener('change', (e) => {
+	// 	e.preventDefault();
+	// 	const target = e.target;
+	// 	showModalDialog({
+	// 		attributes: [
+	// 			{'modal-command': 'importOGPA'},
+	// 			// {'data-file-name': target.files[0].name},
+	// 			{'data-element': selPrimeElement.value},
+	// 			{'data-activity': selActivity.value},
+	// 		],
+	// 		dialogTitle: 'Import OGPA config',
+	// 		dialogQuestion: `Do you want to import OGPA from JSON (current settings will be overwritten)?`,
+	// 	});
+	// });
 
 	btnsCeilAreaAppend.forEach(item => {
 		item.addEventListener('click', (e) => {

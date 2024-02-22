@@ -929,12 +929,14 @@ class databaseUtilsMOP {
 		}
 		return false;
 	}
-    function getOGPA() {
+    function getOGPA($ogpa_group = 0) {
         if ($this->pdo) {
             $ogpa = [];
-			$sql = "SELECT el.id AS id, el.element AS element FROM prime_element AS el";
+			$sql = "SELECT el.id AS id, el.element AS element FROM prime_element AS el WHERE ogpa_group=:ogpa_group";
 			try {
-				if ($table_res = $this->getSQL($sql, [])) {
+				if ($table_res = $this->getSQL($sql, [
+					'ogpa_group' => $ogpa_group,
+				])) {
 					foreach ($table_res as $result)
 					{
 						$ogpa[] = [
@@ -978,29 +980,31 @@ class databaseUtilsMOP {
         }
     }
 
-	function addPrimeElement($value) {
-		$sql = "INSERT into prime_element (element) VALUES (:value)";
+	function addPrimeElement($value, $ogpa_group = 0) {
+		$sql = "INSERT into prime_element (element,ogpa_group) VALUES (:value,:ogpa_group)";
 		$this->modSQL($sql, [
 			'value'		=> $value,
+			'ogpa_group' => $ogpa_group,
 		], true);
-		return $this->getOGPA();
+		return $this->getOGPA($ogpa_group);
 	}
 
-	function modPrimeElement($value, $id) {
+	function modPrimeElement($value, $id, $ogpa_group = 0) {
 		$sql = "UPDATE prime_element SET element=:value WHERE id=:id";
 		$this->modSQL($sql, [
 			'value'	=> $value,
 			'id'	=> $id,
 		], false);
-		return $this->getOGPA();
+		return $this->getOGPA($ogpa_group);
 	}
 	
-	function delPrimeElement($value) {
-		$sql = "DELETE FROM prime_element WHERE element=:value";
+	function delPrimeElement($value, $ogpa_group = 0) {
+		$sql = "DELETE FROM prime_element WHERE element=:value AND ogpa_group=:ogpa_group";
 		$this->modSQL($sql, [
 			'value'		=> $value,
+			'ogpa_group' => $ogpa_group
 		], false);
-		return $this->getOGPA();
+		return $this->getOGPA($ogpa_group);
 	}
 
 	function addActivity($value, $parentId) {
