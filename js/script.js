@@ -93,6 +93,7 @@ let fileAttach;
 let pageStatus = 0, fileDeleted = 0, totalWaits = 0, periodDays = 0;
 let currentUser = '';
 let previousElem = null;
+let no_virt = 1;
 
 let dayStartExcel, dayEndExcel = 0;
 
@@ -103,7 +104,7 @@ const table_statistics_selector = 'table_statistics',
 
 const table_excel_selector = 'table_excel';
 const exportExcel_selector = 'exportExcel';
-const mosaicTtableSelector = 'mosaic-table-row';
+const mosaicTableSelector = 'mosaic-table-row';
 
 const excelDataArray = [];
 
@@ -688,17 +689,136 @@ window.addEventListener('DOMContentLoaded', () => {
 	})
 	.on('buttons-action', periodChange);
 	
-	const dataTableMosaic = $(`#${devicesMosaic_selector}`)
-		.on('init.dt', function () {
-				// const btnExcel = document.querySelector(`.mosaic-excel`);
-				// const img = document.createElement('img');
-				// img.src = 'img/file-excel.svg';
-				// img.classList.add("icon-excel");
-				// btnExcel.append(img);
-		})
-		.DataTable({
-			dom: '<"mosaic-menu"Bft>',
-			buttons: 
+	// const dataTableMosaic = $(`#${devicesMosaic_selector}`)
+	// 	.on('init.dt', function () {
+	// 	})
+	// 	.DataTable({
+	// 		dom: '<"mosaic-menu"Bft>',
+	// 		buttons: 
+	// 		{
+	// 			dom: {
+	// 				container: {
+	// 					tag: 'div',
+	// 					className: 'mosaic-buttons'
+	// 				},
+	// 				button: {
+	// 					tag: 'button',
+	// 					className: []
+	// 				},
+	// 				buttonLiner: {
+	// 					tag: null
+	// 				}
+
+	// 			},
+	// 			buttons: [
+	// 				{
+	// 					extend: "excel",
+	// 					text: 'Export Data',
+	// 					title: null,
+	// 					className: 'mosaic-excel btn-devices btn-devices-export',
+	// 					filename: '* Export',
+	// 					attr: {
+	// 						title: 'Export to Excel',
+	// 						id: exportMosaic_selector
+	// 					},
+	// 					tag: 'a',
+	// 					exportOptions: {
+	// 						columns: '.exportable'
+	// 					}
+	// 				},
+	// 				{
+	// 					tag: 'label',
+	// 					text: 'Import Data',
+	// 					className: 'btn-devices',
+	// 					attr: {
+	// 						// title: 'Import to Services',
+	// 						for: 'loadExcelData',
+	// 						id: 'btnLoadExcelData',
+	// 					},
+	// 					action: function (e, dt, node, config) {
+	// 						const target = e.target;
+	// 						document.querySelector(`#${target.getAttribute('for')}`).click();
+	// 					}
+	// 				}
+	// 			]
+	// 		},
+	// 		"autoWidth": false,
+	// 		columns:
+	// 		[
+	// 			{ "width": "8%" },
+	// 			{ "width": "8%" },
+	// 			{ "width": "15%" },
+	// 			{ "width": "8%" },
+	// 			{ "width": "15%" },
+	// 			{ "width": "10%" },
+	// 			{ "width": "10%" },
+	// 			{ "width": "16%" },
+	// 			{ "width": "10%" },
+	// 		],
+	// 		columnDefs: [
+	// 			{ orderable: false, targets: [0,1,2,3,4,5,6,7,8] }
+	// 		],
+	// 		// order: [
+	// 		// 	// [0, 'desc'],
+	// 		// 	// [1, 'asc'],
+	// 		// ],
+	// 		paging: false,
+	// 		searching: true,
+	// 		stripeClasses :[],
+	// 	});
+
+	// new DataTable('#table-inventory', {
+	// 	order: [[0, 'desc']],
+	// 	"autoWidth": false,
+	// });
+
+	const mosaicTable = new DataTable(`#${devicesMosaic_selector}`, {
+        ajax: {
+            url: 'backend.php',
+            data: function (d) {
+                d.env = 'services';
+			    d.call = 'doGetDevicesAll';
+				d.no_virt = no_virt;
+            }
+        },
+		dom: '<"mosaic-menu"B<"table-controls"plfr>ti>',
+        columns: [							
+            { data: 'node', "name": "name", render: function (data, type, row, meta) {
+                return `<span class="name-text">${data}</span>`;
+            }, "width": "8%" },
+            { data: 'interface', "name": "port", "width": "8%" },
+            { data: 'description', "name": "descr", "width": "15%" },
+            { data: 'platform', "name": "platform", render: function (data, type, row, meta) {
+                return `<span class="name-text editable" data-name="platform" data-value="${data}">${data}</span>`;
+            }, "width": "8%" },
+            { data: 'tag', "name": "tags", render: function (data, type, row, meta) {
+                return `<span class="name-text editable" data-name="tags" data-value="${data}">${data}</span>`;
+            }, "width": "15%"},
+            { data: 'group', "name": "group_name", render: function (data, type, row, meta) {
+                return `<span class="name-text editable" data-name="group" data-value="${data}">${data}</span>`;
+            }, "width": "10%" },
+            { data: 'owner', "name": "manager", render: function (data, type, row, meta) {
+                return `<span class="name-text editable" data-name="owner" data-value="${data}">${data}</span>`;
+            }, "width": "10%" },
+            { data: 'note', "searchable": false, "orderable": false,
+				render: function (data, type, row, meta) {
+                return `<span class="name-text editable" data-name="comments" data-value="${data}">${data}</span>`;
+            }, "width": "16%" },
+            { data: null , "searchable": false, "orderable": false,
+				defaultContent: `
+                <div class="action-buttons justify-content-center d-block d-xl-flex">
+                    <a href="#" data-locked='1'>
+                        <img class="icon-edit icon-edit-sm" data-edit src="img/edit.svg">
+                        <img class="icon icon-edit-sm hidden" data-undo src="img/undo.svg" title="Undo">
+                        <img class="icon icon-edit-sm hidden" data-done src="img/done.svg" title="Done">
+                        <img class="icon icon-edit-sm hidden" data-lock src="img/lock.svg" title="Switch to All">
+                        <img class="icon icon-edit-sm hidden" data-open src="img/lock_open.svg" title="Switch to one">
+                    </a>
+                    <a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
+                </div>`,
+            "width": "10%" },
+        ],
+		buttons: 
 			{
 				dom: {
 					container: {
@@ -715,66 +835,69 @@ window.addEventListener('DOMContentLoaded', () => {
 
 				},
 				buttons: [
-					{
-						extend: "excel",
-						text: 'Export Data',
-						title: null,
-						className: 'mosaic-excel btn-devices btn-devices-export',
-						filename: '* Export',
-						attr: {
-							title: 'Export to Excel',
-							id: exportMosaic_selector
-						},
-						tag: 'a',
-						exportOptions: {
-							columns: '.exportable'
-						}
+				{
+					extend: "excel",
+					text: 'Export Data',
+					title: null,
+					className: 'mosaic-excel btn-devices btn-devices-export',
+					filename: '* Export',
+					attr: {
+						title: 'Export to Excel',
+						id: exportMosaic_selector
 					},
-					{
-						tag: 'label',
-						text: 'Import Data',
-						className: 'btn-devices',
-						attr: {
-							// title: 'Import to Services',
-							for: 'loadExcelData',
-							id: 'btnLoadExcelData',
-						},
-						action: function (e, dt, node, config) {
-							const target = e.target;
-							document.querySelector(`#${target.getAttribute('for')}`).click();
-						}
+					tag: 'a',
+					exportOptions: {
+						// columns: '.exportable'
+						columns: [0, 1, 2, 3, 5, 6, 7],
 					}
-				]
-			},
-			"autoWidth": false,
-			columns:
-			[
-				{ "width": "8%" },
-				{ "width": "8%" },
-				{ "width": "15%" },
-				{ "width": "8%" },
-				{ "width": "15%" },
-				{ "width": "10%" },
-				{ "width": "10%" },
-				{ "width": "16%" },
-				{ "width": "10%" },
-			],
-			columnDefs: [
-				{ orderable: false, targets: [0,1,2,3,4,5,6,7,8] }
-			],
-			// order: [
-			// 	// [0, 'desc'],
-			// 	// [1, 'asc'],
-			// ],
-			paging: false,
-			searching: true,
-			stripeClasses :[],
-		});
-
-	// new DataTable('#table-inventory', {
-	// 	order: [[0, 'desc']],
-	// 	"autoWidth": false,
-	// });
+				},
+				{
+					tag: 'label',
+					text: 'Import Data',
+					className: 'btn-devices',
+					attr: {
+						for: 'loadExcelData',
+						id: 'btnLoadExcelData',
+					},
+					action: function (e, dt, node, config) {
+						const target = e.target;
+						document.querySelector(`#${target.getAttribute('for')}`).click();
+					}
+				},
+				{
+					tag: 'label',
+					className: 'switch switch-services',
+					collectionLayout: 'fixed',
+					text: '<input type="checkbox" id="virt"><span class="slider round"></span>',
+					action: function (e, dt, node, config) {
+						const target = e.target;
+						const virt = target.closest('label').querySelector('#virt');
+						if (virt.checked == true) {
+							virt.checked = false;
+							no_virt = 1;
+						} else {
+							virt.checked = true;
+							no_virt = 0;
+						}
+						mosaicTable.ajax.reload();
+					}
+				},
+				{
+					tag: 'span',
+					text: ' Virtual int',
+				}
+			]
+		},
+        lengthMenu: [[100, 200, -1],[100, 200, "All"]],
+        pageLength: 100,
+        processing: true,
+        serverSide: true,
+        serverMethod: "POST",
+        search: {
+            return: true
+        },
+		autoWidth: false,
+    });
 
 	const saveContent = () => {
 		const savedName = (pageNameEdit.innerText.trim() !== ''  ? pageNameEdit.innerText.trim() : prompt('Enter the Page Name', savedPageName));
@@ -2265,17 +2388,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const getMosaic = () => {
 		initMosaicElems();
-		const body = {
-			env: 'services',
-			call: 'doGetDevicesAll',
-		};
-		sendRequest('POST', requestURL, body).then((data) => {
-			if (data && data.success && data.success.answer) {
-				showMosaic(data.success.answer);
-			} else {
-				location.hash = '';
-			}
-		});
+		// const body = {
+		// 	env: 'services',
+		// 	call: 'doGetDevicesAll',
+		// };
+		// sendRequest('POST', requestURL, body).then((data) => {
+		// 	if (data && data.success && data.success.answer) {
+		// 		showMosaic(data.success.answer);
+		// 	} else {
+		// 		location.hash = '';
+		// 	}
+		// });
+		// mosaicTable.clear().draw();
+		mosaicTable.ajax.reload();
 	};
 
 	// const clearDevicesDataTemp = () => {
@@ -2293,7 +2418,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		sendRequest('POST', requestURL, Object.assign(body, args)).then((data) => {
 			if (data && data.success && data.success.answer) {
-				showMosaic(data.success.answer);
+				showMosaic();
 			} else {
 				location.hash = '';
 			}
@@ -2567,7 +2692,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				let deviceDataID = `device-data-${id}`;
 				const tr = document.createElement('tr');
 
-				tr.classList.add(mosaicTtableSelector);
+				tr.classList.add(mosaicTableSelector);
 				tr.dataset.node_id = id;
 				tr.id = deviceDataID;
 				tr.innerHTML = `
@@ -2605,68 +2730,72 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const showMosaic = (data) => {
-		dataTableMosaic.clear().draw();
-		if (data) {
-			let hideEditButtons = 'd-block d-xl-flex';
-			if (showMosaicEditItems == '0') {
-				hideEditButtons = 'd-none';
-			}
-			// devicesAllBody.textContent = '';
-			data.forEach(function ({
-				id, name, port, description, platform, tags, group, owner, comments
-			}) 
-			{
-				// let deviceDataID = `device-data-${id}`;
-				const tr = document.createElement('tr');
-
-				tr.classList.add(mosaicTtableSelector);
-				tr.dataset.node_id = id;
-				tr.id = `device-data-${id}`;
-				tr.dataset.locked='1';
-				tr.innerHTML = `
-					<td>
-						<span class="name-text">${name}</span>
-					</td>
-					<td>
-						<span class="name-text">${port}</span>
-					</td>
-					<td>
-						<span class="name-text">${description}</span>
-					</td>
-					<td>
-						<span class="name-text editable" data-name="platform" data-value="${platform}">${platform}</span>
-					</td>
-					<td>
-						<span class="name-text editable" data-name="tags" data-value="${tags}">${tags}</span>
-					</td>
-					<td>
-						<span class="name-text editable" data-name="group" data-value="${group}">${group}</span>
-					</td>
-					<td>
-						<span class="name-text editable" data-name="owner" data-value="${owner}">${owner}</span>
-					</td>
-					<td>
-						<span class="name-text editable "data-name="comments" data-value="${comments}">${comments}</span>
-					</td>
-					<td>
-						<div class="action-buttons justify-content-center ${hideEditButtons}">
-							<a href="#" data-locked='1'>
-								<img class="icon-edit icon-edit-sm" data-edit src="img/edit.svg">
-								<img class="icon icon-edit-sm hidden" data-undo src="img/undo.svg" title="Undo">
-								<img class="icon icon-edit-sm hidden" data-done src="img/done.svg" title="Done">
-								<img class="icon icon-edit-sm hidden" data-lock src="img/lock.svg" title="Switch to All">
-								<img class="icon icon-edit-sm hidden" data-open src="img/lock_open.svg" title="Switch to one">
-							</a>
-							<a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
-						</div>
-					</td>
-				`;
-				dataTableMosaic.row.add(tr);
-			});
-			dataTableMosaic.draw();
-		}
+	const showMosaic = () => {
+		mosaicTable.ajax.reload();
 	};
+
+	// const showMosaic = (data) => {
+	// 	dataTableMosaic.clear().draw();
+	// 	if (data) {
+	// 		let hideEditButtons = 'd-block d-xl-flex';
+	// 		if (showMosaicEditItems == '0') {
+	// 			hideEditButtons = 'd-none';
+	// 		}
+	// 		// devicesAllBody.textContent = '';
+	// 		data.forEach(function ({
+	// 			id, name, port, description, platform, tags, group, owner, comments
+	// 		}) 
+	// 		{
+	// 			// let deviceDataID = `device-data-${id}`;
+	// 			const tr = document.createElement('tr');
+
+	// 			tr.classList.add(mosaicTableSelector);
+	// 			tr.dataset.node_id = id;
+	// 			tr.id = `device-data-${id}`;
+	// 			tr.dataset.locked='1';
+	// 			tr.innerHTML = `
+	// 				<td>
+	// 					<span class="name-text">${name}</span>
+	// 				</td>
+	// 				<td>
+	// 					<span class="name-text">${port}</span>
+	// 				</td>
+	// 				<td>
+	// 					<span class="name-text">${description}</span>
+	// 				</td>
+	// 				<td>
+	// 					<span class="name-text editable" data-name="platform" data-value="${platform}">${platform}</span>
+	// 				</td>
+	// 				<td>
+	// 					<span class="name-text editable" data-name="tags" data-value="${tags}">${tags}</span>
+	// 				</td>
+	// 				<td>
+	// 					<span class="name-text editable" data-name="group" data-value="${group}">${group}</span>
+	// 				</td>
+	// 				<td>
+	// 					<span class="name-text editable" data-name="owner" data-value="${owner}">${owner}</span>
+	// 				</td>
+	// 				<td>
+	// 					<span class="name-text editable "data-name="comments" data-value="${comments}">${comments}</span>
+	// 				</td>
+	// 				<td>
+	// 					<div class="action-buttons justify-content-center ${hideEditButtons}">
+	// 						<a href="#" data-locked='1'>
+	// 							<img class="icon-edit icon-edit-sm" data-edit src="img/edit.svg">
+	// 							<img class="icon icon-edit-sm hidden" data-undo src="img/undo.svg" title="Undo">
+	// 							<img class="icon icon-edit-sm hidden" data-done src="img/done.svg" title="Done">
+	// 							<img class="icon icon-edit-sm hidden" data-lock src="img/lock.svg" title="Switch to All">
+	// 							<img class="icon icon-edit-sm hidden" data-open src="img/lock_open.svg" title="Switch to one">
+	// 						</a>
+	// 						<a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
+	// 					</div>
+	// 				</td>
+	// 			`;
+	// 			dataTableMosaic.row.add(tr);
+	// 		});
+	// 		dataTableMosaic.draw();
+	// 	}
+	// };
 
 	const showModalDialog = ({attributes, dialogTitle, dialogQuestion, previousModal = null}, dialogModalProps = {selector:'#dialogModal', titleSelector:'#titleDialogModal', questionSelector: '#questionDialogModal'}) => {
 		attributes.forEach(item => {
@@ -2990,9 +3119,11 @@ window.addEventListener('DOMContentLoaded', () => {
 	const deviceActionMosaic = function(e) {
 		e.preventDefault();
 		const target = e.target;
-		const mosaicRow = target.closest(`.${mosaicTtableSelector}`);
+		const mosaicRow = target.closest(`.${mosaicTableSelector}`);
 		const parent_a = target.closest('a');
 		let action = null;
+		const tr_id = mosaicTable.row(target.closest('tr')).id();
+		const device_id = tr_id.slice(tr_id.indexOf('_') + 1);
 
 		if (target.classList.contains('icon-edit'))
 		{
@@ -3011,7 +3142,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			target.closest('tr').querySelectorAll('.editable').forEach(item => {
 				args[item.dataset.name] = item.textContent;
 			});
-			args['id'] = target.closest('tr').dataset.node_id;
+			args['id'] = device_id;		
 			args['locked'] = parent_a.dataset.locked;
 			updateDevicesData(args);
 			parent_a.querySelector('[data-edit]').classList.remove('hidden');
@@ -3034,14 +3165,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		switch (action) {
 			case 'modify':
 				modifyDeviceSettings({
-					device_id: mosaicRow.dataset.node_id,
+					device_id: device_id,
 					row_id: mosaicRow.id
 				});
 				break;
 			case 'delete':
 				reqDeleteDevice({
 					name: mosaicRow.querySelector('.name-text').innerText,
-					id: mosaicRow.dataset.node_id
+					id: device_id
 				});
 				break;
 		}
@@ -3053,11 +3184,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (newTag) {
 			if (e.code === 'Enter') {
 				e.preventDefault();
-				const mosaicRow = target.closest(`.${mosaicTtableSelector}`);
+				const mosaicRow = target.closest(`.${mosaicTableSelector}`);
 				const platformName = mosaicRow.querySelector('[data-name="platform"]').dataset.value;
 				const groupName = mosaicRow.querySelector('[data-name="group"]').dataset.value;
 				const ownerName = mosaicRow.querySelector('[data-name="owner"]').dataset.value;
-
 
 				if (target.dataset.name === 'owner' && target.innerText.trim() != '' && target.dataset.value != '' && target.innerText.trim() != target.dataset.value)
 				{
@@ -3112,21 +3242,21 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const modifyDeviceSettings_old = ({device_id, row_id}) => {
-		const rowDevice = document.getElementById(row_id);
+	// const modifyDeviceSettings_old = ({device_id, row_id}) => {
+	// 	const rowDevice = document.getElementById(row_id);
 
-		mosaicForm.querySelector('[data-action="add"]').style.display = 'none';
-		mosaicForm.querySelector('[data-action="update"]').style.display = '';
+	// 	mosaicForm.querySelector('[data-action="add"]').style.display = 'none';
+	// 	mosaicForm.querySelector('[data-action="update"]').style.display = '';
 
-		mosaicForm.querySelector('#mosaicNodeName').value = rowDevice.querySelector('.name-text').innerText;
-		mosaicForm.querySelector('#mosaicNodePlatform').value = rowDevice.querySelector('.platform-text').innerText;
-		mosaicForm.querySelector('#mosaicNodeService').value = rowDevice.querySelector('.service-text').innerText;
-		mosaicForm.querySelector('#mosaicNodeOwner').value = rowDevice.querySelector('.owner-text').innerText;
-		mosaicForm.querySelector('#mosaicNodeContact').value = rowDevice.querySelector('.contact_info-text').innerText;
-		mosaicForm.querySelector('#mosaicNodeManager').value = rowDevice.querySelector('.manager-text').innerText;
-		mosaicForm.querySelector('#mosaicNodeComments').innerText = rowDevice.querySelector('.comment-text').innerText;
-		mosaicForm.querySelector('#mosaicNodeId').value = device_id;
-	};
+	// 	mosaicForm.querySelector('#mosaicNodeName').value = rowDevice.querySelector('.name-text').innerText;
+	// 	mosaicForm.querySelector('#mosaicNodePlatform').value = rowDevice.querySelector('.platform-text').innerText;
+	// 	mosaicForm.querySelector('#mosaicNodeService').value = rowDevice.querySelector('.service-text').innerText;
+	// 	mosaicForm.querySelector('#mosaicNodeOwner').value = rowDevice.querySelector('.owner-text').innerText;
+	// 	mosaicForm.querySelector('#mosaicNodeContact').value = rowDevice.querySelector('.contact_info-text').innerText;
+	// 	mosaicForm.querySelector('#mosaicNodeManager').value = rowDevice.querySelector('.manager-text').innerText;
+	// 	mosaicForm.querySelector('#mosaicNodeComments').innerText = rowDevice.querySelector('.comment-text').innerText;
+	// 	mosaicForm.querySelector('#mosaicNodeId').value = device_id;
+	// };
 
 	const modifyDeviceSettings = ({device_id, row_id}) => {
 		const rowDevice = document.querySelector(`#${row_id}`);
@@ -3182,14 +3312,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		sendRequest('POST', requestURL, body).then((data) => {
 			if (data && data.success && data.success.answer) {
-				if (data.success.answer.id !== undefined) {
-					const device_data_row = document.querySelector(`#device-data-${data.success.answer.id}`);
-					if (device_data_row) {
-						device_data_row.remove();
-					}
-				} else {
+				// if (data.success.answer.id !== undefined) {
+				// 	const device_data_row = document.querySelector(`#device-data-${data.success.answer.id}`);
+				// 	if (device_data_row) {
+				// 		device_data_row.remove();
+				// 	}
+				// } else {
 					showMosaic(data.success.answer);
-				}
+				// }
 			}
 		});
 	};

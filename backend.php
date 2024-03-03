@@ -153,6 +153,7 @@ if ($env === 'services') {
 	$mode = $paramJSON['mode'] ?? $_REQUEST['mode'] ?? null;
 	$param_error_msg['answer'] = false;
 
+
 	$data_fields = [
 		'name'	=> '', 
 		'platform'	=> '', 
@@ -188,9 +189,57 @@ if ($env === 'services') {
 		}
 	}
 
+	// if ($call == 'doGetDevicesAll' && $accessType !== false)
+	// {
+	// 	$param_error_msg['answer'] = $db_object->doGetDevicesAll();	
+	// }
+
 	if ($call == 'doGetDevicesAll' && $accessType !== false)
 	{
-		$param_error_msg['answer'] = $db_object->doGetDevicesAll();	
+		$start = $paramJSON['start'] ?? $_REQUEST['start'] ?? 0;
+		$length = $paramJSON['length'] ?? $_REQUEST['length'] ?? 0;
+		$search = $paramJSON['search'] ?? $_REQUEST['search'] ?? false;
+		$order = $paramJSON['order'] ?? $_REQUEST['order'] ?? false;
+		$columns = $paramJSON['columns'] ?? $_REQUEST['columns'] ?? false;
+		$no_virt = $paramJSON['no_virt'] ?? $_REQUEST['no_virt'] ?? false;
+
+		$virt_int = ['ae', 'fxp', 'irb', 'lo0', 'vlan'];
+
+		$search_par = '';
+		$column_name = '';
+		$sort_dir = '';
+
+		if ($search && strlen(trim($search['value'])) > 1) {
+			$search_par = trim($search['value']);
+		}
+
+		if ($order && $columns) {
+			$column_name = $columns[$order[0]['column']]['name'];
+			$sort_dir = $order[0]['dir'];
+		}
+
+		$countDevices = $db_object->countDevices([
+			'search_par'    => $search_par,
+			'virt_int'      => ($no_virt) ? $virt_int : [],
+		]);
+
+		$output_data = [
+			"draw" => (int)$_REQUEST['draw'],
+			"recordsTotal" => $countDevices,
+			"recordsFiltered" => $countDevices,
+			"data" => $db_object->doGetDevicesFiltered([
+				'start'     => $start,
+				'length'    => $length, 
+				'search_par'    => $search_par,
+				'column_name'   => $column_name,
+				'sort_dir'  => $sort_dir,
+				'count'     => $countDevices,
+				'virt_int'  => ($no_virt) ? $virt_int : [],
+			]),
+		];
+		header('Content-type: application/json');
+		echo json_encode($output_data);
+		exit();
 	}
 	elseif ($call == 'doAddDevice' && $accessType === 'admin') 
 	{
@@ -247,8 +296,9 @@ if ($env === 'services') {
 	} elseif ($call == 'doDeleteDevice' && $accessType === 'admin') {
 		$param_error_msg['answer'] = $db_object->doDeleteDevice($paramJSON['id'] ?? 0, $mode);
 	} elseif ($call == 'loadData' && $accessType === 'admin') {
+		// $db_object->errorLog($accessType);
 		$tmp = $_FILES['file']['tmp_name'];
-			if (($tmp!='') && is_uploaded_file($tmp)) 
+			if (($tmp != '') && is_uploaded_file($tmp)) 
 			{  
 				$reader = new Xlsx();
 				$reader->setReadDataOnly(true);

@@ -234,11 +234,31 @@ p {
 	word-wrap: break-word;
 	border-radius: 6px;
 }
-.period-select, .statistics-buttons, .mosaic-buttons {
+.period-select, .statistics-buttons {
 	float: left;
 	margin-bottom: .5rem;
 }
-.excel-menu, .mosaic-menu {
+table.devices-all-table {
+	margin-top: 10px;
+}
+.switch-services {
+	margin-left: 40px;
+}
+.mosaic-top, .mosaic-filters {
+	display: flex;
+	justify-content: space-between;
+}
+.mosaic-buttons {
+	float: left;
+  	width: 40%;
+}
+.table-controls {
+	/* margin-top: 5px; */
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+}
+.excel-menu {
 	margin-top: 10px;
 }
 .action-button{
