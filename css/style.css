@@ -252,6 +252,10 @@ table.devices-all-table {
 	float: left;
   	width: 40%;
 }
+.question-dialog-import{
+	overflow-y: auto;
+	height: 30rem;
+}
 .table-controls {
 	/* margin-top: 5px; */
 	display: flex;

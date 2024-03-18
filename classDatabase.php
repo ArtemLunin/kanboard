@@ -11,6 +11,8 @@ class databaseUtils {
 	private $sql_upd_hash = '';
 	private $row_ins = null;
 	private $row_upd = null;
+	private const LOGFILE = 'import_log.txt';
+	private const PATHLOGFILE = 'temp'; 
 	private $initialRights = [[
 		'pageName' => 'Main',
 		'sectionName' => 'main',
@@ -444,12 +446,11 @@ class databaseUtils {
 			$filter = 'AND NOT (dev.port LIKE \''.$filter_virt.'\')';
 		}
 
-		// $this->errorLog($filter_virt);
-
 
 		if ($search_par !== '') {
 			$filter .= ' AND (dev.name LIKE :search_par OR dev.port LIKE :search_par OR dev.descr LIKE :search_par OR dev.tags LIKE :search_par _REPLACE_PLATFORM_)';
-			$search_par .= "%";
+			// $search_par .= "%";
+			$search_par = "%" . $search_par . "%";
 			$row_2nd = $this->pdo->prepare($sql_2nd);
 			$row_2nd->bindParam('search_par', $search_par);
 			$row_2nd->execute();
@@ -466,6 +467,7 @@ class databaseUtils {
 			}
 			$filter = str_replace('_REPLACE_PLATFORM_', $platform_id, $filter);
 		}
+
 		return $filter;
 	}
 
@@ -484,10 +486,10 @@ class databaseUtils {
 			$filter, 
 			$sql);
 
-		// $this->errorLog($sql);
 		$row = $this->pdo->prepare($sql);
 		if ($search_par !== '') {
-			$search_par .= "%";
+			// $search_par .= "%";
+			$search_par = "%" . $search_par . "%";
 			$row->bindParam('search_par', $search_par);
 		}
 		$row->execute();
@@ -509,8 +511,6 @@ class databaseUtils {
 
 		$sql = "SELECT dev.id,dev.name,dev.port,dev.descr,p.platform,p.group_name,p.manager,p.contacts,dev.tags,dev.comments FROM devices_new AS dev, devices_platform AS p WHERE p.id=dev.platform_id _REPLACE_FILTER_ _REPLACE_ORDER_ _REPLACE_LIMIT_";
 
-		
-
 		$filter = $this->createFilterForPlatform($params_arr);
 
 		if ($params_arr['column_name'] !== '') {
@@ -526,7 +526,6 @@ class databaseUtils {
 			[$filter, $order, $limit_rows], 
 			$sql);
 
-
 		$row = $this->pdo->prepare($sql);
 		if ($params_arr['length'] != -1) {
 			$row->bindParam('start', $params_arr['start'], \PDO::PARAM_INT);
@@ -534,7 +533,8 @@ class databaseUtils {
 		}
 
 		if ($params_arr['search_par'] !== '') {
-			$params_arr['search_par'] .= "%";
+			// $params_arr['search_par'] .= "%";
+			$params_arr['search_par'] = "%" . $params_arr['search_par'] . "%";
 			$row->bindParam('search_par', $params_arr['search_par']);
 		}
 		$row->execute();
@@ -691,27 +691,6 @@ class databaseUtils {
 		return true;
 	}
 
-	// function changeOwner_old($deviceParam) 
-	// {
-	// 	$sql = "UPDATE devices_new SET manager=:manager WHERE manager=:oldManager AND group_name=:group_name";
-	// 	if ($deviceParam['locked'] == '1') {
-	// 		$sql .= " AND id=:id";
-	// 		$this->modSQL($sql, [
-	// 			'oldManager'=> $deviceParam['oldOwner'],
-	// 			'manager'	=> $deviceParam['owner'],
-	// 			'group_name'=> $deviceParam['group'],
-	// 			'id'		=> $deviceParam['id'],
-	// 		], false);
-	// 	} else {
-	// 		$this->modSQL($sql, [
-	// 			'oldManager'=> $deviceParam['oldOwner'],
-	// 			'manager'	=> $deviceParam['owner'],
-	// 			'group_name'=> $deviceParam['group'],
-	// 		], false);
-	// 	}
-	// 	return $this->doGetDevicesAll();
-	// }
-
 	function changeOwner($deviceParam) {
 		$sql = "UPDATE devices_platform SET manager=:manager WHERE manager=:oldManager AND group_name=:group_name";
 			$this->modSQL($sql, [
@@ -721,26 +700,6 @@ class databaseUtils {
 			], false);
 		return true;
 	}
-
-	// function changeGroup_old($deviceParam) {
-	// 	$sql = "UPDATE devices_new SET group_name=:group_name WHERE group_name=:oldGroup AND platform=:platform";
-	// 	if ($deviceParam['locked'] == '1') {
-	// 		$sql .= " AND id=:id";
-	// 		$this->modSQL($sql, [
-	// 			'oldGroup'	=> $deviceParam['oldGroup'],
-	// 			'group_name'=> $deviceParam['group'],
-	// 			'platform'	=> $deviceParam['platform'],
-	// 			'id'		=> $deviceParam['id'],
-	// 		], false);
-	// 	} else {
-	// 		$this->modSQL($sql, [
-	// 			'oldGroup'	=> $deviceParam['oldGroup'],
-	// 			'group_name'=> $deviceParam['group'],
-	// 			'platform'	=> $deviceParam['platform'],
-	// 		], false);
-	// 	}
-	// 	return $this->doGetDevicesAll();
-	// }
 
 	function changeGroup($deviceParam) {
 		$sql = "UPDATE devices_platform SET group_name=:group_name WHERE group_name=:oldGroup AND platform=:platform";
@@ -789,9 +748,13 @@ class databaseUtils {
 	{
 		$sql = "INSERT INTO devices_new (name,port,descr,tags,comments,platform_id) VALUES (:name,:port,:descr,:tags,:comments,:platform_id)";
 		$sql_get = "SELECT id,name,port,descr,tags,platform_id FROM devices_new WHERE name=:name AND port=:port AND descr<>:descr";
-		$sql_get_tags = "SELECT id,name,port,descr,tags,platform_id FROM devices_new WHERE NOT (name=:name AND port=:port) AND tags<>''";
+		// $sql_get_tags = "SELECT id,name,port,descr,tags,platform_id FROM devices_new WHERE NOT (name=:name AND port=:port) AND tags<>''";
+		$sql_get_tags = "SELECT distinct(tags),platform_id FROM devices_new WHERE tags<>''";
 		$sql_upd = "UPDATE devices_new SET descr=:descr,tags=:tags,platform_id=:platform_id WHERE id=:id";
 		$sql_upd_descr = "UPDATE devices_new SET descr=:descr WHERE id=:id";
+		$logFile = fopen(self::PATHLOGFILE.'/'.self::LOGFILE,'w');
+
+		$arr_log = [];
 
 		$row_ins = $this->pdo->prepare($sql);
 		$row_get = $this->pdo->prepare($sql_get);
@@ -799,7 +762,15 @@ class databaseUtils {
 		$row_upd = $this->pdo->prepare($sql_upd);
 		$row_upd_descr = $this->pdo->prepare($sql_upd_descr);
 
+		$new_devices = $mod_devices = $skip_devices = 0;
+
+		$row_get_tags->execute();
+		$table_tags = $row_get_tags->fetchall();
+
+		$row_count = 0;
+
 		foreach ($rows as $row) {
+			$row_count++;
 			$new_device_id = 0;
 			$new_platform_id = null;
 			$new_tags = '';
@@ -811,7 +782,16 @@ class databaseUtils {
 			$tags = trim($row[4] ?? '');
 			$group_name = trim($row[5] ?? '');
 			$manager = trim($row[6] ?? '');
+			$comments = trim($row[7] ?? '');
 			$contacts = null;
+
+			if ($name == '' || $port == '') {
+				$skip_devices++;
+				fwrite($logFile, $row_count.';Skipped: node='.$name.',interface:'.$port.PHP_EOL);
+				$arr_log[] = $row_count.';Skipped: node='.$name.',interface:'.$port;
+				continue;
+			}
+
 			$platform_id = $this->getPlatformId([
 				'platform'		=> $platform,
 				'group_name'	=> $group_name,
@@ -819,29 +799,28 @@ class databaseUtils {
 				'contacts'		=> $contacts,
 			]);
 
-			if (!$row[0] || trim($row[0] ?? '') == '' || !$row[1] || trim($row[1] ?? '') == '') {
-				continue;
+			if ($descr !== '' && strlen($descr) > 2 && $tags === '') {
+				foreach ($table_tags as $result_tags)
+				{
+					if (stripos($descr, $result_tags['tags']) !== false) {
+						$platform_id = $result_tags['platform_id'];
+						$tags = trim($result_tags['tags']);
+						break;
+					}
+				}
 			}
-			// $this->modSQLInsUpd(['ins' => $sql, 'upd' => null], [
-			// 	'name'	=> trim($row[0]),
-			// 	'port'	=> trim($row[1]),
-			// 	'descr' => trim($row[2] ?? ''),
-			// 	'tags'	=> trim($row[4] ?? ''),
-			// 	'comments'		=> trim($row[7] ?? ''),
-			// 	'platform_id'	=> $platform_id,
-			// ]);
+
 			try {
-				// $row = $this->pdo->prepare($sqlInsUpd['ins']);
-				// $row->execute($params_arr);
 				$row_ins->execute([
 						'name'	=> $name,
 						'port'	=> $port,
 						'descr' => $descr,
 						'tags'	=> $tags,
-						'comments'		=> trim($row[7] ?? ''),
+						'comments'		=> $comments,
 						'platform_id'	=> $platform_id,
 					]);
 				$new_device_id = $this->pdo->lastInsertId();
+				$new_devices++;
 			} catch (\PDOException $e) {
 				if (preg_match('/Duplicate entry/i', $e->getMessage()) == 1) {
 					$row_get->execute([
@@ -853,50 +832,56 @@ class databaseUtils {
 
 					if (isset($result['id'])) {
 						$new_device_id = $result['id'];
-					}
-				}
-			} finally {
-				if ($new_device_id) {
-					$row_get_tags->execute([
-						'name'	=> $name,
-						'port'	=> $port,
-					]);
-					if ($table_res = $row_get_tags->fetchall())
-					{
-						foreach ($table_res as $result_tags)
-						{
-							if (stripos($descr, $result_tags['tags']) !== false) {
-								$new_platform_id = $result_tags['platform_id'];
-								$new_tags = trim($result_tags['tags']);
-								break;
-							}
-						}
-					}
-					if ($new_platform_id === null){
-						$new_platform_id = $this->getPlatformId([
-							'platform'		=> '',
-							'group_name'	=> '',
-							'manager'		=> '',
-							'contacts'		=> '',
-						]);
-					}
-					if ($tags !== $new_tags) {
-						$row_upd->execute([
-							'descr'			=> $descr,
-							'tags'			=> $new_tags,
-							'platform_id'	=> $new_platform_id,
-							'id'			=> $new_device_id,
-						]);
+						// if ($result_tags['tags'] !== '' && stripos($descr, $result_tags['tags']) !== false) {
+						// 	$new_platform_id = $result['platform_id'];
+						// 	$new_tags = $result['tags'];
+						// } else {
+						// 	$new_platform_id = $this->getPlatformId([
+						// 		'platform'		=> '',
+						// 		'group_name'	=> '',
+						// 		'manager'		=> '',
+						// 		'contacts'		=> '',
+						// 	]);
+						// 	$new_tags = '';
+						// }
+						
+						$mod_devices++;
+						fwrite($logFile, $row_count.';Modified: node='.$name.',interface:'.$port.',descr:'.$descr.PHP_EOL);
+						$arr_log[] = $row_count.';Modified: node='.$name.',interface:'.$port.',descr:'.$descr;
+
+						// if ($tags !== $new_tags && $new_tags !== '') {
+							$row_upd->execute([
+								'descr'			=> $descr,
+								'tags'			=> $tags,//$new_tags,
+								'platform_id'	=> $platform_id,//$new_platform_id,
+								'id'			=> $new_device_id,
+							]);
+						// } else {
+						// 	$row_upd_descr->execute([
+						// 		'descr'			=> $descr,
+						// 		'id'			=> $new_device_id,
+						// 	]);
+						// }
 					} else {
-						$row_upd_descr->execute([
-							'descr'			=> $descr,
-							'id'			=> $new_device_id,
-						]);
+						$skip_devices++;
+						fwrite($logFile, $row_count.';Skipped: node='.$name.',interface:'.$port.',descr:'.$descr.PHP_EOL);
+						$arr_log[] = $row_count.';Skipped: node='.$name.',interface:'.$port.',descr:'.$descr;
 					}
+				} else {
+					$skip_devices++;
+					fwrite($logFile, $row_count.';Skipped by exception'.$e->getMessage().': node='.$name.',interface:'.$port.',descr:'.$descr.PHP_EOL);
+					$arr_log[] = $row_count.';Skipped by exception'.$e->getMessage().': node='.$name.',interface:'.$port.',descr:'.$descr;
 				}
 			}
 		}
-		return true;
+		fwrite($logFile, $row_count.';Total processed'.PHP_EOL);
+		fclose($logFile);
+		return [
+			'new_devices'	=> $new_devices,
+			'mod_devices'	=> $mod_devices,
+			'skip_devices'	=> $skip_devices,
+			'rows_log'		=> $arr_log,
+		];
 	}
 
 	function getPlatformId($platform)

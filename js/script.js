@@ -787,13 +787,13 @@ window.addEventListener('DOMContentLoaded', () => {
                 return `<span class="name-text">${data}</span>`;
             }, "width": "8%" },
             { data: 'interface', "name": "port", "width": "8%" },
-            { data: 'description', "name": "descr", "width": "15%" },
+            { data: 'description', "name": "descr", "width": "35%" },
             { data: 'platform', "name": "platform", render: function (data, type, row, meta) {
                 return `<span class="name-text editable" data-name="platform" data-value="${data}">${data}</span>`;
             }, "width": "8%" },
             { data: 'tag', "name": "tags", render: function (data, type, row, meta) {
                 return `<span class="name-text editable" data-name="tags" data-value="${data}">${data}</span>`;
-            }, "width": "15%"},
+            }, "width": "9%"},
             { data: 'group', "name": "group_name", render: function (data, type, row, meta) {
                 return `<span class="name-text editable" data-name="group" data-value="${data}">${data}</span>`;
             }, "width": "10%" },
@@ -803,7 +803,7 @@ window.addEventListener('DOMContentLoaded', () => {
             { data: 'note', "searchable": false, "orderable": false,
 				render: function (data, type, row, meta) {
                 return `<span class="name-text editable" data-name="comments" data-value="${data}">${data}</span>`;
-            }, "width": "16%" },
+            }, "width": "7%" },
             { data: null , "searchable": false, "orderable": false,
 				defaultContent: `
                 <div class="action-buttons justify-content-center d-block d-xl-flex">
@@ -3242,6 +3242,19 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
+	const servicesImportLog = (data) =>{
+		titleDialogModal.innerText = 'Import log';
+		questionDialogModal.classList.add('question-dialog-import');
+		questionDialogModal.innerText = `Added: ${data['new_devices']}\nModified: ${data['mod_devices']}\nSkipped: ${data['skip_devices']}\n`;
+		questionDialogModal.insertAdjacentHTML('beforeend', data['rows_log'].join('<br>'));
+		const hideDialogButton = btnDialogModal.closest('.modal-footer').querySelector('[data-dismiss="modal"]');
+		hideDialogButton.classList.add('hidden');
+		btnDialogModal.setAttribute('modal-command', 'closeImportDialog');
+		$('#dialogModal').modal({
+			keyboard: true
+		});
+	};
+
 	// const modifyDeviceSettings_old = ({device_id, row_id}) => {
 	// 	const rowDevice = document.getElementById(row_id);
 
@@ -3299,6 +3312,11 @@ window.addEventListener('DOMContentLoaded', () => {
 					'group': target.dataset.group,
 					'platform': target.dataset.platform,
 				});
+				break;
+			case 'closeImportDialog':
+				const hideDialogButton = target.closest('.modal-footer').querySelector('[data-dismiss="modal"]');
+				hideDialogButton.classList.remove('hidden');
+				questionDialogModal.classList.remove('question-dialog-import');
 				break;
 		}
 	};
@@ -3370,6 +3388,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		formDevicesUpload.reset();
 		errorMsgDevices.style.display="none";
 		errorMsgDevices.innerText='';
+	});
+
+	$('#dialogModal').on('hidden.bs.modal', function (e) {
+		const target = e.target;
+		const hideDialogButton = target.querySelector('[data-dismiss="modal"]');
+		hideDialogButton.classList.remove('hidden');
+		questionDialogModal.classList.remove('question-dialog-import');
 	});
 	
 	function checkAllCB()
@@ -3839,7 +3864,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		formData.append('call', 'loadData');
 
 		sendFile('POST', requestURL, formData).then((data) => {
-			showMosaic(data.success.answer);
+			servicesImportLog(data.success.answer)
+			showMosaic();
 		});
 	});
 
@@ -3847,6 +3873,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	devicesAllBody.addEventListener('keydown', deviceKeyDown);
 	btnDialogModal.addEventListener('click', confirmDialog);
 	// triangle.addEventListener('click', triangleToggle);
+
 
 	const clearAttachmentsArea = (container, attachmentsList) => {
 		container.dataset.page_id = null;

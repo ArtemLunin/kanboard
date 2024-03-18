@@ -17,7 +17,20 @@
 	<script src="js/bootstrap.min.js"></script>
 	<script type="text/javascript" charset="utf8" src="js/datatables.min.js"></script>
 	<link rel="stylesheet" href="css/style.css">
-	<script type="text/javascript" src="js/script.js" defer></script>
+	<script>
+			var script = document.createElement("script");  // create a script DOM node
+			let datePageRefresh = new Date();
+			script.src = "js/script.js?" + datePageRefresh.getTime();
+			script.type = 'text/javascript';
+			script.defer = true;
+			script.onreadystatechange = scriptLoaded;
+			script.onload = scriptLoaded;
+			function scriptLoaded() {
+				window.dispatchEvent(new Event('DOMContentLoaded'));
+			}
+			document.head.appendChild(script);  
+	</script>
+	<!-- <script type="text/javascript" src="js/script.js" defer></script> -->
 	<title>SDE Tickets</title>
 </head>
 <body>
@@ -784,6 +797,9 @@
 							</tbody>
 						</table>
 					</form>
+				</div>
+				<div class="import-log">
+					<!-- <a href="temp/import_log.txt" download>Get import log</a> -->
 				</div>
 			</section>
 			<section class="section template">
