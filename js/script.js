@@ -70,6 +70,8 @@ const sections = [
 	'cmop',
 	'template DIP',
 	'dip',
+	'template cDIP',
+	'cdip',
 	'capacity',
 	'inventory',
 	// 'documentation',
@@ -1410,7 +1412,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				showSection === 'ctemplate' ||
 				showSection === 'mop'|| 
 				showSection === 'dip'|| 
-				showSection === 'cmop') {
+				showSection === 'cmop' ||
+				showSection === 'templatecDIP' ||
+				showSection === 'cdip'
+				) {
 				section[idx].append(renderMopDiv);
 			}
 			section[idx].style.display = "block";
@@ -1483,7 +1488,13 @@ window.addEventListener('DOMContentLoaded', () => {
 				displayMOPElements(true);
 				iniOGPA();
 				break;
-				// actField34
+			case 'templatecDIP':
+				document.title = 'Template cDIP';
+				templateDip = 1;
+				cTemplate = 2;
+				displayMOPElements(true);
+				iniOGPA();
+				break;
 			case 'mop':
 				document.title = 'MOP';
 				docTitle.value = 'Method of Procedure (MOP)';
@@ -1497,6 +1508,15 @@ window.addEventListener('DOMContentLoaded', () => {
 				docTitle.value = 'Method of Procedure (MOP)';
 				templateDip = 0;
 				cTemplate = 1;
+				gCounterMode = "mopCounter";
+				displayMOPElements(false);
+				iniOGPA();
+				break;
+			case 'cdip':
+				document.title = 'cDIP';
+				docTitle.value = 'Design Implementation Procedure (DIP)';
+				templateDip = 0;
+				cTemplate = 2;
 				gCounterMode = "mopCounter";
 				displayMOPElements(false);
 				iniOGPA();
@@ -2300,13 +2320,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		const select = document.querySelector(`select[data-selectname="${selectName}"]`);
 		if (!!select) {
 			select.value = selectMode;
-			// if (select.dataset['control']) {
-				// if (select.value === '') {
-				// 	document.querySelector(select.dataset['control']).classList.add('d-none');
-				// } else {
-				// 	document.querySelector(select.dataset['control']).classList.remove('d-none');
-				// }
-			// }
 		}
 	};
 
@@ -3141,6 +3154,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			const args = {};
 			target.closest('tr').querySelectorAll('.editable').forEach(item => {
 				args[item.dataset.name] = item.textContent;
+				if (item.dataset.name == 'platform') {
+					args['oldPlatform'] = item.dataset.value;
+				}
 			});
 			args['id'] = device_id;		
 			args['locked'] = parent_a.dataset.locked;
@@ -3189,7 +3205,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				const groupName = mosaicRow.querySelector('[data-name="group"]').dataset.value;
 				const ownerName = mosaicRow.querySelector('[data-name="owner"]').dataset.value;
 
-				if (target.dataset.name === 'owner' && target.innerText.trim() != '' && target.dataset.value != '' && target.innerText.trim() != target.dataset.value)
+				if (target.dataset.name === 'owner' && target.innerText.trim() != target.dataset.value)
 				{
 					titleDialogModal.innerText = 'Change Owner';
 					questionDialogModal.innerText = `Do you really want to change owner from : ${target.dataset.value} to ${target.innerText.trim()}?`;
@@ -3203,7 +3219,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					$('#dialogModal').modal({
 						keyboard: true
 					});
-				} else if (target.dataset.name === 'group' && target.innerText.trim() != '' && target.dataset.value != '' && target.innerText.trim() != target.dataset.value) {
+				} else if (target.dataset.name === 'group' && target.innerText.trim() != target.dataset.value) {
 					titleDialogModal.innerText = 'Change Group';
 					questionDialogModal.innerText = `Do you really want to change group from : ${target.dataset.value} to ${target.innerText.trim()}?`;
 					btnDialogModal.setAttribute('modal-command', 'changeGroup');

@@ -173,6 +173,7 @@ if ($env === 'services') {
 		'owner'		=> '',
 		'contacts'	=> '',
 		'comments'	=> '',
+		'oldPlatform' => '',
 		'oldOwner'	=> '',
 		'oldGroup'	=> '',
 	];
@@ -188,11 +189,6 @@ if ($env === 'services') {
 			$devices_data[$key] = trim($db_object->removeBadSymbols($paramJSON[$key]));
 		}
 	}
-
-	// if ($call == 'doGetDevicesAll' && $accessType !== false)
-	// {
-	// 	$param_error_msg['answer'] = $db_object->doGetDevicesAll();	
-	// }
 
 	if ($call == 'doGetDevicesAll' && $accessType !== false)
 	{
@@ -270,6 +266,7 @@ if ($env === 'services') {
 			'id'		=> $devices_data['id'],
 			'locked'	=> $devices_data['locked'],
 			'platform'	=> $devices_data['platform'],
+			'oldPlatform' => $devices_data['oldPlatform'],
 			'tags'		=> $devices_data['tags'],
 			'group'		=> $devices_data['group'],
 			'owner'		=> $devices_data['owner'],
@@ -277,7 +274,8 @@ if ($env === 'services') {
 			'contacts'	=> '',
 			'comments'	=> $devices_data['comments'],
 		]);
-	} elseif ($call == 'doChangeOwner' && $accessType === 'admin' && $devices_data['owner'] != '' && $devices_data['oldOwner'] != '') {
+	} elseif ($call == 'doChangeOwner' && $accessType === 'admin') {
+		// && $devices_data['owner'] != '' && $devices_data['oldOwner'] != ''
 		$param_error_msg['answer'] = $db_object->changeOwner([
 			'id'		=> $devices_data['id'],
 			'locked'	=> $devices_data['locked'],
@@ -285,7 +283,8 @@ if ($env === 'services') {
 			'owner'		=> $devices_data['owner'],
 			'group'		=> $devices_data['group'],
 		]);
-	} elseif ($call == 'doChangeGroup' && $accessType === 'admin' && $devices_data['group'] != '' && $devices_data['oldGroup'] != '') {
+	} elseif ($call == 'doChangeGroup' && $accessType === 'admin') {
+		// && $devices_data['group'] != '' && $devices_data['oldGroup'] != ''
 		$param_error_msg['answer'] = $db_object->changeGroup([
 			'id'		=> $devices_data['id'],
 			'locked'	=> $devices_data['locked'],

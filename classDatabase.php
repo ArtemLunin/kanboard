@@ -61,7 +61,7 @@ class databaseUtils {
 		'pageName' => 'cMOP',
 		'sectionName' => 'cmop',
 		'sectionAttr'	=> 'cmop',
-		'accessType'	=> 'csadmin',
+		'accessType'	=> 'admin',
 	],
 	[
 		'pageName' => 'Template DIP',
@@ -73,6 +73,18 @@ class databaseUtils {
 		'pageName' => 'DIP',
 		'sectionName' => 'dip',
 		'sectionAttr'	=> 'dip',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'Template cDIP',
+		'sectionName' => 'templatecDIP',
+		'sectionAttr'	=> 'templatecDIP',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'cDIP',
+		'sectionName' => 'cdip',
+		'sectionAttr'	=> 'cdip',
 		'accessType'	=> 'admin',
 	],
 	[
@@ -636,10 +648,12 @@ class databaseUtils {
 		$group_name = $deviceParam['group'];
 		$manager = $deviceParam['owner'];
 		$platform = $deviceParam['platform'];
+		$oldPlatform = $deviceParam['oldPlatform'];
 
-		$sql = "SELECT dev.id, dev.descr, p.platform,p.group_name,p.manager FROM devices_new AS dev, devices_platform AS p WHERE p.platform=:filter AND p.id=dev.platform_id";
+		$sql = "SELECT dev.id, dev.descr, p.platform,p.group_name,p.manager FROM devices_new AS dev, devices_platform AS p WHERE p.id=dev.platform_id";
+		// p.platform=:filter AND
 		
-		$filter = '';
+		$filter = null;
 		if ($deviceParam['locked'] == '1') {
 			$sql = "SELECT dev.id, dev.descr, p.platform,p.group_name,p.manager FROM devices_new AS dev, devices_platform AS p WHERE dev.id=:filter AND p.id=dev.platform_id";
 			$filter = $deviceParam['id'];
@@ -666,9 +680,14 @@ class databaseUtils {
 			'contacts'		=> null,
 		]);
 
-		if ($table_res = $this->getSQL($sql, [
-			'filter' => $filter,
-		])) {
+		if ($filter !== null) {
+			$table_res = $this->getSQL($sql, [
+				'filter' => $filter,
+			]);
+		} else {
+			$table_res = $this->getSQL($sql, []);
+		}
+		if ($table_res) {
 			foreach ($table_res as $result)
 			{
 				foreach ($tags as $tag) {
