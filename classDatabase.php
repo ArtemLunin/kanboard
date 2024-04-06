@@ -388,34 +388,6 @@ class databaseUtils {
 		return $user_rights['accessType'] != '';
 	}
 
-	// function doGetDevicesAll_old($in_exp = FALSE)
-	// {
-	// 	$device_list = [];
-	// 	$sql = "SELECT id, name, platform, service, owner, contact_info, manager, comments FROM devices";
-	// 	if ($in_exp !== false) {
-	// 		$sql .= " WHERE id IN ({$in_exp})";
-	// 	}
-	// 	$row = $this->pdo->prepare($sql);
-	// 	$row->execute();
-	// 	if($table_res = $row->fetchall())
-	// 	{
-	// 		foreach ($table_res as $row_res)
-	// 		{
-	// 			$device_list[] = [
-	// 				'id'			=> (int)$row_res['id'],
-	// 				'name'			=> $this->removeBadSymbols($row_res['name']),
-	// 				'platform'		=> $this->removeBadSymbols($row_res['platform']),
-	// 				'service'		=> $this->removeBadSymbols($row_res['service']),
-	// 				'owner'			=> $this->removeBadSymbols($row_res['owner']),
-	// 				'contact_info'	=> $this->removeBadSymbols($row_res['contact_info']),
-	// 				'manager'		=> $this->removeBadSymbols($row_res['manager']),
-	// 				'comments'		=> $this->removeBadSymbols($row_res['comments']),
-	// 			];
-	// 		}
-	// 	}
-	// 	return $device_list;
-	// }
-
 	function doGetDevicesAll($start = 0, $length = 100) 
 	{
 		$device_list = [];
@@ -483,6 +455,15 @@ class databaseUtils {
 		return $filter;
 	}
 
+	private function createFilterForInventory($params_arr) {
+		$search_par = trim($params_arr['search_par']);
+		$filter = '';
+		if ($search_par !== '') {
+			$filter .= ' AND (node_name LIKE :search_par OR vendor LIKE :search_par OR hw_model LIKE :search_par OR software LIKE :search_par OR serial LIKE :search_par)';
+		}
+		return $filter;
+	}
+
 	function countDevices($params_arr) {
 
 		$search_par = $params_arr['search_par'];
@@ -503,6 +484,30 @@ class databaseUtils {
 			// $search_par .= "%";
 			$search_par = "%" . $search_par . "%";
 			$row->bindParam('search_par', $search_par);
+		}
+		$row->execute();
+		if ($table_res = $row->fetch()) {
+			$count_dev = (int)$table_res['count_dev'];
+		}
+		return $count_dev;
+	}
+
+	function countInventory($params_arr) {
+		$count_dev = 0;
+		
+		$sql = "SELECT COUNT(id) AS count_dev FROM inventory WHERE id>0 _REPLACE_FILTER_";
+
+		$filter = $this->createFilterForInventory($params_arr);
+		
+		$sql = str_replace(
+			'_REPLACE_FILTER_',
+			$filter, 
+			$sql);
+
+		$row = $this->pdo->prepare($sql);
+		if ($params_arr['search_par'] !== '') {
+			$params_arr['search_par'] = "%" . $params_arr['search_par'] . "%";
+			$row->bindParam('search_par', $params_arr['search_par']);
 		}
 		$row->execute();
 		if ($table_res = $row->fetch()) {
@@ -545,7 +550,6 @@ class databaseUtils {
 		}
 
 		if ($params_arr['search_par'] !== '') {
-			// $params_arr['search_par'] .= "%";
 			$params_arr['search_par'] = "%" . $params_arr['search_par'] . "%";
 			$row->bindParam('search_par', $params_arr['search_par']);
 		}
@@ -590,58 +594,6 @@ class databaseUtils {
 		}
 		return false;
 	}
-
-	// function updateDevicesData_old($deviceParam)
-	// {
-	// 	$group = $deviceParam['group'];
-	// 	$manager = $deviceParam['owner'];
-
-	// 	$sql = "SELECT id, descr,platform,group_name,manager FROM devices_new WHERE platform=:filter";
-	// 	$filter = '';
-	// 	if ($deviceParam['locked'] == '1') {
-	// 		$sql = "SELECT id, descr,platform,group_name,manager FROM devices_new WHERE id=:filter";
-	// 		$filter = $deviceParam['id'];
-	// 	} elseif ($deviceParam['group'] == '') {
-	// 		$sql_pre = "SELECT id, descr,platform,group_name,manager FROM devices_new WHERE platform=:filter LIMIT 1";
-	// 		if ($table_res = $this->getSQL($sql_pre, [
-	// 			'filter' => $deviceParam['platform'],
-	// 		])) {
-	// 			$group = $table_res[0]['group_name'];
-	// 			$manager = $table_res[0]['manager'];
-	// 			// $filter = $deviceParam['platform'];
-	// 		}
-	// 	}
-	// 	$tags = explode(" ", trim(strtolower($deviceParam['tags'])));
-
-	// 	$sql_upd = "UPDATE devices_new SET platform=:platform,group_name=:group_name,manager=:manager,contacts=:contacts,tags=:tags WHERE id=:id";
-	// 	$sql_udp_note = "UPDATE devices_new SET comments=:comments WHERE id=:id";
-
-	// 	if ($table_res = $this->getSQL($sql, [
-	// 		'filter' => $filter,
-	// 	])) {
-	// 		foreach ($table_res as $result)
-	// 		{
-	// 			foreach ($tags as $tag) {
-	// 				if (strpos(strtolower($result['descr'] ?? ''), $tag) !== false) {
-	// 					$this->modSQL($sql_upd, [
-	// 						'platform'		=> $deviceParam['platform'],
-	// 						'group_name'	=> $group,
-	// 						'manager'		=> $manager ,
-	// 						'contacts'		=> $deviceParam['contacts'],
-	// 						'tags'			=> $deviceParam['tags'],
-	// 						'id'			=> $result['id'],
-	// 					], false);
-	// 					break;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	$this->modSQL($sql_udp_note, [
-	// 		'comments'	=> $deviceParam['comments'],
-	// 		'id'		=> $deviceParam['id'],
-	// 	], false);
-	// 	return $this->doGetDevicesAll();
-	// }
 
 	function updateDevicesData($deviceParam)
 	{
@@ -706,8 +658,77 @@ class databaseUtils {
 			'comments'	=> $deviceParam['comments'],
 			'id'		=> $deviceParam['id'],
 		], false);
-		// return $this->doGetDevicesAll();
 		return true;
+	}
+
+	function updateInventoryData($deviceParam) {
+		$sql_hw = "SELECT hw_model,serial,comments FROM inventory WHERE id=:id";
+		$row_get = $this->pdo->prepare($sql_hw);
+		$row_get->execute(['id' => $deviceParam['id']]);
+		$result = $row_get->fetch();
+
+		if (isset($result['hw_model'])) {
+			$sql = "UPDATE inventory SET _REPLACE_FIELDS_ WHERE hw_model=:hw_model _REPLACE_ID_";
+			$fields = $values = $id_cond= "";
+			if (isset($deviceParam['hw_eos'])) {
+				$fields .= "`hw_eos`=:hw_eos,";
+			}
+			if (isset($deviceParam['hw_eol'])) {
+				$fields .= "`hw_eol`=:hw_eol,";
+			}
+			if (isset($deviceParam['sw_eos'])) {
+				$fields .= "`sw_eos`=:sw_eos,";
+			}
+			if (isset($deviceParam['sw_eol'])) {
+				$fields .= "`sw_eol`=:sw_eol,";
+			}
+			if (isset($deviceParam['ca_year'])) {
+				$fields .= "`ca_year`=:ca_year,";
+			}
+			$fields .= "`software`=:software";
+			if ($deviceParam['locked'] == '1') {
+				$id_cond = " AND id=:id";
+			}
+
+			$sql = str_replace(
+				['_REPLACE_FIELDS_','_REPLACE_ID_'],
+				[$fields, $id_cond], 
+				$sql);	
+			
+			$row = $this->pdo->prepare($sql);
+			$row->bindParam('hw_model', $result['hw_model']);
+			$row->bindParam('software', $deviceParam['software']);
+			if (isset($deviceParam['hw_eos'])) {
+				$row->bindParam('hw_eos', $deviceParam['hw_eos']);
+			}
+			if (isset($deviceParam['hw_eol'])) {
+				$row->bindParam('hw_eol', $deviceParam['hw_eol']);
+			}
+			if (isset($deviceParam['sw_eos'])) {
+				$row->bindParam('sw_eos', $deviceParam['sw_eos']);
+			}
+			if (isset($deviceParam['sw_eol'])) {
+				$row->bindParam('sw_eol', $deviceParam['sw_eol']);
+			}
+			if (isset($deviceParam['ca_year'])) {
+				$row->bindParam('ca_year', $deviceParam['ca_year']);
+			}
+			if ($deviceParam['locked'] == '1') {
+				$row->bindParam('id', $deviceParam['id']);
+			}
+			$row->execute();
+
+			if ($result['serial'] !== trim($deviceParam['serial']) || $result['comments'] !== trim($deviceParam['comments'])) {
+				$sql_upd = "UPDATE inventory SET `serial`=:serial,`comments`=:comments WHERE id=:id";
+				$row_upd = $this->pdo->prepare($sql_upd);
+				$row_upd->execute([
+					'serial'	=> trim($deviceParam['serial']),
+					'comments'	=> trim($deviceParam['comments']),
+					'id'		=> $deviceParam['id'],
+				]);
+			}
+			return true;
+		}
 	}
 
 	function changeOwner($deviceParam) {
@@ -729,39 +750,6 @@ class databaseUtils {
 			], false);
 		return true;
 	}
-
-	// function loadData_old($rows)
-	// {
-	// 	$sql = "INSERT INTO devices_new (name,port,descr,platform,group_name,manager,tags,comments) VALUES (:name,:port,:descr,:platform,:group_name,:manager,:tags,:comments)";
-	// 	foreach ($rows as $row) {
-	// 		$result = $this->modSQLInsUpd(['ins' => $sql, 'upd' => null], [
-	// 			'name'		=> trim($row[0]),
-	// 			'port'		=> trim($row[1]),
-	// 			'descr' 	=> trim($row[2] ?? ''),
-	// 			'platform'	=> trim($row[3] ?? ''),
-	// 			'tags'		=> trim($row[4] ?? ''),
-	// 			'group_name' => trim($row[5] ?? ''),
-	// 			'manager'	=> trim($row[6] ?? ''),
-	// 			'comments'	=> trim($row[7] ?? ''),
-	// 		], false);
-	// 		if ($result === null) {
-	// 			$sql_descr = "SELECT id, descr FROM devices_new WHERE name=:name AND port=:port";
-	// 			if ($table_res = $this->getSQL($sql_descr, [
-	// 				'name' => trim($row[0]),
-	// 				'port' => trim($row[1]),
-	// 			])) {
-	// 				if (trim($row[2] ?? '') != trim($table_res[0]['descr'])) {
-	// 					$sql_upd = "UPDATE devices_new SET descr=:descr,platform='',group_name='',manager='',tags='',comments='' WHERE id=:id";
-	// 					$this->modSQL($sql_upd, [
-	// 						'descr'	=> trim($row[2] ?? ''),
-	// 						'id'	=> $table_res[0]['id'],
-	// 					], false);
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	return $this->doGetDevicesAll();
-	// }
 	
 	function loadData($rows)
 	{
@@ -903,6 +891,58 @@ class databaseUtils {
 		];
 	}
 
+	function loadInventory($rows) {
+		$sql = "INSERT INTO inventory (node_name,vendor,hw_model,software,serial) VALUES (:node_name,:vendor,:hw_model,:software,:serial)";
+
+		$new_devices = $mod_devices = $skip_devices = 0;
+
+		$arr_log = [];
+		$row_count = 0;
+
+		$row_ins = $this->pdo->prepare($sql);
+		foreach ($rows as $row) {
+			$row_count++;
+			$node_name = trim($row[0] ?? '');
+			$vendor = trim($row[1] ?? '');
+			$hw_model = trim($row[2] ?? '');
+			$software = trim($row[3] ?? '');
+			$serial = trim($row[4] ?? '');
+
+			if ($node_name == '') {
+				$skip_devices++;
+
+				$arr_log[] = $row_count.';Skipped: node='.$node_name.',vendor:'.$vendor.',serial:'.$serial;
+				continue;
+			}
+
+			try {
+				$row_ins->execute([
+						'node_name'	=> $node_name,
+						'vendor'	=> $vendor,
+						'hw_model' => $hw_model,
+						'software'	=> $software,
+						'serial'		=> $serial,
+					]);
+				$new_device_id = $this->pdo->lastInsertId();
+				$new_devices++;
+			} catch (\PDOException $e) {
+				if (preg_match('/Duplicate entry/i', $e->getMessage()) == 1) {
+					$skip_devices++;
+					$arr_log[] = $row_count.';Skipped: node='.$node_name.',vendor:'.$vendor.',serial:'.$serial;
+				} else {
+					$skip_devices++;
+					$arr_log[] = $row_count.';Skipped by exception'.$e->getMessage().': node='.$node_name.',vendor:'.$vendor.',serial:'.$serial;
+				}
+			}
+		}
+		return [
+			'new_devices'	=> $new_devices,
+			'mod_devices'	=> $mod_devices,
+			'skip_devices'	=> $skip_devices,
+			'rows_log'		=> $arr_log,
+		];
+	}
+
 	function getPlatformId($platform)
 	{
 		$platform_id = null;
@@ -931,20 +971,106 @@ class databaseUtils {
 
 	function doDeleteDevice($id, $mode = null)
 	{
-		$sql = "DELETE FROM devices_new WHERE id=:id";
+		// $sql = "DELETE FROM devices_new WHERE id=:id";
+		// if ($this->modSQL($sql, [
+		// 	'id' => $id
+		// ], true)) {	
+		// 		return ['id' => $id];
+		// }
+		// return false;
+		return $this->doDeleteByID('devices_new', $id);
+	}
+
+	function doDeleteInventory($id, $mode = null)
+	{
+		// $sql = "DELETE FROM inventory WHERE id=:id";
+		// if ($this->modSQL($sql, [
+		// 	'id' => $id
+		// ], true)) {	
+		// 		return ['id' => $id];
+		// }
+		// return false;
+		return $this->doDeleteByID('inventory', $id);
+	}
+
+	private function doDeleteByID($table_name, $id) {
+		$sql = "DELETE FROM `".$table_name."` WHERE id=:id";
 		if ($this->modSQL($sql, [
 			'id' => $id
 		], true)) {	
-			// if ($mode === 'fast') {
-				return ['id' => $id];
-			// }
+			return ['id' => $id];
 		}
 		return false;
 	}
-
 	function clearDevicesDataTemp() {
 		$sql = "DELETE FROM devices_new WHERE id<>0";
 		return $this->modSQL($sql, [], false);
+	}
+
+	function doGetInventory($params_arr) {
+		$get_data = $params_arr['get_data'];
+		$inventory_list = [];
+
+		if ($params_arr['count'] == 0 || $get_data != '1') {
+			return $inventory_list;
+		}
+
+		$order = '';
+		$limit_rows = '';
+
+		$filter = $this->createFilterForInventory($params_arr);
+
+		if ($params_arr['column_name'] !== '') {
+			$order = ' ORDER BY `'.$params_arr['column_name'].'` '.$params_arr['sort_dir'];
+		}
+
+		if ($params_arr['length'] != -1) {
+			$limit_rows = "LIMIT :start, :length";
+		}
+
+		$sql = "SELECT id,node_name,vendor,hw_model,software,serial,hw_eos,hw_eol,sw_eos,sw_eol,ca_year,comments FROM inventory WHERE id>0 _REPLACE_FILTER_ _REPLACE_ORDER_ _REPLACE_LIMIT_";
+		$sql = str_replace(
+			['_REPLACE_FILTER_', '_REPLACE_ORDER_', '_REPLACE_LIMIT_'],
+			[$filter, $order, $limit_rows], 
+			$sql);
+
+		$row = $this->pdo->prepare($sql);
+		if ($params_arr['length'] != -1) {
+			$row->bindParam('start', $params_arr['start'], \PDO::PARAM_INT);
+			$row->bindParam('length', $params_arr['length'], \PDO::PARAM_INT);
+		}
+
+		if ($params_arr['search_par'] !== '') {
+			$params_arr['search_par'] = "%" . $params_arr['search_par'] . "%";
+			$row->bindParam('search_par', $params_arr['search_par']);
+		}
+		$row->execute();
+		if ($table_res = $row->fetchall()) {
+			foreach ($table_res as $result)
+			{
+				$inventory_list[] = [
+					'DT_RowId' 	=> 'row_'.$result['id'],
+					'DT_RowClass'	=> 'inventory-table-row',
+					'DT_RowAttr'	=> [
+						'data-table'	=> 'inventory',
+						'data-node_id' => $result['id'], 
+						'data-locked' => '1'],
+					'node'		=> $result['node_name'],
+					'vendor'	=> $result['vendor'],
+					'hw_model'	=> $result['hw_model'],
+					'software'	=> $result['software'],
+					'serial'	=> $result['serial'],
+					'hw_eos'	=> $result['hw_eos'] ? date('Y-m', strtotime($result['hw_eos'])) : '',
+					'hw_eol'	=> $result['hw_eol'] ? date('Y-m', strtotime($result['hw_eol'])) : '',
+					'sw_eos'	=> $result['sw_eos'] ? date('Y-m', strtotime($result['sw_eos'])) : '',
+					'sw_eol'	=> $result['sw_eol'] ? date('Y-m', strtotime($result['sw_eol'])) : '',
+					'ca_year'	=> $result['ca_year'] ? date('Y', strtotime($result['ca_year'])) : '',
+					'comments'	=> $result['comments'] ?? '',
+				];
+			}
+		}
+
+		return $inventory_list;
 	}
 
 	function installCacheTable() {

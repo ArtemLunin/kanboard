@@ -177,6 +177,19 @@ if ($env === 'services') {
 		'oldOwner'	=> '',
 		'oldGroup'	=> '',
 	];
+
+	$inventory_data = [
+		'id'		=> '0',
+		'locked'	=> '1',
+		'ca_year'	=> null,
+		'comments'	=> '',
+		'hw_eol'	=> null,
+		'hw_eos'	=> null,
+		'serial'	=> '',
+		'software'	=> '',
+		'sw_eol'	=> null,
+		'sw_eos'	=> null,
+	];
 	
 	foreach ($data_fields as $key => $value) {
 		if(isset($paramJSON[$key])) {
@@ -187,6 +200,32 @@ if ($env === 'services') {
 	foreach ($devices_data as $key => $value) {
 		if(isset($paramJSON[$key])) {
 			$devices_data[$key] = trim($db_object->removeBadSymbols($paramJSON[$key]));
+		}
+	}
+
+	foreach ($inventory_data as $key => $value) {
+		if(isset($paramJSON[$key])) {
+			$date_now = $date = new DateTime();
+
+			if ($key == 'hw_eol' || $key == 'hw_eos' ||$key == 'sw_eol' ||$key == 'sw_eos') {
+				if (preg_match('/(\d{4}).{0,1}(\d{2})/', trim($db_object->removeBadSymbols($paramJSON[$key])), $matches)) {
+					$date = new DateTime();
+					$date->setDate($matches[1],$matches[2],'1');
+					if ($date_now <= $date) {
+						$inventory_data[$key] = $date->format('Y-m-d');
+					}
+				}
+			} elseif ($key == 'ca_year') {
+				if (preg_match('/(\d{4})/', trim($db_object->removeBadSymbols($paramJSON[$key])), $matches)) {
+					$date = new DateTime();
+					$date->setDate($matches[1],'12','31');
+					if ($date_now <= $date) {
+						$inventory_data[$key] = $date->format('Y-m-d');
+					}
+				}
+			} else {
+				$inventory_data[$key] = trim($db_object->removeBadSymbols($paramJSON[$key]));
+			}
 		}
 	}
 
@@ -295,7 +334,6 @@ if ($env === 'services') {
 	} elseif ($call == 'doDeleteDevice' && $accessType === 'admin') {
 		$param_error_msg['answer'] = $db_object->doDeleteDevice($paramJSON['id'] ?? 0, $mode);
 	} elseif ($call == 'loadData' && $accessType === 'admin') {
-		// $db_object->errorLog($accessType);
 		$tmp = $_FILES['file']['tmp_name'];
 			if (($tmp != '') && is_uploaded_file($tmp)) 
 			{  
@@ -307,7 +345,79 @@ if ($env === 'services') {
 
 				$param_error_msg['answer'] = $db_object->loadData($rows);
 			}
-	} 
+	} elseif ($call == 'doGetInventory' && $accessType === 'admin') {
+
+		$start = $paramJSON['start'] ?? $_REQUEST['start'] ?? 0;
+		$length = $paramJSON['length'] ?? $_REQUEST['length'] ?? 0;
+		$search = $paramJSON['search'] ?? $_REQUEST['search'] ?? false;
+		$order = $paramJSON['order'] ?? $_REQUEST['order'] ?? false;
+		$columns = $paramJSON['columns'] ?? $_REQUEST['columns'] ?? false;
+
+		$search_par = '';
+		$column_name = '';
+		$sort_dir = '';
+
+		if ($search && strlen(trim($search['value'])) > 1) {
+			$search_par = trim($search['value']);
+		}
+
+		if ($order && $columns) {
+			$column_name = $columns[$order[0]['column']]['name'];
+			$sort_dir = $order[0]['dir'];
+		}
+
+		$countDevices = $db_object->countInventory([
+			'search_par'    => $search_par,
+		]);
+
+		$get_data = $paramJSON['get_data'] ?? $_REQUEST['get_data'] ?? 0;
+		$output_data = [
+			"draw" => (int)$_REQUEST['draw'],
+			"recordsTotal" => $countDevices,
+			"recordsFiltered" => $countDevices,
+			"data" => $db_object->doGetInventory([
+				'start'     => $start,
+				'length'    => $length, 
+				'search_par'    => $search_par,
+				'column_name'   => $column_name,
+				'sort_dir'  => $sort_dir,
+				'count'     => $countDevices,
+				'get_data'	=> $get_data,
+			]),
+		];
+		header('Content-type: application/json');
+		echo json_encode($output_data);
+		exit();
+	} elseif ($call == 'loadInventory' && $accessType === 'admin') {
+		$tmp = $_FILES['file']['tmp_name'];
+			if (($tmp != '') && is_uploaded_file($tmp)) 
+			{  
+				$reader = new Xlsx();
+				$reader->setReadDataOnly(true);
+				$spreadsheet = $reader->load($tmp);
+				$worksheet = $spreadsheet->getActiveSheet();
+				$rows = $worksheet->toArray();
+
+				$param_error_msg['answer'] = $db_object->loadInventory($rows);
+			}
+	} elseif ($call == 'doDeleteInventory' && $accessType === 'admin') {
+		$param_error_msg['answer'] = $db_object->doDeleteInventory($paramJSON['id'] ?? 0, $mode);
+	} elseif ($call == 'updateInventoryData' && $accessType === 'admin') {
+		$param_error_msg['answer'] = $db_object->updateInventoryData([
+			'id'		=> $inventory_data['id'],
+			'locked'	=> $inventory_data['locked'],
+			'ca_year'	=> $inventory_data['ca_year'],
+			'comments'	=> $inventory_data['comments'],
+			'hw_eol'	=> $inventory_data['hw_eol'],
+			'hw_eos'	=> $inventory_data['hw_eos'],
+			'serial'	=> $inventory_data['serial'],
+			'software'	=> $inventory_data['software'],
+			'sw_eol'	=> $inventory_data['sw_eol'],
+			'sw_eos'	=> $inventory_data['sw_eos'],
+		]);
+		
+	}
+	
 	// elseif ($call == 'clearDevicesDataTemp' && $accessType === 'admin') {
 	// 	$param_error_msg['answer'] = $db_object->clearDevicesDataTemp();
 	// }

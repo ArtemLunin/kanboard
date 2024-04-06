@@ -159,6 +159,7 @@ h3 {
 	padding: .3rem;
 }
 .menu {
+	overflow-y: auto;
 	background:#363636;
 	color:#fff;
 	height:100vh;
@@ -590,6 +591,12 @@ input:read-only {
 	display: inline-block;
 	overflow: hidden;
 	width: 100px;
+}
+.editable.new-tag[data-name^="hw_eo"],
+.editable.new-tag[data-name^="sw_eo"],
+.editable.new-tag[data-name="ca_year"]
+{
+	width: 60px;
 }
 a>img:hover  {
 	background-color: gray;

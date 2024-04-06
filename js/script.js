@@ -107,6 +107,7 @@ const table_statistics_selector = 'table_statistics',
 const table_excel_selector = 'table_excel';
 const exportExcel_selector = 'exportExcel';
 const mosaicTableSelector = 'mosaic-table-row';
+const inventoryTableSelector = 'inventory-table-row';
 
 const excelDataArray = [];
 
@@ -122,6 +123,7 @@ let savedPageName = 'New Page',
 	page_id = '0';
 
 const inventoryTagsSet = new Set();
+let inventoryMode = 0;
 
 // common functions
 // for sort in ORDER DESC by default
@@ -393,6 +395,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		tableTags = document.querySelector('#table-tags'),
 		// bntNewChassis = document.querySelector('#table-tags'),
 		inventoryTags = document.querySelector('.inventory-tags'),
+		loadInventory = document.querySelector('#loadInventory'),
 		tInventory = document.querySelector('.t-inventory');
 		// newTag = document.querySelector('.new-tag');
 
@@ -691,83 +694,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	})
 	.on('buttons-action', periodChange);
 	
-	// const dataTableMosaic = $(`#${devicesMosaic_selector}`)
-	// 	.on('init.dt', function () {
-	// 	})
-	// 	.DataTable({
-	// 		dom: '<"mosaic-menu"Bft>',
-	// 		buttons: 
-	// 		{
-	// 			dom: {
-	// 				container: {
-	// 					tag: 'div',
-	// 					className: 'mosaic-buttons'
-	// 				},
-	// 				button: {
-	// 					tag: 'button',
-	// 					className: []
-	// 				},
-	// 				buttonLiner: {
-	// 					tag: null
-	// 				}
-
-	// 			},
-	// 			buttons: [
-	// 				{
-	// 					extend: "excel",
-	// 					text: 'Export Data',
-	// 					title: null,
-	// 					className: 'mosaic-excel btn-devices btn-devices-export',
-	// 					filename: '* Export',
-	// 					attr: {
-	// 						title: 'Export to Excel',
-	// 						id: exportMosaic_selector
-	// 					},
-	// 					tag: 'a',
-	// 					exportOptions: {
-	// 						columns: '.exportable'
-	// 					}
-	// 				},
-	// 				{
-	// 					tag: 'label',
-	// 					text: 'Import Data',
-	// 					className: 'btn-devices',
-	// 					attr: {
-	// 						// title: 'Import to Services',
-	// 						for: 'loadExcelData',
-	// 						id: 'btnLoadExcelData',
-	// 					},
-	// 					action: function (e, dt, node, config) {
-	// 						const target = e.target;
-	// 						document.querySelector(`#${target.getAttribute('for')}`).click();
-	// 					}
-	// 				}
-	// 			]
-	// 		},
-	// 		"autoWidth": false,
-	// 		columns:
-	// 		[
-	// 			{ "width": "8%" },
-	// 			{ "width": "8%" },
-	// 			{ "width": "15%" },
-	// 			{ "width": "8%" },
-	// 			{ "width": "15%" },
-	// 			{ "width": "10%" },
-	// 			{ "width": "10%" },
-	// 			{ "width": "16%" },
-	// 			{ "width": "10%" },
-	// 		],
-	// 		columnDefs: [
-	// 			{ orderable: false, targets: [0,1,2,3,4,5,6,7,8] }
-	// 		],
-	// 		// order: [
-	// 		// 	// [0, 'desc'],
-	// 		// 	// [1, 'asc'],
-	// 		// ],
-	// 		paging: false,
-	// 		searching: true,
-	// 		stripeClasses :[],
-	// 	});
 
 	// new DataTable('#table-inventory', {
 	// 	order: [[0, 'desc']],
@@ -900,6 +826,127 @@ window.addEventListener('DOMContentLoaded', () => {
         },
 		autoWidth: false,
     });
+
+	// mosaicTable.on('preXhr.dt', function (e, settings) {
+	// 	console.log('123');
+	// });
+
+	const dataTableInventory = $(`#table-inventory`)
+		.on('preXhr.dt', function (e, settings, data) {
+			data.get_data = inventoryMode;
+		})
+		.DataTable({
+			ajax: {
+				url: 'backend.php',
+				data: function (d) {
+					d.env = 'services';
+					d.call = 'doGetInventory';
+				}
+			},
+			dom: '<"mosaic-menu"B<"table-controls"plfr>ti>',
+			columns: [							
+				{ data: 'node', "name": "node_name", render: function (data, type, row, meta) {
+					return `<span class="name-text">${data}</span>`;
+				}, "width": "14%" },
+				{ data: 'vendor', "name": "vendor", "width": "6%" },
+				{ data: 'hw_model', "name": "hw_model", "width": "8%" },
+				{ data: 'hw_eos', "name": "hw_eos", render: function (data, type, row, meta) {
+					return `<span class="name-text editable" data-name="hw_eos" data-value="${data}">${data}</span>`;
+				}, "width": "6%" },
+				{ data: 'hw_eol', "name": "hw_eol", render: function (data, type, row, meta) {
+					return `<span class="name-text editable" data-name="hw_eol" data-value="${data}">${data}</span>`;
+				}, "width": "6%" },
+				{ data: 'software', "name": "software", render: function (data, type, row, meta) {
+					return `<span class="name-text editable" data-name="software" data-value="${data}">${data}</span>`;
+				}, "width": "6%" },
+				{ data: 'sw_eos', "name": "sw_eos", render: function (data, type, row, meta) {
+					return `<span class="name-text editable" data-name="sw_eos" data-value="${data}">${data}</span>`;
+				}, "width": "6%" },
+				{ data: 'sw_eol', "name": "sw_eol", render: function (data, type, row, meta) {
+					return `<span class="name-text editable" data-name="sw_eol" data-value="${data}">${data}</span>`;
+				}, "width": "6%" },
+				{ data: 'serial', "name": "serial", render: function (data, type, row, meta) {
+					return `<span class="name-text editable" data-name="serial" data-value="${data}">${data}</span>`;
+				}, "width": "12%"},
+				{ data: 'ca_year', "name": "ca_year", render: function (data, type, row, meta) {
+					return `<span class="name-text editable" data-name="ca_year" data-value="${data}">${data}</span>`;
+				}, "width": "6%" },
+				{ data: 'comments', "searchable": false, "orderable": false,
+					render: function (data, type, row, meta) {
+					return `<span class="name-text editable" data-name="comments" data-value="${data}">${data}</span>`;
+				}, "width": "14%" },
+				{ data: null , "searchable": false, "orderable": false,
+					defaultContent: `
+					<div class="action-buttons justify-content-center d-block d-xl-flex">
+						<a href="#" data-locked='1'>
+							<img class="icon-edit icon-edit-sm" data-edit src="img/edit.svg">
+							<img class="icon icon-edit-sm hidden" data-undo src="img/undo.svg" title="Undo">
+							<img class="icon icon-edit-sm hidden" data-done src="img/done.svg" title="Done">
+							<img class="icon icon-edit-sm hidden" data-lock src="img/lock.svg" title="Switch to All">
+							<img class="icon icon-edit-sm hidden" data-open src="img/lock_open.svg" title="Switch to one">
+						</a>
+						<a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
+					</div>`,
+				"width": "10%" },
+			],
+			buttons: 
+			{
+				dom: {
+					container: {
+						tag: 'div',
+						className: 'mosaic-buttons'
+					},
+					button: {
+						tag: 'button',
+						className: []
+					},
+					buttonLiner: {
+						tag: null
+					}
+
+				},
+				buttons: [
+					{
+						extend: "excel",
+						text: 'Export Data',
+						title: null,
+						className: 'mosaic-excel btn-devices btn-devices-export',
+						filename: '* Export',
+						attr: {
+							title: 'Export to Excel',
+							id: exportMosaic_selector
+						},
+						tag: 'a',
+						exportOptions: {
+							columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+						}
+					},
+					{
+						tag: 'label',
+						text: 'Import Data',
+						className: 'btn-devices',
+						attr: {
+							for: 'loadInventory',
+							id: 'btnLoadloadInventory',
+						},
+						action: function (e, dt, node, config) {
+							const target = e.target;
+							document.querySelector(`#${target.getAttribute('for')}`).click();
+						}
+					},
+				]
+			},
+			lengthMenu: [[100, 200, -1],[100, 200, "All"]],
+			pageLength: 100,
+			processing: true,
+			serverSide: true,
+			serverMethod: "POST",
+			search: {
+				return: true
+			},
+			autoWidth: false,
+		});
+
 
 	const saveContent = () => {
 		const savedName = (pageNameEdit.innerText.trim() !== ''  ? pageNameEdit.innerText.trim() : prompt('Enter the Page Name', savedPageName));
@@ -1539,6 +1586,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 				break;
 			case 'inventory':
+				document.title = 'Inventory';
 				iniInventory();
 			default:
 				break;
@@ -2401,18 +2449,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const getMosaic = () => {
 		initMosaicElems();
-		// const body = {
-		// 	env: 'services',
-		// 	call: 'doGetDevicesAll',
-		// };
-		// sendRequest('POST', requestURL, body).then((data) => {
-		// 	if (data && data.success && data.success.answer) {
-		// 		showMosaic(data.success.answer);
-		// 	} else {
-		// 		location.hash = '';
-		// 	}
-		// });
-		// mosaicTable.clear().draw();
 		mosaicTable.ajax.reload();
 	};
 
@@ -2432,6 +2468,22 @@ window.addEventListener('DOMContentLoaded', () => {
 		sendRequest('POST', requestURL, Object.assign(body, args)).then((data) => {
 			if (data && data.success && data.success.answer) {
 				showMosaic();
+			} else {
+				location.hash = '';
+			}
+		});
+	};
+
+	const updateInventoryData = (args) => {
+		const body = {
+			env: 'services',
+			call: 'updateInventoryData',
+		};
+		// const re = new RegExp(`(\d{4})-(\d{2})`);
+		// let match_id = check_box.id.match(re);
+		sendRequest('POST', requestURL, Object.assign(body, args)).then((data) => {
+			if (data && data.success && data.success.answer) {
+				iniInventory();
 			} else {
 				location.hash = '';
 			}
@@ -2690,125 +2742,62 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const showMosaic_old = (data) => {
-		dataTableMosaic.clear().draw();
-		if (data) {
-			let hideEditButtons = 'd-block d-xl-flex';
-			if (showMosaicEditItems == '0') {
-				hideEditButtons = 'd-none';
-			}
-			devicesAllBody.textContent = '';
-			data.forEach(function ({
-				id, name, platform, service, owner, contact_info, manager, comments
-			}) 
-			{
-				let deviceDataID = `device-data-${id}`;
-				const tr = document.createElement('tr');
-
-				tr.classList.add(mosaicTableSelector);
-				tr.dataset.node_id = id;
-				tr.id = deviceDataID;
-				tr.innerHTML = `
-						<td>
-							<span class="name-text">${name}</span>
-						</td>
-						<td>
-							<span class="platform-text">${platform}</span>
-						</td>
-						<td>
-							<span class="service-text">${service}</span>
-						</td>
-						<td>
-							<span class="owner-text">${owner}</span>
-						</td>
-						<td>
-							<span class="contact_info-text">${contact_info}</span>
-						</td>
-						<td>
-							<span class="manager-text">${manager}</span>
-						</td>
-						<td>
-							<p class="comment-text crop-height">${comments.replace(/(?:\r\n|\r|\n)/g, '<br>')}</p>
-						</td>
-						<td>
-							<div class="action-buttons justify-content-center ${hideEditButtons}">
-								<a href="#"><img class="icon-edit icon-edit-sm" src="img/edit.svg"></a>
-								<a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
-							</div>
-						</td>
-				`;
-				dataTableMosaic.row.add(tr);
-			});
-			dataTableMosaic.draw();
-		}
-	};
-
-	const showMosaic = () => {
-		mosaicTable.ajax.reload();
-	};
-
-	// const showMosaic = (data) => {
+	// const showMosaic_old = (data) => {
 	// 	dataTableMosaic.clear().draw();
 	// 	if (data) {
 	// 		let hideEditButtons = 'd-block d-xl-flex';
 	// 		if (showMosaicEditItems == '0') {
 	// 			hideEditButtons = 'd-none';
 	// 		}
-	// 		// devicesAllBody.textContent = '';
+	// 		devicesAllBody.textContent = '';
 	// 		data.forEach(function ({
-	// 			id, name, port, description, platform, tags, group, owner, comments
+	// 			id, name, platform, service, owner, contact_info, manager, comments
 	// 		}) 
 	// 		{
-	// 			// let deviceDataID = `device-data-${id}`;
+	// 			let deviceDataID = `device-data-${id}`;
 	// 			const tr = document.createElement('tr');
 
 	// 			tr.classList.add(mosaicTableSelector);
 	// 			tr.dataset.node_id = id;
-	// 			tr.id = `device-data-${id}`;
-	// 			tr.dataset.locked='1';
+	// 			tr.id = deviceDataID;
 	// 			tr.innerHTML = `
-	// 				<td>
-	// 					<span class="name-text">${name}</span>
-	// 				</td>
-	// 				<td>
-	// 					<span class="name-text">${port}</span>
-	// 				</td>
-	// 				<td>
-	// 					<span class="name-text">${description}</span>
-	// 				</td>
-	// 				<td>
-	// 					<span class="name-text editable" data-name="platform" data-value="${platform}">${platform}</span>
-	// 				</td>
-	// 				<td>
-	// 					<span class="name-text editable" data-name="tags" data-value="${tags}">${tags}</span>
-	// 				</td>
-	// 				<td>
-	// 					<span class="name-text editable" data-name="group" data-value="${group}">${group}</span>
-	// 				</td>
-	// 				<td>
-	// 					<span class="name-text editable" data-name="owner" data-value="${owner}">${owner}</span>
-	// 				</td>
-	// 				<td>
-	// 					<span class="name-text editable "data-name="comments" data-value="${comments}">${comments}</span>
-	// 				</td>
-	// 				<td>
-	// 					<div class="action-buttons justify-content-center ${hideEditButtons}">
-	// 						<a href="#" data-locked='1'>
-	// 							<img class="icon-edit icon-edit-sm" data-edit src="img/edit.svg">
-	// 							<img class="icon icon-edit-sm hidden" data-undo src="img/undo.svg" title="Undo">
-	// 							<img class="icon icon-edit-sm hidden" data-done src="img/done.svg" title="Done">
-	// 							<img class="icon icon-edit-sm hidden" data-lock src="img/lock.svg" title="Switch to All">
-	// 							<img class="icon icon-edit-sm hidden" data-open src="img/lock_open.svg" title="Switch to one">
-	// 						</a>
-	// 						<a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
-	// 					</div>
-	// 				</td>
+	// 					<td>
+	// 						<span class="name-text">${name}</span>
+	// 					</td>
+	// 					<td>
+	// 						<span class="platform-text">${platform}</span>
+	// 					</td>
+	// 					<td>
+	// 						<span class="service-text">${service}</span>
+	// 					</td>
+	// 					<td>
+	// 						<span class="owner-text">${owner}</span>
+	// 					</td>
+	// 					<td>
+	// 						<span class="contact_info-text">${contact_info}</span>
+	// 					</td>
+	// 					<td>
+	// 						<span class="manager-text">${manager}</span>
+	// 					</td>
+	// 					<td>
+	// 						<p class="comment-text crop-height">${comments.replace(/(?:\r\n|\r|\n)/g, '<br>')}</p>
+	// 					</td>
+	// 					<td>
+	// 						<div class="action-buttons justify-content-center ${hideEditButtons}">
+	// 							<a href="#"><img class="icon-edit icon-edit-sm" src="img/edit.svg"></a>
+	// 							<a href="#"><img class="icon-delete icon-delete-sm" src="img/delete.svg"></a>
+	// 						</div>
+	// 					</td>
 	// 			`;
 	// 			dataTableMosaic.row.add(tr);
 	// 		});
 	// 		dataTableMosaic.draw();
 	// 	}
 	// };
+
+	const showMosaic = () => {
+		mosaicTable.ajax.reload();
+	};
 
 	const showModalDialog = ({attributes, dialogTitle, dialogQuestion, previousModal = null}, dialogModalProps = {selector:'#dialogModal', titleSelector:'#titleDialogModal', questionSelector: '#questionDialogModal'}) => {
 		attributes.forEach(item => {
@@ -3194,6 +3183,94 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
+	const deviceActionNodes = function(e, params) {
+		e.preventDefault();
+		const target = e.target;
+		const nodesRow = target.closest('tr');
+		const parent_a = target.closest('a');
+		let action = null;
+		const device_id = nodesRow.dataset.node_id;
+
+		if (target.classList.contains('icon-edit'))
+		{
+			nodesRow.querySelectorAll('span.editable').forEach(setEdit);
+			switchTableAction({
+				'lockMode': 1, 
+				'dataLocked': [parent_a, nodesRow],
+				'shownedElems': [
+					parent_a.querySelector('[data-undo]'),
+					parent_a.querySelector('[data-done]'),
+					parent_a.querySelector('[data-lock]'),
+				],
+				'hiddenElems': [
+					parent_a.querySelector('[data-edit]'),
+					parent_a.querySelector('[data-open]'),
+				],
+			});
+		} else if (target.classList.contains('icon-delete')) {
+			action = 'delete';
+		} else if (target.dataset.undo != null) {
+			switchTableAction({
+				'lockMode': null, 
+				'dataLocked': [],
+				'shownedElems': [parent_a.querySelector('[data-edit]')],
+				'hiddenElems': [
+					parent_a.querySelector('[data-done]'),
+					parent_a.querySelector('[data-lock]'),
+					parent_a.querySelector('[data-open]'),
+					target,
+				],
+			});
+			nodesRow.querySelectorAll('span.editable').forEach(resetEdit);
+		} else if (target.dataset.done != null) {
+			const args = {};
+			nodesRow.querySelectorAll('.editable').forEach(item => {
+				args[item.dataset.name] = item.textContent;
+				if (item.dataset.name == 'platform') {
+					args['oldPlatform'] = item.dataset.value;
+				}
+			});
+			args['id'] = device_id;		
+			args['locked'] = parent_a.dataset.locked;
+			updateInventoryData(args);
+			switchTableAction({
+				'lockMode': null, 
+				'dataLocked': [],
+				'shownedElems': [parent_a.querySelector('[data-edit]')],
+				'hiddenElems': [
+					parent_a.querySelector('[data-undo]'),
+					parent_a.querySelector('[data-lock]'),
+					parent_a.querySelector('[data-open]'),
+					target,
+				],
+			});
+			nodesRow.querySelectorAll('span.editable').forEach(resetEdit);
+		} else if (target.dataset.lock != null) {
+			switchTableAction({
+				'lockMode': 0, 
+				'dataLocked': [parent_a, nodesRow],
+				'shownedElems': [parent_a.querySelector('[data-open]')],
+				'hiddenElems': [target],
+			});
+		} else if (target.dataset.open != null) {
+			switchTableAction({
+				'lockMode': 1, 
+				'dataLocked': [parent_a, nodesRow],
+				'shownedElems': [parent_a.querySelector('[data-lock]')],
+				'hiddenElems': [target],
+			});
+		}
+		switch (action) {
+			case 'delete':
+				reqDeleteDevice({
+					name: nodesRow.querySelector('.name-text').innerText,
+					table: nodesRow.dataset.table,
+					id: device_id
+				});
+				break;
+		}
+	};
+
 	const deviceKeyDown = function(e) {
 		const target = e.target;
 		const newTag = target.closest('.new-tag');
@@ -3248,11 +3325,20 @@ window.addEventListener('DOMContentLoaded', () => {
 		item.classList.add('new-tag');
 	};
 
+	const switchTableAction = (params) => {
+		if (params.lockMode != null) {
+			params.dataLocked.forEach(item => item.dataset.locked = params.lockMode);
+		}
+		params.shownedElems.forEach(item => item.classList.remove('hidden'));
+		params.hiddenElems.forEach(item => item.classList.add('hidden'));
+	};
+
 	const reqDeleteDevice = (deviceParams) =>{
 		titleDialogModal.innerText = 'Delete node';
 		questionDialogModal.innerText = `Do you really want to delete the node: ${deviceParams['name']}?`;
 		btnDialogModal.setAttribute('modal-command', 'deleteDevice');
 		btnDialogModal.dataset['id'] = deviceParams['id'];
+		btnDialogModal.dataset['table'] = deviceParams['table'];
 		$('#dialogModal').modal({
 			keyboard: true
 		});
@@ -3271,22 +3357,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	// const modifyDeviceSettings_old = ({device_id, row_id}) => {
-	// 	const rowDevice = document.getElementById(row_id);
-
-	// 	mosaicForm.querySelector('[data-action="add"]').style.display = 'none';
-	// 	mosaicForm.querySelector('[data-action="update"]').style.display = '';
-
-	// 	mosaicForm.querySelector('#mosaicNodeName').value = rowDevice.querySelector('.name-text').innerText;
-	// 	mosaicForm.querySelector('#mosaicNodePlatform').value = rowDevice.querySelector('.platform-text').innerText;
-	// 	mosaicForm.querySelector('#mosaicNodeService').value = rowDevice.querySelector('.service-text').innerText;
-	// 	mosaicForm.querySelector('#mosaicNodeOwner').value = rowDevice.querySelector('.owner-text').innerText;
-	// 	mosaicForm.querySelector('#mosaicNodeContact').value = rowDevice.querySelector('.contact_info-text').innerText;
-	// 	mosaicForm.querySelector('#mosaicNodeManager').value = rowDevice.querySelector('.manager-text').innerText;
-	// 	mosaicForm.querySelector('#mosaicNodeComments').innerText = rowDevice.querySelector('.comment-text').innerText;
-	// 	mosaicForm.querySelector('#mosaicNodeId').value = device_id;
-	// };
-
 	const modifyDeviceSettings = ({device_id, row_id}) => {
 		const rowDevice = document.querySelector(`#${row_id}`);
 		rowDevice.querySelectorAll('span.editable').forEach(setEdit);
@@ -3303,7 +3373,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		switch(modalCommand)
 		{
 			case 'deleteDevice':
-				deleteDevice(target.dataset['id']);
+				if (target.dataset.table == 'inventory') {
+					deleteInventory(target.dataset['id']);
+				} else {
+					deleteDevice(target.dataset['id']);
+				}
 				break;
 			case 'importOGPA':
 				importOGPA({
@@ -3346,17 +3420,23 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		sendRequest('POST', requestURL, body).then((data) => {
 			if (data && data.success && data.success.answer) {
-				// if (data.success.answer.id !== undefined) {
-				// 	const device_data_row = document.querySelector(`#device-data-${data.success.answer.id}`);
-				// 	if (device_data_row) {
-				// 		device_data_row.remove();
-				// 	}
-				// } else {
 					showMosaic(data.success.answer);
-				// }
 			}
 		});
 	};
+
+	const deleteInventory = (deviceID) => {
+		const body = {
+			env: 'services',
+			call: 'doDeleteInventory',
+			id: deviceID
+		};
+		sendRequest('POST', requestURL, body).then((data) => {
+			if (data && data.success && data.success.answer) {
+				iniInventory();
+			}
+		});
+	}
 
 	const changeOwner = ({id, locked, oldOwner, owner, group}) => {
 		const body = {
@@ -3588,6 +3668,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	loadExcelData.addEventListener('change', function(e) {
 		mosaicFormLoadData.requestSubmit();
+	});
+
+	loadInventory.addEventListener('change', function(e) {
+		inventoryFormLoadData.requestSubmit();
 	});
 
 	// btnClearData.addEventListener('click', function(e) {
@@ -3880,16 +3964,30 @@ window.addEventListener('DOMContentLoaded', () => {
 		formData.append('call', 'loadData');
 
 		sendFile('POST', requestURL, formData).then((data) => {
-			servicesImportLog(data.success.answer)
+			servicesImportLog(data.success.answer);
 			showMosaic();
+		});
+	});
+
+	inventoryFormLoadData.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const formData = new FormData(e.target);
+		formData.append('env', 'services');
+		formData.append('call', 'loadInventory');
+
+		sendFile('POST', requestURL, formData).then((data) => {
+			servicesImportLog(data.success.answer);
+			iniInventory();
 		});
 	});
 
 	devicesAllBody.addEventListener('click', deviceActionMosaic);
 	devicesAllBody.addEventListener('keydown', deviceKeyDown);
 	btnDialogModal.addEventListener('click', confirmDialog);
-	// triangle.addEventListener('click', triangleToggle);
-
+	tInventory.addEventListener('click', (e) => {
+		deviceActionNodes(e, {});
+	});
+	
 
 	const clearAttachmentsArea = (container, attachmentsList) => {
 		container.dataset.page_id = null;
@@ -4044,33 +4142,33 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const showInventory = (data) => {
-		tInventory.textContent = '';
-		if (data && data.success && data.success.answer) {
-			data.success.answer.forEach(({id, chassis_name, vendor, model, software, serial, year_service, comment}) => {
-				tInventory.insertAdjacentHTML('beforeend', `
-				<tr data-id="${id}">
-					<td data-field="chassis_name" data-value="${chassis_name}">${chassis_name}</td>
-					<td data-field="vendor" data-value="${vendor}">${vendor}</td>
-					<td data-field="model" data-value="${model}">${model}</td>
-					<td data-field="software" data-value="${software}">${software}</td>
-					<td data-field="serial" data-value="${serial}">${serial}</td>
-					<td data-field="year_service" data-value="${year_service}">${year_service}</td>
-					<td data-field="comment" data-value="${comment}">${comment}</td>
-					<td>
-						<a href="#">
-							<img class="icon-edit icon-edit-sm js-expandInventory" data-edit src="img/edit.svg" title="Edit">
-							<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-undo src="img/undo.svg" title="Undo">
-							<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-done src="img/done.svg" title="Done">
-							<img class="icon-edit icon-edit-sm js-expandInventory" data-expand src="img/expand_content.svg" title="Detail">
-							<img class="icon-edit icon-edit-sm hidden js-expandInventory" data-collapse src="img/collapse_content.svg">
-						</a>
-					</td>
-				</tr>
-			`);
-			});
-		}
-	};
+	// const showInventory = (data) => {
+	// 	tInventory.textContent = '';
+	// 	if (data && data.success && data.success.answer) {
+	// 		data.success.answer.forEach(({id, chassis_name, vendor, model, software, serial, year_service, comment}) => {
+	// 			tInventory.insertAdjacentHTML('beforeend', `
+	// 			<tr data-id="${id}">
+	// 				<td data-field="chassis_name" data-value="${chassis_name}">${chassis_name}</td>
+	// 				<td data-field="vendor" data-value="${vendor}">${vendor}</td>
+	// 				<td data-field="model" data-value="${model}">${model}</td>
+	// 				<td data-field="software" data-value="${software}">${software}</td>
+	// 				<td data-field="serial" data-value="${serial}">${serial}</td>
+	// 				<td data-field="year_service" data-value="${year_service}">${year_service}</td>
+	// 				<td data-field="comment" data-value="${comment}">${comment}</td>
+	// 				<td>
+	// 					<a href="#">
+	// 						<img class="icon-edit icon-edit-sm js-expandInventory" data-edit src="img/edit.svg" title="Edit">
+	// 						<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-undo src="img/undo.svg" title="Undo">
+	// 						<img class="icon-edit icon-edit-sm js-expandInventory hidden" data-done src="img/done.svg" title="Done">
+	// 						<img class="icon-edit icon-edit-sm js-expandInventory" data-expand src="img/expand_content.svg" title="Detail">
+	// 						<img class="icon-edit icon-edit-sm hidden js-expandInventory" data-collapse src="img/collapse_content.svg">
+	// 					</a>
+	// 				</td>
+	// 			</tr>
+	// 		`);
+	// 		});
+	// 	}
+	// };
 
 	const showChassisTags = (data) => {
 		inventoryTagsSet.clear();
@@ -4113,12 +4211,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const iniInventory = () => {
-		const body = {
-			method: 'getInventory',
-		};
-		sendRequest('POST', requestURLTemplate, body).then((data) => {
-			showInventory(data);
-		});
+		inventoryMode = 1;
+		dataTableInventory.ajax.reload();
 	};
 
 	const getChassisTags = (chassis_id) => {
@@ -4142,16 +4236,16 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const setChassisData = (chassis_id, chassis_data) => {
-		const body = {
-			method: 'setChassisData',
-			id: chassis_id,
-			value: chassis_data,
-		};
-		sendRequest('POST', requestURLTemplate, body).then((data) => {
-			showInventory(data);
-		});
-	};
+	// const setChassisData = (chassis_id, chassis_data) => {
+	// 	const body = {
+	// 		method: 'setChassisData',
+	// 		id: chassis_id,
+	// 		value: chassis_data,
+	// 	};
+	// 	sendRequest('POST', requestURLTemplate, body).then((data) => {
+	// 		showInventory(data);
+	// 	});
+	// };
 
 	const delElement = (method, callback, value) => {
 		const body = {
