@@ -457,7 +457,30 @@ class databaseUtils {
 
 	private function createFilterForInventory($params_arr) {
 		$search_par = trim($params_arr['search_par']);
+		$vendor_par = trim($params_arr['vendor_par']);
+		$date_par = trim($params_arr['date_par']);
+
 		$filter = '';
+		if ($vendor_par !== '') {
+			$vendor_filter = ' AND vendor IN (';
+			$vendor_arr = explode(';', $vendor_par);
+			foreach ($vendor_arr as $value) {
+				$vendor_filter .= "'" . $value . "',";
+			}
+			$vendor_filter = rtrim($vendor_filter, ',');
+			$vendor_filter .= ')';
+			$filter .= $vendor_filter;
+		}
+		if ($date_par !== '') {
+			$date_filter = ' AND YEAR(ca_year) IN (';
+			$date_arr = explode(';', $date_par);
+			foreach ($date_arr as $value) {
+				$date_filter .= "'" . $value . "',";
+			}
+			$date_filter = rtrim($date_filter, ',');
+			$date_filter .= ')';
+			$filter .= $date_filter;
+		}
 		if ($search_par !== '') {
 			$filter .= ' AND (node_name LIKE :search_par OR vendor LIKE :search_par OR hw_model LIKE :search_par OR software LIKE :search_par OR serial LIKE :search_par)';
 		}
@@ -662,7 +685,7 @@ class databaseUtils {
 	}
 
 	function updateInventoryData($deviceParam) {
-		$sql_hw = "SELECT hw_model,serial,comments FROM inventory WHERE id=:id";
+		$sql_hw = "SELECT hw_model,serial FROM inventory WHERE id=:id";
 		$row_get = $this->pdo->prepare($sql_hw);
 		$row_get->execute(['id' => $deviceParam['id']]);
 		$result = $row_get->fetch();
@@ -718,12 +741,11 @@ class databaseUtils {
 			}
 			$row->execute();
 
-			if ($result['serial'] !== trim($deviceParam['serial']) || $result['comments'] !== trim($deviceParam['comments'])) {
-				$sql_upd = "UPDATE inventory SET `serial`=:serial,`comments`=:comments WHERE id=:id";
+			if ($result['serial'] !== trim($deviceParam['serial'])) {
+				$sql_upd = "UPDATE inventory SET `serial`=:serial WHERE id=:id";
 				$row_upd = $this->pdo->prepare($sql_upd);
 				$row_upd->execute([
 					'serial'	=> trim($deviceParam['serial']),
-					'comments'	=> trim($deviceParam['comments']),
 					'id'		=> $deviceParam['id'],
 				]);
 			}
@@ -971,26 +993,18 @@ class databaseUtils {
 
 	function doDeleteDevice($id, $mode = null)
 	{
-		// $sql = "DELETE FROM devices_new WHERE id=:id";
-		// if ($this->modSQL($sql, [
-		// 	'id' => $id
-		// ], true)) {	
-		// 		return ['id' => $id];
-		// }
-		// return false;
 		return $this->doDeleteByID('devices_new', $id);
 	}
 
 	function doDeleteInventory($id, $mode = null)
 	{
-		// $sql = "DELETE FROM inventory WHERE id=:id";
-		// if ($this->modSQL($sql, [
-		// 	'id' => $id
-		// ], true)) {	
-		// 		return ['id' => $id];
-		// }
-		// return false;
-		return $this->doDeleteByID('inventory', $id);
+		// return $this->doDeleteByID('inventory', $id);
+		$sql = "DELETE FROM inventory_comments WHERE inventory_id=:id;DELETE FROM `inventory` WHERE id=:id";
+		if ($this->modSQL($sql, [
+			'id' => $id
+		], true)) {	
+			return ['id' => $id];
+		}
 	}
 
 	private function doDeleteByID($table_name, $id) {
@@ -1028,7 +1042,7 @@ class databaseUtils {
 			$limit_rows = "LIMIT :start, :length";
 		}
 
-		$sql = "SELECT id,node_name,vendor,hw_model,software,serial,hw_eos,hw_eol,sw_eos,sw_eol,ca_year,comments FROM inventory WHERE id>0 _REPLACE_FILTER_ _REPLACE_ORDER_ _REPLACE_LIMIT_";
+		$sql = "SELECT id,node_name,vendor,hw_model,software,serial,hw_eos,hw_eol,sw_eos,sw_eol,ca_year FROM inventory WHERE id>0 _REPLACE_FILTER_ _REPLACE_ORDER_ _REPLACE_LIMIT_";
 		$sql = str_replace(
 			['_REPLACE_FILTER_', '_REPLACE_ORDER_', '_REPLACE_LIMIT_'],
 			[$filter, $order, $limit_rows], 
@@ -1065,12 +1079,43 @@ class databaseUtils {
 					'sw_eos'	=> $result['sw_eos'] ? date('Y-m', strtotime($result['sw_eos'])) : '',
 					'sw_eol'	=> $result['sw_eol'] ? date('Y-m', strtotime($result['sw_eol'])) : '',
 					'ca_year'	=> $result['ca_year'] ? date('Y', strtotime($result['ca_year'])) : '',
-					'comments'	=> $result['comments'] ?? '',
+					'comments'	=> $this->doGetComments($result['id'], 1),
 				];
 			}
 		}
-
 		return $inventory_list;
+	}
+
+	function doGetComments($id, $oneRec = 0) {
+		$comments_list = [];
+		if ($id !== 0) {
+			$sql = "SELECT id,comment,date_add FROM inventory_comments WHERE inventory_id=:id ORDER BY date_add DESC";
+			if ($oneRec === 1) {
+				$sql .= " LIMIT 1";
+			}
+			if ($table_res = $this->getSQL($sql, ['id' => $id])) {
+				foreach ($table_res as $result)
+				{
+					$comments_list[] = [
+						'id'	=> $result['id'],
+						'comment'	=> ($oneRec === 1) ? substr($result['comment'], 0, 20) : $result['comment'],
+						'date'	=> $result['date_add'],
+					];
+				}
+			}
+		}
+		return $comments_list;
+	}
+
+	function doSetComments($id, $comment) {
+		$sql_upd = "INSERT INTO inventory_comments (comment,date_add,inventory_id) VALUES (:comment,:date_add,:id)";
+		$row_upd = $this->pdo->prepare($sql_upd);
+		$row_upd->execute([
+			'comment'	=> trim($comment),
+			'date_add'	=> date("Y-m-d H:i:s"),
+			'id'		=> $id,
+		]);
+		return $this->doGetComments($id);
 	}
 
 	function installCacheTable() {

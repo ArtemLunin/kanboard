@@ -182,7 +182,7 @@ if ($env === 'services') {
 		'id'		=> '0',
 		'locked'	=> '1',
 		'ca_year'	=> null,
-		'comments'	=> '',
+		'comment'	=> '',
 		'hw_eol'	=> null,
 		'hw_eos'	=> null,
 		'serial'	=> '',
@@ -352,6 +352,8 @@ if ($env === 'services') {
 		$search = $paramJSON['search'] ?? $_REQUEST['search'] ?? false;
 		$order = $paramJSON['order'] ?? $_REQUEST['order'] ?? false;
 		$columns = $paramJSON['columns'] ?? $_REQUEST['columns'] ?? false;
+		$vendor_par = $paramJSON['vendor_filter'] ?? $_REQUEST['vendor_filter'] ?? '';
+		$date_par = $paramJSON['date_filter'] ?? $_REQUEST['date_filter'] ?? '';
 
 		$search_par = '';
 		$column_name = '';
@@ -366,8 +368,18 @@ if ($env === 'services') {
 			$sort_dir = $order[0]['dir'];
 		}
 
+		// if ($columns) {
+		// 	foreach ($columns as $column) {
+		// 		if ($column['name'] == 'vendor') {
+		// 			$vendor_par = $column['search']['value'];
+		// 		}
+		// 	}
+		// }
+
 		$countDevices = $db_object->countInventory([
 			'search_par'    => $search_par,
+			'vendor_par'	=> $vendor_par,
+			'date_par'		=> $date_par,
 		]);
 
 		$get_data = $paramJSON['get_data'] ?? $_REQUEST['get_data'] ?? 0;
@@ -379,6 +391,8 @@ if ($env === 'services') {
 				'start'     => $start,
 				'length'    => $length, 
 				'search_par'    => $search_par,
+				'vendor_par'	=> $vendor_par,
+				'date_par'		=> $date_par,
 				'column_name'   => $column_name,
 				'sort_dir'  => $sort_dir,
 				'count'     => $countDevices,
@@ -407,7 +421,6 @@ if ($env === 'services') {
 			'id'		=> $inventory_data['id'],
 			'locked'	=> $inventory_data['locked'],
 			'ca_year'	=> $inventory_data['ca_year'],
-			'comments'	=> $inventory_data['comments'],
 			'hw_eol'	=> $inventory_data['hw_eol'],
 			'hw_eos'	=> $inventory_data['hw_eos'],
 			'serial'	=> $inventory_data['serial'],
@@ -415,7 +428,10 @@ if ($env === 'services') {
 			'sw_eol'	=> $inventory_data['sw_eol'],
 			'sw_eos'	=> $inventory_data['sw_eos'],
 		]);
-		
+	} elseif ($call == 'doGetComments' && $accessType === 'admin') {
+		$param_error_msg['answer'] = $db_object->doGetComments($paramJSON['id'] ?? 0);
+	}  elseif ($call == 'doSetComments' && $accessType === 'admin') {
+		$param_error_msg['answer'] = $db_object->doSetComments($paramJSON['id'] ?? 0, $inventory_data['comment']);
 	}
 	
 	// elseif ($call == 'clearDevicesDataTemp' && $accessType === 'admin') {
