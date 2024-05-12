@@ -23,18 +23,17 @@ const hardCodeDesign = {
 };
 const sectionChildren = {
 	'dip': {
-		// 'Capacity':
-		// [
-		// 	'Capacity',
-		// 	'Capacity',
-		// 	'capacity'
-		// ],
 		'Roaming FCR': 
 		[
 			'Firewall',
 			'Add/Change/Remove Roaming',
 			'fcr'
-		]
+		],
+		'EFCR': [
+			'EFCR',
+			'',
+			'efcr',
+		],
 	}
 };
 
@@ -123,7 +122,7 @@ let savedPageName = 'New Page',
 	page_id = '0';
 
 const inventoryTagsSet = new Set();
-let inventoryMode = 0;
+let inventoryMode = 0, efcrMode = 0;
 
 // common functions
 // for sort in ORDER DESC by default
@@ -395,6 +394,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		// inventory elements
 	const tableInventory = document.querySelector('#table-inventory'),
+		inventoryFormLoadData = document.querySelector('#inventoryFormLoadData'),
 		tableParts = document.querySelector('#table-parts'),
 		tableTags = document.querySelector('#table-tags'),
 		// bntNewChassis = document.querySelector('#table-tags'),
@@ -405,9 +405,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		commentsText = document.querySelector('#commentsText'),
 		btnCommentsModal = document.querySelector('#btnCommentsModal'),
 		tInventory = document.querySelector('.t-inventory');
-		// newTag = document.querySelector('.new-tag');
 
-		// showAll.checked = false;
+	const formEFCR = document.querySelector('#form-efcr'),
+		loadEFCR = document.querySelector('#loadEFCR'),
+		tEFCR = document.querySelector('.t-efcr');
 
 		btnNewActivity.dataset.prime_elem_id = 0;
 
@@ -435,6 +436,10 @@ window.addEventListener('DOMContentLoaded', () => {
 			formSubmit.innerText = 'Create';
 		}
 	};
+
+	// const fillEFCR = (dataTableE, item) => {
+	// 	dataTableE.row.add(item);
+	// };
 
 	const periodChange = (e, buttonApi, dataTable, node, config) => {
 		const target = buttonApi.nodes()[0];
@@ -570,7 +575,9 @@ window.addEventListener('DOMContentLoaded', () => {
 					className: 'btn-secondary',
 				},
 				{
-					text: 'Today',
+					text: 'Today',paging: false,
+					searching: true,
+					info: false,
 					action: function (e, dt, node, config) {
 					},
 					attr: {
@@ -1055,6 +1062,106 @@ window.addEventListener('DOMContentLoaded', () => {
 			},
 			autoWidth: false,
 		});
+
+	const dataTableEFCR = $(`#table-efcr`)
+	.on('preXhr.dt', function (e, settings, data) {
+		data.get_data = efcrMode;
+	})
+	.DataTable({
+		dom: '<"mosaic-menu"B<"table-controls"plfr>ti>',
+		paging: false,
+		searching: false,
+		ordering: false,
+		info: false,
+		autoWidth: false,
+		columns: [
+			{ data: 'eFCRnumber', "name": "eFCR Number", render: function (data, type, row, meta) {
+				if (data === undefined) { data = '&nbsp;'}
+				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+			}, "width": "15%"},
+			{ data: 'policyName', "name": "Policy Name", render: function (data, type, row, meta) {
+				if (data === undefined) { data = '&nbsp;'}
+				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+			}, "width": "15%"},
+			{ data: 'sourceZone', "name": "Source Zone", render: function (data, type, row, meta) {
+				if (data === undefined) { data = '&nbsp;'}
+				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+			}, "width": "10%"},
+			{ data: 'sourceSubnet', "name": "Source subnet", render: function (data, type, row, meta) {
+				if (data === undefined) { data = '&nbsp;'}
+				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+			}, "width": "10%"},
+			{ data: 'destinationZone', "name": "Destination Zone", render: function (data, type, row, meta) {
+				if (data === undefined) { data = '&nbsp;'}
+				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+			}, "width": "10%"},
+			{ data: 'PHUBsites', "name": "PHUB sites", render: function (data, type, row, meta) {
+				if (data === undefined) { data = '&nbsp;'}
+				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+			}, "width": "10%"},
+			{ data: 'destinationSubnet', "name": "Destination Subnet", render: function (data, type, row, meta) {
+				if (data === undefined) { data = '&nbsp;'}
+				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+			}, "width": "10%"},
+			{ data: 'protocol', "name": "Protocol", render: function (data, type, row, meta) {
+				if (data === undefined) { data = '&nbsp;'}
+				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+			}, "width": "8%"},
+			{ data: 'port', "name": "Port", render: function (data, type, row, meta) {
+				if (data === undefined) { data = '&nbsp;'}
+				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+			},
+			"width": "4%"},
+			{ data: null , "searchable": false, "orderable": false,
+					defaultContent: `
+					<div class="action-buttons justify-content-center d-block d-xl-flex">
+						<a href="#" data-locked='1'>
+							<img class="icon-edit icon-edit-sm" data-add src="img/add_circle.svg">
+							<img class="icon-edit icon-edit-sm" data-add-copy src="img/add_task.svg">
+							<img class="icon icon-edit-sm hidden" data-undo src="img/undo.svg" title="Undo">
+							<img class="icon icon-edit-sm hidden" data-done src="img/done.svg" title="Done">
+						</a>
+						<a href="#"><img class="icon-delete icon-delete-sm" data-delete src="img/delete.svg"></a>
+					</div>`,
+					"width": "8%"
+			},
+		],
+		buttons: {
+			dom: {
+				container: {
+					tag: 'div',
+					className: 'mosaic-buttons'
+				},
+				button: {
+					tag: 'button',
+					className: []
+				},
+				buttonLiner: {
+					tag: null
+				}
+
+			},
+			buttons: [
+				{
+					tag: 'label',
+					text: 'Import Data',
+					className: 'btn-devices',
+					attr: {
+						for: 'loadEFCR',
+						id: 'btnEFCR',
+					},
+					action: function (e, dt, node, config) {
+						const target = e.target;
+						const input = target.getAttribute('for');
+						document.querySelector(`#${input}`).click();
+					}
+				},
+			],
+		},
+	});
+
+	dataTableEFCR.row.add({}).draw();
+
 
 	const saveContent = () => {
 		const savedName = (pageNameEdit.innerText.trim() !== ''  ? pageNameEdit.innerText.trim() : prompt('Enter the Page Name', savedPageName));
@@ -1554,6 +1661,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		location.hash = showSection;
 		let idx = 0;
 		showSection = showSection.replace(/\s+/g, '');
+		if (showSection === 'dip' && addParams['element'] === 'EFCR') {
+			showSection = addParams['element'];
+		}
 		if (showSection !== 'documentation') {
 			// section is document.querySelectorAll('.section');
 			section.forEach((item, i) => {
@@ -1565,8 +1675,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (showSection === 'template' || 
 				showSection === 'templateDIP' ||
 				showSection === 'ctemplate' ||
-				showSection === 'mop'|| 
-				showSection === 'dip'|| 
+				showSection === 'mop' || 
+				showSection === 'dip' || 
 				showSection === 'cmop' ||
 				showSection === 'templatecDIP' ||
 				showSection === 'cdip'
@@ -1684,6 +1794,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				displayMOPElements(false);
 				if (addParams['element']) {
 					if (addParams['element'] === 'Capacity') {
+						document.title = addParams['visibleName'];
+					} else if (addParams['element'] === 'EFCR') {
 						document.title = addParams['visibleName'];
 					} else {
 						document.title = addParams['visibleName'];
@@ -2587,8 +2699,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			env: 'services',
 			call: 'updateInventoryData',
 		};
-		// const re = new RegExp(`(\d{4})-(\d{2})`);
-		// let match_id = check_box.id.match(re);
 		sendRequest('POST', requestURL, Object.assign(body, args)).then((data) => {
 			if (data && data.success && data.success.answer) {
 				iniInventory();
@@ -3377,6 +3487,39 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
+	const deviceActionEFCR = function(e, params) {
+		e.preventDefault();
+		const target = e.target;
+		const nodesRow = target.closest('tr');
+		const parent_t = target.closest('table');
+		const parent_a = target.closest('a');
+		let action = null;
+
+		if (target.dataset.add !== undefined)
+		{
+			dataTableEFCR.row.add({}).draw();
+		} else if (target.dataset.addCopy !== undefined) {
+			dataTableEFCR.row.add(dataTableEFCR.row(nodesRow).data()).draw();
+		} else if (target.dataset.delete !== undefined) {
+			// console.log(nodesRow);
+			// nodesRow.remove();
+			dataTableEFCR.row(nodesRow).remove().draw();
+		}
+	};
+
+	const efcrKeyDown = function(e) {
+		const target = e.target;
+		if (e.code === 'Enter') {
+			e.preventDefault();
+			const nodeCell = target.closest('td');
+			if (nodeCell) {
+				console.log(nodeCell);
+				dataTableEFCR.cell(nodeCell).data(nodeCell.textContent);
+			}
+			// console.log(target.textContent);
+		}
+	}
+
 	const resetEdit = (item) => {
 		item.removeAttribute('contenteditable');
 		item.classList.remove('new-tag');
@@ -3752,6 +3895,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		inventoryFormLoadData.requestSubmit();
 	});
 
+	loadEFCR.addEventListener('change', function(e) {
+		formEFCR.requestSubmit();
+	});
+	
+
 	// btnClearData.addEventListener('click', function(e) {
 	// 	clearDevicesDataTemp();
 	// });
@@ -4059,6 +4207,33 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
+	formEFCR.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const formData = new FormData(e.target);
+		formData.append('env', 'services');
+		formData.append('call', 'loadEFCR');
+
+		sendFile('POST', requestURL, formData).then((data) => {
+			if (data.success && data.success.answer) {
+				dataTableEFCR.clear().draw();
+				data.success.answer.forEach(item => {
+					dataTableEFCR.row.add({
+						'eFCRnumber': item.eFCRnumber,
+						'policyName': item.policyName,
+						'sourceZone': item.sourceZone,
+						'sourceSubnet': item.sourceSubnet,
+						'destinationZone': item.destinationZone,
+						'PHUBsites': item.PHUBSites,
+						'destinationSubnet': item.destinationSubnet,
+						'protocol': item.protocol,
+						'port': item.port,
+					});
+				});
+				dataTableEFCR.draw();
+			}
+		});
+	});
+
 	formInventoryComments.addEventListener('submit', e => {
 		e.preventDefault();
 		const formData = new FormData(e.target);
@@ -4080,6 +4255,10 @@ window.addEventListener('DOMContentLoaded', () => {
 	tInventory.addEventListener('click', (e) => {
 		deviceActionNodes(e, {});
 	});
+	tEFCR.addEventListener('click', (e) => {
+		deviceActionEFCR(e, {});
+	});
+	tEFCR.addEventListener('keydown', efcrKeyDown);
 	
 	const formToArr = (formData) => {
 		const arrData = {};

@@ -368,14 +368,6 @@ if ($env === 'services') {
 			$sort_dir = $order[0]['dir'];
 		}
 
-		// if ($columns) {
-		// 	foreach ($columns as $column) {
-		// 		if ($column['name'] == 'vendor') {
-		// 			$vendor_par = $column['search']['value'];
-		// 		}
-		// 	}
-		// }
-
 		$countDevices = $db_object->countInventory([
 			'search_par'    => $search_par,
 			'vendor_par'	=> $vendor_par,
@@ -404,16 +396,16 @@ if ($env === 'services') {
 		exit();
 	} elseif ($call == 'loadInventory' && $accessType === 'admin') {
 		$tmp = $_FILES['file']['tmp_name'];
-			if (($tmp != '') && is_uploaded_file($tmp)) 
-			{  
-				$reader = new Xlsx();
-				$reader->setReadDataOnly(true);
-				$spreadsheet = $reader->load($tmp);
-				$worksheet = $spreadsheet->getActiveSheet();
-				$rows = $worksheet->toArray();
+		if (($tmp != '') && is_uploaded_file($tmp)) 
+		{  
+			$reader = new Xlsx();
+			$reader->setReadDataOnly(true);
+			$spreadsheet = $reader->load($tmp);
+			$worksheet = $spreadsheet->getActiveSheet();
+			$rows = $worksheet->toArray();
 
-				$param_error_msg['answer'] = $db_object->loadInventory($rows);
-			}
+			$param_error_msg['answer'] = $db_object->loadInventory($rows);
+		}
 	} elseif ($call == 'doDeleteInventory' && $accessType === 'admin') {
 		$param_error_msg['answer'] = $db_object->doDeleteInventory($paramJSON['id'] ?? 0, $mode);
 	} elseif ($call == 'updateInventoryData' && $accessType === 'admin') {
@@ -432,6 +424,19 @@ if ($env === 'services') {
 		$param_error_msg['answer'] = $db_object->doGetComments($paramJSON['id'] ?? 0);
 	}  elseif ($call == 'doSetComments' && $accessType === 'admin') {
 		$param_error_msg['answer'] = $db_object->doSetComments($paramJSON['id'] ?? 0, $inventory_data['comment']);
+	} elseif ($call == 'loadEFCR' && $accessType === 'admin') {
+		$tmp = $_FILES['file']['tmp_name'];
+		if (($tmp != '') && is_uploaded_file($tmp)) 
+		{  
+			$reader = new Xlsx();
+			$reader->setReadDataOnly(true);
+			$spreadsheet = $reader->load($tmp);
+			$worksheet = $spreadsheet->getActiveSheet();
+			$rows = $worksheet->toArray();
+			array_shift($rows);
+
+			$param_error_msg['answer'] = $db_object->loadEFCR($rows);
+		}
 	}
 	
 	// elseif ($call == 'clearDevicesDataTemp' && $accessType === 'admin') {

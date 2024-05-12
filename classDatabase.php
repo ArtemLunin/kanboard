@@ -965,6 +965,34 @@ class databaseUtils {
 		];
 	}
 
+	function loadEFCR($rows) {
+		$efcr_lines = [];
+		foreach ($rows as $row) {
+			$eFCRnumber = trim($row[0] ?? '');
+			$policyName = trim($row[1] ?? '');
+			$sourceZone = trim($row[2] ?? '');
+			$sourceSubnet = trim($row[3] ?? '');
+			$destinationZone = trim($row[4] ?? '');
+			$PHUBSites = trim($row[5] ?? '');
+			$destinationSubnet = trim($row[6] ?? '');
+			$protocol = trim($row[7] ?? '');
+			$port = trim($row[8] ?? '');
+
+			$efcr_lines[] = [
+				'eFCRnumber'	=> $eFCRnumber,
+				'policyName'	=> $policyName,
+				'sourceZone'	=> $sourceZone,
+				'sourceSubnet'	=> $sourceSubnet,
+				'destinationZone'	=> $destinationZone,
+				'PHUBSites'		=> $PHUBSites,
+				'destinationSubnet'	=> $destinationSubnet,
+				'protocol'		=> $protocol,
+				'port'			=> $port,
+			];
+		}
+		return $efcr_lines;
+	}
+
 	function getPlatformId($platform)
 	{
 		$platform_id = null;

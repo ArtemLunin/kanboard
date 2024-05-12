@@ -636,6 +636,9 @@ input:read-only {
 {
 	width: 60px;
 }
+.t-efcr .editable.new-tag {
+	width: 100%;
+}
 a>img:hover  {
 	background-color: gray;
 }

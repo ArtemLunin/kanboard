@@ -666,6 +666,12 @@
 										<option value="admin">admin</option>
 										<option value="user">user</option>
 									</select>
+									<label class="input-group-text-sm mr-1" for="cdipPage">Inventory</label>
+									<select class="custom-select-sm mr-2" name="inventory" id="inventoryPage" data-selectname="inventory">
+										<option value=""></option>
+										<option value="admin">admin</option>
+										<option value="user">user</option>
+									</select>
 
 									<button type="submit" class="btn btn-sm btn-primary my-1 mr-2">Set</button>
 								</form>
@@ -1490,30 +1496,6 @@
 							</tbody>	
 						</table>
 					</form>
-								<!-- <th>
-									<a href="#" data-id="">
-										<img class="icon-edit icon-edit-sm js-newChassis" src="img/add_circle.svg" title="New">
-										<img class="icon-edit icon-edit-sm js-undoNewChassis hidden" data-undo src="img/undo.svg" title="Undo">
-										</a>
-								</th> -->	
-					<!-- </table> -->
-					<!-- <table class="table table-hover table-striped table-bordered compact mt-2 hidden" >
-						<thead class="thead-light">
-							<tr>
-								<th>Model</th>
-								<th>Tag</th>
-							</tr>
-						</thead>
-						<tbody class="t-parts">
-							<tr>
-								<td>
-									<span class="inventory-tag">one</span>
-									<span class="inventory-tag">two</span>
-									<span class="inventory-tag">three</span>
-								</td>
-							</tr>
-						</tbody>
-					</table> -->
 					<div class="hidden" id="table-tags">
 						<div class="inventory-head">Tags 
 							<a href="#" data-id="" title="Save tags">
@@ -1536,6 +1518,31 @@
 							</tr>
 						</tbody>
 					</table>
+				</div>
+			</section>
+			<section class="section EFCR">
+				<div class="ercf-container container-xl mx-lg-4 mx-md-2 mx-sm-1" id="efcr">
+					<form action="#" method="POST" id="form-efcr" enctype="multipart/form-data">
+						<input type="file" class="form-control-file-excel file-input-hidden" id="loadEFCR" name="file" accept=".xlsx">
+						<table class="table table-hover table-sm table-striped table-bordered compact no-footer" id="table-efcr">
+							<thead class="thead-light">
+								<tr>
+									<th>eFCR number</th>
+									<th>Policy name</th>
+									<th>Source Zone</th>
+									<th>Source subnet</th>
+									<th>Destination Zone</th>
+									<th>PHUB sites</th>
+									<th>Destination Subnet</th>
+									<th>Protocol</th>
+									<th>Port</th>
+									<th>Actions</th>
+								</tr>
+							</thead>
+							<tbody class="t-efcr">
+							</tbody>
+						</table>
+					</form>
 				</div>
 			</section>
 			<section class="section documentation">
