@@ -407,6 +407,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		tInventory = document.querySelector('.t-inventory');
 
 	const formEFCR = document.querySelector('#form-efcr'),
+		formEFCRExport = document.querySelector('#form-efcrExport'),
 		loadEFCR = document.querySelector('#loadEFCR'),
 		tEFCR = document.querySelector('.t-efcr');
 
@@ -1095,7 +1096,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				if (data === undefined) { data = '&nbsp;'}
 				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
 			}, "width": "10%"},
-			{ data: 'PHUBsites', "name": "PHUB sites", render: function (data, type, row, meta) {
+			{ data: 'PHUBSites', "name": "PHUB sites", render: function (data, type, row, meta) {
 				if (data === undefined) { data = '&nbsp;'}
 				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
 			}, "width": "10%"},
@@ -1156,6 +1157,27 @@ window.addEventListener('DOMContentLoaded', () => {
 						document.querySelector(`#${input}`).click();
 					}
 				},
+				{
+					tag: 'label',
+					text: 'Export Data',
+					className: 'btn-devices',
+					attr: {
+						id: 'btnEFCRExport',
+					},
+					action: function (e, dt, node, config) {
+						const json_table = [];
+						dt.rows().every( function() {
+							const row = this.data();
+							json_table.push(row);
+						});
+
+						formEFCRExport.reset();
+						formEFCRExport.querySelector('input[name="env"]').setAttribute('value', 'services');
+						formEFCRExport.querySelector('input[name="call"]').setAttribute('value', 'exportEFCR');
+						formEFCRExport.querySelector('input[name="efcrTable"]').setAttribute('value', JSON.stringify(json_table));
+						formEFCRExport.requestSubmit();				
+					}
+				}
 			],
 		},
 	});
@@ -1657,12 +1679,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const toggleSection = (showSection, addParams = {}) => {
 		if (showSection == '') return;
+		console.log(showSection);
 		document.title = startDocumentTitle;
 		location.hash = showSection;
 		let idx = 0;
 		showSection = showSection.replace(/\s+/g, '');
 		if (showSection === 'dip' && addParams['element'] === 'EFCR') {
 			showSection = addParams['element'];
+			document.title = addParams['visibleName'];
 		}
 		if (showSection !== 'documentation') {
 			// section is document.querySelectorAll('.section');
@@ -1689,6 +1713,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		clearOldData(showSection);
 
 		cTemplate = 0;
+		console.log(showSection);
 		switch (showSection) {
 			case 'main':
 				if (!section[idx].dataset['showned']) {
@@ -1791,6 +1816,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				docTitle.value = 'Design Implementation Procedure (DIP)';
 				templateDip = 1;
 				gCounterMode = "dipCounter";
+				console.log(addParams);
 				displayMOPElements(false);
 				if (addParams['element']) {
 					if (addParams['element'] === 'Capacity') {
@@ -1833,6 +1859,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else if (target.dataset.section === 'login') {
 				toggleSignIn('show');
 			} else {
+				console.log(target.dataset.section);
 				selectMenuItem(target.parentNode, target.dataset.section, (!!target.dataset.subsection) ? target.dataset.subsection : false);
 				toggleSection(target.dataset.section, 
 				{'element': (target.dataset.element === undefined) ? false : target.dataset.element, 
@@ -1936,7 +1963,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			/* else if (currentHash === 'documentation' && !!rights[currentHash]) {
 				section = 'documentation';
 			} */
-
+			console.log('toggle1');
 			selectMenuItem(menu, section);
 			toggleSection(section);
 		}
@@ -3501,8 +3528,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		} else if (target.dataset.addCopy !== undefined) {
 			dataTableEFCR.row.add(dataTableEFCR.row(nodesRow).data()).draw();
 		} else if (target.dataset.delete !== undefined) {
-			// console.log(nodesRow);
-			// nodesRow.remove();
 			dataTableEFCR.row(nodesRow).remove().draw();
 		}
 	};
@@ -3513,11 +3538,17 @@ window.addEventListener('DOMContentLoaded', () => {
 			e.preventDefault();
 			const nodeCell = target.closest('td');
 			if (nodeCell) {
-				console.log(nodeCell);
 				dataTableEFCR.cell(nodeCell).data(nodeCell.textContent);
 			}
-			// console.log(target.textContent);
 		}
+	}
+
+	const efcrFocusOut = function(e) {
+		const target = e.target;
+			const nodeCell = target.closest('td');
+			if (nodeCell) {
+				dataTableEFCR.cell(nodeCell).data(nodeCell.textContent);
+			}
 	}
 
 	const resetEdit = (item) => {
@@ -4223,7 +4254,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						'sourceZone': item.sourceZone,
 						'sourceSubnet': item.sourceSubnet,
 						'destinationZone': item.destinationZone,
-						'PHUBsites': item.PHUBSites,
+						'PHUBSites': item.PHUBSites,
 						'destinationSubnet': item.destinationSubnet,
 						'protocol': item.protocol,
 						'port': item.port,
@@ -4249,6 +4280,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		e.target.reset();
 	});
 
+	// formEFCRExport.addEventListener('submit', e => {
+	// 	e.preventDefault();
+	// 	e.target.submit();
+	// });
+
 	devicesAllBody.addEventListener('click', deviceActionMosaic);
 	devicesAllBody.addEventListener('keydown', deviceKeyDown);
 	btnDialogModal.addEventListener('click', confirmDialog);
@@ -4259,6 +4295,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		deviceActionEFCR(e, {});
 	});
 	tEFCR.addEventListener('keydown', efcrKeyDown);
+	tEFCR.addEventListener('focusout', efcrFocusOut);
 	
 	const formToArr = (formData) => {
 		const arrData = {};

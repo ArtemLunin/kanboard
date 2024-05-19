@@ -41,6 +41,7 @@ function getRightsAnswer($user, $rights, $root_access) {
 $xls_output = false;
 $file_output = false;
 $accessType = false;
+$txt_output = false;
 $filename = tempnam(sys_get_temp_dir(), 'xls');
 
 $noCheckedKanboardMethods = [
@@ -54,6 +55,7 @@ $method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
 $splitProjects = $paramJSON['splitProjects'] ?? $_REQUEST['splitProjects'] ?? null;
 $params = $paramJSON['params'] ?? $_REQUEST ?? 0;
 $env = $paramJSON['env'] ?? $_REQUEST['env'] ?? 'kanboard';
+$efcrTable = $paramJSON['efcrTable'] ?? $_REQUEST['efcrTable'] ?? null;
 
 $projectName = trim($params['projectName'] ?? '');
 $params['id']  = $params['id'] ?? 0;
@@ -437,6 +439,21 @@ if ($env === 'services') {
 
 			$param_error_msg['answer'] = $db_object->loadEFCR($rows);
 		}
+	} elseif ($call === 'exportEFCR' && $accessType !== false) {
+		$efcr_out = '';
+		if ($efcrTable) {
+			$efcrTable_arr = json_decode($efcrTable, true);
+			if  ($efcrTable_arr !== null) {
+				$efcr_out = $db_object->exportEFCR($efcrTable_arr);
+			}
+		}
+		header("Content-Type: text/plain; charset=utf-8");
+		header("Content-Disposition: attachment; filename=efcr.txt");
+		header("Expires: 0");
+		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+		header("Cache-Control: private", false);
+		echo $efcr_out;
+		exit;
 	}
 	
 	// elseif ($call == 'clearDevicesDataTemp' && $accessType === 'admin') {
@@ -1066,5 +1083,4 @@ if ($xls_output !== false) {
 	header('Content-type: application/json');
 	echo json_encode($out_res);
 }
-// error_log('commonEnd:'.microtime(true));
 ?>

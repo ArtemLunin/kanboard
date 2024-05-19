@@ -993,6 +993,57 @@ class databaseUtils {
 		return $efcr_lines;
 	}
 
+	function exportEFCR($efcr_arr) {
+		$efcrFile2 = file('template/eFCR_2.txt');
+		$efcr_out = '';
+		foreach ($efcr_arr as $efcr) {
+			try {
+
+				$sourceSubnetName = str_replace('/', '_', $efcr['sourceSubnet'] ?? '');
+				$DestinationSubnetName = str_replace('/', '_', $efcr['destinationSubnet'] ?? '');
+				$protocolDisplayName = ($efcr['protocol'] ?? '') . '_' . ($efcr['port'] ?? '');
+				$protocolName = strtolower($efcr['protocol'] ?? '');
+				$EFCRPolicyName = ($efcr['eFCRnumber'] ?? '') . '_' . ($efcr['policyName'] ?? '');
+
+				foreach ($efcrFile2 as $efcr_str) {
+					$new_str = str_replace([
+						'%SourceZone%',
+						'%SourceSubnetName%',
+						'%SourceSubnet%',
+						'%DestinationZone%',
+						'%DestinationSubnetName%',
+						'%DestinationSubnet%',
+						'%ProtocolDisplayName%',
+						'%ProtocolName%',
+						'%ProtocolPort%',
+						'%EFCRPolicyName%',
+					], [
+						$efcr['sourceZone'] ?? '',
+						$sourceSubnetName,
+						$efcr['sourceSubnet'] ?? '',
+						$efcr['destinationZone'] ?? '',
+						$DestinationSubnetName,
+						$efcr['destinationSubnet'] ?? '',
+						$protocolDisplayName,
+						$efcr['protocol'] ?? '',
+						$efcr['port'] ?? '',
+						$efcr['policyName'] ?? '',
+					], $efcr_str);
+					if (strpos($new_str,'[PHUBWIRELESSCHECK]') !== false) {
+						if (strtolower($efcr['PHUBSites'] ?? '') === 'wireless') {
+							continue;
+						}
+						$new_str = str_replace('[PHUBWIRELESSCHECK]', '', $new_str);
+					}
+					$efcr_out .= $new_str;
+				}
+			} catch (Throwable $e) {
+			}
+			$efcr_out .= PHP_EOL;
+		}
+		return $efcr_out;
+	}
+
 	function getPlatformId($platform)
 	{
 		$platform_id = null;
