@@ -29,7 +29,7 @@ const sectionChildren = {
 			'Add/Change/Remove Roaming',
 			'fcr'
 		],
-		'EFCR': [
+		'eFCR': [
 			'EFCR',
 			'',
 			'efcr',
@@ -1096,10 +1096,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				if (data === undefined) { data = '&nbsp;'}
 				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
 			}, "width": "10%"},
-			{ data: 'PHUBSites', "name": "PHUB sites", render: function (data, type, row, meta) {
-				if (data === undefined) { data = '&nbsp;'}
-				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
-			}, "width": "10%"},
 			{ data: 'destinationSubnet', "name": "Destination Subnet", render: function (data, type, row, meta) {
 				if (data === undefined) { data = '&nbsp;'}
 				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
@@ -1113,6 +1109,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
 			},
 			"width": "4%"},
+			{ data: 'PHUBSites', "name": "PHUB sites", render: function (data, type, row, meta) {
+				if (data === undefined) { data = '&nbsp;'}
+				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+			}, "width": "10%"},
 			{ data: null , "searchable": false, "orderable": false,
 					defaultContent: `
 					<div class="action-buttons justify-content-center d-block d-xl-flex">
@@ -1679,7 +1679,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const toggleSection = (showSection, addParams = {}) => {
 		if (showSection == '') return;
-		console.log(showSection);
 		document.title = startDocumentTitle;
 		location.hash = showSection;
 		let idx = 0;
@@ -1713,7 +1712,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		clearOldData(showSection);
 
 		cTemplate = 0;
-		console.log(showSection);
 		switch (showSection) {
 			case 'main':
 				if (!section[idx].dataset['showned']) {
@@ -1816,7 +1814,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				docTitle.value = 'Design Implementation Procedure (DIP)';
 				templateDip = 1;
 				gCounterMode = "dipCounter";
-				console.log(addParams);
 				displayMOPElements(false);
 				if (addParams['element']) {
 					if (addParams['element'] === 'Capacity') {
@@ -1859,7 +1856,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else if (target.dataset.section === 'login') {
 				toggleSignIn('show');
 			} else {
-				console.log(target.dataset.section);
 				selectMenuItem(target.parentNode, target.dataset.section, (!!target.dataset.subsection) ? target.dataset.subsection : false);
 				toggleSection(target.dataset.section, 
 				{'element': (target.dataset.element === undefined) ? false : target.dataset.element, 
@@ -1963,7 +1959,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			/* else if (currentHash === 'documentation' && !!rights[currentHash]) {
 				section = 'documentation';
 			} */
-			console.log('toggle1');
 			selectMenuItem(menu, section);
 			toggleSection(section);
 		}

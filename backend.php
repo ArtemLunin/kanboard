@@ -444,15 +444,15 @@ if ($env === 'services') {
 		if ($efcrTable) {
 			$efcrTable_arr = json_decode($efcrTable, true);
 			if  ($efcrTable_arr !== null) {
-				$efcr_out = $db_object->exportEFCR($efcrTable_arr);
+				$efcr_res = $db_object->exportEFCR($efcrTable_arr);
 			}
 		}
 		header("Content-Type: text/plain; charset=utf-8");
-		header("Content-Disposition: attachment; filename=efcr.txt");
+		header("Content-Disposition: attachment; filename={$efcr_res['file']}.txt");
 		header("Expires: 0");
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 		header("Cache-Control: private", false);
-		echo $efcr_out;
+		echo $efcr_res['efcr_out'];
 		exit;
 	}
 	

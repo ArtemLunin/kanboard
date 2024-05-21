@@ -968,15 +968,15 @@ class databaseUtils {
 	function loadEFCR($rows) {
 		$efcr_lines = [];
 		foreach ($rows as $row) {
-			$eFCRnumber = trim($row[0] ?? '');
-			$policyName = trim($row[1] ?? '');
-			$sourceZone = trim($row[2] ?? '');
-			$sourceSubnet = trim($row[3] ?? '');
-			$destinationZone = trim($row[4] ?? '');
-			$PHUBSites = trim($row[5] ?? '');
-			$destinationSubnet = trim($row[6] ?? '');
-			$protocol = trim($row[7] ?? '');
-			$port = trim($row[8] ?? '');
+			$eFCRnumber = $this->totalTrim($row[0] ?? '');
+			$policyName = $this->totalTrim($row[1] ?? '');
+			$sourceZone = $this->totalTrim($row[2] ?? '');
+			$sourceSubnet = $this->totalTrim($row[3] ?? '');
+			$destinationZone = $this->totalTrim($row[4] ?? '');
+			$PHUBSites = $this->totalTrim($row[5] ?? '');
+			$destinationSubnet = $this->totalTrim($row[6] ?? '');
+			$protocol = $this->totalTrim($row[7] ?? '');
+			$port = $this->totalTrim($row[8] ?? '');
 
 			$efcr_lines[] = [
 				'eFCRnumber'	=> $eFCRnumber,
@@ -998,13 +998,15 @@ class databaseUtils {
 		$efcr_out = '';
 		foreach ($efcr_arr as $efcr) {
 			try {
-
-				$sourceSubnetName = str_replace('/', '_', $efcr['sourceSubnet'] ?? '');
-				$DestinationSubnetName = str_replace('/', '_', $efcr['destinationSubnet'] ?? '');
-				$protocolDisplayName = ($efcr['protocol'] ?? '') . '_' . ($efcr['port'] ?? '');
-				$protocolName = strtolower($efcr['protocol'] ?? '');
-				$EFCRPolicyName = ($efcr['eFCRnumber'] ?? '') . '_' . ($efcr['policyName'] ?? '');
-
+				$sourceZone = $this->totalTrim($efcr['sourceZone'] ?? '');
+				$sourceSubnetName = str_replace('/', '_', $this->totalTrim($efcr['sourceSubnet'] ?? ''));
+				$DestinationSubnetName = str_replace('/', '_', $this->totalTrim($efcr['destinationSubnet'] ?? ''));
+				$protocolDisplayName = $this->totalTrim($efcr['protocol'] ?? '') . '_' . $this->totalTrim($efcr['port'] ?? '');
+				$protocolName = $this->totalTrim(strtolower($efcr['protocol'] ?? ''));
+				$eFCRnumber = $this->totalTrim($efcr['eFCRnumber'] ?? '');
+				$EFCRPolicyName = $eFCRnumber . '_' . $this->totalTrim($efcr['policyName'] ?? '');
+				$PHUBSites = $this->totalTrim(strtolower($efcr['PHUBSites'] ?? ''));
+				$efcr_out .= "[ {$PHUBSites} ]" . PHP_EOL;
 				foreach ($efcrFile2 as $efcr_str) {
 					$new_str = str_replace([
 						'%SourceZone%',
@@ -1018,19 +1020,19 @@ class databaseUtils {
 						'%ProtocolPort%',
 						'%EFCRPolicyName%',
 					], [
-						$efcr['sourceZone'] ?? '',
+						$sourceZone,
 						$sourceSubnetName,
-						$efcr['sourceSubnet'] ?? '',
-						$efcr['destinationZone'] ?? '',
+						$this->totalTrim($efcr['sourceSubnet'] ?? ''),
+						$this->totalTrim($efcr['destinationZone'] ?? ''),
 						$DestinationSubnetName,
-						$efcr['destinationSubnet'] ?? '',
+						$this->totalTrim($efcr['destinationSubnet'] ?? ''),
 						$protocolDisplayName,
-						$efcr['protocol'] ?? '',
-						$efcr['port'] ?? '',
-						$efcr['policyName'] ?? '',
+						$this->totalTrim($efcr['protocol'] ?? ''),
+						$this->totalTrim($efcr['port'] ?? ''),
+						$EFCRPolicyName,
 					], $efcr_str);
 					if (strpos($new_str,'[PHUBWIRELESSCHECK]') !== false) {
-						if (strtolower($efcr['PHUBSites'] ?? '') === 'wireless') {
+						if ($PHUBSites === 'wireless') {
 							continue;
 						}
 						$new_str = str_replace('[PHUBWIRELESSCHECK]', '', $new_str);
@@ -1041,7 +1043,10 @@ class databaseUtils {
 			}
 			$efcr_out .= PHP_EOL;
 		}
-		return $efcr_out;
+		return [
+			'file'	=> $eFCRnumber,
+			'efcr_out'	=> $efcr_out,
+		];
 	}
 
 	function getPlatformId($platform)
@@ -1219,6 +1224,12 @@ class databaseUtils {
 	function removeBadSymbols($str)
 	{
 		return str_replace(["\"","'","\t"]," ", $str ?? '');
+	}
+
+	function totalTrim($str) {
+		$string = htmlentities($str, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'utf-8');
+		$string = str_replace("&nbsp;", " ", $string);
+		return trim(html_entity_decode($string));
 	}
 
 	function setSQLError($pdo_exception, $error_text)
