@@ -19,7 +19,8 @@ let gPrimeElementID = 0,
 	// templateMop = 0;
 
 const hardCodeDesign = {
-	'Add/Change/Remove Roaming': 'js-eFCR-view'
+	'Add/Change/Remove Roaming': 'js-eFCR-view',
+	'Add/Change/Remove': 'js-eFCR2-view'
 };
 const sectionChildren = {
 	'dip': {
@@ -30,8 +31,8 @@ const sectionChildren = {
 			'fcr'
 		],
 		'eFCR': [
-			'EFCR',
-			'',
+			'Firewall',
+			'Add/Change/Remove',
 			'efcr',
 		],
 	}
@@ -1683,10 +1684,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		location.hash = showSection;
 		let idx = 0;
 		showSection = showSection.replace(/\s+/g, '');
-		if (showSection === 'dip' && addParams['element'] === 'EFCR') {
-			showSection = addParams['element'];
-			document.title = addParams['visibleName'];
-		}
+		// if (showSection === 'dip' && addParams['visibleName'] === 'eFCR') {
+		// 	showSection = 'EFCR';
+		// 	document.title = addParams['visibleName'];
+		// }
 		if (showSection !== 'documentation') {
 			// section is document.querySelectorAll('.section');
 			section.forEach((item, i) => {
@@ -1712,6 +1713,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		clearOldData(showSection);
 
 		cTemplate = 0;
+
 		switch (showSection) {
 			case 'main':
 				if (!section[idx].dataset['showned']) {
@@ -1818,8 +1820,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				if (addParams['element']) {
 					if (addParams['element'] === 'Capacity') {
 						document.title = addParams['visibleName'];
-					} else if (addParams['element'] === 'EFCR') {
+					} else if (addParams['visibleName'] === 'eFCR') {
 						document.title = addParams['visibleName'];
+						iniOGPA(addParams);
 					} else {
 						document.title = addParams['visibleName'];
 						iniOGPA(addParams);
@@ -4408,6 +4411,20 @@ window.addEventListener('DOMContentLoaded', () => {
 				});
 			}
 		});
+		document.querySelectorAll('.js-eFCR2-view').forEach(item => {
+			if (templateDip) {
+				item.querySelectorAll('input').forEach(inputElem => {
+					inputElem.disabled = false;
+					inputElem.classList.add(inputSelectorClass);
+				});
+			} else {
+				item.querySelectorAll('input').forEach(inputElem => {
+					inputElem.disabled = true;
+					inputElem.classList.remove(inputSelectorClass);
+				});
+			}
+
+		});
 		efcrFields.value = JSON.stringify(efcrFieldsArr);
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(({groupID, hidden, fields, disabled=false}) => {
@@ -4442,7 +4459,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 			checkInputsData(`.${inputSelectorClass}`);
 		}
-		if (!!hardCodeDesign[gActivityName] && !adminEnabled && document.title == 'Roaming FCR') {
+		if (!!hardCodeDesign[gActivityName] && !adminEnabled && (document.title == 'Roaming FCR' || document.title == 'eFCR')) {
 			showHardCodeDesign(hardCodeDesign[gActivityName].split(','));
 		}
 		formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
@@ -4946,9 +4963,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	showAll.addEventListener('click', (e) => {
 		if (e.target.checked) {
 			document.querySelectorAll('fieldset.hidden').forEach(item => {
-				// if (!item.classList.contains('js-eFCR-view') ||
-				//  (item.classList.contains('js-eFCR-view') && 
-				//  document.title == 'Roaming FCR')) 
 				if (!item.classList.contains('js-hard-code-design'))
 				{
 					item.classList.remove('hidden');

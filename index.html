@@ -930,6 +930,80 @@
 									<button class="mop action renderOnly js-ceil-area-remove hidden" type="button" title="Remove row">-</button>
 								</div>
 							</fieldset>
+							<fieldset id="group19" class="js-hard-code-design renderOnly js-eFCR2-view">
+								<legend>eFCR</legend>
+								<input type="hidden" name="rows_eFCR2"  data-parent="self" data-id="rows_eFCR2" value="1">
+								<input type="hidden" name="rows_eFCR2" id="rows_eFCR2" data-efcr="1">
+								<div class="param-row multirows">
+									<div class="param param-half">
+										<label for="dipeFCRNumber">eFCR Number</label>
+										<input type="text" class="mop input-edit" name="dipeFCRNumber" value="" disabled data-name="dipeFCRNumber" data-efcr2="1">
+									</div>
+									<div class="param param-half">
+										<label for="dipPolicyName">Policy name</label>
+										<input type="text" class="mop input-edit" name="dipPolicyName" value="" disabled data-efcr2="1">
+									</div>
+									<div class="param param-fourth">
+										<label for="dipSourceZone">Source Zone</label>
+										<!-- <input type="text" class="mop input-edit" name="dipSourceZone" value="" disabled data-efcr2="1"> -->
+										<input list="zones-list" name="dipSourceZone" class="mop input-edit" disabled data-efcr2="1"/>
+									</div>
+									<div class="param param-fourth">
+										<label for="dipSourceSubnet">Source subnet</label>
+										<input type="text" class="mop input-edit" name="dipSourceSubnet" value="" disabled data-efcr2="1">
+									</div>
+									<div class="param param-fourth">
+										<label for="dipDestinationZone">Destination Zone</label>
+										<input list="zones-list" name="dipDestinationZone" class="mop input-edit" disabled data-efcr2="1"/>
+									</div>
+									<div class="param param-fourth">
+										<label for="dipDestinationSubnet">Destination subnet</label>
+										<input type="text" class="mop input-edit" name="dipDestinationSubnet" value="" disabled data-efcr2="1">
+									</div>
+									<div class="param param-fourth">
+										<label for="dipProtocol">Protocol</label>
+										<input type="text" class="mop input-edit" name="dipProtocol" value="" disabled data-efcr2="1">
+									</div>
+									<div class="param param-fourth">
+										<label for="dipPort">Port</label>
+										<input type="text" class="mop input-edit" name="dipPort" value="" disabled data-efcr2="1">
+									</div>
+									<div class="param param-half">
+										<label for="dipPHUBSites">PHUB sites</label>
+										<input list="sites-list" class="mop input-edit" name="dipPHUBSites" value="" disabled data-efcr2="1">
+									</div>
+								</div>
+								<div class="param-row ceil-btns">
+									<button class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
+									<button class="mop action renderOnly js-ceil-area-remove hidden" type="button" title="Remove row">-</button>
+								</div>
+								<datalist id="zones-list">
+									<option value="RCSIN_PRV"></option>
+									<option value="RCSIN_PUB"></option>
+									<option value="RCSIN_REN"></option>
+									<option value="RCSIN_SHR"></option>
+									<option value="RCSIN_SRV"></option>
+									<option value="RCSIN_TEN"></option>
+									<option value="RCSIN_TP"></option>
+									<option value="RCSIN_UEN"></option>
+								</datalist>
+								<datalist id="sites-list">
+									<option value="FW66/67.VA2"></option>
+									<option value="FW66/67.ML02"></option>
+									<option value="FW66/67.To5"></option>
+									<option value="FW66/67.To3"></option>
+									<option value="FW66/67.MS1"></option>
+									<option value="FW66/67.bcvan"></option>
+									<option value="FW66/67.dupt"></option>
+									<option value="FW66/67.ed2"></option>
+									<option value="FW66/67.mtnk"></option>
+									<option value="FW66/67.nbmn"></option>
+									<option value="FW66/67.qcmtl"></option>
+									<option value="FW66/67.slnt"></option>
+									<option value="FW66/67.wlfdle"></option>
+									<option value="FW66/67.ym"></option>
+								</datalist>
+							</fieldset>
 							<fieldset id="group3" class="">
 								<legend>Project Info</legend>
 								<div class="param param-half">
