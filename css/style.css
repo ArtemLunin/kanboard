@@ -535,6 +535,10 @@ button.pressed {
     flex-flow: row wrap;
     align-items: center;
 }
+.param-row-single {
+	width: 100%;
+    display: flex;
+}
 .param-row button {
 	margin-right: 5px;
 }

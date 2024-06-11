@@ -389,6 +389,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		btnsCeilAreaAppend = document.querySelectorAll('.js-ceil-area-append'),
 		btnsCeilAreaRemove = document.querySelectorAll('.js-ceil-area-remove'),
 		exportDownload = document.querySelector('.js-export-download'),
+		impactedNCT = document.querySelector('#impactedNCT'),
 		visibleSuperOnly = document.querySelectorAll('.js-superOnly');
 		// aExport = document.querySelector('#a_export'),
 		// aImport = document.querySelector('#importFileJSON');
@@ -409,8 +410,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const formEFCR = document.querySelector('#form-efcr'),
 		formEFCRExport = document.querySelector('#form-efcrExport'),
-		loadEFCR = document.querySelector('#loadEFCR'),
-		tEFCR = document.querySelector('.t-efcr');
+		loadEFCR = document.querySelector('#loadEFCR');
+		// tEFCR = document.querySelector('.t-efcr');
 
 		btnNewActivity.dataset.prime_elem_id = 0;
 
@@ -1065,125 +1066,125 @@ window.addEventListener('DOMContentLoaded', () => {
 			autoWidth: false,
 		});
 
-	const dataTableEFCR = $(`#table-efcr`)
-	.on('preXhr.dt', function (e, settings, data) {
-		data.get_data = efcrMode;
-	})
-	.DataTable({
-		dom: '<"mosaic-menu"B<"table-controls"plfr>ti>',
-		paging: false,
-		searching: false,
-		ordering: false,
-		info: false,
-		autoWidth: false,
-		columns: [
-			{ data: 'eFCRnumber', "name": "eFCR Number", render: function (data, type, row, meta) {
-				if (data === undefined) { data = '&nbsp;'}
-				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
-			}, "width": "15%"},
-			{ data: 'policyName', "name": "Policy Name", render: function (data, type, row, meta) {
-				if (data === undefined) { data = '&nbsp;'}
-				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
-			}, "width": "15%"},
-			{ data: 'sourceZone', "name": "Source Zone", render: function (data, type, row, meta) {
-				if (data === undefined) { data = '&nbsp;'}
-				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
-			}, "width": "10%"},
-			{ data: 'sourceSubnet', "name": "Source subnet", render: function (data, type, row, meta) {
-				if (data === undefined) { data = '&nbsp;'}
-				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
-			}, "width": "10%"},
-			{ data: 'destinationZone', "name": "Destination Zone", render: function (data, type, row, meta) {
-				if (data === undefined) { data = '&nbsp;'}
-				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
-			}, "width": "10%"},
-			{ data: 'destinationSubnet', "name": "Destination Subnet", render: function (data, type, row, meta) {
-				if (data === undefined) { data = '&nbsp;'}
-				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
-			}, "width": "10%"},
-			{ data: 'protocol', "name": "Protocol", render: function (data, type, row, meta) {
-				if (data === undefined) { data = '&nbsp;'}
-				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
-			}, "width": "8%"},
-			{ data: 'port', "name": "Port", render: function (data, type, row, meta) {
-				if (data === undefined) { data = '&nbsp;'}
-				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
-			},
-			"width": "4%"},
-			{ data: 'PHUBSites', "name": "PHUB sites", render: function (data, type, row, meta) {
-				if (data === undefined) { data = '&nbsp;'}
-				return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
-			}, "width": "10%"},
-			{ data: null , "searchable": false, "orderable": false,
-					defaultContent: `
-					<div class="action-buttons justify-content-center d-block d-xl-flex">
-						<a href="#" data-locked='1'>
-							<img class="icon-edit icon-edit-sm" data-add src="img/add_circle.svg">
-							<img class="icon-edit icon-edit-sm" data-add-copy src="img/add_task.svg">
-							<img class="icon icon-edit-sm hidden" data-undo src="img/undo.svg" title="Undo">
-							<img class="icon icon-edit-sm hidden" data-done src="img/done.svg" title="Done">
-						</a>
-						<a href="#"><img class="icon-delete icon-delete-sm" data-delete src="img/delete.svg"></a>
-					</div>`,
-					"width": "8%"
-			},
-		],
-		buttons: {
-			dom: {
-				container: {
-					tag: 'div',
-					className: 'mosaic-buttons'
-				},
-				button: {
-					tag: 'button',
-					className: []
-				},
-				buttonLiner: {
-					tag: null
-				}
+	// const dataTableEFCR = $(`#table-efcr`)
+	// .on('preXhr.dt', function (e, settings, data) {
+	// 	data.get_data = efcrMode;
+	// })
+	// .DataTable({
+	// 	dom: '<"mosaic-menu"B<"table-controls"plfr>ti>',
+	// 	paging: false,
+	// 	searching: false,
+	// 	ordering: false,
+	// 	info: false,
+	// 	autoWidth: false,
+	// 	columns: [
+	// 		{ data: 'eFCRnumber', "name": "eFCR Number", render: function (data, type, row, meta) {
+	// 			if (data === undefined) { data = '&nbsp;'}
+	// 			return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+	// 		}, "width": "15%"},
+	// 		{ data: 'policyName', "name": "Policy Name", render: function (data, type, row, meta) {
+	// 			if (data === undefined) { data = '&nbsp;'}
+	// 			return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+	// 		}, "width": "15%"},
+	// 		{ data: 'sourceZone', "name": "Source Zone", render: function (data, type, row, meta) {
+	// 			if (data === undefined) { data = '&nbsp;'}
+	// 			return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+	// 		}, "width": "10%"},
+	// 		{ data: 'sourceSubnet', "name": "Source subnet", render: function (data, type, row, meta) {
+	// 			if (data === undefined) { data = '&nbsp;'}
+	// 			return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+	// 		}, "width": "10%"},
+	// 		{ data: 'destinationZone', "name": "Destination Zone", render: function (data, type, row, meta) {
+	// 			if (data === undefined) { data = '&nbsp;'}
+	// 			return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+	// 		}, "width": "10%"},
+	// 		{ data: 'destinationSubnet', "name": "Destination Subnet", render: function (data, type, row, meta) {
+	// 			if (data === undefined) { data = '&nbsp;'}
+	// 			return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+	// 		}, "width": "10%"},
+	// 		{ data: 'protocol', "name": "Protocol", render: function (data, type, row, meta) {
+	// 			if (data === undefined) { data = '&nbsp;'}
+	// 			return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+	// 		}, "width": "8%"},
+	// 		{ data: 'port', "name": "Port", render: function (data, type, row, meta) {
+	// 			if (data === undefined) { data = '&nbsp;'}
+	// 			return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+	// 		},
+	// 		"width": "4%"},
+	// 		{ data: 'PHUBSites', "name": "PHUB sites", render: function (data, type, row, meta) {
+	// 			if (data === undefined) { data = '&nbsp;'}
+	// 			return `<span class="name-text editable new-tag" contenteditable>${data}</span>`;
+	// 		}, "width": "10%"},
+	// 		{ data: null , "searchable": false, "orderable": false,
+	// 				defaultContent: `
+	// 				<div class="action-buttons justify-content-center d-block d-xl-flex">
+	// 					<a href="#" data-locked='1'>
+	// 						<img class="icon-edit icon-edit-sm" data-add src="img/add_circle.svg">
+	// 						<img class="icon-edit icon-edit-sm" data-add-copy src="img/add_task.svg">
+	// 						<img class="icon icon-edit-sm hidden" data-undo src="img/undo.svg" title="Undo">
+	// 						<img class="icon icon-edit-sm hidden" data-done src="img/done.svg" title="Done">
+	// 					</a>
+	// 					<a href="#"><img class="icon-delete icon-delete-sm" data-delete src="img/delete.svg"></a>
+	// 				</div>`,
+	// 				"width": "8%"
+	// 		},
+	// 	],
+	// 	buttons: {
+	// 		dom: {
+	// 			container: {
+	// 				tag: 'div',
+	// 				className: 'mosaic-buttons'
+	// 			},
+	// 			button: {
+	// 				tag: 'button',
+	// 				className: []
+	// 			},
+	// 			buttonLiner: {
+	// 				tag: null
+	// 			}
 
-			},
-			buttons: [
-				{
-					tag: 'label',
-					text: 'Import Data',
-					className: 'btn-devices',
-					attr: {
-						for: 'loadEFCR',
-						id: 'btnEFCR',
-					},
-					action: function (e, dt, node, config) {
-						const target = e.target;
-						const input = target.getAttribute('for');
-						document.querySelector(`#${input}`).click();
-					}
-				},
-				{
-					tag: 'label',
-					text: 'Export Data',
-					className: 'btn-devices',
-					attr: {
-						id: 'btnEFCRExport',
-					},
-					action: function (e, dt, node, config) {
-						const json_table = [];
-						dt.rows().every( function() {
-							const row = this.data();
-							json_table.push(row);
-						});
+	// 		},
+	// 		buttons: [
+	// 			{
+	// 				tag: 'label',
+	// 				text: 'Import Data',
+	// 				className: 'btn-devices',
+	// 				attr: {
+	// 					for: 'loadEFCR',
+	// 					id: 'btnEFCR',
+	// 				},
+	// 				action: function (e, dt, node, config) {
+	// 					const target = e.target;
+	// 					const input = target.getAttribute('for');
+	// 					document.querySelector(`#${input}`).click();
+	// 				}
+	// 			},
+	// 			{
+	// 				tag: 'label',
+	// 				text: 'Export Data',
+	// 				className: 'btn-devices',
+	// 				attr: {
+	// 					id: 'btnEFCRExport',
+	// 				},
+	// 				action: function (e, dt, node, config) {
+	// 					const json_table = [];
+	// 					dt.rows().every( function() {
+	// 						const row = this.data();
+	// 						json_table.push(row);
+	// 					});
 
-						formEFCRExport.reset();
-						formEFCRExport.querySelector('input[name="env"]').setAttribute('value', 'services');
-						formEFCRExport.querySelector('input[name="call"]').setAttribute('value', 'exportEFCR');
-						formEFCRExport.querySelector('input[name="efcrTable"]').setAttribute('value', JSON.stringify(json_table));
-						formEFCRExport.requestSubmit();				
-					}
-				}
-			],
-		},
-	});
+	// 					formEFCRExport.reset();
+	// 					formEFCRExport.querySelector('input[name="env"]').setAttribute('value', 'services');
+	// 					formEFCRExport.querySelector('input[name="call"]').setAttribute('value', 'exportEFCR');
+	// 					formEFCRExport.querySelector('input[name="efcrTable"]').setAttribute('value', JSON.stringify(json_table));
+	// 					formEFCRExport.requestSubmit();				
+	// 				}
+	// 			}
+	// 		],
+	// 	},
+	// });
 
-	dataTableEFCR.row.add({}).draw();
+	// dataTableEFCR.row.add({}).draw();
 
 
 	const saveContent = () => {
@@ -3512,42 +3513,42 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const deviceActionEFCR = function(e, params) {
-		e.preventDefault();
-		const target = e.target;
-		const nodesRow = target.closest('tr');
-		const parent_t = target.closest('table');
-		const parent_a = target.closest('a');
-		let action = null;
+	// const deviceActionEFCR = function(e, params) {
+	// 	e.preventDefault();
+	// 	const target = e.target;
+	// 	const nodesRow = target.closest('tr');
+	// 	const parent_t = target.closest('table');
+	// 	const parent_a = target.closest('a');
+	// 	let action = null;
 
-		if (target.dataset.add !== undefined)
-		{
-			dataTableEFCR.row.add({}).draw();
-		} else if (target.dataset.addCopy !== undefined) {
-			dataTableEFCR.row.add(dataTableEFCR.row(nodesRow).data()).draw();
-		} else if (target.dataset.delete !== undefined) {
-			dataTableEFCR.row(nodesRow).remove().draw();
-		}
-	};
+	// 	if (target.dataset.add !== undefined)
+	// 	{
+	// 		dataTableEFCR.row.add({}).draw();
+	// 	} else if (target.dataset.addCopy !== undefined) {
+	// 		dataTableEFCR.row.add(dataTableEFCR.row(nodesRow).data()).draw();
+	// 	} else if (target.dataset.delete !== undefined) {
+	// 		dataTableEFCR.row(nodesRow).remove().draw();
+	// 	}
+	// };
 
-	const efcrKeyDown = function(e) {
-		const target = e.target;
-		if (e.code === 'Enter') {
-			e.preventDefault();
-			const nodeCell = target.closest('td');
-			if (nodeCell) {
-				dataTableEFCR.cell(nodeCell).data(nodeCell.textContent);
-			}
-		}
-	}
+	// const efcrKeyDown = function(e) {
+	// 	const target = e.target;
+	// 	if (e.code === 'Enter') {
+	// 		e.preventDefault();
+	// 		const nodeCell = target.closest('td');
+	// 		if (nodeCell) {
+	// 			dataTableEFCR.cell(nodeCell).data(nodeCell.textContent);
+	// 		}
+	// 	}
+	// }
 
-	const efcrFocusOut = function(e) {
-		const target = e.target;
-			const nodeCell = target.closest('td');
-			if (nodeCell) {
-				dataTableEFCR.cell(nodeCell).data(nodeCell.textContent);
-			}
-	}
+	// const efcrFocusOut = function(e) {
+	// 	const target = e.target;
+	// 		const nodeCell = target.closest('td');
+	// 		if (nodeCell) {
+	// 			dataTableEFCR.cell(nodeCell).data(nodeCell.textContent);
+	// 		}
+	// }
 
 	const resetEdit = (item) => {
 		item.removeAttribute('contenteditable');
@@ -4236,32 +4237,32 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
-	formEFCR.addEventListener('submit', (e) => {
-		e.preventDefault();
-		const formData = new FormData(e.target);
-		formData.append('env', 'services');
-		formData.append('call', 'loadEFCR');
+	// formEFCR.addEventListener('submit', (e) => {
+	// 	e.preventDefault();
+	// 	const formData = new FormData(e.target);
+	// 	formData.append('env', 'services');
+	// 	formData.append('call', 'loadEFCR');
 
-		sendFile('POST', requestURL, formData).then((data) => {
-			if (data.success && data.success.answer) {
-				dataTableEFCR.clear().draw();
-				data.success.answer.forEach(item => {
-					dataTableEFCR.row.add({
-						'eFCRnumber': item.eFCRnumber,
-						'policyName': item.policyName,
-						'sourceZone': item.sourceZone,
-						'sourceSubnet': item.sourceSubnet,
-						'destinationZone': item.destinationZone,
-						'PHUBSites': item.PHUBSites,
-						'destinationSubnet': item.destinationSubnet,
-						'protocol': item.protocol,
-						'port': item.port,
-					});
-				});
-				dataTableEFCR.draw();
-			}
-		});
-	});
+	// 	sendFile('POST', requestURL, formData).then((data) => {
+	// 		if (data.success && data.success.answer) {
+	// 			dataTableEFCR.clear().draw();
+	// 			data.success.answer.forEach(item => {
+	// 				dataTableEFCR.row.add({
+	// 					'eFCRnumber': item.eFCRnumber,
+	// 					'policyName': item.policyName,
+	// 					'sourceZone': item.sourceZone,
+	// 					'sourceSubnet': item.sourceSubnet,
+	// 					'destinationZone': item.destinationZone,
+	// 					'PHUBSites': item.PHUBSites,
+	// 					'destinationSubnet': item.destinationSubnet,
+	// 					'protocol': item.protocol,
+	// 					'port': item.port,
+	// 				});
+	// 			});
+	// 			dataTableEFCR.draw();
+	// 		}
+	// 	});
+	// });
 
 	formInventoryComments.addEventListener('submit', e => {
 		e.preventDefault();
@@ -4278,22 +4279,17 @@ window.addEventListener('DOMContentLoaded', () => {
 		e.target.reset();
 	});
 
-	// formEFCRExport.addEventListener('submit', e => {
-	// 	e.preventDefault();
-	// 	e.target.submit();
-	// });
-
 	devicesAllBody.addEventListener('click', deviceActionMosaic);
 	devicesAllBody.addEventListener('keydown', deviceKeyDown);
 	btnDialogModal.addEventListener('click', confirmDialog);
 	tInventory.addEventListener('click', (e) => {
 		deviceActionNodes(e, {});
 	});
-	tEFCR.addEventListener('click', (e) => {
-		deviceActionEFCR(e, {});
-	});
-	tEFCR.addEventListener('keydown', efcrKeyDown);
-	tEFCR.addEventListener('focusout', efcrFocusOut);
+	// tEFCR.addEventListener('click', (e) => {
+	// 	deviceActionEFCR(e, {});
+	// });
+	// tEFCR.addEventListener('keydown', efcrKeyDown);
+	// tEFCR.addEventListener('focusout', efcrFocusOut);
 	
 	const formToArr = (formData) => {
 		const arrData = {};
@@ -4417,8 +4413,16 @@ window.addEventListener('DOMContentLoaded', () => {
 					inputElem.disabled = false;
 					inputElem.classList.add(inputSelectorClass);
 				});
+				item.querySelectorAll('textarea').forEach(inputElem => {
+					inputElem.disabled = false;
+					inputElem.classList.add(inputSelectorClass);
+				});
 			} else {
 				item.querySelectorAll('input').forEach(inputElem => {
+					inputElem.disabled = true;
+					inputElem.classList.remove(inputSelectorClass);
+				});
+				item.querySelectorAll('textarea').forEach(inputElem => {
 					inputElem.disabled = true;
 					inputElem.classList.remove(inputSelectorClass);
 				});
@@ -4678,6 +4682,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				row_inputs.querySelectorAll('input').forEach(ceil_input => {
 					one_row[ceil_input.dataset['name']] = ceil_input.value;
 				});
+				row_inputs.querySelectorAll('textarea').forEach(ceil_input => {
+					one_row[ceil_input.dataset['name']] = ceil_input.value.split('\n');
+				});
 				rows_arr.push(one_row);
 			});
 			const item_name = item.dataset.id;
@@ -4705,7 +4712,24 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 		const progress = Math.trunc((changedInputs / totalInputs) * 100);
 		divCounter.style.width = `${progress}%`;
-		divCounter.innerText = `${progress}% (${changedInputs} of ${totalInputs})`;	
+		divCounter.innerText = `${progress}% (${changedInputs} of ${totalInputs})`;
+		setImpactedNCTList();
+	};
+
+	const setImpactedNCTList = () => {
+		if (document.title == 'eFCR') {
+			impactedNCT.value = '';
+			let impactedSites = new Set();
+			const fieldset = document.querySelector('.js-eFCR2-view');
+			fieldset.querySelectorAll('[data-name="dipPHUBSites"]').forEach(phubsite => {
+				if (phubsite.value.trim() != '') {
+					impactedSites.add(phubsite.value);
+				} 
+			});
+			for (const site of impactedSites) {
+				impactedNCT.value += site + '\n';
+			}
+		}
 	};
 
 	const resetHardCodeDesign = () => {

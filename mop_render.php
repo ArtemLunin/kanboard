@@ -64,12 +64,17 @@ foreach ($_POST as $param => $value) {
     }
     if (is_array($value)) {
         $values = json_decode($value[0], true);
-        foreach ($values as $val_idx => $val_arr) {
-            foreach ($val_arr as $par_name => $par_value) {
-                $values[$val_idx][$par_name] = htmlentities($par_value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8");
+        if ($param == 'ceilAreaEFCR2') {
+            $efcr_res = $db_object->exportEFCR($values);
+            $db_object->errorLog(print_r($efcr_res, true));
+        } else {
+            foreach ($values as $val_idx => $val_arr) {
+                foreach ($val_arr as $par_name => $par_value) {
+                    $values[$val_idx][$par_name] = htmlentities($par_value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8");
+                }
             }
+            $templateProcessor->cloneRowAndSetValues($param, $values);
         }
-        $templateProcessor->cloneRowAndSetValues($param, $values);
     } elseif (!isset($arrayBlocks[$param])) {
         $templateProcessor->setValue($param, htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
     } else {

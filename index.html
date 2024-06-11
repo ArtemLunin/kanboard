@@ -889,13 +889,6 @@
 							<input type="hidden" name="docTitle" id="docTitle" value="Method of Procedure (MOP)">
 							<fieldset id="group18" class="js-hard-code-design renderOnly js-eFCR-view">
 								<legend>eFCR</legend>
-								<!-- <div class="param param-full admin-view hidden">
-									<label class="switch">
-										<input type="checkbox" class="js-pinned">
-										<span class="slider round"></span>
-									</label>
-									Pin to current OGPA
-								</div> -->
 								<input type="hidden" name="efcrFields" id="efcrFields" class="renderOnly" value="" data-dip-only="1">
 								<input type="hidden" name="rows_ceilIP" id="rows_ceilIP" data-id="ceilIP" data-parent="self" value="1">
 								<input type="hidden" name="ceilIP" id="ceilIP" data-efcr="1">
@@ -932,45 +925,45 @@
 							</fieldset>
 							<fieldset id="group19" class="js-hard-code-design renderOnly js-eFCR2-view">
 								<legend>eFCR</legend>
-								<input type="hidden" name="rows_eFCR2"  data-parent="self" data-id="rows_eFCR2" value="1">
-								<input type="hidden" name="rows_eFCR2" id="rows_eFCR2" data-efcr="1">
-								<div class="param-row multirows">
-									<div class="param param-half">
+								<input type="hidden" name="efcrFields2" id="efcrFields2" class="renderOnly" value="" data-dip-only="1">
+								<input type="hidden" name="rows_ceilAreaEFCR2" id="rows_ceilAreaEFCR2" data-id="ceilAreaEFCR2" data-parent="self" value="1">
+								<input type="hidden" name="ceilAreaEFCR2[]" id="ceilAreaEFCR2">
+								<div class="param-row-single multirows">
+									<div class="param ">
 										<label for="dipeFCRNumber">eFCR Number</label>
 										<input type="text" class="mop input-edit" name="dipeFCRNumber" value="" disabled data-name="dipeFCRNumber" data-efcr2="1">
 									</div>
-									<div class="param param-half">
+									<div class="param">
 										<label for="dipPolicyName">Policy name</label>
-										<input type="text" class="mop input-edit" name="dipPolicyName" value="" disabled data-efcr2="1">
+										<input type="text" class="mop input-edit" name="dipPolicyName" data-name="dipPolicyName" value="" disabled data-efcr2="1">
 									</div>
-									<div class="param param-fourth">
+									<div class="param">
 										<label for="dipSourceZone">Source Zone</label>
-										<!-- <input type="text" class="mop input-edit" name="dipSourceZone" value="" disabled data-efcr2="1"> -->
-										<input list="zones-list" name="dipSourceZone" class="mop input-edit" disabled data-efcr2="1"/>
+										<input list="zones-list" name="dipSourceZone" class="mop input-edit" data-name="dipSourceZone" disabled data-efcr2="1"/>
 									</div>
-									<div class="param param-fourth">
-										<label for="dipSourceSubnet">Source subnet</label>
-										<input type="text" class="mop input-edit" name="dipSourceSubnet" value="" disabled data-efcr2="1">
+									<div class="param">
+										<label for="dipSourceSubnet">Source Subnet</label>
+										<textarea class="mop input-edit" name="dipSourceSubnet" value="" data-name="dipSourceSubnet" disabled data-efcr2="1" cols="30" rows="4"></textarea>
 									</div>
-									<div class="param param-fourth">
-										<label for="dipDestinationZone">Destination Zone</label>
-										<input list="zones-list" name="dipDestinationZone" class="mop input-edit" disabled data-efcr2="1"/>
+									<div class="param">
+										<label for="dipDestinationZone">Dest. Zone</label>
+										<input list="zones-list" name="dipDestinationZone" data-name="dipDestinationZone" class="mop input-edit" disabled data-efcr2="1"/>
 									</div>
-									<div class="param param-fourth">
-										<label for="dipDestinationSubnet">Destination subnet</label>
-										<input type="text" class="mop input-edit" name="dipDestinationSubnet" value="" disabled data-efcr2="1">
+									<div class="param">
+										<label for="dipDestinationSubnet">Dest. Subnet</label>
+										<textarea class="mop input-edit" name="dipDestinationSubnet" data-name="dipDestinationSubnet" value="" disabled data-efcr2="1" cols="30" rows="4"></textarea>
 									</div>
-									<div class="param param-fourth">
+									<div class="param">
 										<label for="dipProtocol">Protocol</label>
-										<input type="text" class="mop input-edit" name="dipProtocol" value="" disabled data-efcr2="1">
+										<input list="protocol-list" class="mop input-edit" name="dipProtocol" data-name="dipProtocol" value="" disabled data-efcr2="1">
 									</div>
-									<div class="param param-fourth">
+									<div class="param">
 										<label for="dipPort">Port</label>
-										<input type="text" class="mop input-edit" name="dipPort" value="" disabled data-efcr2="1">
+										<input type="text" class="mop input-edit" name="dipPort" data-name="dipPort" value="" disabled data-efcr2="1">
 									</div>
-									<div class="param param-half">
+									<div class="param">
 										<label for="dipPHUBSites">PHUB sites</label>
-										<input list="sites-list" class="mop input-edit" name="dipPHUBSites" value="" disabled data-efcr2="1">
+										<input list="sites-list" class="mop input-edit" name="dipPHUBSites" data-name="dipPHUBSites" value="" disabled data-efcr2="1">
 									</div>
 								</div>
 								<div class="param-row ceil-btns">
@@ -988,20 +981,24 @@
 									<option value="RCSIN_UEN"></option>
 								</datalist>
 								<datalist id="sites-list">
-									<option value="FW66/67.VA2"></option>
-									<option value="FW66/67.ML02"></option>
-									<option value="FW66/67.To5"></option>
-									<option value="FW66/67.To3"></option>
-									<option value="FW66/67.MS1"></option>
-									<option value="FW66/67.bcvan"></option>
-									<option value="FW66/67.dupt"></option>
-									<option value="FW66/67.ed2"></option>
-									<option value="FW66/67.mtnk"></option>
-									<option value="FW66/67.nbmn"></option>
-									<option value="FW66/67.qcmtl"></option>
-									<option value="FW66/67.slnt"></option>
-									<option value="FW66/67.wlfdle"></option>
-									<option value="FW66/67.ym"></option>
+									<option value="VA2"></option>
+									<option value="ML02"></option>
+									<option value="To5"></option>
+									<option value="To3"></option>
+									<option value="MS1"></option>
+									<option value="bcvan"></option>
+									<option value="dupt"></option>
+									<option value="ed2"></option>
+									<option value="mtnk"></option>
+									<option value="nbmn"></option>
+									<option value="qcmtl"></option>
+									<option value="slnt"></option>
+									<option value="wlfdle"></option>
+									<option value="ym"></option>
+								</datalist>
+								<datalist id="protocol-list">
+									<option>TCP</option>
+									<option>UDP</option>
 								</datalist>
 							</fieldset>
 							<fieldset id="group3" class="">
