@@ -9,6 +9,8 @@ $db_object = new mySQLDatabaseUtils\databaseUtilsMOP();
 
 $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/mop_template.docx');
 $efcrFile = file('template/eFCR.txt');
+$efcrFile2 = false;
+$efcr_res = false;
 
 $filename = tempnam(sys_get_temp_dir(), 'docx');
 $resultFileName = "untitled";
@@ -27,6 +29,7 @@ function getLinesFromTextArea($taText) {
     });
 }
 
+// $db_object->errorLog(print_r($_POST, true));
 
 if (isset($_POST['efcrFields']) && $efcrFile) {
     $efcrFieldsArr = json_decode($_POST['efcrFields'], true);
@@ -35,6 +38,10 @@ if (isset($_POST['efcrFields']) && $efcrFile) {
     }
 } else {
     $efcrFile = false;
+}
+
+if (isset($_POST['efcrFields2'])) {
+    $efcrFile2 = true;
 }
 
 //search textarea fields for clone block
@@ -66,7 +73,7 @@ foreach ($_POST as $param => $value) {
         $values = json_decode($value[0], true);
         if ($param == 'ceilAreaEFCR2') {
             $efcr_res = $db_object->exportEFCR($values);
-            $db_object->errorLog(print_r($efcr_res, true));
+            // continue;
         } else {
             foreach ($values as $val_idx => $val_arr) {
                 foreach ($val_arr as $par_name => $par_value) {
@@ -85,7 +92,7 @@ foreach ($_POST as $param => $value) {
                 $arrayBlocks[$param]["taName"] => htmlentities($line, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8")
             ];
         }
-        if($efcrFile && $arrayBlocks[$param]["blockName"] == 'implementationCheckList')
+        if(($efcrFile || $efcrFile2) && $arrayBlocks[$param]["blockName"] == 'implementationCheckList')
         {
             continue;
         }
@@ -133,6 +140,11 @@ if ($efcrFile) {
         }
     }
     $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, $efcrOutput);
+} elseif ($efcrFile2 && $efcr_res) {
+    foreach ($efcr_res as $line) {
+        $efcrOutput[] = ['implementationCommandList' => htmlentities($line, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8")];
+    }
+    $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, $efcrOutput);
 }
 
 
@@ -164,8 +176,6 @@ if (isset($_FILES['implFile']) && is_uploaded_file($_FILES['implFile']['tmp_name
     }
 }
 
-
-
 $checkedBox = '☒';
 
 $templateProcessor->setValues([
@@ -185,14 +195,12 @@ $templateProcessor->setValues([
     'cb14_2' => $checkedBox,
     ]);
 
-
 $templateProcessor->saveAs($filename);
 
 if ($counterMode !=0 ) {
     $db_object->incActivityCounter($activityID, $counterMode);
 }
 // $db_object->getActivitiesCounter($activityID);
-
 
 // write file to embedded docx
 if ($implFile != false) {

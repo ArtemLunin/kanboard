@@ -246,6 +246,13 @@ function b64DecodeUnicode(str) {
     }).join(''));
 }
 
+// function toggleField(hideObj, showObj) {
+// 	hideObj.disabled=true;        
+// 	hideObj.style.display='none';
+// 	showObj.disabled=false;   
+// 	showObj.style.display='inline';
+// 	showObj.focus();
+//   }
 
 const capitalize = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
@@ -386,7 +393,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		docTitle = document.querySelector('#docTitle'),
         showAll = document.querySelector('#showAll'),
 		efcrFields = document.querySelector('#efcrFields'),
+		comboSelect = document.querySelectorAll('.combo-select'),
 		btnsCeilAreaAppend = document.querySelectorAll('.js-ceil-area-append'),
+		// btnsCeilAreaClone = document.querySelectorAll('.js-ceil-area-clone'),
 		btnsCeilAreaRemove = document.querySelectorAll('.js-ceil-area-remove'),
 		exportDownload = document.querySelector('.js-export-download'),
 		impactedNCT = document.querySelector('#impactedNCT'),
@@ -2899,7 +2908,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const showUpdatedCreator = (data) => {
-		// creatorApply.classList.add('d-none');
 		if (!!data.success) {
 			try {
 				const selector = `.task-ticket-status[data-task_id="${data.success.answer.id}"]`;
@@ -4237,32 +4245,56 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
-	// formEFCR.addEventListener('submit', (e) => {
-	// 	e.preventDefault();
-	// 	const formData = new FormData(e.target);
-	// 	formData.append('env', 'services');
-	// 	formData.append('call', 'loadEFCR');
+	formEFCR.addEventListener('submit', (e) => {
+		e.preventDefault();
+		// console.log(e.target);
+		const formData = new FormData(e.target);
+		formData.set('env', 'services');
+		formData.set('call', 'loadEFCR');
 
-	// 	sendFile('POST', requestURL, formData).then((data) => {
-	// 		if (data.success && data.success.answer) {
-	// 			dataTableEFCR.clear().draw();
-	// 			data.success.answer.forEach(item => {
-	// 				dataTableEFCR.row.add({
-	// 					'eFCRnumber': item.eFCRnumber,
-	// 					'policyName': item.policyName,
-	// 					'sourceZone': item.sourceZone,
-	// 					'sourceSubnet': item.sourceSubnet,
-	// 					'destinationZone': item.destinationZone,
-	// 					'PHUBSites': item.PHUBSites,
-	// 					'destinationSubnet': item.destinationSubnet,
-	// 					'protocol': item.protocol,
-	// 					'port': item.port,
-	// 				});
-	// 			});
-	// 			dataTableEFCR.draw();
-	// 		}
-	// 	});
-	// });
+		sendFile('POST', requestURL, formData).then((data) => {
+			if (data.success && data.success.answer) {
+				console.log(data.success.answer);
+				// const loadEFCR = e.target.querySelector('#loadEFCR');
+				const fieldset = document.querySelector(`[for="loadEFCR"]`).closest('fieldset');
+				fieldset.querySelectorAll('[data-clone="1"]').forEach(element => {
+					element.remove();
+				});
+				data.success.answer.forEach(item => {
+					fieldset.querySelector('[data-name="dipeFCRNumber"]').value = item.eFCRnumber;
+					fieldset.querySelector('[data-name="dipPolicyName"]').value = item.policyName;
+					fieldset.querySelector('[data-name="dipSourceZone"]').value = item.sourceZone;
+					fieldset.querySelector('[data-name="dipSourceSubnet"]').textContent = item.sourceSubnet;
+					fieldset.querySelector('[data-name="dipDestinationZone"]').value = item.destinationZone;
+					fieldset.querySelector('[data-name="dipDestinationSubnet"]').textContent = item.destinationSubnet;
+					fieldset.querySelector('[data-name="dipProtocol"]').value = item.protocol;
+					fieldset.querySelector('[data-name="dipPort"]').value = item.port;
+					
+					let option = fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector(`[value="item.PHUBSites"]`);
+					if (option == null) {
+						fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector('.editable').value = item.PHUBSites;
+						fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector('.editable').textContent = item.PHUBSites;
+					}
+						fieldset.querySelector('[data-name="dipPHUBSites"]').value = item.PHUBSites;
+				});
+				// dataTableEFCR.clear().draw();
+				// data.success.answer.forEach(item => {
+				// 	dataTableEFCR.row.add({
+				// 		'eFCRnumber': item.eFCRnumber,
+				// 		'policyName': item.policyName,
+				// 		'sourceZone': item.sourceZone,
+				// 		'sourceSubnet': item.sourceSubnet,
+				// 		'destinationZone': item.destinationZone,
+				// 		'PHUBSites': item.PHUBSites,
+				// 		'destinationSubnet': item.destinationSubnet,
+				// 		'protocol': item.protocol,
+				// 		'port': item.port,
+				// 	});
+				// });
+				// dataTableEFCR.draw();
+			}
+		});
+	});
 
 	formInventoryComments.addEventListener('submit', e => {
 		e.preventDefault();
@@ -4680,10 +4712,15 @@ window.addEventListener('DOMContentLoaded', () => {
 			item.closest('fieldset').querySelectorAll('.multirows').forEach(row_inputs => {
 				const one_row = {};
 				row_inputs.querySelectorAll('input').forEach(ceil_input => {
+					if (ceil_input.name !== '') {
+						one_row[ceil_input.dataset['name']] = ceil_input.value;
+					}
+				});
+				row_inputs.querySelectorAll('select').forEach(ceil_input => {
 					one_row[ceil_input.dataset['name']] = ceil_input.value;
 				});
 				row_inputs.querySelectorAll('textarea').forEach(ceil_input => {
-					one_row[ceil_input.dataset['name']] = ceil_input.value.split('\n');
+					one_row[ceil_input.dataset['name']] = ceil_input.value.split('\n').filter(function(str) { return str.trim().length > 6 ? true : false});
 				});
 				rows_arr.push(one_row);
 			});
@@ -4717,13 +4754,14 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const setImpactedNCTList = () => {
+		const site_prefix = 'FW66/67';
 		if (document.title == 'eFCR') {
 			impactedNCT.value = '';
 			let impactedSites = new Set();
 			const fieldset = document.querySelector('.js-eFCR2-view');
 			fieldset.querySelectorAll('[data-name="dipPHUBSites"]').forEach(phubsite => {
 				if (phubsite.value.trim() != '') {
-					impactedSites.add(phubsite.value);
+					impactedSites.add(site_prefix + '.' + phubsite.value);
 				} 
 			});
 			for (const site of impactedSites) {
@@ -4973,6 +5011,25 @@ window.addEventListener('DOMContentLoaded', () => {
 		getActivityFields(id);
 	});
 
+	const comboSelectChange = (e) => {
+		const target = e.target;
+		const parent = target.closest('div');
+		const input_elem = parent.querySelector(`.editOption[data-name="${target.dataset.name}"]`);
+		if (target.options[target.selectedIndex].classList.contains('editable')) {
+			input_elem.classList.remove('hidden');
+			input_elem.addEventListener('keyup', (e) => {
+				target.options[target.selectedIndex].value = input_elem.value;
+				target.options[target.selectedIndex].textContent = input_elem.value;
+			});
+		} else {
+			input_elem.classList.add('hidden');
+		}
+	};
+
+	comboSelect.forEach(element => {
+		element.addEventListener('change', comboSelectChange); 
+	});
+
 	btnDelPrimeElement.addEventListener('click', (e) => {
 		e.preventDefault();
 		delElement('delPrimeElement', showOGPA, selPrimeElement.value);
@@ -5035,24 +5092,60 @@ window.addEventListener('DOMContentLoaded', () => {
 	// 	});
 	// });
 
-	btnsCeilAreaAppend.forEach(item => {
-		item.addEventListener('click', (e) => {
-			const fieldset = e.target.closest('fieldset');
-			const row = fieldset.querySelector("[data-parent='self']");
-			const row_prime = fieldset.querySelector('.multirows');
-			const new_row = row_prime.cloneNode(true);
-			row.value = parseInt(row.value) + 1;
-			new_row.dataset.clone = 1;
-			new_row.querySelectorAll('input').forEach(item => {
-				item.name = `${item.dataset.name}_${row.value}`;
-				item.id = item.name;
+	const btnAreaAppend = (e) => {
+		const target = e.target;
+		const fieldset = e.target.closest('fieldset');
+		const row = fieldset.querySelector("[data-parent='self']");
+		let row_prime;
+		let copyArea = false;
+		if (target.dataset.copy !== undefined) {
+			row_prime = target.closest('.multirows');
+			copyArea = true;
+		} else {
+			row_prime = fieldset.querySelector('.multirows');
+		}
+		// const row_prime = fieldset.querySelector('.multirows');
+		const new_row = row_prime.cloneNode(true);
+		row.value = parseInt(row.value) + 1;
+		new_row.dataset.clone = 1;
+		new_row.querySelectorAll('input').forEach(item => {
+			item.name = `${item.dataset.name}_${row.value}`;
+			item.id = item.name;
+			if (!copyArea) {
 				item.value = '';
 				item.dataset.ini_data = '';
-			});
-			fieldset.append(new_row);
-			fieldset.append(e.target.closest('.ceil-btns'));
-			checkInputsData(`.${inputSelectorClass}`, false);
+			}
 		});
+		new_row.querySelectorAll('textarea').forEach(item => {
+			item.name = `${item.dataset.name}_${row.value}`;
+			item.id = item.name;
+			if (!copyArea) {
+				item.textContent = '';
+				item.dataset.ini_data = '';
+			}
+		});
+		new_row.querySelectorAll('select').forEach(item => {
+			item.name = `${item.dataset.name}_${row.value}`;
+			item.id = item.name;
+			if (copyArea) {
+				item.selectedIndex = row_prime.querySelector(`[data-name="${item.dataset.name}"]`).selectedIndex;
+			}
+		});
+		const cloneButton = new_row.querySelector('[data-copy]');
+		if (cloneButton !== null) {
+			cloneButton.dataset.copy = parseInt(cloneButton.dataset.copy) + 1;
+			cloneButton.addEventListener('click', btnAreaAppend);
+		}
+		new_row.querySelectorAll('.combo-select').forEach(element => {
+			element.addEventListener('change', comboSelectChange); 
+		});
+		fieldset.append(new_row);
+		fieldset.append(fieldset.querySelector('.ceil-btns'));
+		checkInputsData(`.${inputSelectorClass}`, false);
+	};
+
+	btnsCeilAreaAppend.forEach(item => {
+		item.addEventListener('click', btnAreaAppend);
 	});
 
 	btnsCeilAreaRemove.forEach(item => {
