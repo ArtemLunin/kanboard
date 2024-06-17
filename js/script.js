@@ -4247,15 +4247,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	formEFCR.addEventListener('submit', (e) => {
 		e.preventDefault();
-		// console.log(e.target);
 		const formData = new FormData(e.target);
 		formData.set('env', 'services');
 		formData.set('call', 'loadEFCR');
 
 		sendFile('POST', requestURL, formData).then((data) => {
 			if (data.success && data.success.answer) {
-				console.log(data.success.answer);
-				// const loadEFCR = e.target.querySelector('#loadEFCR');
 				const fieldset = document.querySelector(`[for="loadEFCR"]`).closest('fieldset');
 				fieldset.querySelectorAll('[data-clone="1"]').forEach(element => {
 					element.remove();
@@ -4270,7 +4267,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					fieldset.querySelector('[data-name="dipProtocol"]').value = item.protocol;
 					fieldset.querySelector('[data-name="dipPort"]').value = item.port;
 					
-					let option = fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector(`[value="item.PHUBSites"]`);
+					let option = fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector(`[value="${item.PHUBSites}"]`);
 					if (option == null) {
 						fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector('.editable').value = item.PHUBSites;
 						fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector('.editable').textContent = item.PHUBSites;
@@ -4427,7 +4424,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (templateDip) {
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = false;
-					inputElem.classList.add(inputSelectorClass);
+					if (inputElem.type != 'hidden') {
+						inputElem.classList.add(inputSelectorClass);
+					}
 					if (inputElem.dataset['efcr'] == "1") {
 						efcrFieldsArr.push(inputElem.name);
 					}
@@ -4435,7 +4434,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else {
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = true;
-					inputElem.classList.remove(inputSelectorClass);
+					if (inputElem.type != 'hidden') {
+						inputElem.classList.remove(inputSelectorClass);
+					}
 				});
 			}
 		});
@@ -4443,20 +4444,28 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (templateDip) {
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = false;
-					inputElem.classList.add(inputSelectorClass);
+					if (inputElem.type != 'hidden') {
+						inputElem.classList.add(inputSelectorClass);
+					}
 				});
 				item.querySelectorAll('textarea').forEach(inputElem => {
 					inputElem.disabled = false;
-					inputElem.classList.add(inputSelectorClass);
+					if (inputElem.type != 'hidden') {
+						inputElem.classList.add(inputSelectorClass);
+					}
 				});
 			} else {
 				item.querySelectorAll('input').forEach(inputElem => {
 					inputElem.disabled = true;
-					inputElem.classList.remove(inputSelectorClass);
+					if (inputElem.type != 'hidden') {
+						inputElem.classList.remove(inputSelectorClass);
+					}
 				});
 				item.querySelectorAll('textarea').forEach(inputElem => {
 					inputElem.disabled = true;
-					inputElem.classList.remove(inputSelectorClass);
+					if (inputElem.type != 'hidden') {
+						inputElem.classList.remove(inputSelectorClass);
+					}
 				});
 			}
 
@@ -4477,7 +4486,9 @@ window.addEventListener('DOMContentLoaded', () => {
 							const fieldIn = document.querySelector(`#${field.fieidID}`);
 							if (field) {
 								fieldIn.value = field.default;
-								fieldIn.classList.add(inputSelectorClass);
+								if (fieldIn.type != 'hidden') {
+									fieldIn.classList.add(inputSelectorClass);
+								}
 							}
 						});
 						if ((adminEnabled && !group.classList.contains('renderOnly')) || 
@@ -4493,7 +4504,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				} catch (e) {
 				}
 			});
-			checkInputsData(`.${inputSelectorClass}`);
+			// checkInputsData(`.${inputSelectorClass}`);
 		}
 		if (!!hardCodeDesign[gActivityName] && !adminEnabled && (document.title == 'Roaming FCR' || document.title == 'eFCR')) {
 			showHardCodeDesign(hardCodeDesign[gActivityName].split(','));
@@ -4505,6 +4516,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.value = item.dataset.default.trim();
 			}
 		});
+		checkInputsData(`.${inputSelectorClass}`);
 	};
 
 	const showChassisTags = (data) => {
@@ -4736,11 +4748,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		totalInputs = 0;
 		changedInputs = 0;
 		document.querySelectorAll(inputsSelector).forEach(item => {
-			if (item.type !== 'hidden' && item.type !== 'file' && 
-				((!JSON.parse(efcrFields.value).includes(item.name) && document.title != 'Roaming FCR') || document.title == 'Roaming FCR')) {
+			// if (item.type !== 'hidden' && item.type !== 'file' && item.name !== '' && ((!JSON.parse(efcrFields.value).includes(item.name) && document.title != 'Roaming FCR' && document.title != 'eFCR') || document.title == 'Roaming FCR' || document.title == 'eFCR')) {
+			// console.log(item);
+			if (item.type !== 'hidden' && item.type !== 'file' && item.name !== '' && !(item.closest('fieldset').disabled))
+			{
 				totalInputs++;
 				if (setIni) {
-					item.dataset.ini_data = item.value.trim().substring(0, 20)
+					item.dataset.ini_data = item.value.trim().substring(0, 20);
+					// console.log(item);
 				}
 				if (item.value.trim() !== '') {
 					changedInputs++;
@@ -4754,12 +4769,15 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const setImpactedNCTList = () => {
+		// console.log('setImpactedNCTList');
 		const site_prefix = 'FW66/67';
 		if (document.title == 'eFCR') {
 			impactedNCT.value = '';
 			let impactedSites = new Set();
 			const fieldset = document.querySelector('.js-eFCR2-view');
 			fieldset.querySelectorAll('[data-name="dipPHUBSites"]').forEach(phubsite => {
+				// console.log(phubsite);
+				// console.log(phubsite.selectedIndex);
 				if (phubsite.value.trim() != '') {
 					impactedSites.add(site_prefix + '.' + phubsite.value);
 				} 
@@ -5104,7 +5122,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		} else {
 			row_prime = fieldset.querySelector('.multirows');
 		}
-		// const row_prime = fieldset.querySelector('.multirows');
 		const new_row = row_prime.cloneNode(true);
 		row.value = parseInt(row.value) + 1;
 		new_row.dataset.clone = 1;
@@ -5130,6 +5147,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (copyArea) {
 				item.selectedIndex = row_prime.querySelector(`[data-name="${item.dataset.name}"]`).selectedIndex;
 			}
+			item.dataset.ini_data = item.options[item.selectedIndex].value;
 		});
 		const cloneButton = new_row.querySelector('[data-copy]');
 		if (cloneButton !== null) {
