@@ -4267,12 +4267,29 @@ window.addEventListener('DOMContentLoaded', () => {
 					fieldset.querySelector('[data-name="dipProtocol"]').value = item.protocol;
 					fieldset.querySelector('[data-name="dipPort"]').value = item.port;
 					
-					let option = fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector(`[value="${item.PHUBSites}"]`);
-					if (option == null) {
-						fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector('.editable').value = item.PHUBSites;
-						fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector('.editable').textContent = item.PHUBSites;
+					let dipPHUBSites = fieldset.querySelector('select[data-name="dipPHUBSites"]');
+					console.log(dipPHUBSites.options.length);
+					let selectedIndex = null;
+					for (let option of dipPHUBSites.options) {
+						if (option.value.toLowerCase() == item.PHUBSites.toLowerCase()) {
+							selectedIndex = option.index;
+							break;
+						}
 					}
-						fieldset.querySelector('[data-name="dipPHUBSites"]').value = item.PHUBSites;
+					if (selectedIndex !== null) {
+						dipPHUBSites.selectedIndex = selectedIndex;
+					} else {
+						dipPHUBSites.querySelector('.editable').value = item.PHUBSites;
+						dipPHUBSites.querySelector('.editable').textContent = item.PHUBSites;
+						dipPHUBSites.value = item.PHUBSites;
+						dipPHUBSites.closest('div').querySelector('.editOption').value = item.PHUBSites;
+					}
+					// let option = fieldset.querySelector('select[data-name="dipPHUBSites"]').querySelector(`[value="${item.PHUBSites}"]`);
+					// if (option == null) {
+					// 	fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector('.editable').value = item.PHUBSites;
+					// 	fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector('.editable').textContent = item.PHUBSites;
+					// }
+					// 	fieldset.querySelector('[data-name="dipPHUBSites"]').value = item.PHUBSites;
 				});
 				// dataTableEFCR.clear().draw();
 				// data.success.answer.forEach(item => {
@@ -4740,6 +4757,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			rows_object[item_name] = rows_arr;
 			item.closest('fieldset').querySelector(`#${item_name}`).value = JSON.stringify(rows_object[item_name]);
 		});
+		setImpactedNCTList();
 		renderForm.submit();
 		formSubmit.classList.remove('edit');
 	};
@@ -4755,7 +4773,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				totalInputs++;
 				if (setIni) {
 					item.dataset.ini_data = item.value.trim().substring(0, 20);
-					// console.log(item);
 				}
 				if (item.value.trim() !== '') {
 					changedInputs++;
@@ -4769,15 +4786,12 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const setImpactedNCTList = () => {
-		// console.log('setImpactedNCTList');
 		const site_prefix = 'FW66/67';
 		if (document.title == 'eFCR') {
 			impactedNCT.value = '';
 			let impactedSites = new Set();
 			const fieldset = document.querySelector('.js-eFCR2-view');
-			fieldset.querySelectorAll('[data-name="dipPHUBSites"]').forEach(phubsite => {
-				// console.log(phubsite);
-				// console.log(phubsite.selectedIndex);
+			fieldset.querySelectorAll('select[data-name="dipPHUBSites"]').forEach(phubsite => {
 				if (phubsite.value.trim() != '') {
 					impactedSites.add(site_prefix + '.' + phubsite.value);
 				} 
@@ -5032,12 +5046,14 @@ window.addEventListener('DOMContentLoaded', () => {
 	const comboSelectChange = (e) => {
 		const target = e.target;
 		const parent = target.closest('div');
-		const input_elem = parent.querySelector(`.editOption[data-name="${target.dataset.name}"]`);
+		// const input_elem = parent.querySelector(`.editOption[data-name="${target.dataset.name}"]`);
+		const input_elem = parent.querySelector(`.editOption`);
 		if (target.options[target.selectedIndex].classList.contains('editable')) {
 			input_elem.classList.remove('hidden');
 			input_elem.addEventListener('keyup', (e) => {
 				target.options[target.selectedIndex].value = input_elem.value;
 				target.options[target.selectedIndex].textContent = input_elem.value;
+				target.value = input_elem.value;
 			});
 		} else {
 			input_elem.classList.add('hidden');
@@ -5155,7 +5171,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			cloneButton.addEventListener('click', btnAreaAppend);
 		}
 		new_row.querySelectorAll('.combo-select').forEach(element => {
-			element.addEventListener('change', comboSelectChange); 
+			element.addEventListener('change', comboSelectChange);
+			element.dispatchEvent(selectCnange);
 		});
 		fieldset.append(new_row);
 		fieldset.append(fieldset.querySelector('.ceil-btns'));

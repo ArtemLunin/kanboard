@@ -472,13 +472,13 @@ class databaseUtils {
 			$filter .= $vendor_filter;
 		}
 		if ($date_par !== '') {
-			$date_filter = ' AND YEAR(ca_year) IN (';
+			$date_filter = ' AND (YEAR(ca_year) IN (';
 			$date_arr = explode(';', $date_par);
 			foreach ($date_arr as $value) {
 				$date_filter .= "'" . $value . "',";
 			}
 			$date_filter = rtrim($date_filter, ',');
-			$date_filter .= ')';
+			$date_filter .= ') OR ca_year is NULL)';
 			$filter .= $date_filter;
 		}
 		if ($search_par !== '') {
@@ -1082,13 +1082,11 @@ class databaseUtils {
 
 	function doDeleteInventory($id, $mode = null)
 	{
-		// return $this->doDeleteByID('inventory', $id);
 		$sql = "DELETE FROM inventory_comments WHERE inventory_id=:id;DELETE FROM `inventory` WHERE id=:id";
-		if ($this->modSQL($sql, [
+		$this->modSQL($sql, [
 			'id' => $id
-		], true)) {	
-			return ['id' => $id];
-		}
+		], true);
+		return ['id' => $id];
 	}
 
 	private function doDeleteByID($table_name, $id) {
@@ -1288,6 +1286,7 @@ class databaseUtilsMOP {
 		$string = str_replace("&nbsp;", " ", $string);
 		return trim(html_entity_decode($string));
 	}
+	// databaseUtilsMOP
     function getSQL($sql_query, $params_arr) {
         try {
 			$row = $this->pdo->prepare($sql_query);
@@ -1298,10 +1297,13 @@ class databaseUtilsMOP {
 		}
 		return null;
     }
+	// databaseUtilsMOP
 	function modSQL($sql_query, $params_arr, $needCount = true) {
 		try {
 			$row = $this->pdo->prepare($sql_query);
 			$row->execute($params_arr);
+			$this->errorLog($row->rowCount());
+			
 			if (!$needCount || ($row->rowCount())) {
 				return true;
 			}
