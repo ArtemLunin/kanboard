@@ -1044,6 +1044,11 @@ window.addEventListener('DOMContentLoaded', () => {
 						},
 						text: `<button class="btn-devices">Year</button>
 							<div class="inventory-filters-list hidden">
+								<p class="filter-one js-date" data-year="2022" data-checked="1">
+									<img class="icon icon-edit-sm js-filter-off hidden" src="img/check_box_outline.svg">
+									<img class="icon icon-edit-sm js-filter-on" src="img/check_box.svg">
+									2022
+								</p>
 								<p class="filter-one js-date" data-year="2023" data-checked="1">
 									<img class="icon icon-edit-sm js-filter-off hidden" src="img/check_box_outline.svg">
 									<img class="icon icon-edit-sm js-filter-on" src="img/check_box.svg">
@@ -1058,6 +1063,31 @@ window.addEventListener('DOMContentLoaded', () => {
 									<img class="icon icon-edit-sm js-filter-off hidden" src="img/check_box_outline.svg">
 									<img class="icon icon-edit-sm js-filter-on" src="img/check_box.svg">
 									2025
+								</p>
+								<p class="filter-one js-date" data-year="2026" data-checked="1">
+									<img class="icon icon-edit-sm js-filter-off hidden" src="img/check_box_outline.svg">
+									<img class="icon icon-edit-sm js-filter-on" src="img/check_box.svg">
+									2026
+								</p>
+								<p class="filter-one js-date" data-year="2027" data-checked="1">
+									<img class="icon icon-edit-sm js-filter-off hidden" src="img/check_box_outline.svg">
+									<img class="icon icon-edit-sm js-filter-on" src="img/check_box.svg">
+									2027
+								</p>
+								<p class="filter-one js-date" data-year="2028" data-checked="1">
+									<img class="icon icon-edit-sm js-filter-off hidden" src="img/check_box_outline.svg">
+									<img class="icon icon-edit-sm js-filter-on" src="img/check_box.svg">
+									2028
+								</p>
+								<p class="filter-one js-date" data-year="2029" data-checked="1">
+									<img class="icon icon-edit-sm js-filter-off hidden" src="img/check_box_outline.svg">
+									<img class="icon icon-edit-sm js-filter-on" src="img/check_box.svg">
+									2029
+								</p>
+								<p class="filter-one js-date" data-year="2030" data-checked="1">
+									<img class="icon icon-edit-sm js-filter-off hidden" src="img/check_box_outline.svg">
+									<img class="icon icon-edit-sm js-filter-on" src="img/check_box.svg">
+									2030
 								</p>
 							</div>
 						`
@@ -4245,6 +4275,31 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
+	const removeChildElementFromCollection = (collection, selector) => {
+		collection.querySelectorAll(selector).forEach(row => {
+			row.remove();
+		});
+	};
+
+	const setSelectItem = (collection, selector, value) => {
+		let selectCollection = collection.querySelector(selector);
+		let selectedIndex = null;
+		for (let option of selectCollection.options) {
+			if (option.value.toLowerCase() == value.toLowerCase()) {
+				selectedIndex = option.index;
+				break;
+			}
+		}
+		if (selectedIndex !== null) {
+			selectCollection.selectedIndex = selectedIndex;
+		} else {
+			selectCollection.querySelector('.editable').value = value;
+			selectCollection.querySelector('.editable').textContent = value;
+			selectCollection.value = value;
+			selectCollection.closest('div').querySelector('.editOption').value = value;
+		}
+	};
+	
 	formEFCR.addEventListener('submit', (e) => {
 		e.preventDefault();
 		const formData = new FormData(e.target);
@@ -4253,43 +4308,27 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		sendFile('POST', requestURL, formData).then((data) => {
 			if (data.success && data.success.answer) {
+				let count_rows = 1;
 				const fieldset = document.querySelector(`[for="loadEFCR"]`).closest('fieldset');
-				fieldset.querySelectorAll('[data-clone="1"]').forEach(element => {
-					element.remove();
-				});
+
+				removeChildElementFromCollection(fieldset, '.multirows[data-clone="1"]');
+				let row_values = fieldset.querySelector('.multirows');
 				data.success.answer.forEach(item => {
-					fieldset.querySelector('[data-name="dipeFCRNumber"]').value = item.eFCRnumber;
-					fieldset.querySelector('[data-name="dipPolicyName"]').value = item.policyName;
-					fieldset.querySelector('[data-name="dipSourceZone"]').value = item.sourceZone;
-					fieldset.querySelector('[data-name="dipSourceSubnet"]').textContent = item.sourceSubnet;
-					fieldset.querySelector('[data-name="dipDestinationZone"]').value = item.destinationZone;
-					fieldset.querySelector('[data-name="dipDestinationSubnet"]').textContent = item.destinationSubnet;
-					fieldset.querySelector('[data-name="dipProtocol"]').value = item.protocol;
-					fieldset.querySelector('[data-name="dipPort"]').value = item.port;
+					if (count_rows > 1) {
+						row_values = btnAreaAppend(fieldset.querySelector('.multirows'));				
+					}
+					row_values.querySelector('[data-name="dipeFCRNumber"]').value = item.eFCRnumber;
+					row_values.querySelector('[data-name="dipPolicyName"]').value = item.policyName;
+
+					row_values.querySelector('[data-name="dipSourceSubnet"]').textContent = item.sourceSubnet;
+					row_values.querySelector('[data-name="dipDestinationSubnet"]').textContent = item.destinationSubnet;
+					row_values.querySelector('[data-name="dipPort"]').value = item.port;
 					
-					let dipPHUBSites = fieldset.querySelector('select[data-name="dipPHUBSites"]');
-					console.log(dipPHUBSites.options.length);
-					let selectedIndex = null;
-					for (let option of dipPHUBSites.options) {
-						if (option.value.toLowerCase() == item.PHUBSites.toLowerCase()) {
-							selectedIndex = option.index;
-							break;
-						}
-					}
-					if (selectedIndex !== null) {
-						dipPHUBSites.selectedIndex = selectedIndex;
-					} else {
-						dipPHUBSites.querySelector('.editable').value = item.PHUBSites;
-						dipPHUBSites.querySelector('.editable').textContent = item.PHUBSites;
-						dipPHUBSites.value = item.PHUBSites;
-						dipPHUBSites.closest('div').querySelector('.editOption').value = item.PHUBSites;
-					}
-					// let option = fieldset.querySelector('select[data-name="dipPHUBSites"]').querySelector(`[value="${item.PHUBSites}"]`);
-					// if (option == null) {
-					// 	fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector('.editable').value = item.PHUBSites;
-					// 	fieldset.querySelector('[data-name="dipPHUBSites"]').querySelector('.editable').textContent = item.PHUBSites;
-					// }
-					// 	fieldset.querySelector('[data-name="dipPHUBSites"]').value = item.PHUBSites;
+					setSelectItem(row_values, '[data-name="dipSourceZone"]', item.sourceZone);
+					setSelectItem(row_values, '[data-name="dipDestinationZone"]', item.destinationZone);
+					setSelectItem(row_values, '[data-name="dipProtocol"]', item.protocol);
+					setSelectItem(row_values, '[data-name="dipPHUBSites"]', item.PHUBSites);
+					count_rows++;
 				});
 				// dataTableEFCR.clear().draw();
 				// data.success.answer.forEach(item => {
@@ -4875,9 +4914,10 @@ window.addEventListener('DOMContentLoaded', () => {
 	formFields.addEventListener('reset', (e) => {
 		const target = e.target;
 		target.querySelectorAll('fieldset').forEach(fieldset => {
-			fieldset.querySelectorAll('.multirows[data-clone="1"]').forEach(row => {
-				row.remove();
-			});
+			// fieldset.querySelectorAll('.multirows[data-clone="1"]').forEach(row => {
+			// 	row.remove();
+			// });
+			removeChildElementFromCollection(fieldset, '.multirows[data-clone="1"]');
 			fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
 				ceil.value = 1;
 				fieldset.querySelector(`#${ceil.dataset.id}`).value = "";
@@ -5126,9 +5166,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	// 	});
 	// });
 
-	const btnAreaAppend = (e) => {
-		const target = e.target;
-		const fieldset = e.target.closest('fieldset');
+	const btnAreaAppend = (target) => {
+		// const target = e.target;
+		const fieldset = target.closest('fieldset');
 		const row = fieldset.querySelector("[data-parent='self']");
 		let row_prime;
 		let copyArea = false;
@@ -5168,7 +5208,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		const cloneButton = new_row.querySelector('[data-copy]');
 		if (cloneButton !== null) {
 			cloneButton.dataset.copy = parseInt(cloneButton.dataset.copy) + 1;
-			cloneButton.addEventListener('click', btnAreaAppend);
+			cloneButton.addEventListener('click', (e) => {
+				btnAreaAppend(e.target);
+			});
 		}
 		new_row.querySelectorAll('.combo-select').forEach(element => {
 			element.addEventListener('change', comboSelectChange);
@@ -5177,10 +5219,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		fieldset.append(new_row);
 		fieldset.append(fieldset.querySelector('.ceil-btns'));
 		checkInputsData(`.${inputSelectorClass}`, false);
+		return new_row;
 	};
 
 	btnsCeilAreaAppend.forEach(item => {
-		item.addEventListener('click', btnAreaAppend);
+		item.addEventListener('click', (e) => {
+			btnAreaAppend(e.target);
+		});
 	});
 
 	btnsCeilAreaRemove.forEach(item => {
