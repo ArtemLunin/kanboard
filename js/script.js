@@ -4825,14 +4825,14 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const setImpactedNCTList = () => {
-		const site_prefix = 'FW66/67';
+		// const site_prefix = 'FW66/67';
 		if (document.title == 'eFCR') {
 			impactedNCT.value = '';
 			let impactedSites = new Set();
 			const fieldset = document.querySelector('.js-eFCR2-view');
 			fieldset.querySelectorAll('select[data-name="dipPHUBSites"]').forEach(phubsite => {
 				if (phubsite.value.trim() != '') {
-					impactedSites.add(site_prefix + '.' + phubsite.value);
+					impactedSites.add(phubsite.value);
 				} 
 			});
 			for (const site of impactedSites) {

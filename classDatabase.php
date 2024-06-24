@@ -1527,30 +1527,29 @@ class databaseUtilsMOP {
 		};
 
 		$wireless_sites = ['VA2','ML02','To5','To3','MS1'];
+		$site_prefix = 'FW66/67.';
 
 		$efcrFile2 = file('template/eFCR_2.txt');
-		// $efcr_out = '';
 		$efcr_out = [];
 		
 		foreach ($efcr_arr as $efcr) {
 			try {
 				$sourceZone = $this->totalTrim($efcr['dipSourceZone'] ?? '');
 				$destinationZone = $this->totalTrim($efcr['dipDestinationZone'] ?? '');
-				// $sourceSubnetName = str_replace('/', '_', $this->totalTrim($efcr['dipSourceSubnet'] ?? ''));
 				$sourceSubnetArr = $efcr['dipSourceSubnet'];
 				$sourceSubnetNameArr = array_map($slash2ldash, $sourceSubnetArr);
 				$destinationSubnetArr = $efcr['dipDestinationSubnet'];
 				$destinationSubnetNameArr = array_map($slash2ldash, $destinationSubnetArr);
 
-				// $DestinationSubnetName = str_replace('/', '_', $this->totalTrim($efcr['dipDestinationSubnet'] ?? ''));
 				$protocolDisplayName = $this->totalTrim($efcr['dipProtocol'] ?? '') . '_' . $this->totalTrim($efcr['dipPort'] ?? '');
 				$protocolName = $this->totalTrim(strtolower($efcr['dipProtocol'] ?? ''));
 				$eFCRnumber = $this->totalTrim($efcr['dipeFCRNumber'] ?? '');
 				$EFCRPolicyName = $eFCRnumber . '_' . $this->totalTrim($efcr['dipPolicyName'] ?? '');
 				$PHUBSites = $this->totalTrim($efcr['dipPHUBSites'] ?? '');
-				$wireless_status = in_array($PHUBSites, $wireless_sites) ? true : false;
+				$wireless_status = in_array(str_replace($site_prefix, '', $PHUBSites), $wireless_sites) ? true : false;
 
-				$efcr_out[] = "FW66/67.{$PHUBSites}:";
+				// $efcr_out[] = "FW66/67.{$PHUBSites}:";
+				$efcr_out[] = "{$PHUBSites}:";
 				foreach ($efcrFile2 as $efcr_str) {
 					if (stripos($efcr_str, '_sourcezone_') !== false) {
 						$tmp_str = str_replace('_sourcezone_', '', $efcr_str);
