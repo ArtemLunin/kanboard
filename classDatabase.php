@@ -993,62 +993,6 @@ class databaseUtils {
 		return $efcr_lines;
 	}
 
-	// function exportEFCR($efcr_arr) {
-	// 	$efcrFile2 = file('template/eFCR_2.txt');
-	// 	$efcr_out = '';
-	// 	foreach ($efcr_arr as $efcr) {
-	// 		try {
-	// 			$sourceZone = $this->totalTrim($efcr['sourceZone'] ?? '');
-	// 			$sourceSubnetName = str_replace('/', '_', $this->totalTrim($efcr['sourceSubnet'] ?? ''));
-	// 			$DestinationSubnetName = str_replace('/', '_', $this->totalTrim($efcr['destinationSubnet'] ?? ''));
-	// 			$protocolDisplayName = $this->totalTrim($efcr['protocol'] ?? '') . '_' . $this->totalTrim($efcr['port'] ?? '');
-	// 			$protocolName = $this->totalTrim(strtolower($efcr['protocol'] ?? ''));
-	// 			$eFCRnumber = $this->totalTrim($efcr['eFCRnumber'] ?? '');
-	// 			$EFCRPolicyName = $eFCRnumber . '_' . $this->totalTrim($efcr['policyName'] ?? '');
-	// 			$PHUBSites = $this->totalTrim(strtolower($efcr['PHUBSites'] ?? ''));
-	// 			$efcr_out .= "[ {$PHUBSites} ]" . PHP_EOL;
-	// 			foreach ($efcrFile2 as $efcr_str) {
-	// 				$new_str = str_replace([
-	// 					'%SourceZone%',
-	// 					'%SourceSubnetName%',
-	// 					'%SourceSubnet%',
-	// 					'%DestinationZone%',
-	// 					'%DestinationSubnetName%',
-	// 					'%DestinationSubnet%',
-	// 					'%ProtocolDisplayName%',
-	// 					'%ProtocolName%',
-	// 					'%ProtocolPort%',
-	// 					'%EFCRPolicyName%',
-	// 				], [
-	// 					$sourceZone,
-	// 					$sourceSubnetName,
-	// 					$this->totalTrim($efcr['sourceSubnet'] ?? ''),
-	// 					$this->totalTrim($efcr['destinationZone'] ?? ''),
-	// 					$DestinationSubnetName,
-	// 					$this->totalTrim($efcr['destinationSubnet'] ?? ''),
-	// 					$protocolDisplayName,
-	// 					$this->totalTrim($efcr['protocol'] ?? ''),
-	// 					$this->totalTrim($efcr['port'] ?? ''),
-	// 					$EFCRPolicyName,
-	// 				], $efcr_str);
-	// 				if (strpos($new_str,'[PHUBWIRELESSCHECK]') !== false) {
-	// 					if ($PHUBSites === 'wireless') {
-	// 						continue;
-	// 					}
-	// 					$new_str = str_replace('[PHUBWIRELESSCHECK]', '', $new_str);
-	// 				}
-	// 				$efcr_out .= $new_str;
-	// 			}
-	// 		} catch (Throwable $e) {
-	// 		}
-	// 		$efcr_out .= PHP_EOL;
-	// 	}
-	// 	return [
-	// 		'file'	=> $eFCRnumber,
-	// 		'efcr_out'	=> $efcr_out,
-	// 	];
-	// }
-
 	function getPlatformId($platform)
 	{
 		$platform_id = null;
@@ -1286,6 +1230,7 @@ class databaseUtilsMOP {
 		$string = str_replace("&nbsp;", " ", $string);
 		return trim(html_entity_decode($string));
 	}
+
 	// databaseUtilsMOP
     function getSQL($sql_query, $params_arr) {
         try {
@@ -1302,7 +1247,7 @@ class databaseUtilsMOP {
 		try {
 			$row = $this->pdo->prepare($sql_query);
 			$row->execute($params_arr);
-			$this->errorLog($row->rowCount());
+			// $this->errorLog($row->rowCount());
 			
 			if (!$needCount || ($row->rowCount())) {
 				return true;
@@ -1525,31 +1470,53 @@ class databaseUtilsMOP {
 		$slash2ldash = function(string $value): string {
 			return str_replace('/', '_', $this->totalTrim($value ?? ''));
 		};
+		$addMaskToSubnet = function(string $value): string {
+			$add_mask = '';
+			if (strpos($value, '.', 1) !== false) {
+				if (strpos($value, '/') === false) {
+					$add_mask = '/32';
+				}
+			} elseif (strpos($value, ':') !== false) {
+				if (strpos($value, '/') === false) {
+					$add_mask = '/128';
+				}
+			}
+			return $value.$add_mask;
+		};
 
 		$wireless_sites = ['VA2','ML02','To5','To3','MS1'];
 		$site_prefix = 'FW66/67.';
 
 		$efcrFile2 = file('template/eFCR_2.txt');
 		$efcr_out = [];
+		$application_arr = [];
+		$application_full = false;
+		$application_search = '';
+		
+		$sourceZone_pr = $destinationZone_pr = $eFCRnumber_pr = $EFCRPolicyName_pr = $PHUBSites_pr = null;
 		
 		foreach ($efcr_arr as $efcr) {
+			$double_policies = false;
+			$efcr_storage = [];
 			try {
 				$sourceZone = $this->totalTrim($efcr['dipSourceZone'] ?? '');
 				$destinationZone = $this->totalTrim($efcr['dipDestinationZone'] ?? '');
-				$sourceSubnetArr = $efcr['dipSourceSubnet'];
+				$sourceSubnetArr = array_map($addMaskToSubnet, $efcr['dipSourceSubnet']);
 				$sourceSubnetNameArr = array_map($slash2ldash, $sourceSubnetArr);
-				$destinationSubnetArr = $efcr['dipDestinationSubnet'];
+				$destinationSubnetArr = array_map($addMaskToSubnet, $efcr['dipDestinationSubnet']);
 				$destinationSubnetNameArr = array_map($slash2ldash, $destinationSubnetArr);
-
-				$protocolDisplayName = $this->totalTrim($efcr['dipProtocol'] ?? '') . '_' . $this->totalTrim($efcr['dipPort'] ?? '');
-				$protocolName = $this->totalTrim(strtolower($efcr['dipProtocol'] ?? ''));
+				$dipPort = $this->totalTrim($efcr['dipPort'] ?? '');
+				$protocolName = $this->totalTrim(strtoupper($efcr['dipProtocol'] ?? ''));
+				$protocolDisplayName = $protocolName . '_' . $dipPort;
+				if ($protocolName === 'ICMP') {
+					$protocolDisplayName = 'junos-icmp-all';
+				}
 				$eFCRnumber = $this->totalTrim($efcr['dipeFCRNumber'] ?? '');
 				$EFCRPolicyName = $eFCRnumber . '_' . $this->totalTrim($efcr['dipPolicyName'] ?? '');
 				$PHUBSites = $this->totalTrim($efcr['dipPHUBSites'] ?? '');
 				$wireless_status = in_array(str_replace($site_prefix, '', $PHUBSites), $wireless_sites) ? true : false;
 
-				// $efcr_out[] = "FW66/67.{$PHUBSites}:";
-				$efcr_out[] = "{$PHUBSites}:";
+				$efcr_storage[] = "\n\n{$PHUBSites}:";
 				foreach ($efcrFile2 as $efcr_str) {
 					if (stripos($efcr_str, '_sourcezone_') !== false) {
 						$tmp_str = str_replace('_sourcezone_', '', $efcr_str);
@@ -1563,7 +1530,7 @@ class databaseUtilsMOP {
 								$sourceSubnetNameArr[$key],
 								$subnet_value,
 							], $tmp_str);
-							$efcr_out[] = $new_str;
+							$efcr_storage[] = $new_str;
 						}
 					} elseif (stripos($efcr_str, '_destinationzone_') !== false) {
 						$tmp_str = str_replace('_destinationzone_', '', $efcr_str);
@@ -1577,7 +1544,7 @@ class databaseUtilsMOP {
 								$destinationSubnetNameArr[$key],
 								$subnet_value,
 							], $tmp_str);
-							$efcr_out[] = $new_str;
+							$efcr_storage[] = $new_str;
 						}
 					} elseif (stripos($efcr_str, '_policiessource-address_') !== false) {
 						$tmp_str = str_replace('_policiessource-address_', '', $efcr_str);
@@ -1593,7 +1560,7 @@ class databaseUtilsMOP {
 								$EFCRPolicyName,
 								$subnet_name,
 							], $tmp_str);
-							$efcr_out[] = $new_str;
+							$efcr_storage[] = $new_str;
 						}
 					} elseif (stripos($efcr_str, '_policiesdestination-address_') !== false) {
 						$tmp_str = str_replace('_policiesdestination-address_', '', $efcr_str);
@@ -1609,7 +1576,7 @@ class databaseUtilsMOP {
 								$EFCRPolicyName,
 								$subnet_name,
 							], $tmp_str);
-							$efcr_out[] = $new_str;
+							$efcr_storage[] = $new_str;
 						}
 					} else {
 						$new_str = str_replace([
@@ -1623,8 +1590,8 @@ class databaseUtilsMOP {
 							$sourceZone,
 							$destinationZone,
 							$protocolDisplayName,
-							$this->totalTrim($efcr['dipProtocol'] ?? ''),
-							$this->totalTrim($efcr['dipPort'] ?? ''),
+							$protocolName,
+							$dipPort,
 							$EFCRPolicyName,
 						], $efcr_str);
 						if (stripos($efcr_str,'_PHUBWIRELESSCHECK_') !== false) {
@@ -1632,13 +1599,61 @@ class databaseUtilsMOP {
 								continue;
 							}
 							$new_str = str_replace('_PHUBWIRELESSCHECK_', '', $new_str);
-						} 
-						$efcr_out[] = $new_str;
+						}
+						if (stripos($efcr_str,'_setup_application_') !== false) {
+							$new_str = str_replace('_setup_application_', '', $new_str);
+							if (!$application_full) {
+								$application_arr[] = $efcr_str;
+								$application_search = $new_str;
+							}
+							if ($protocolName === 'ICMP') {
+								continue;
+							}		
+						}
+						$efcr_storage[] = $new_str;
 					}
 				}
+				$application_full = true;
+				
 			} catch (Throwable $e) {
 			}
+			if ($sourceZone_pr === $sourceZone &&  
+				$destinationZone_pr === $destinationZone && 
+				$eFCRnumber_pr === $eFCRnumber &&
+				$EFCRPolicyName_pr ===  $EFCRPolicyName &&
+				$PHUBSites_pr === $PHUBSites) {
+				$double_policies = true;
+				$efcr_storage = [];
+				foreach ($application_arr as $application_str) {
+					$new_str = str_replace([
+						'%ProtocolDisplayName%',
+						'%ProtocolName%',
+						'%ProtocolPort%'
+					], [
+						$protocolDisplayName,
+						$protocolName,
+						$dipPort,
+					], $application_str);
+					$new_str = str_replace('_setup_application_', '', $new_str);
+					$efcr_storage[] = $new_str;
+				}
+				$temp_index = array_search($application_search, array_reverse($efcr_out));
+				$this->errorLog(print_r($efcr_out, true));
+				$this->errorLog($application_search);
+				$position = count($efcr_out) - $temp_index;
+				array_splice($efcr_out, $position, 0, $efcr_storage);
+			}
+			else {
+				$sourceZone_pr = $sourceZone;
+				$destinationZone_pr = $destinationZone;
+				$eFCRnumber_pr = $eFCRnumber;
+				$EFCRPolicyName_pr =  $EFCRPolicyName;
+				$PHUBSites_pr = $PHUBSites;
+				$efcr_out = array_merge($efcr_out, $efcr_storage);
+				}
+			// $this->errorLog(print_r($efcr_storage, true));
 		}
+		// $this->errorLog(print_r($efcr_out, true));
 		return $efcr_out;
 	}
 

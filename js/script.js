@@ -5086,7 +5086,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	const comboSelectChange = (e) => {
 		const target = e.target;
 		const parent = target.closest('div');
-		// const input_elem = parent.querySelector(`.editOption[data-name="${target.dataset.name}"]`);
+		const parent_row = parent.closest('.multirows');
 		const input_elem = parent.querySelector(`.editOption`);
 		if (target.options[target.selectedIndex].classList.contains('editable')) {
 			input_elem.classList.remove('hidden');
@@ -5097,6 +5097,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 		} else {
 			input_elem.classList.add('hidden');
+		}
+		if (target.options[target.selectedIndex].value === 'ICMP') {
+			parent_row.querySelector(`[name='${target.dataset.port}']`).value = '';
 		}
 	};
 

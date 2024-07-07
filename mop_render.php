@@ -141,11 +141,14 @@ if ($efcrFile) {
     }
     $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, $efcrOutput);
 } elseif ($efcrFile2 && $efcr_res) {
+    $added_text = "Show | compare  (Please check before commit to make sure output only has 'add/+', don't have any 'delete/-' which mean overlay with existing setup. If we do have 'delete/-', stop commit and contact Engineer to double check)";
     foreach ($efcr_res as $line) {
         $efcrOutput[] = ['implementationCommandList' => htmlentities($line, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8")];
     }
     $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, $efcrOutput);
+    $templateProcessor->setValue('FCR_addedText', htmlentities($added_text, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
 }
+$templateProcessor->setValue('FCR_addedText', htmlentities('', ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
 
 
 $templateProcessor->setValues(array(
