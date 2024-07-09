@@ -5099,7 +5099,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			input_elem.classList.add('hidden');
 		}
 		if (target.options[target.selectedIndex].value === 'ICMP') {
-			parent_row.querySelector(`[name='${target.dataset.port}']`).value = '';
+			parent_row.querySelector(`[data-name='${target.dataset.port}']`).value = '';
 		}
 	};
 
