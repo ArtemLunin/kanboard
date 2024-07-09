@@ -1,0 +1,1 @@
+set security policies from-zone %SourceZone% to-zone %DestinationZone% policy %EFCRPolicyName% match application %ProtocolDisplayName%

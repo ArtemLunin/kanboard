@@ -1,0 +1,2 @@
+set applications application %ProtocolDisplayName% protocol %ProtocolName%
+set applications application %ProtocolDisplayName% destination-port %ProtocolPort%

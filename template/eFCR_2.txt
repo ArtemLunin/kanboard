@@ -1,12 +1,11 @@
 _sourcezone_set security zones security-zone %SourceZone% address-book address %SourceSubnetName% %SourceSubnet%
 _destinationzone_set security zones security-zone %DestinationZone% address-book address %DestinationSubnetName% %DestinationSubnet%
 
-_setup_application_set applications application %ProtocolDisplayName% protocol %ProtocolName%
-_setup_application_set applications application %ProtocolDisplayName% destination-port %ProtocolPort%
+_APPLICATION_BLOCK_
 
 _policiessource-address_set security policies from-zone %SourceZone% to-zone %DestinationZone% policy %EFCRPolicyName% match source-address %SourceSubnetName%
 _policiesdestination-address_set security policies from-zone %SourceZone% to-zone %DestinationZone% policy %EFCRPolicyName% match destination-address %DestinationSubnetName%
-set security policies from-zone %SourceZone% to-zone %DestinationZone% policy %EFCRPolicyName% match application %ProtocolDisplayName%
+_SECURITYMATCH_BLOCK_
 set security policies from-zone %SourceZone% to-zone %DestinationZone% policy %EFCRPolicyName% then permit
 set security policies from-zone %SourceZone% to-zone %DestinationZone% policy %EFCRPolicyName% then log session-init
 set security policies from-zone %SourceZone% to-zone %DestinationZone% policy %EFCRPolicyName% then log session-close

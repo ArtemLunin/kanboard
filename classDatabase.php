@@ -1193,7 +1193,14 @@ class databaseUtils {
 class databaseUtilsMOP {
     private $pdo = null;
 	private const OGPAEXPORTFILE = 'ogpa_export.json';
-	private const PATHEXPORTFILE = 'temp'; 
+	private const PATHEXPORTFILE = 'temp';
+	private const APPLICATIONBLOCK = '_APPLICATION_BLOCK_';
+	private const SECURITYMATCHBLOCK = '_SECURITYMATCH_BLOCK_';
+	private const PHUBSitesHEADER = '';
+	private const JUNOSICMPALL = 'junos-icmp-all';
+	private const TEMPLATEEFCR2 = 'template/eFCR_2.txt';
+	private const TEMPLATEEFCR2APP = 'template/eFCR_2_application.txt';
+	private const TEMPLATEEFCR2SECMATCH = 'template/eFCR_2_securitymatch.txt';
 
     function __construct () {
 		try
@@ -1483,20 +1490,27 @@ class databaseUtilsMOP {
 			}
 			return $value.$add_mask;
 		};
+		function deleteBlockHelper($blockTextName, $arrayStrings) {
+			$pr_position = array_search($blockTextName, $arrayStrings);
+			array_splice($arrayStrings, $pr_position, 1);
+			return $arrayStrings;
+		}
 
 		$wireless_sites = ['VA2','ML02','To5','To3','MS1'];
 		$site_prefix = 'FW66/67.';
 
-		$efcrFile2 = file('template/eFCR_2.txt');
+		$efcrFile2 = file(self::TEMPLATEEFCR2);
+		$efcr_applications = file(self::TEMPLATEEFCR2APP);
+		$efcr_securitymatch = file(self::TEMPLATEEFCR2SECMATCH);
 		$efcr_out = [];
 		$application_arr = [];
-		$application_full = false;
+		$first_row = true;
 		$application_search = '';
 		
 		$sourceZone_pr = $destinationZone_pr = $eFCRnumber_pr = $EFCRPolicyName_pr = $PHUBSites_pr = null;
+		$first_efcr_row = true;
 		
 		foreach ($efcr_arr as $efcr) {
-			$double_policies = false;
 			$efcr_storage = [];
 			try {
 				$sourceZone = $this->totalTrim($efcr['dipSourceZone'] ?? '');
@@ -1509,14 +1523,20 @@ class databaseUtilsMOP {
 				$protocolName = $this->totalTrim(strtoupper($efcr['dipProtocol'] ?? ''));
 				$protocolDisplayName = $protocolName . '_' . $dipPort;
 				if ($protocolName === 'ICMP') {
-					$protocolDisplayName = 'junos-icmp-all';
+					$protocolDisplayName = self::JUNOSICMPALL;
 				}
 				$eFCRnumber = $this->totalTrim($efcr['dipeFCRNumber'] ?? '');
 				$EFCRPolicyName = $eFCRnumber . '_' . $this->totalTrim($efcr['dipPolicyName'] ?? '');
 				$PHUBSites = $this->totalTrim($efcr['dipPHUBSites'] ?? '');
 				$wireless_status = in_array(str_replace($site_prefix, '', $PHUBSites), $wireless_sites) ? true : false;
 
-				$efcr_storage[] = "\n\n{$PHUBSites}:";
+				if (!$first_row) {
+					$efcr_storage[] = '';
+					$efcr_storage[] = '';
+				} else {
+					$first_row = false;
+				}
+				$efcr_storage[] = self::PHUBSitesHEADER."{$PHUBSites}:";
 				foreach ($efcrFile2 as $efcr_str) {
 					if (stripos($efcr_str, '_sourcezone_') !== false) {
 						$tmp_str = str_replace('_sourcezone_', '', $efcr_str);
@@ -1578,6 +1598,41 @@ class databaseUtilsMOP {
 							], $tmp_str);
 							$efcr_storage[] = $new_str;
 						}
+					} elseif (stripos($efcr_str, self::APPLICATIONBLOCK) !== false) {
+						$efcr_storage[] = self::APPLICATIONBLOCK;
+						$storage_temp = [];
+						foreach ($efcr_applications as $efcr_application) {
+							if ($protocolName === 'ICMP') {
+								break;
+							}
+							$new_str = str_replace([
+								'%ProtocolDisplayName%',
+								'%ProtocolName%',
+								'%ProtocolPort%'
+							], [
+								$protocolDisplayName,
+								$protocolName,
+								$dipPort,
+							], $efcr_application);
+							$storage_temp[] = $new_str;
+						}
+					} elseif (stripos($efcr_str, self::SECURITYMATCHBLOCK) !== false) {
+						$efcr_storage[] = self::SECURITYMATCHBLOCK;
+						$storage_match = [];
+						foreach ($efcr_securitymatch as $efcr_match) {
+							$new_str = str_replace([
+								'%SourceZone%',
+								'%DestinationZone%',
+								'%EFCRPolicyName%',
+								'%ProtocolDisplayName%',
+							], [
+								$sourceZone,
+								$destinationZone,
+								$EFCRPolicyName,
+								$protocolDisplayName,
+							], $efcr_match);
+							$storage_match[] = $new_str;
+						}
 					} else {
 						$new_str = str_replace([
 							'%SourceZone%',
@@ -1600,21 +1655,9 @@ class databaseUtilsMOP {
 							}
 							$new_str = str_replace('_PHUBWIRELESSCHECK_', '', $new_str);
 						}
-						if (stripos($efcr_str,'_setup_application_') !== false) {
-							$new_str = str_replace('_setup_application_', '', $new_str);
-							if (!$application_full) {
-								$application_arr[] = $efcr_str;
-								$application_search = $new_str;
-							}
-							if ($protocolName === 'ICMP') {
-								continue;
-							}		
-						}
 						$efcr_storage[] = $new_str;
 					}
 				}
-				$application_full = true;
-				
 			} catch (Throwable $e) {
 			}
 			if ($sourceZone_pr === $sourceZone &&  
@@ -1622,26 +1665,7 @@ class databaseUtilsMOP {
 				$eFCRnumber_pr === $eFCRnumber &&
 				$EFCRPolicyName_pr ===  $EFCRPolicyName &&
 				$PHUBSites_pr === $PHUBSites) {
-				$double_policies = true;
 				$efcr_storage = [];
-				foreach ($application_arr as $application_str) {
-					$new_str = str_replace([
-						'%ProtocolDisplayName%',
-						'%ProtocolName%',
-						'%ProtocolPort%'
-					], [
-						$protocolDisplayName,
-						$protocolName,
-						$dipPort,
-					], $application_str);
-					$new_str = str_replace('_setup_application_', '', $new_str);
-					$efcr_storage[] = $new_str;
-				}
-				$temp_index = array_search($application_search, array_reverse($efcr_out));
-				$this->errorLog(print_r($efcr_out, true));
-				$this->errorLog($application_search);
-				$position = count($efcr_out) - $temp_index;
-				array_splice($efcr_out, $position, 0, $efcr_storage);
 			}
 			else {
 				$sourceZone_pr = $sourceZone;
@@ -1649,11 +1673,23 @@ class databaseUtilsMOP {
 				$eFCRnumber_pr = $eFCRnumber;
 				$EFCRPolicyName_pr =  $EFCRPolicyName;
 				$PHUBSites_pr = $PHUBSites;
-				$efcr_out = array_merge($efcr_out, $efcr_storage);
+				if (!$first_efcr_row) {
+					$efcr_out = deleteBlockHelper(self::APPLICATIONBLOCK, $efcr_out);
+					$efcr_out = deleteBlockHelper(self::SECURITYMATCHBLOCK, $efcr_out);
 				}
-			// $this->errorLog(print_r($efcr_storage, true));
+				$first_efcr_row = false;
+				$efcr_out = array_merge($efcr_out, $efcr_storage);
+			}
+				
+			$position = array_search(self::APPLICATIONBLOCK, $efcr_out);
+			array_splice($efcr_out, $position, 0, $storage_temp);
+			$position = array_search(self::SECURITYMATCHBLOCK, $efcr_out);
+			array_splice($efcr_out, $position, 0, $storage_match);
 		}
-		// $this->errorLog(print_r($efcr_out, true));
+		$efcr_out = deleteBlockHelper(self::APPLICATIONBLOCK, $efcr_out);
+		$efcr_out = deleteBlockHelper(self::SECURITYMATCHBLOCK, $efcr_out);
+		// $pr_position = array_search(self::APPLICATIONBLOCK, $efcr_out);
+		// array_splice($efcr_out, $pr_position, 1);
 		return $efcr_out;
 	}
 
