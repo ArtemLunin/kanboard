@@ -1,6 +1,9 @@
 <?php
 namespace mySQLDatabaseUtils;
 
+require_once 'classHelper.php';
+
+
 class databaseUtils {
 	private $unauthorized = true;
 	private $root_access = false;
@@ -1190,7 +1193,7 @@ class databaseUtils {
 	}
 }
 
-class databaseUtilsMOP {
+class databaseUtilsMOP extends \helperUtils\helperUtils {
     private $pdo = null;
 	private const OGPAEXPORTFILE = 'ogpa_export.json';
 	private const PATHEXPORTFILE = 'temp';
@@ -1223,20 +1226,20 @@ class databaseUtilsMOP {
 		$this->errorLog($error_txt_info, 1);
 	}
 	// databaseUtilsMOP
-    function errorLog($error_message, $debug_mode = 1)
-	{
-		if ($debug_mode === 1)
-		{
-			error_log(date("Y-m-d H:i:s") . " ". $error_message);
-		}
-		return TRUE;
-	}
+    // function errorLog($error_message, $debug_mode = 1)
+	// {
+	// 	if ($debug_mode === 1)
+	// 	{
+	// 		error_log(date("Y-m-d H:i:s") . " ". $error_message);
+	// 	}
+	// 	return TRUE;
+	// }
 	// databaseUtilsMOP
-	function totalTrim($str) {
-		$string = htmlentities($str, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'utf-8');
-		$string = str_replace("&nbsp;", " ", $string);
-		return trim(html_entity_decode($string));
-	}
+	// function totalTrim($str) {
+	// 	$string = htmlentities($str, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'utf-8');
+	// 	$string = str_replace("&nbsp;", " ", $string);
+	// 	return trim(html_entity_decode($string));
+	// }
 
 	// databaseUtilsMOP
     function getSQL($sql_query, $params_arr) {
@@ -1525,8 +1528,11 @@ class databaseUtilsMOP {
 				if ($protocolName === 'ICMP') {
 					$protocolDisplayName = self::JUNOSICMPALL;
 				}
+				$protocolName = strtolower($protocolName);
 				$eFCRnumber = $this->totalTrim($efcr['dipeFCRNumber'] ?? '');
-				$EFCRPolicyName = $eFCRnumber . '_' . $this->totalTrim($efcr['dipPolicyName'] ?? '');
+				$policyName = str_replace(' ', '_', $this->totalTrim($efcr['dipPolicyName'] ?? ''));
+				
+				$EFCRPolicyName = $eFCRnumber . '_' . $policyName;
 				$PHUBSites = $this->totalTrim($efcr['dipPHUBSites'] ?? '');
 				$wireless_status = in_array(str_replace($site_prefix, '', $PHUBSites), $wireless_sites) ? true : false;
 
@@ -1602,7 +1608,7 @@ class databaseUtilsMOP {
 						$efcr_storage[] = self::APPLICATIONBLOCK;
 						$storage_temp = [];
 						foreach ($efcr_applications as $efcr_application) {
-							if ($protocolName === 'ICMP') {
+							if ($protocolName === 'icmp') {
 								break;
 							}
 							$new_str = str_replace([
@@ -1688,8 +1694,8 @@ class databaseUtilsMOP {
 		}
 		$efcr_out = deleteBlockHelper(self::APPLICATIONBLOCK, $efcr_out);
 		$efcr_out = deleteBlockHelper(self::SECURITYMATCHBLOCK, $efcr_out);
-		// $pr_position = array_search(self::APPLICATIONBLOCK, $efcr_out);
-		// array_splice($efcr_out, $pr_position, 1);
+
+		// $this->test('test message from helper');
 		return $efcr_out;
 	}
 
