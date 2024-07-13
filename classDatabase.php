@@ -280,7 +280,6 @@ class databaseUtils {
 		{
 			$rights = json_decode($result['user_rights'], true);
 			if ($rights) {
-				// $rights = array_filter($rights, array($this, 'hideNoAccessRights'));
 				array_walk($rights, function (&$one_right) {
 					if ($one_right['pageName'] == 'Status') {
 						$one_right['pageName'] = 'Request';
@@ -316,11 +315,7 @@ class databaseUtils {
 	function setRights($user, $rights) {
 		if ($this->root_access === true) {
 			$token_str = '';
-			// if (strlen(trim($tokenObj['token_id'])) > 30 && strlen(trim($tokenObj['token_secret'])) > 30) {
-			// 	$token_str = 'Token '.trim($tokenObj['token_id']). ':'. trim($tokenObj['token_secret']);
-			// }
 			$new_rights = array_merge($this->initialRights, $rights);
-			// $sql = "UPDATE users SET user_rights=:rights, token=:token_str WHERE user_name=:user";
 			$sql = "UPDATE users SET user_rights=:rights WHERE user_name=:user";
 			if ($this->modSQL($sql, [
 				'rights'	=> json_encode($new_rights),

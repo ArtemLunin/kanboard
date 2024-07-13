@@ -54,6 +54,9 @@ a:hover {
 h3 {
 	margin: 0;
 }
+.extLink {
+	font-weight: bold;
+}
 .container-documentation {
 	display: flex;
 }

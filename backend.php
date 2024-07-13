@@ -34,6 +34,7 @@ function getRightsAnswer($user, $rights, $root_access) {
 		'rights' => $rights,
 		'cache_setup' => $root_access,
 		'docsHref' => 'http://bookstack',
+		'capacityHref' => CAPACITY_EXTERNAL_LINK,
 		'doscLDAP' => 0
 	];
 }
@@ -105,7 +106,6 @@ catch (Exception $e) {
 
 if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
 	$currentUser = $_SESSION['logged_user'];
-	// list($rights, $token) = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
 	$rights = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
 }
 
@@ -474,7 +474,6 @@ if ($projectID !== false && $method !== 0)
 		$kanboardUserName = trim($params['userName'] ?? 'defaultUser');
 		$kanboardUserPass = trim($params['password'] ?? '');
 		if (strlen($kanboardUserName) && strlen($kanboardUserPass)) {
-			// list($rights, $token) = $db_object->getRights($kanboardUserName, $kanboardUserPass);
 			$rights = $db_object->getRights($kanboardUserName, $kanboardUserPass);
 			if ($rights) {
 				$_SESSION['logged_user'] = $kanboardUserName;
@@ -490,11 +489,6 @@ if ($projectID !== false && $method !== 0)
 		];
 	} elseif ($method === 'getRights') {
 		$param_error_msg['answer'] = getRightsAnswer($currentUser, $rights, $db_object->root_access);
-		// $param_error_msg['answer'] = [
-		// 	'user'	 => $currentUser,
-		// 	'rights' => $rights,
-		// 	'docsHref' => DOCUMENTATION_HREF,
-		// ];
 	} elseif ($method === 'addUser' && $params !== 0 && strlen(trim($params['userName'])) > 2 && strlen($params['password']) > 2) {
 		$param_error_msg['answer'] = $db_object->addUser(trim($params['userName']), $params['password']);
 	} elseif ($method === 'modUser' && $params !== 0 && strlen(trim($params['userName'])) > 2 && strlen($params['password']) > 2) {

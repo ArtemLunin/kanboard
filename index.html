@@ -677,6 +677,9 @@
 								</form>
 							</div>
 						</div>
+						<div class="capacity-frame my-2 p-2 border">
+							Capacity external link: <span class="extLink" id="capacity-frame-link"></span>
+						</div>
 						<form action="#" method="POST" id="cache_form">
 							<button class="btn btn-primary btn-sm" type="submit">Setup Cache</button>
 							<span class="bg-success d-none">Cache initialized</span>
@@ -1541,7 +1544,7 @@
 			<section class="section dip"></section>
 			<section class="section templatecDIP"></section>
 			<section class="section cdip"></section>
-			<section class="section capacity">
+			<!-- <section class="section capacity">
 				<fieldset class="">
 					<legend>Uplink/Downlink Information</legend>
 					<div class="param param-half">
@@ -1563,6 +1566,16 @@
 					<div class="param param-half">
 					</div>
 				</fieldset>
+			</section> -->
+			<section class="section capacity">
+				<iframe
+					id="capacityFrame"
+					width="100%"
+					height="800px"
+					frameborder="0"
+					sandbox
+					src="">
+				</iframe>
 			</section>
 			<section class="section inventory">
 				<div class="inventory-container container-xl mx-lg-4 mx-md-2 mx-sm-1" id="inventory">
@@ -1643,6 +1656,7 @@
 					</form>
 				</div>
 			</section>
+
 			<section class="section documentation">
 				<div class="container-documentation" style="display:none;">
 					<div class="book-aside book-menu">

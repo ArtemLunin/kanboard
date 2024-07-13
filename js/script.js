@@ -1983,6 +1983,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				});
 				wikiURL = data.success.answer.docsHref;
 				wikiLDAPAuth = data.success.answer.doscLDAP;
+				document.querySelector('#capacity-frame-link').textContent = data.success.answer.capacityHref;
+				document.querySelector('#capacityFrame').src = data.success.answer.capacityHref;
 			}
 			menu.insertAdjacentHTML('beforeend', `
 				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
