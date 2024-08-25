@@ -97,6 +97,12 @@ class databaseUtils {
 		'accessType'	=> 'admin',
 	],
 	[
+		'pageName' => 'cSDE Ping Test',
+		'sectionName' => 'cSDEPingtest',
+		'sectionAttr'	=> 'cSDEPingtest',
+		'accessType'	=> 'admin',
+	],
+	[
 		'pageName' => 'Inventory',
 		'sectionName' => 'inventory',
 		'sectionAttr'	=> 'inventory',
@@ -1199,6 +1205,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 	private const TEMPLATEEFCR2 = 'template/eFCR_2.txt';
 	private const TEMPLATEEFCR2APP = 'template/eFCR_2_application.txt';
 	private const TEMPLATEEFCR2SECMATCH = 'template/eFCR_2_securitymatch.txt';
+	private const TEMPLATEDGWPINGTESTED = 'template/dgw66-cgw01_ping_tested.txt';
 
     function __construct () {
 		try
@@ -1692,6 +1699,47 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 
 		// $this->test('test message from helper');
 		return $efcr_out;
+	}
+
+	function createNodesList($nodes_arr) {
+		$nodesList = [];
+		foreach ($nodes_arr as $key => $value) {
+			$nodesList[$value['rcbin_node']][] = [
+				'rcbin_int_number'	=> $value['rcbin_int_number'],
+				'rcbin_int_type'	=> $value['rcbin_int_type'],
+				'csde_node'			=> $value['csde_node'],
+				'csde_int_number'	=> $value['csde_int_number'],
+				'csde_int_type'		=> $value['csde_int_type'],
+			];
+			$nodesList[$value['csde_node']][] = [
+				'csde_int_number'	=> $value['csde_int_number'],
+				'csde_int_type'		=> $value['csde_int_type'],
+				'rcbin_node'		=> $value['rcbin_node'],
+				'rcbin_int_number'	=> $value['rcbin_int_number'],
+				'rcbin_int_type'	=> $value['rcbin_int_type'],
+			];
+		}
+		$dgw_ping_tested = file_get_contents(self::TEMPLATEDGWPINGTESTED);
+		$out_str = [];
+		foreach ($nodesList as $node_name => $node_arr) {
+			$this->errorLog($node_name);
+			if (strpos(strtolower($node_name), 'dgw') !== false) {
+				foreach ($node_arr as $key => $value) {
+					$out_str[] = str_replace([
+						'%NODE1%',
+						'%INTERFACE11%',
+						'%NODE2%',
+						'%INTERFACE21%'
+					], [
+						$node_name,
+						$value['rcbin_int_type']. '-' . $value['rcbin_int_number'],
+						$value['csde_node'],
+						$value['csde_int_type']. '-' . $value['csde_int_number']
+					], $dgw_ping_tested);
+				}
+			}
+		}
+		$this->errorLog(print_r($out_str, true));
 	}
 
 	function exportActivity($element, $activity) {

@@ -1,0 +1,147 @@
+
+Objective:
+===========
+
+To test and verify connectivity on the NEW physical links between dgw66/67.wlfdle and cgw01
+
+Pre-CHECKS
+===========
+
+set cli screen-length 0 
+
+show interfaces descriptions
+show interfaces terse
+show ospf neighbor instance all
+show ospf interface
+show route summary
+show bgp summary
+show ldp neighbor
+
+
+show ntp associations
+show system connections
+show chassis alarms
+
+show spanning-tree interface
+show ver
+show configuration | display set | no-more
+show chassis hardware | no-more
+show chassis fpc | no-more
+show chassis alarms | no-more
+show chassis craft-interface  | no-more
+show log messages | no-more
+show system core-dumps
+set cli screen-length 24
+
+Device List
+=======
+_DEVICES_BLOCK_
+
+
+
+New physical links :
+--------------------
+
+Connection Origin 	Interface	Connection Destination	Interface
+_TESTED_NODES_BLOCK_
+
+
+
+
+
+Step 1 : Test and verify the new link before adding it to the Ether-Bundle :
+-----------------------------------------------------------------------------
+
+### Initial commit for rollback at the end of the ongoing test
+
+show | compare
+
+commit comment PING_TEST
+
+
+_START_MULTILINE_INTERFACE_BLOCK_
+dgw66B.wlfdle -- SAMPLE CONFIG
+-----------------------------
+
+show configuration interfaces %INTERFACE11%
+show configuration interfaces %INTERFACE12%
+
+edit
+
+! 
+set interface %INTERFACE11% unit 0 family inet6
+set interfaces %INTERFACE11% mtu 4484
+
+set interface %INTERFACE12% unit 0 family inet6
+set interfaces %INTERFACE12% mtu 4484
+
+!
+
+commit
+
+Verifications:
+=======
+
+sh interface %INTERFACE11%
+show interfaces %INTERFACE11% | match fe80
+
+sh interface %INTERFACE12%
+show interfaces %INTERFACE12% | match fe80
+!
+show interfaces diagnostics optics %INTERFACE11% | match dbm
+show interfaces diagnostics optics %INTERFACE12% | match dbm
+!
+
+clear interfaces statistics %INTERFACE11%
+clear interfaces statistics %INTERFACE12%
+
+Ping the remote IPv6 link local address from each side:
+---------------------------------------------------------------
+
+
+
+dgw66B.wlfdle:
+-----------
+
+ping inet6 <remote link-local-IPv6-address> source < Interface Link-local IP of %INTERFACE11% > count 1000 size 4400 rapid
+!
+
+
+Verifications:
+!
+sh interface %INTERFACE11% extensive
+sh interface %INTERFACE12% extensive
+!
+
+###end of the Ping test 
+
+===>> dgw66B.wlfdle
+
+show system commit
+
+#rollback x
+
+show | compare
+commit
+
+! 
+
+commit
+
+Verifications:
+--------------
+show configuration interfaces %INTERFACE11%
+show configuration interfaces %INTERFACE12%
+sh interface %INTERFACE11% 
+sh interface %INTERFACE12% 
+
+_END_MULTILINE_INTERFACE_BLOCK_
+
+
+=============================
+POST CHECK same as PRE CHECKS
+=============================
+
+
+<---END of EMOP--->
+

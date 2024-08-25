@@ -73,7 +73,10 @@ foreach ($_POST as $param => $value) {
         $values = json_decode($value[0], true);
         if ($param == 'ceilAreaEFCR2') {
             $efcr_res = $db_object->exportEFCR($values);
-            // continue;
+        } elseif ($param == 'ceilAreacSDE') {
+            // $db_object->errorLog($param);
+            // $db_object->errorLog(print_r($values, true));
+            $db_object->createNodesList($values);
         } else {
             foreach ($values as $val_idx => $val_arr) {
                 foreach ($val_arr as $par_name => $par_value) {

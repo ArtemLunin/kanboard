@@ -20,7 +20,8 @@ let gPrimeElementID = 0,
 
 const hardCodeDesign = {
 	'Add/Change/Remove Roaming': 'js-eFCR-view',
-	'Add/Change/Remove': 'js-eFCR2-view'
+	'Add/Change/Remove': 'js-eFCR2-view',
+	'pingtest': 'js-cSDEPingTest-view',
 };
 const sectionChildren = {
 	'dip': {
@@ -74,6 +75,7 @@ const sections = [
 	'cdip',
 	'capacity',
 	'inventory',
+	'cSDEPingtest',
 	// 'documentation',
 	'action',
 ];
@@ -1743,7 +1745,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				showSection === 'dip' || 
 				showSection === 'cmop' ||
 				showSection === 'templatecDIP' ||
-				showSection === 'cdip'
+				showSection === 'cdip' || 
+				showSection === 'cSDEPingtest'
 				) {
 				section[idx].append(renderMopDiv);
 			}
@@ -1870,6 +1873,11 @@ window.addEventListener('DOMContentLoaded', () => {
 				} else {
 					iniOGPA();
 				}
+				break;
+			case 'cSDEPingtest':
+				document.title = 'cSDE Ping Test';
+				displayMOPElements(false);
+				iniOGPA();
 				break;
 			case 'inventory':
 				document.title = 'Inventory';
@@ -4566,6 +4574,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		if (!!hardCodeDesign[gActivityName] && !adminEnabled && (document.title == 'Roaming FCR' || document.title == 'eFCR')) {
 			showHardCodeDesign(hardCodeDesign[gActivityName].split(','));
+		} else if (document.title == 'cSDE Ping Test') {
+			showHardCodeDesign(hardCodeDesign['pingtest'].split(','));
 		}
 		formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
 			if (cTemplate) {
@@ -4827,7 +4837,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const setImpactedNCTList = () => {
-		// const site_prefix = 'FW66/67';
 		if (document.title == 'eFCR') {
 			impactedNCT.value = '';
 			let impactedSites = new Set();
@@ -5172,7 +5181,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	// });
 
 	const btnAreaAppend = (target) => {
-		// const target = e.target;
 		const fieldset = target.closest('fieldset');
 		const row = fieldset.querySelector("[data-parent='self']");
 		let row_prime;
