@@ -1206,6 +1206,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 	private const TEMPLATEEFCR2APP = 'template/eFCR_2_application.txt';
 	private const TEMPLATEEFCR2SECMATCH = 'template/eFCR_2_securitymatch.txt';
 	private const TEMPLATEDGWPINGTESTED = 'template/dgw66-cgw01_ping_tested.txt';
+	private const TEMPLATEDGWCGWCONFIG = 'template/dgw-cgw_ping.txt';
 
     function __construct () {
 		try
@@ -1697,19 +1698,40 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		$efcr_out = deleteBlockHelper(self::APPLICATIONBLOCK, $efcr_out);
 		$efcr_out = deleteBlockHelper(self::SECURITYMATCHBLOCK, $efcr_out);
 
-		// $this->test('test message from helper');
 		return $efcr_out;
 	}
 
 	function createNodesList($nodes_arr) {
+		function configGen ($templateStr, $arr_search, $arr_values) {
+			$out_str = [];
+			foreach ($arr_values as $value) {
+				$out_str[] = str_replace($arr_search, $value, $templateStr);
+			}
+			return $out_str;
+		}
+		function configGenMulti($templateStrArr, $arr_search, $arr_values) {
+			$out_str = [];
+			foreach ($arr_values as $value) {
+				$out_str[] = str_replace($arr_search, $value, $templateStrArr);
+			}
+			return $out_str;
+		}
+
+		$one_line_template = '_ONE_LINE_';
+		$multi_line_template = '_MULTI_LINE_';
+
 		$nodesList = [];
 		foreach ($nodes_arr as $key => $value) {
+			$cisco_interface = (($value['csde_int_type'] == '10') ? 'Te' : 'Hu') . $value['csde_int_number'];
+			$jun_interface = (($value['rcbin_int_type'] == '10') ? 'Xe' : 'Et') . '-' . $value['rcbin_int_number'];
 			$nodesList[$value['rcbin_node']][] = [
 				'rcbin_int_number'	=> $value['rcbin_int_number'],
 				'rcbin_int_type'	=> $value['rcbin_int_type'],
 				'csde_node'			=> $value['csde_node'],
 				'csde_int_number'	=> $value['csde_int_number'],
 				'csde_int_type'		=> $value['csde_int_type'],
+				'rcbin_int_name'	=> $jun_interface,
+				'csde_int_name'		=> $cisco_interface,
 			];
 			$nodesList[$value['csde_node']][] = [
 				'csde_int_number'	=> $value['csde_int_number'],
@@ -1717,28 +1739,53 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				'rcbin_node'		=> $value['rcbin_node'],
 				'rcbin_int_number'	=> $value['rcbin_int_number'],
 				'rcbin_int_type'	=> $value['rcbin_int_type'],
+				'rcbin_int_name'	=> $jun_interface,
+				'csde_int_name'		=> $cisco_interface,
 			];
 		}
+
 		$dgw_ping_tested = file_get_contents(self::TEMPLATEDGWPINGTESTED);
+		$dgw_cgw_config = file(self::TEMPLATEDGWCGWCONFIG);
+		
 		$out_str = [];
 		foreach ($nodesList as $node_name => $node_arr) {
-			$this->errorLog($node_name);
+			// $this->errorLog($node_name);
 			if (strpos(strtolower($node_name), 'dgw') !== false) {
-				foreach ($node_arr as $key => $value) {
-					$out_str[] = str_replace([
-						'%NODE1%',
-						'%INTERFACE11%',
-						'%NODE2%',
-						'%INTERFACE21%'
-					], [
-						$node_name,
-						$value['rcbin_int_type']. '-' . $value['rcbin_int_number'],
-						$value['csde_node'],
-						$value['csde_int_type']. '-' . $value['csde_int_number']
-					], $dgw_ping_tested);
+				// foreach ($node_arr as $key => $value) {
+				// 	$out_str[] = str_replace([
+				// 		'%NODE1%',
+				// 		'%INTERFACE11%',
+				// 		'%NODE2%',
+				// 		'%INTERFACE21%'
+				// 	], [
+				// 		$node_name,
+				// 		$value['rcbin_int_name'],
+				// 		$value['csde_node'],
+				// 		$value['csde_int_name'],
+				// 	], $dgw_ping_tested);
+				// }
+				$multiLineFlag = false;
+				$multiLineStr = [];
+				foreach ($dgw_cgw_config as $dgw_cgw_conf) {
+					if (strpos(strtoupper($dgw_cgw_conf), $one_line_template) !== false) {
+						$res_str = configGen(str_replace($one_line_template, '', $dgw_cgw_conf), '%INTERFACE%', array_column($node_arr, 'rcbin_int_name'));
+						$this->errorLog(print_r($res_str, true));
+					} elseif (strpos(strtoupper($dgw_cgw_conf), $multi_line_template) !== false) {
+						$multiLineFlag = true;
+						$multiLineStr[] = str_replace($multi_line_template, '', $dgw_cgw_conf);
+					} elseif ($multiLineFlag) {
+						$res_str = configGenMulti($multiLineStr, '%INTERFACE%',array_column($node_arr, 'rcbin_int_name'));
+						$this->errorLog(print_r($res_str, true));
+						$multiLineFlag = false;
+						$multiLineStr = [];
+					} else {
+						$multiLineFlag = false;
+						$multiLineStr = [];
+					}
 				}
 			}
 		}
+
 		$this->errorLog(print_r($out_str, true));
 	}
 

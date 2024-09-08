@@ -43,8 +43,7 @@ New physical links :
 --------------------
 
 Connection Origin 	Interface	Connection Destination	Interface
-_TESTED_NODES_BLOCK_
-
+_ONE_LINE_%NODE1% %INTERFACE11% (NEW UPLINK)   %NODE2% %INTERFACE21%
 
 
 
@@ -59,21 +58,16 @@ show | compare
 commit comment PING_TEST
 
 
-_START_MULTILINE_INTERFACE_BLOCK_
 dgw66B.wlfdle -- SAMPLE CONFIG
 -----------------------------
 
-show configuration interfaces %INTERFACE11%
-show configuration interfaces %INTERFACE12%
+_ONE_LINE_show configuration interfaces %INTERFACE%
 
 edit
 
-! 
-set interface %INTERFACE11% unit 0 family inet6
-set interfaces %INTERFACE11% mtu 4484
-
-set interface %INTERFACE12% unit 0 family inet6
-set interfaces %INTERFACE12% mtu 4484
+!
+_MULTI_LINE_set interface %INTERFACE% unit 0 family inet6
+_MULTI_LINE_set interfaces %INTERFACE% mtu 4484
 
 !
 
@@ -82,18 +76,14 @@ commit
 Verifications:
 =======
 
-sh interface %INTERFACE11%
-show interfaces %INTERFACE11% | match fe80
+_MULTI_LINE_sh interface %INTERFACE%
+_MULTI_LINE_show interfaces %INTERFACE% | match fe80
 
-sh interface %INTERFACE12%
-show interfaces %INTERFACE12% | match fe80
 !
-show interfaces diagnostics optics %INTERFACE11% | match dbm
-show interfaces diagnostics optics %INTERFACE12% | match dbm
+_ONE_LINE_show interfaces diagnostics optics %INTERFACE% | match dbm
 !
 
-clear interfaces statistics %INTERFACE11%
-clear interfaces statistics %INTERFACE12%
+_ONE_LINE_clear interfaces statistics %INTERFACE%
 
 Ping the remote IPv6 link local address from each side:
 ---------------------------------------------------------------
@@ -103,14 +93,13 @@ Ping the remote IPv6 link local address from each side:
 dgw66B.wlfdle:
 -----------
 
-ping inet6 <remote link-local-IPv6-address> source < Interface Link-local IP of %INTERFACE11% > count 1000 size 4400 rapid
+_ONE_LINE_ping inet6 <remote link-local-IPv6-address> source < Interface Link-local IP of %INTERFACE% > count 1000 size 4400 rapid
 !
 
 
 Verifications:
 !
-sh interface %INTERFACE11% extensive
-sh interface %INTERFACE12% extensive
+_ONE_LINE_sh interface %INTERFACE% extensive
 !
 
 ###end of the Ping test 
@@ -130,18 +119,11 @@ commit
 
 Verifications:
 --------------
-show configuration interfaces %INTERFACE11%
-show configuration interfaces %INTERFACE12%
-sh interface %INTERFACE11% 
-sh interface %INTERFACE12% 
-
-_END_MULTILINE_INTERFACE_BLOCK_
+_ONE_LINE_show configuration interfaces %INTERFACE%
+_ONE_LINE_sh interface %INTERFACE% 
 
 
 =============================
 POST CHECK same as PRE CHECKS
 =============================
-
-
-<---END of EMOP--->
 
