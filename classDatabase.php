@@ -1702,7 +1702,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 	}
 
 	function createNodesList($nodes_arr) {
-		function configGen ($templateStr, $arr_search, $arr_values) {
+		function configGen($templateStr, $arr_search, $arr_values) {
 			$out_str = [];
 			foreach ($arr_values as $value) {
 				$out_str[] = str_replace($arr_search, $value, $templateStr);
@@ -1716,6 +1716,34 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 			}
 			return $out_str;
 		}
+		function getTemplatesValue($node_name, $templateStr, $node_arr) {
+			$out_str = [];
+			$node_val_res = [];
+			$arr_coresponds = [
+				'%NODE1%'		=> 'rcbin_node',
+				'%INTERFACE11%' => 'rcbin_int_name',
+				'%INTERFACE%'	=> 'rcbin_int_name',
+				'%NODE2%'		=> 'csde_node',
+				'%INTERFACE21%'	=> 'csde_int_name',
+			];
+			if (preg_match_all('/\%\w+\%/m', $templateStr, $matches, PREG_SET_ORDER) !== false) {
+				$out_str = array_column($matches, 0);
+				foreach ($node_arr as $node_row) {
+					$node_one_value = [];
+					foreach ($out_str as $template_name) {
+						if (array_key_exists($arr_coresponds[$template_name], $node_row)) {
+							$node_one_value[] = $node_row[$arr_coresponds[$template_name]];
+						} else {
+							$node_one_value[] = 'unset';
+						}
+					}
+					$node_val_res[] = $node_one_value;
+				}
+			}
+
+			// error_log('getTemplatesValue>'.print_r($out_str, true));
+			return [$out_str, $node_val_res];
+		}
 
 		$one_line_template = '_ONE_LINE_';
 		$multi_line_template = '_MULTI_LINE_';
@@ -1725,6 +1753,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 			$cisco_interface = (($value['csde_int_type'] == '10') ? 'Te' : 'Hu') . $value['csde_int_number'];
 			$jun_interface = (($value['rcbin_int_type'] == '10') ? 'Xe' : 'Et') . '-' . $value['rcbin_int_number'];
 			$nodesList[$value['rcbin_node']][] = [
+				'rcbin_node'		=> $value['rcbin_node'],
 				'rcbin_int_number'	=> $value['rcbin_int_number'],
 				'rcbin_int_type'	=> $value['rcbin_int_type'],
 				'csde_node'			=> $value['csde_node'],
@@ -1734,6 +1763,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				'csde_int_name'		=> $cisco_interface,
 			];
 			$nodesList[$value['csde_node']][] = [
+				'csde_node'			=> $value['csde_node'],
 				'csde_int_number'	=> $value['csde_int_number'],
 				'csde_int_type'		=> $value['csde_int_type'],
 				'rcbin_node'		=> $value['rcbin_node'],
@@ -1768,25 +1798,36 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				$multiLineStr = [];
 				foreach ($dgw_cgw_config as $dgw_cgw_conf) {
 					if (strpos(strtoupper($dgw_cgw_conf), $one_line_template) !== false) {
-						$res_str = configGen(str_replace($one_line_template, '', $dgw_cgw_conf), '%INTERFACE%', array_column($node_arr, 'rcbin_int_name'));
-						$this->errorLog(print_r($res_str, true));
+						// $res_str = configGen(str_replace($one_line_template, '', $dgw_cgw_conf), getTemplatesValue($dgw_cgw_conf), array_column($node_arr, 'rcbin_int_name'));
+						[$templates_arr, $node_arr_values] = getTemplatesValue($node_name, $dgw_cgw_conf, $node_arr);
+						// $this->errorLog(print_r($templates_arr, true));
+						// $this->errorLog(print_r($node_arr_values, true));
+						$res_str = configGen(str_replace($one_line_template, '', $dgw_cgw_conf), $templates_arr, $node_arr_values);
+						// $this->errorLog(print_r($res_str, true));
+						array_push($out_str, $res_str);
 					} elseif (strpos(strtoupper($dgw_cgw_conf), $multi_line_template) !== false) {
 						$multiLineFlag = true;
 						$multiLineStr[] = str_replace($multi_line_template, '', $dgw_cgw_conf);
 					} elseif ($multiLineFlag) {
 						$res_str = configGenMulti($multiLineStr, '%INTERFACE%',array_column($node_arr, 'rcbin_int_name'));
-						$this->errorLog(print_r($res_str, true));
+						// $this->errorLog(print_r($res_str, true));
+						array_push($out_str, $res_str);
 						$multiLineFlag = false;
 						$multiLineStr = [];
 					} else {
+						$out_str[] = $dgw_cgw_conf;
 						$multiLineFlag = false;
 						$multiLineStr = [];
 					}
 				}
 			}
 		}
+		$rai = new \RecursiveArrayIterator($out_str);
+		$rii = new \RecursiveIteratorIterator($rai);
+		foreach($rii as $value) {
+			$this->errorLog($value);
+		}
 
-		$this->errorLog(print_r($out_str, true));
 	}
 
 	function exportActivity($element, $activity) {
