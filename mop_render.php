@@ -22,6 +22,9 @@ $ercfProcess = [];
 $activityID = 0;
 $counterMode = 0;
 
+$exportDGWConfig = false;
+$dgw_file = '';
+$conf_handle = null;
 
 function getLinesFromTextArea($taText) {
     return array_filter(explode("\r\n", trim($taText)), function ($arrStr) {
@@ -74,9 +77,16 @@ foreach ($_POST as $param => $value) {
         if ($param == 'ceilAreaEFCR2') {
             $efcr_res = $db_object->exportEFCR($values);
         } elseif ($param == 'ceilAreacSDE') {
-            // $db_object->errorLog($param);
-            // $db_object->errorLog(print_r($values, true));
-            $db_object->createNodesList($values);
+            $arr_dgw_cgw = $db_object->createNodesList($values);
+            $dgw_file = tempnam(sys_get_temp_dir(), 'txt');
+            $exportDGWConfig = file_put_contents($dgw_file, $arr_dgw_cgw['dgw']);
+            // $db_object->errorLog($exportDGWConfig);
+            // $conf_handle = fopen($dgw_file, "w");
+            // foreach ($arr_dgw_cgw['dgw'] as $conf_str) {
+            //     fwrite($conf_handle, $conf_str);
+            // }
+            // fclose($conf_handle);
+            // $db_object->errorLog(print_r($arr_dgw_cgw['dgw'], true));
         } else {
             foreach ($values as $val_idx => $val_arr) {
                 foreach ($val_arr as $par_name => $par_value) {
@@ -260,12 +270,23 @@ if ($implFile != false) {
 }
 $sourceZip->close();
 
-header("Content-Type: application/vnd.ms-word; charset=utf-8");
-header("Content-Disposition: attachment; filename=".$resultFileName);
-header("Expires: 0");
-header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-header("Cache-Control: private", false);
-$handle = fopen($filename, "r");
-$contents = fread($handle, filesize($filename));
-echo $contents;
+if ($exportDGWConfig !== false) {
+    header("Content-Type: text/plain; charset=utf-8");
+    header("Content-Disposition: attachment; filename=dgw_config.txt");
+    header("Expires: 0");
+    header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+    header("Cache-Control: private", false);
+    $handle = fopen($dgw_file, "r");
+    $contents = fread($handle, $exportDGWConfig);
+    echo $contents;
+} else {
+    header("Content-Type: application/vnd.ms-word; charset=utf-8");
+    header("Content-Disposition: attachment; filename=".$resultFileName);
+    header("Expires: 0");
+    header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+    header("Cache-Control: private", false);
+    $handle = fopen($filename, "r");
+    $contents = fread($handle, filesize($filename));
+    echo $contents;
+}
 }

@@ -35,7 +35,7 @@ set cli screen-length 24
 
 Device List
 =======
-_DEVICES_BLOCK_
+_UNIQ_LINE_%NODE1%
 
 
 
@@ -58,7 +58,7 @@ show | compare
 commit comment PING_TEST
 
 
-dgw66B.wlfdle -- SAMPLE CONFIG
+_UNIQ_LINE_%NODE1% -- SAMPLE CONFIG
 -----------------------------
 
 _ONE_LINE_show configuration interfaces %INTERFACE%
@@ -90,7 +90,7 @@ Ping the remote IPv6 link local address from each side:
 
 
 
-dgw66B.wlfdle:
+_UNIQ_LINE_%NODE1%:
 -----------
 
 _ONE_LINE_ping inet6 <remote link-local-IPv6-address> source < Interface Link-local IP of %INTERFACE% > count 1000 size 4400 rapid
@@ -104,7 +104,7 @@ _ONE_LINE_sh interface %INTERFACE% extensive
 
 ###end of the Ping test 
 
-===>> dgw66B.wlfdle
+===>> _UNIQ_LINE_%NODE1%
 
 show system commit
 
