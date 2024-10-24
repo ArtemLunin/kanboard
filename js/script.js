@@ -21,7 +21,7 @@ let gPrimeElementID = 0,
 const hardCodeDesign = {
 	'Add/Change/Remove Roaming': 'js-eFCR-view',
 	'Add/Change/Remove': 'js-eFCR2-view',
-	'pingtest': 'js-cSDEPingTest-view',
+	'Capacity Upgrade': 'js-cSDEPingTest-view',
 };
 const sectionChildren = {
 	'dip': {
@@ -36,7 +36,18 @@ const sectionChildren = {
 			'Add/Change/Remove',
 			'efcr',
 		],
-	}
+	},
+	'cSDEPingtest': [
+		'DGW',
+		'Capacity Upgrade',
+		'pingtest',
+	],
+};
+
+const documentProperties = {
+	'cSDEPingtest': {
+		title: 'cSDE Ping Test',
+	},
 };
 
 // const cTemplateGroups = {
@@ -1875,9 +1886,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 				break;
 			case 'cSDEPingtest':
-				document.title = 'cSDE Ping Test';
+				document.title = documentProperties.cSDEPingtest.title;
 				displayMOPElements(false);
-				iniOGPA();
+				iniOGPA(addParams);
 				break;
 			case 'inventory':
 				document.title = 'Inventory';
@@ -1921,12 +1932,11 @@ window.addEventListener('DOMContentLoaded', () => {
 			item.style.backgroundColor = '';
 		});
 		try {
+			let selector = `[data-section="${section}"]`;
 			if (subsection) {
-				menu.querySelector(`[data-section="${section}"][data-subsection="${subsection}"]`).style.backgroundColor = 'rgba(0,0,0,0.1)';
-			} else {
-				menu.querySelector(`[data-section="${section}"]`).style.backgroundColor = 'rgba(0,0,0,0.1)';
+				selector = `[data-section="${section}"][data-subsection="${subsection}"]`;
 			}
-			
+			menu.querySelector(selector).style.backgroundColor = 'rgba(0,0,0,0.1)';
 		} catch (e) {
 		};
 	};
@@ -1957,10 +1967,15 @@ window.addEventListener('DOMContentLoaded', () => {
 						}
 						if (accessType != '') {	
 							rights[sectionName] = accessType;
+							let add_attrs = '';
+							if (!!sectionChildren[sectionName] && Array.isArray(sectionChildren[sectionName])) {
+								let temp_arr = sectionChildren[sectionName];
+								add_attrs = `data-element="${temp_arr[0]}" data-activity="${temp_arr[1]}"`;
+							}
 							menu.insertAdjacentHTML('beforeend', `
-							<li data-section="${sectionAttr}" data-access="${accessType}">${pageName}</li>
+							<li data-section="${sectionAttr}" data-access="${accessType}" ${add_attrs}>${pageName}</li>
 							`);
-							if (!!sectionChildren[sectionName]) {
+							if (!!sectionChildren[sectionName] && typeof sectionChildren[sectionName] === 'object' && !Array.isArray(sectionChildren[sectionName])) {
 								for (const [key, value] of Object.entries (sectionChildren[sectionName])) {
 									menu.insertAdjacentHTML('beforeend', `<li data-section="${sectionAttr}" 
 									data-visible-name="${key}" 
@@ -2013,7 +2028,15 @@ window.addEventListener('DOMContentLoaded', () => {
 				section = 'documentation';
 			} */
 			selectMenuItem(menu, section);
-			toggleSection(section);
+			let paramSection = {};
+			try {
+				let sectionItem = document.querySelector(`li[data-section="${section}"]`);
+				if (!!sectionItem.dataset.element && !!sectionItem.dataset.activity) {
+					paramSection.element = sectionItem.dataset.element;
+					paramSection.activity = sectionItem.dataset.activity;
+				}
+			} catch (e) {}
+			toggleSection(section, paramSection);
 		}
 	};
 
@@ -4574,8 +4597,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		if (!!hardCodeDesign[gActivityName] && !adminEnabled && (document.title == 'Roaming FCR' || document.title == 'eFCR')) {
 			showHardCodeDesign(hardCodeDesign[gActivityName].split(','));
-		} else if (document.title == 'cSDE Ping Test') {
-			showHardCodeDesign(hardCodeDesign['pingtest'].split(','));
+		} else if (document.title == documentProperties.cSDEPingtest.title) {
+			showHardCodeDesign(hardCodeDesign['Capacity Upgrade'].split(','));
 		}
 		formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
 			if (cTemplate) {
@@ -4817,8 +4840,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		totalInputs = 0;
 		changedInputs = 0;
 		document.querySelectorAll(inputsSelector).forEach(item => {
-			// if (item.type !== 'hidden' && item.type !== 'file' && item.name !== '' && ((!JSON.parse(efcrFields.value).includes(item.name) && document.title != 'Roaming FCR' && document.title != 'eFCR') || document.title == 'Roaming FCR' || document.title == 'eFCR')) {
-			// console.log(item);
 			if (item.type !== 'hidden' && item.type !== 'file' && item.name !== '' && !(item.closest('fieldset').disabled))
 			{
 				totalInputs++;
@@ -4837,9 +4858,25 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const setImpactedNCTList = () => {
+		function createNCTForItem(fieldSet, ...itemSelector) {
+			let NCTList = '';
+			let impactedSites = new Set();
+			for (let item of itemSelector) {
+				fieldSet.querySelectorAll(item).forEach(foundValue => {
+					if (foundValue.value.trim() != '') {
+						impactedSites.add(foundValue.value);
+					} 
+				});
+			}
+			for (const site of impactedSites) {
+				NCTList += site + '\n';
+			}
+			return NCTList;
+		}
+
+		let impactedSites = new Set();
 		if (document.title == 'eFCR') {
 			impactedNCT.value = '';
-			let impactedSites = new Set();
 			const fieldset = document.querySelector('.js-eFCR2-view');
 			fieldset.querySelectorAll('select[data-name="dipPHUBSites"]').forEach(phubsite => {
 				if (phubsite.value.trim() != '') {
@@ -4849,6 +4886,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			for (const site of impactedSites) {
 				impactedNCT.value += site + '\n';
 			}
+		} else if (document.title == documentProperties.cSDEPingtest.title) {
+			const fieldset = document.querySelector('.js-cSDEPingTest-view');
+			impactedNCT.value = createNCTForItem(fieldset, 'select[data-name="rcbin_node"]', 'select[data-name="csde_node"]');
 		}
 	};
 

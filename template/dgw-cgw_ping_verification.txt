@@ -1,0 +1,32 @@
+_UNIQ_LINE_%NODE1%:
+-----------
+
+_MULTI_LINE_sh interface %INTERFACE%
+_MULTI_LINE_show interfaces %INTERFACE% | match fe80
+
+!
+_ONE_LINE_show interfaces diagnostics optics %INTERFACE% | match dbm
+!
+
+_ONE_LINE_clear interfaces statistics %INTERFACE%
+
+Ping the remote IPv6 link local address from each side:
+---------------------------------------------------------------
+
+_ONE_LINE_ping inet6 <remote link-local-IPv6-address> source < Interface Link-local IP of %INTERFACE% > count 1000 size 4400 rapid
+
+!
+_ONE_LINE_sh interface %INTERFACE% extensive
+!
+
+show system commit
+
+#rollback x
+
+show | compare
+commit
+
+!
+
+_ONE_LINE_show configuration interfaces %INTERFACE%
+_ONE_LINE_sh interface %INTERFACE% 

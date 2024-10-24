@@ -11,6 +11,10 @@ $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/mop_temp
 $efcrFile = file('template/eFCR.txt');
 $efcrFile2 = false;
 $efcr_res = false;
+$pingtest_res = false;
+$pingtest_test = false;
+$exportDGWConfig = false;
+$nodes_list = [];
 
 $filename = tempnam(sys_get_temp_dir(), 'docx');
 $resultFileName = "untitled";
@@ -22,7 +26,6 @@ $ercfProcess = [];
 $activityID = 0;
 $counterMode = 0;
 
-$exportDGWConfig = false;
 $dgw_file = '';
 $conf_handle = null;
 
@@ -30,6 +33,15 @@ function getLinesFromTextArea($taText) {
     return array_filter(explode("\r\n", trim($taText)), function ($arrStr) {
         return strlen($arrStr);
     });
+}
+
+function genCMDBlock($arr_str, $blockName) {
+    $cmd_out = [];
+    foreach ($arr_str as $line) {
+        // 'implementationCommandList'
+        $cmd_out[] = [ $blockName => htmlentities($line, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8")];
+    }
+    return $cmd_out;
 }
 
 // $db_object->errorLog(print_r($_POST, true));
@@ -77,16 +89,10 @@ foreach ($_POST as $param => $value) {
         if ($param == 'ceilAreaEFCR2') {
             $efcr_res = $db_object->exportEFCR($values);
         } elseif ($param == 'ceilAreacSDE') {
-            $arr_dgw_cgw = $db_object->createNodesList($values);
-            $dgw_file = tempnam(sys_get_temp_dir(), 'txt');
-            $exportDGWConfig = file_put_contents($dgw_file, $arr_dgw_cgw['dgw']);
-            // $db_object->errorLog($exportDGWConfig);
-            // $conf_handle = fopen($dgw_file, "w");
-            // foreach ($arr_dgw_cgw['dgw'] as $conf_str) {
-            //     fwrite($conf_handle, $conf_str);
-            // }
-            // fclose($conf_handle);
-            // $db_object->errorLog(print_r($arr_dgw_cgw['dgw'], true));
+            $arr_dgw_cgw = $db_object->createPingTestConfig($values);
+            $pingtest_res = $arr_dgw_cgw['dgw_config'];
+            $pingtest_test = $arr_dgw_cgw['dgw_verification'];
+            $nodes_list = $arr_dgw_cgw['nodes_list'];
         } else {
             foreach ($values as $val_idx => $val_arr) {
                 foreach ($val_arr as $par_name => $par_value) {
@@ -105,7 +111,8 @@ foreach ($_POST as $param => $value) {
                 $arrayBlocks[$param]["taName"] => htmlentities($line, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8")
             ];
         }
-        if(($efcrFile || $efcrFile2) && $arrayBlocks[$param]["blockName"] == 'implementationCheckList')
+        if((($efcrFile || $efcrFile2 || $pingtest_res) && $arrayBlocks[$param]["blockName"] == 'implementationCheckList') || 
+        ($pingtest_test && $arrayBlocks[$param]["blockName"] == 'finalCheckList'))
         {
             continue;
         }
@@ -160,9 +167,25 @@ if ($efcrFile) {
     }
     $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, $efcrOutput);
     $templateProcessor->setValue('FCR_addedText', htmlentities($added_text, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
+} 
+if ($pingtest_res) {
+    $db_object->errorLog(print_r($nodes_list, true));
+    $templateProcessor->cloneRowAndSetValues('rcbinNode', $nodes_list);
+    // [
+    //     ['rcbin_node' => 'DGW66B.WLFDLE', 'rcbin_int_name' => 'Et-7/1/3', 'csde_node' => 'CGW01.MTNK', 'csde_int_name' => 'Hu7/1/14'],
+    //     ['host1' => 'dgw', 'interface1' => 'te1', 'host2' => 'cgw', 'interface2' => 'te2' ],
+    //     ['host1' => 'dgw_', 'interface1' => 'te1_', 'host2' => 'cgw_', 'interface2' => 'te2_' ],
+    // ]
+// );
+    $templateProcessor->cloneBlock('testPingNewInterfaces', 1, true, true);
+    $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, genCMDBlock($pingtest_res, 'implementationCommandList'));
 }
-$templateProcessor->setValue('FCR_addedText', htmlentities('', ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
+if ($pingtest_test) {
+    $templateProcessor->cloneBlock('finalCheckList', 0, true, false, genCMDBlock($pingtest_test, 'finalCommandList'));
+}
 
+$templateProcessor->setValue('FCR_addedText', htmlentities('', ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
+$templateProcessor->cloneBlock('testPingNewInterfaces', 0, true, true);
 
 $templateProcessor->setValues(array(
     'revisionDate' => date("F j, Y"), 
