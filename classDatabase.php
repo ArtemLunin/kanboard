@@ -1207,7 +1207,9 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 	private const TEMPLATEEFCR2SECMATCH = 'template/eFCR_2_securitymatch.txt';
 	// private const TEMPLATEDGWPINGTESTED = 'template/dgw66-cgw01_ping_tested.txt';
 	private const TEMPLATEDGWCGWCONFIG = 'template/dgw-cgw_ping_config.txt';
+	private const TEMPLATECGWDGWCONFIG = 'template/cgw-dgw_ping_config.txt';
 	private const TEMPLATEDGWCGWVERIFICATION = 'template/dgw-cgw_ping_verification.txt';
+	private const TEMPLATECGWDGWVERIFICATION = 'template/cgw-dgw_ping_verification.txt';
 
     function __construct () {
 		try
@@ -1702,8 +1704,11 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 
 	function createPingTestConfig($nodes_arr) {
 		function configGen($templateStr, $arr_search, $arr_values) {
-			error_log(print_r($templateStr, true));
 			$out_str = [];
+			error_log(date("Y-m-d H:i:s").', configGen');
+			error_log(print_r($templateStr, true));
+			error_log(print_r($arr_search, true));
+			error_log(print_r($arr_values, true));
 			foreach ($arr_values as $value) {
 				$out_str[] = str_replace($arr_search, $value, $templateStr);
 			}
@@ -1732,6 +1737,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				foreach ($node_arr as $node_row) {
 					$node_one_value = [];
 					foreach ($out_str as $template_name) {
+						error_log(print_r($template_name, true));
 						if (array_key_exists($arr_coresponds[$template_name], $node_row)) {
 							$node_one_value[] = $node_row[$arr_coresponds[$template_name]];
 						} else {
@@ -1752,6 +1758,8 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 			$out_str_dgw = [];
 			$multiLineFlag = false;
 			$multiLineStr = [];
+			$templatesArr = [];
+			$nodeArrValues = [];
 			foreach ($config_file as $dgw_cgw_conf) {
 				$dgw_cgw_conf_upper = strtoupper($dgw_cgw_conf);
 				if ((strpos($dgw_cgw_conf_upper, $one_line_template) !== false) || (strpos($dgw_cgw_conf_upper, $uniq_line_template) !== false)) {
@@ -1769,10 +1777,25 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				elseif (strpos($dgw_cgw_conf_upper, $multi_line_template) !== false) {
 					$multiLineFlag = true;
 					[$templates_arr, $node_arr_values] = getTemplatesValue($node_name, $dgw_cgw_conf, $node_arr);
+					if (count($templates_arr) != 0 && count($node_arr_values) != 0) {
+						if (count(array_diff($templates_arr, $templatesArr)) != 0) {
+							error_log('adding to templates');
+							error_log(print_r($templates_arr, true));
+							error_log(print_r($templatesArr, true));
+							$templatesArr = array_merge($templatesArr, $templates_arr);
+							$nodeArrValues = array_merge($nodeArrValues, $node_arr_values);
+						}
+					}
 					$multiLineStr[] = str_replace($multi_line_template, '', $dgw_cgw_conf);
+					error_log(date("Y-m-d H:i:s").', templates_arr');
+					error_log(print_r($templates_arr, true));
+					error_log(date("Y-m-d H:i:s").', node_arr_values');
+					error_log(print_r($node_arr_values, true));
 				} elseif ($multiLineFlag) {
-					$res_str = configGen($multiLineStr, $templates_arr, $node_arr_values);
+					// error_log(print_r($templates_arr, true));
+					$res_str = configGen($multiLineStr, $templatesArr, $nodeArrValues);
 					array_push($out_str_dgw, $res_str);
+					$out_str_dgw[] = $dgw_cgw_conf;
 					$multiLineFlag = false;
 					$multiLineStr = [];
 				} else {
@@ -1811,44 +1834,74 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		}
 		
 		$out_str_dgw_config = [];
+		$out_str_cgw_config = [];
 		$out_str_dgw_verification = [];
+		$out_str_cgw_verification = [];
 		$out_nodes_dgw = [];
+		$out_nodes_cgw = [];
 		foreach ($nodesList as $node_name => $node_arr) {
 			if (strpos(strtolower($node_name), 'dgw') !== false) {
 				$out_nodes_dgw = array_merge($out_nodes_dgw, $node_arr);
 				array_push($out_str_dgw_config, createConfigOnTemplate($node_name, $node_arr, file(self::TEMPLATEDGWCGWCONFIG)), ['', '']);
 				array_push($out_str_dgw_verification, createConfigOnTemplate($node_name, $node_arr, file(self::TEMPLATEDGWCGWVERIFICATION)), ['', '']);
+			} elseif (strpos(strtolower($node_name), 'cgw') !== false) {
+				$out_nodes_cgw = array_merge($out_nodes_cgw, $node_arr);
+				array_push($out_str_cgw_config, createConfigOnTemplate($node_name, $node_arr, file(self::TEMPLATECGWDGWCONFIG)), ['', '']);
+				array_push($out_str_cgw_verification, createConfigOnTemplate($node_name, $node_arr, file(self::TEMPLATECGWDGWVERIFICATION)), ['', '']);
 			}
 		}
-		$rai_dgw_config = new \RecursiveArrayIterator($out_str_dgw_config);
-		$rii_dgw_config = new \RecursiveIteratorIterator($rai_dgw_config);
+		// $rai_dgw_config = new \RecursiveArrayIterator($out_str_dgw_config);
+		// $rii_dgw_config = new \RecursiveIteratorIterator($rai_dgw_config);
 
-		$rai_dgw_verification = new \RecursiveArrayIterator($out_str_dgw_verification);
-		$rii_dgw_verification = new \RecursiveIteratorIterator($rai_dgw_verification);
+		// $rai_dgw_verification = new \RecursiveArrayIterator($out_str_dgw_verification);
+		// $rii_dgw_verification = new \RecursiveIteratorIterator($rai_dgw_verification);
 
-		// $rai_nodes_list = new \RecursiveArrayIterator($out_nodes_dgw);
-		// $rii_nodes_list = new \RecursiveIteratorIterator($rai_nodes_list);
+		// $rai_cgw_config = new \RecursiveArrayIterator($out_str_cgw_config);
+		// $rii_cgw_config = new \RecursiveIteratorIterator($rai_cgw_config);
 
-		$arr_cgw = [];
-		$arr_dgw_config = [];
-		$arr_dgw_verification = [];
-		$arr_nodes_list = [];
-		foreach($rii_dgw_config as $value) {
-			$arr_dgw_config[] = $value;
+		// $rai_cgw_verification = new \RecursiveArrayIterator($out_str_cgw_verification);
+		// $rii_cgw_verification = new \RecursiveIteratorIterator($rai_cgw_verification);
+
+		// $arr_cgw_config = [];
+		// $arr_dgw_config = [];
+		// $arr_dgw_verification = [];
+		// $arr_cgw_verification = [];
+		// $arr_nodes_list = [];
+
+		function objectToArrayIterator($complexObject) {
+			$rai_config = new \RecursiveArrayIterator($complexObject);
+			$rii_config = new \RecursiveIteratorIterator($rai_config);
+			$arr_from_iterator = [];
+			foreach($rii_config as $value) {
+				$arr_from_iterator[] = $value;
+			}
+			return $arr_from_iterator;
 		}
-		foreach($rii_dgw_verification as $value) {
-			$arr_dgw_verification[] = $value;
-		}
-		// foreach ($rii_nodes_list as $value) {
-		// 	$arr_nodes_list[] = $value;
+
+		$arr_dgw_config = objectToArrayIterator($out_str_dgw_config);
+		$arr_cgw_config = objectToArrayIterator($out_str_cgw_config);
+		$arr_dgw_verification = objectToArrayIterator($out_str_dgw_verification);
+		$arr_cgw_verification = objectToArrayIterator($out_str_cgw_verification);
+
+		// foreach($rii_dgw_config as $value) {
+		// 	$arr_dgw_config[] = $value;
+		// }
+		// foreach($rii_dgw_verification as $value) {
+		// 	$arr_dgw_verification[] = $value;
+		// }
+		// foreach($rii_cgw_config as $value) {
+		// 	$arr_cgw_config[] = $value;
+		// }
+		// foreach($rii_cgw_verification as $value) {
+		// 	$arr_cgw_verification[] = $value;
 		// }
 		return [
 			'dgw_config'	=> $arr_dgw_config,
 			'dgw_verification'	=> $arr_dgw_verification,
-			'cgw'			=> $arr_cgw,
+			'cgw_config'		=> $arr_cgw_config,
+			'cgw_verification'	=> $arr_cgw_verification,
 			'nodes_list'	=> $out_nodes_dgw,
 		];
-
 	}
 
 	function exportActivity($element, $activity) {

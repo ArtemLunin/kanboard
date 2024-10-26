@@ -1,5 +1,4 @@
 _UNIQ_LINE_%NODE1%:
------------
 
 _MULTI_LINE_sh interface %INTERFACE%
 _MULTI_LINE_show interfaces %INTERFACE% | match fe80
@@ -27,6 +26,5 @@ show | compare
 commit
 
 !
-
 _ONE_LINE_show configuration interfaces %INTERFACE%
 _ONE_LINE_sh interface %INTERFACE% 

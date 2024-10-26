@@ -1,0 +1,13 @@
+_UNIQ_LINE_%NODE2% -- CONFIG
+!
+config t
+!
+_MULTI_LINE_interface %INTERFACE21%
+_MULTI_LINE_mtu 4484
+_MULTI_LINE_ipv6 enable
+_MULTI_LINE_no shut
+_MULTI_LINE_!
+show commit changes diff
+!
+commit
+!

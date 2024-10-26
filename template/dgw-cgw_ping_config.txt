@@ -5,7 +5,6 @@ commit comment PING_TEST
 
 
 _UNIQ_LINE_%NODE1% -- CONFIG
------------------------------
 
 _ONE_LINE_show configuration interfaces %INTERFACE%
 

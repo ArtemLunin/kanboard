@@ -11,8 +11,10 @@ $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/mop_temp
 $efcrFile = file('template/eFCR.txt');
 $efcrFile2 = false;
 $efcr_res = false;
-$pingtest_res = false;
-$pingtest_test = false;
+$pingtest_dgw = false;
+$pingtest_cgw = false;
+$pingtest_dgw_ver = false;
+$pingtest_cgw_ver = false;
 $exportDGWConfig = false;
 $nodes_list = [];
 
@@ -90,8 +92,10 @@ foreach ($_POST as $param => $value) {
             $efcr_res = $db_object->exportEFCR($values);
         } elseif ($param == 'ceilAreacSDE') {
             $arr_dgw_cgw = $db_object->createPingTestConfig($values);
-            $pingtest_res = $arr_dgw_cgw['dgw_config'];
-            $pingtest_test = $arr_dgw_cgw['dgw_verification'];
+            $pingtest_dgw = $arr_dgw_cgw['dgw_config'];
+            $pingtest_cgw = $arr_dgw_cgw['cgw_config'];
+            $pingtest_dgw_ver = $arr_dgw_cgw['dgw_verification'];
+            $pingtest_cgw_ver = $arr_dgw_cgw['cgw_verification'];
             $nodes_list = $arr_dgw_cgw['nodes_list'];
         } else {
             foreach ($values as $val_idx => $val_arr) {
@@ -111,8 +115,8 @@ foreach ($_POST as $param => $value) {
                 $arrayBlocks[$param]["taName"] => htmlentities($line, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8")
             ];
         }
-        if((($efcrFile || $efcrFile2 || $pingtest_res) && $arrayBlocks[$param]["blockName"] == 'implementationCheckList') || 
-        ($pingtest_test && $arrayBlocks[$param]["blockName"] == 'finalCheckList'))
+        if((($efcrFile || $efcrFile2 || $pingtest_dgw || $pingtest_cgw) && $arrayBlocks[$param]["blockName"] == 'implementationCheckList') || 
+        (($pingtest_dgw_ver || $pingtest_cgw_ver) && $arrayBlocks[$param]["blockName"] == 'finalCheckList'))
         {
             continue;
         }
@@ -168,20 +172,14 @@ if ($efcrFile) {
     $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, $efcrOutput);
     $templateProcessor->setValue('FCR_addedText', htmlentities($added_text, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
 } 
-if ($pingtest_res) {
-    $db_object->errorLog(print_r($nodes_list, true));
+if ($pingtest_dgw) {
     $templateProcessor->cloneRowAndSetValues('rcbinNode', $nodes_list);
-    // [
-    //     ['rcbin_node' => 'DGW66B.WLFDLE', 'rcbin_int_name' => 'Et-7/1/3', 'csde_node' => 'CGW01.MTNK', 'csde_int_name' => 'Hu7/1/14'],
-    //     ['host1' => 'dgw', 'interface1' => 'te1', 'host2' => 'cgw', 'interface2' => 'te2' ],
-    //     ['host1' => 'dgw_', 'interface1' => 'te1_', 'host2' => 'cgw_', 'interface2' => 'te2_' ],
-    // ]
-// );
     $templateProcessor->cloneBlock('testPingNewInterfaces', 1, true, true);
-    $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, genCMDBlock($pingtest_res, 'implementationCommandList'));
+
+    $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, genCMDBlock(array_merge($pingtest_dgw, $pingtest_cgw), 'implementationCommandList'));
 }
-if ($pingtest_test) {
-    $templateProcessor->cloneBlock('finalCheckList', 0, true, false, genCMDBlock($pingtest_test, 'finalCommandList'));
+if ($pingtest_dgw_ver) {
+    $templateProcessor->cloneBlock('finalCheckList', 0, true, false, genCMDBlock(array_merge($pingtest_dgw_ver, $pingtest_cgw_ver), 'finalCommandList'));
 }
 
 $templateProcessor->setValue('FCR_addedText', htmlentities('', ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
