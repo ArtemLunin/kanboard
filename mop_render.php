@@ -33,7 +33,8 @@ $conf_handle = null;
 
 function getLinesFromTextArea($taText) {
     return array_filter(explode("\r\n", trim($taText)), function ($arrStr) {
-        return strlen($arrStr);
+        // return strlen($arrStr);
+        return true;
     });
 }
 
@@ -115,8 +116,8 @@ foreach ($_POST as $param => $value) {
                 $arrayBlocks[$param]["taName"] => htmlentities($line, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8")
             ];
         }
-        if((($efcrFile || $efcrFile2 || $pingtest_dgw || $pingtest_cgw) && $arrayBlocks[$param]["blockName"] == 'implementationCheckList') || 
-        (($pingtest_dgw_ver || $pingtest_cgw_ver) && $arrayBlocks[$param]["blockName"] == 'finalCheckList'))
+        if((($efcrFile || $efcrFile2 || $pingtest_dgw || $pingtest_cgw) && $arrayBlocks[$param]["blockName"] == 'implementationCheckList'))// || 
+        // (($pingtest_dgw_ver || $pingtest_cgw_ver) && $arrayBlocks[$param]["blockName"] == 'finalCheckList'))
         {
             continue;
         }
@@ -178,9 +179,9 @@ if ($pingtest_dgw) {
 
     $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, genCMDBlock(array_merge($pingtest_dgw, $pingtest_cgw), 'implementationCommandList'));
 }
-if ($pingtest_dgw_ver) {
-    $templateProcessor->cloneBlock('finalCheckList', 0, true, false, genCMDBlock(array_merge($pingtest_dgw_ver, $pingtest_cgw_ver), 'finalCommandList'));
-}
+// if ($pingtest_dgw_ver) {
+//     $templateProcessor->cloneBlock('finalCheckList', 0, true, false, genCMDBlock(array_merge($pingtest_dgw_ver, $pingtest_cgw_ver), 'finalCommandList'));
+// }
 
 $templateProcessor->setValue('FCR_addedText', htmlentities('', ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
 $templateProcessor->cloneBlock('testPingNewInterfaces', 0, true, true);

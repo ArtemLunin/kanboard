@@ -1705,10 +1705,6 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 	function createPingTestConfig($nodes_arr) {
 		function configGen($templateStr, $arr_search, $arr_values) {
 			$out_str = [];
-			error_log(date("Y-m-d H:i:s").', configGen');
-			error_log(print_r($templateStr, true));
-			error_log(print_r($arr_search, true));
-			error_log(print_r($arr_values, true));
 			foreach ($arr_values as $value) {
 				$out_str[] = str_replace($arr_search, $value, $templateStr);
 			}
@@ -1737,7 +1733,6 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				foreach ($node_arr as $node_row) {
 					$node_one_value = [];
 					foreach ($out_str as $template_name) {
-						error_log(print_r($template_name, true));
 						if (array_key_exists($arr_coresponds[$template_name], $node_row)) {
 							$node_one_value[] = $node_row[$arr_coresponds[$template_name]];
 						} else {
@@ -1779,20 +1774,12 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 					[$templates_arr, $node_arr_values] = getTemplatesValue($node_name, $dgw_cgw_conf, $node_arr);
 					if (count($templates_arr) != 0 && count($node_arr_values) != 0) {
 						if (count(array_diff($templates_arr, $templatesArr)) != 0) {
-							error_log('adding to templates');
-							error_log(print_r($templates_arr, true));
-							error_log(print_r($templatesArr, true));
 							$templatesArr = array_merge($templatesArr, $templates_arr);
 							$nodeArrValues = array_merge($nodeArrValues, $node_arr_values);
 						}
 					}
 					$multiLineStr[] = str_replace($multi_line_template, '', $dgw_cgw_conf);
-					error_log(date("Y-m-d H:i:s").', templates_arr');
-					error_log(print_r($templates_arr, true));
-					error_log(date("Y-m-d H:i:s").', node_arr_values');
-					error_log(print_r($node_arr_values, true));
 				} elseif ($multiLineFlag) {
-					// error_log(print_r($templates_arr, true));
 					$res_str = configGen($multiLineStr, $templatesArr, $nodeArrValues);
 					array_push($out_str_dgw, $res_str);
 					$out_str_dgw[] = $dgw_cgw_conf;
