@@ -17,6 +17,7 @@ $pingtest_dgw_ver = false;
 $pingtest_cgw_ver = false;
 $exportDGWConfig = false;
 $nodes_list = [];
+// $csde_type = false;
 
 $filename = tempnam(sys_get_temp_dir(), 'docx');
 $resultFileName = "untitled";
@@ -62,6 +63,10 @@ if (isset($_POST['efcrFields2'])) {
     $efcrFile2 = true;
 }
 
+// if (isset($_POST['csde_type'])) {
+    // }
+$csde_type = $_POST['csde_type'] ?? false;
+
 //search textarea fields for clone block
 $arrayBlocks = [];
 foreach ($_POST as $param => $value) {
@@ -92,7 +97,11 @@ foreach ($_POST as $param => $value) {
         if ($param == 'ceilAreaEFCR2') {
             $efcr_res = $db_object->exportEFCR($values);
         } elseif ($param == 'ceilAreacSDE') {
-            $arr_dgw_cgw = $db_object->createPingTestConfig($values);
+            if ($csde_type == "pingtest") {
+                $arr_dgw_cgw = $db_object->createPingTestConfig($values);
+            } else {
+                $arr_dgw_cgw = $db_object->createPingTestConfig($values);
+            }
             $pingtest_dgw = $arr_dgw_cgw['dgw_config'];
             $pingtest_cgw = $arr_dgw_cgw['cgw_config'];
             $pingtest_dgw_ver = $arr_dgw_cgw['dgw_verification'];

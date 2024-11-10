@@ -38,16 +38,28 @@ const sectionChildren = {
 		],
 	},
 	'cSDEPingtest': [
-		'DGW',
+		'AGW / DGW',
 		'Capacity Upgrade',
 		'pingtest',
+	],
+	'cSDEBundle': [
+		'AGW / DGW',
+		'Capacity Upgrade',
+		'bundle',
 	],
 };
 
 const documentProperties = {
 	'cSDEPingtest': {
 		title: 'cSDE Ping Test',
+		csde_type: 'pingtest',
 	},
+	'cSDEBundle': {
+		title: 'cSDE Bundle',
+		csde_type: 'bundle',
+	},
+	csde_type: 'pingtest',
+	legend: 'cSDE Ping Test',
 };
 
 // const cTemplateGroups = {
@@ -87,6 +99,7 @@ const sections = [
 	'capacity',
 	'inventory',
 	'cSDEPingtest',
+	'cSDEBundle',
 	// 'documentation',
 	'action',
 ];
@@ -412,6 +425,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		btnsCeilAreaRemove = document.querySelectorAll('.js-ceil-area-remove'),
 		exportDownload = document.querySelector('.js-export-download'),
 		impactedNCT = document.querySelector('#impactedNCT'),
+		cSDEType = document.querySelector('#cSDEType'),
 		visibleSuperOnly = document.querySelectorAll('.js-superOnly');
 		// aExport = document.querySelector('#a_export'),
 		// aImport = document.querySelector('#importFileJSON');
@@ -1737,10 +1751,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		location.hash = showSection;
 		let idx = 0;
 		showSection = showSection.replace(/\s+/g, '');
-		// if (showSection === 'dip' && addParams['visibleName'] === 'eFCR') {
-		// 	showSection = 'EFCR';
-		// 	document.title = addParams['visibleName'];
-		// }
 		if (showSection !== 'documentation') {
 			// section is document.querySelectorAll('.section');
 			section.forEach((item, i) => {
@@ -1757,7 +1767,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				showSection === 'cmop' ||
 				showSection === 'templatecDIP' ||
 				showSection === 'cdip' || 
-				showSection === 'cSDEPingtest'
+				showSection === 'cSDEPingtest' ||
+				showSection === 'cSDEBundle'
 				) {
 				section[idx].append(renderMopDiv);
 			}
@@ -1886,7 +1897,12 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 				break;
 			case 'cSDEPingtest':
-				document.title = documentProperties.cSDEPingtest.title;
+			case 'cSDEBundle':
+				document.title = documentProperties[showSection].title;
+				// documentProperties.csde_type = documentProperties[showSection].csde_type;
+				// documentProperties.legend = documentProperties[showSection].title;
+				cSDEType.value = documentProperties[showSection].csde_type;
+				cSDEType.closest('fieldset').querySelector('legend').textContent = documentProperties[showSection].title;
 				displayMOPElements(false);
 				iniOGPA(addParams);
 				break;
@@ -1970,7 +1986,7 @@ window.addEventListener('DOMContentLoaded', () => {
 							let add_attrs = '';
 							if (!!sectionChildren[sectionName] && Array.isArray(sectionChildren[sectionName])) {
 								let temp_arr = sectionChildren[sectionName];
-								add_attrs = `data-element="${temp_arr[0]}" data-activity="${temp_arr[1]}"`;
+								add_attrs = `data-element="${temp_arr[0]}" data-activity="${temp_arr[1]}" data-csde_type="${temp_arr[2]}"`;
 							}
 							menu.insertAdjacentHTML('beforeend', `
 							<li data-section="${sectionAttr}" data-access="${accessType}" ${add_attrs}>${pageName}</li>
@@ -4597,8 +4613,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		if (!!hardCodeDesign[gActivityName] && !adminEnabled && (document.title == 'Roaming FCR' || document.title == 'eFCR')) {
 			showHardCodeDesign(hardCodeDesign[gActivityName].split(','));
-		} else if (document.title == documentProperties.cSDEPingtest.title) {
+		} else if (document.title == documentProperties.cSDEPingtest.title || 
+			document.title == documentProperties.cSDEBundle.title
+		) {
 			showHardCodeDesign(hardCodeDesign['Capacity Upgrade'].split(','));
+			// documentProperties
 		}
 		formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
 			if (cTemplate) {
@@ -4886,7 +4905,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			for (const site of impactedSites) {
 				impactedNCT.value += site + '\n';
 			}
-		} else if (document.title == documentProperties.cSDEPingtest.title) {
+		} else if (document.title == documentProperties.cSDEPingtest.title || 
+			document.title == documentProperties.cSDEBundle.title) {
 			const fieldset = document.querySelector('.js-cSDEPingTest-view');
 			impactedNCT.value = createNCTForItem(fieldset, 'select[data-name="rcbin_node"]', 'select[data-name="csde_node"]');
 		}

@@ -103,6 +103,12 @@ class databaseUtils {
 		'accessType'	=> 'admin',
 	],
 	[
+		'pageName' => 'cSDE Bundle',
+		'sectionName' => 'cSDEBundle',
+		'sectionAttr'	=> 'cSDEBundle',
+		'accessType'	=> 'admin',
+	],
+	[
 		'pageName' => 'Inventory',
 		'sectionName' => 'inventory',
 		'sectionAttr'	=> 'inventory',
