@@ -1,10 +1,11 @@
+=============
+_UNIQ_LINE_%NODE1% -- CONFIG
+=============
 ### Initial commit for rollback at the end of the ongoing test
 
 show | compare
 commit comment PING_TEST
 
-
-_UNIQ_LINE_%NODE1% -- CONFIG
 
 _ONE_LINE_show configuration interfaces %INTERFACE%
 

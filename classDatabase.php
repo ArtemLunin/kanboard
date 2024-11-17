@@ -1216,6 +1216,10 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 	private const TEMPLATECGWDGWCONFIG = 'template/cgw-dgw_ping_config.txt';
 	private const TEMPLATEDGWCGWVERIFICATION = 'template/dgw-cgw_ping_verification.txt';
 	private const TEMPLATECGWDGWVERIFICATION = 'template/cgw-dgw_ping_verification.txt';
+	private const TEMPLATEDGWCGWUPGRADE = 'template/dgw-cgw_upgrade_config.txt';
+	private const TEMPLATECGWDGWUPGRADE = 'template/cgw-dgw_upgrade_config.txt';
+	// private const TEMPLATEDGWCGWVERIFICATION = 'template/dgw-cgw_ping_verification.txt';
+	// private const TEMPLATECGWDGWVERIFICATION = 'template/cgw-dgw_ping_verification.txt';
 
     function __construct () {
 		try
@@ -1708,7 +1712,24 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		return $efcr_out;
 	}
 
-	function createPingTestConfig($nodes_arr) {
+	function createPingTestUpgradeConfig($nodes_arr, $csde_type) {
+		$templatedgwcgwconfig = [];
+		$templatecgwdgwconfig = [];
+		$templatedgwcgwverification = [];
+		$templatecgwdgwverification = [];
+		if ($csde_type == "pingtest") {
+			$templatedgwcgwconfig = file(self::TEMPLATEDGWCGWCONFIG);
+			$templatecgwdgwconfig = file(self::TEMPLATECGWDGWCONFIG);
+			// $templatedgwcgwverification = file(self::TEMPLATEDGWCGWVERIFICATION);
+			// $templatecgwdgwverification = file(self::TEMPLATECGWDGWVERIFICATION);
+			
+		} else {
+			$templatedgwcgwconfig = file(self::TEMPLATEDGWCGWUPGRADE);
+			$templatecgwdgwconfig = file(self::TEMPLATECGWDGWUPGRADE);
+			// $templatedgwcgwverification = file(self::TEMPLATEDGWCGWVERIFICATION);
+			// $templatecgwdgwverification = file(self::TEMPLATECGWDGWVERIFICATION);
+		}
+		
 		function configGen($templateStr, $arr_search, $arr_values) {
 			$out_str = [];
 			foreach ($arr_values as $value) {
@@ -1803,7 +1824,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		$nodesList = [];
 		foreach ($nodes_arr as $key => $value) {
 			$cisco_interface = (($value['csde_int_type'] == '10') ? 'Te' : 'Hu') . $value['csde_int_number'];
-			$jun_interface = (($value['rcbin_int_type'] == '10') ? 'Xe' : 'Et') . '-' . $value['rcbin_int_number'];
+			$jun_interface = (($value['rcbin_int_type'] == '10') ? 'xe' : 'et') . '-' . $value['rcbin_int_number'];
 			$nodesList[$value['rcbin_node']][] = [
 				'rcbinNode'			=> $value['rcbin_node'],
 				'rcbin_int_number'	=> $value['rcbin_int_number'],
@@ -1835,31 +1856,14 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		foreach ($nodesList as $node_name => $node_arr) {
 			if (strpos(strtolower($node_name), 'dgw') !== false) {
 				$out_nodes_dgw = array_merge($out_nodes_dgw, $node_arr);
-				array_push($out_str_dgw_config, createConfigOnTemplate($node_name, $node_arr, file(self::TEMPLATEDGWCGWCONFIG)), ['', '']);
-				array_push($out_str_dgw_verification, createConfigOnTemplate($node_name, $node_arr, file(self::TEMPLATEDGWCGWVERIFICATION)), ['', '']);
+				array_push($out_str_dgw_config, createConfigOnTemplate($node_name, $node_arr, $templatedgwcgwconfig), ['', '']);
+				array_push($out_str_dgw_verification, createConfigOnTemplate($node_name, $node_arr, $templatedgwcgwverification), ['', '']);
 			} elseif (strpos(strtolower($node_name), 'cgw') !== false) {
 				$out_nodes_cgw = array_merge($out_nodes_cgw, $node_arr);
-				array_push($out_str_cgw_config, createConfigOnTemplate($node_name, $node_arr, file(self::TEMPLATECGWDGWCONFIG)), ['', '']);
-				array_push($out_str_cgw_verification, createConfigOnTemplate($node_name, $node_arr, file(self::TEMPLATECGWDGWVERIFICATION)), ['', '']);
+				array_push($out_str_cgw_config, createConfigOnTemplate($node_name, $node_arr, $templatecgwdgwconfig), ['', '']);
+				array_push($out_str_cgw_verification, createConfigOnTemplate($node_name, $node_arr, $templatecgwdgwverification), ['', '']);
 			}
 		}
-		// $rai_dgw_config = new \RecursiveArrayIterator($out_str_dgw_config);
-		// $rii_dgw_config = new \RecursiveIteratorIterator($rai_dgw_config);
-
-		// $rai_dgw_verification = new \RecursiveArrayIterator($out_str_dgw_verification);
-		// $rii_dgw_verification = new \RecursiveIteratorIterator($rai_dgw_verification);
-
-		// $rai_cgw_config = new \RecursiveArrayIterator($out_str_cgw_config);
-		// $rii_cgw_config = new \RecursiveIteratorIterator($rai_cgw_config);
-
-		// $rai_cgw_verification = new \RecursiveArrayIterator($out_str_cgw_verification);
-		// $rii_cgw_verification = new \RecursiveIteratorIterator($rai_cgw_verification);
-
-		// $arr_cgw_config = [];
-		// $arr_dgw_config = [];
-		// $arr_dgw_verification = [];
-		// $arr_cgw_verification = [];
-		// $arr_nodes_list = [];
 
 		function objectToArrayIterator($complexObject) {
 			$rai_config = new \RecursiveArrayIterator($complexObject);
@@ -1876,18 +1880,6 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		$arr_dgw_verification = objectToArrayIterator($out_str_dgw_verification);
 		$arr_cgw_verification = objectToArrayIterator($out_str_cgw_verification);
 
-		// foreach($rii_dgw_config as $value) {
-		// 	$arr_dgw_config[] = $value;
-		// }
-		// foreach($rii_dgw_verification as $value) {
-		// 	$arr_dgw_verification[] = $value;
-		// }
-		// foreach($rii_cgw_config as $value) {
-		// 	$arr_cgw_config[] = $value;
-		// }
-		// foreach($rii_cgw_verification as $value) {
-		// 	$arr_cgw_verification[] = $value;
-		// }
 		return [
 			'dgw_config'	=> $arr_dgw_config,
 			'dgw_verification'	=> $arr_dgw_verification,

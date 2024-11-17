@@ -706,3 +706,8 @@ input:read-only {
 a>img:hover  {
 	background-color: gray;
 }
+.bundle-link {
+	align-self: end;
+	margin-left: 100px;
+	text-decoration: underline;
+}

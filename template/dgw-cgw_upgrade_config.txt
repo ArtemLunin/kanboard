@@ -1,0 +1,53 @@
+=============
+_UNIQ_LINE_%NODE1% -- CONFIG
+=============
+
+edit
+show | compare
+commit comment CAPACITY_UPGRADE
+
+edit
+
+_MULTI_LINE_set interfaces %INTERFACE11% description AE1:%NODE2%_%INTERFACE21%:BE66
+_MULTI_LINE_set interfaces %INTERFACE11% gigether-options 802.3ad ae1
+
+show | compare
+commit
+
+=============
+Verification:
+=============
+_MULTI_LINE_show interface %INTERFACE11% terse
+
+show interfaces ae1 terse
+show interfaces ae1 
+show lacp interfaces ae1
+ping 209.148.227.158 source 209.148.227.157 rapid count 1000 size 1500
+ping 209.148.227.158 source 209.148.227.157 rapid count 1000 size 4400
+monitor interface ae1
+show ldp neighbor
+show ospf neighbor 
+show isis adjacency
+show bgp summary
+
+=============
+_UNIQ_LINE_%NODE1% -- CONFIG
+=============
+edit
+set interfaces ae1 aggregated-ether-options minimum-links 1
+show | compare
+commit
+
+=============
+Verification:
+=============
+_MULTI_LINE_show interface %INTERFACE11% terse
+show interfaces ae1 terse
+show lacp interfaces ae1
+ping 209.148.227.158 source 209.148.227.157 rapid count 1000 size 1500
+ping 209.148.227.158 source 209.148.227.157 rapid count 1000 size 4400
+show configuration interfaces ae1
+show ldp neighbor
+show ospf neighbor 
+show isis adjacency
+show bgp summary
