@@ -1,7 +1,16 @@
+================
+_UNIQ_LINE_%NODE2% -- Pre Checks
+================
+
+
+_UNIQ_LINE_sh run formal | i Bundle-Ether%DGWNUMBER%
+_UNIQ_LINE_sh int Bundle-Ether%DGWNUMBER%
+_UNIQ_LINE_sh int Bundle-Ether%DGWNUMBER% | i "rate|error|drop"
 =============
 _UNIQ_LINE_%NODE2% -- CONFIG
 =============
-
-=============
-Verification:
-=============
+!
+_MULTI_LINE_show running-config formal interface %INTERFACE21% %DGWNUMBER%
+_MULTI_LINE_sh int %INTERFACE21% 
+_MULTI_LINE_sh int %DGWNUMBER%
+conf t

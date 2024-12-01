@@ -1731,6 +1731,9 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		}
 		
 		function configGen($templateStr, $arr_search, $arr_values) {
+			// error_log(print_r($templateStr, true));
+			// error_log(print_r($arr_search, true));
+			// error_log(print_r($arr_values, true));
 			$out_str = [];
 			foreach ($arr_values as $value) {
 				$out_str[] = str_replace($arr_search, $value, $templateStr);
@@ -1754,12 +1757,18 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				'%INTERFACE%'	=> 'rcbinIntName',
 				'%NODE2%'		=> 'csdeNode',
 				'%INTERFACE21%'	=> 'csdeIntName',
+				'%DGWNUMBER%'	=> 'rcbinIntSuff',
 			];
 			if (preg_match_all('/\%\w+\%/m', $templateStr, $matches, PREG_SET_ORDER) !== false) {
-				$out_str = array_column($matches, 0);
+				// $out_str = array_column($matches, 0);
+				$out_str = array_keys($arr_coresponds);
 				foreach ($node_arr as $node_row) {
 					$node_one_value = [];
 					foreach ($out_str as $template_name) {
+					// foreach ($arr_coresponds as $template_name => $unusedval) {
+						if(!array_key_exists($template_name, $arr_coresponds)) {
+							continue;
+						}
 						if (array_key_exists($arr_coresponds[$template_name], $node_row)) {
 							$node_one_value[] = $node_row[$arr_coresponds[$template_name]];
 						} else {
@@ -1769,7 +1778,10 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 					$node_val_res[] = $node_one_value;
 				}
 			}
-
+			error_log(print_r($out_str, true));
+			error_log(print_r($node_val_res, true));
+			// error_log(print_r($node_arr, true));
+			
 			return [$out_str, $node_val_res];
 		}
 
@@ -1799,6 +1811,8 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				elseif (strpos($dgw_cgw_conf_upper, $multi_line_template) !== false) {
 					$multiLineFlag = true;
 					[$templates_arr, $node_arr_values] = getTemplatesValue($node_name, $dgw_cgw_conf, $node_arr);
+					// error_log(print_r($templates_arr, true));
+					// error_log(print_r($node_arr_values, true));
 					if (count($templates_arr) != 0 && count($node_arr_values) != 0) {
 						if (count(array_diff($templates_arr, $templatesArr)) != 0) {
 							$templatesArr = array_merge($templatesArr, $templates_arr);
@@ -1825,6 +1839,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		foreach ($nodes_arr as $key => $value) {
 			$cisco_interface = (($value['csde_int_type'] == '10') ? 'Te' : 'Hu') . $value['csde_int_number'];
 			$jun_interface = (($value['rcbin_int_type'] == '10') ? 'xe' : 'et') . '-' . $value['rcbin_int_number'];
+			$rcbinIntSuff = '00';
 			$nodesList[$value['rcbin_node']][] = [
 				'rcbinNode'			=> $value['rcbin_node'],
 				'rcbin_int_number'	=> $value['rcbin_int_number'],
@@ -1832,6 +1847,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				'csdeNode'			=> $value['csde_node'],
 				'csde_int_number'	=> $value['csde_int_number'],
 				'csde_int_type'		=> $value['csde_int_type'],
+				'rcbinIntSuff'		=> $rcbinIntSuff,
 				'rcbinIntName'		=> $jun_interface,
 				'csdeIntName'		=> $cisco_interface,
 			];
@@ -1842,6 +1858,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				'rcbinNode'			=> $value['rcbin_node'],
 				'rcbin_int_number'	=> $value['rcbin_int_number'],
 				'rcbin_int_type'	=> $value['rcbin_int_type'],
+				'rcbinIntSuff'		=> $rcbinIntSuff,
 				'rcbinIntName'		=> $jun_interface,
 				'csdeIntName'		=> $cisco_interface,
 			];
@@ -1859,6 +1876,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				array_push($out_str_dgw_config, createConfigOnTemplate($node_name, $node_arr, $templatedgwcgwconfig), ['', '']);
 				array_push($out_str_dgw_verification, createConfigOnTemplate($node_name, $node_arr, $templatedgwcgwverification), ['', '']);
 			} elseif (strpos(strtolower($node_name), 'cgw') !== false) {
+				// $this->errorLog($node_name."\n".print_r($node_arr, true));
 				$out_nodes_cgw = array_merge($out_nodes_cgw, $node_arr);
 				array_push($out_str_cgw_config, createConfigOnTemplate($node_name, $node_arr, $templatecgwdgwconfig), ['', '']);
 				array_push($out_str_cgw_verification, createConfigOnTemplate($node_name, $node_arr, $templatecgwdgwverification), ['', '']);

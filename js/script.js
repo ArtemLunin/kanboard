@@ -39,12 +39,12 @@ const sectionChildren = {
 	},
 	'cSDEPingtest': [
 		'AGW / DGW',
-		'Capacity Upgrade',
+		'Ping Test',
 		'pingtest',
 	],
 	'cSDEBundle': [
 		'AGW / DGW',
-		'Capacity Upgrade',
+		'Bundle',
 		'bundle',
 	],
 };
