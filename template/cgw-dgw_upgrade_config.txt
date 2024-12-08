@@ -2,15 +2,121 @@
 _UNIQ_LINE_%NODE2% -- Pre Checks
 ================
 
+terminal len 0
+sh run
+admin sh run 
+admin sh platform
+admin sh inventory
+sh redundancy
+sh cdp neigh
+sh int desc
+sh ipv4 int br
+sh ipv6 int br
+sh ipv6 neighbors
+sh bundle brief
+sh ospf int br
+sh ospf nei
+sh mpls int
+sh mpls ldp nei br
+sh mpls traffic-eng forwarding
+sh pim int
+sh pim nei
+sh rsvp int
+sh rsvp nei
+sh isis int br
+sh isis nei
+sh bgp all all summary
+sh cef summary
+sh route summ
+sh mpls tr tunnels brie
+sh log last 200
+
 
 _UNIQ_LINE_sh run formal | i Bundle-Ether%DGWNUMBER%
 _UNIQ_LINE_sh int Bundle-Ether%DGWNUMBER%
 _UNIQ_LINE_sh int Bundle-Ether%DGWNUMBER% | i "rate|error|drop"
+
+_UNIQ_LINE_sh running-config formal | i %DGWNUMBER% | i "cost|metric"
+
+_UNIQ_LINE_sh ospf nei Bundle-Ether%DGWNUMBER%
+_UNIQ_LINE_sh isis adj Bundle-Ether%DGWNUMBER%
+_UNIQ_LINE_sh mpls ldp neighbor Bundle-Ether%DGWNUMBER%
+_UNIQ_LINE_show pim neighbor Bundle-Ether%DGWNUMBER%
+
+
 =============
 _UNIQ_LINE_%NODE2% -- CONFIG
 =============
 !
-_MULTI_LINE_show running-config formal interface %INTERFACE21% %DGWNUMBER%
-_MULTI_LINE_sh int %INTERFACE21% 
-_MULTI_LINE_sh int %DGWNUMBER%
+_MULTI_LINE_show running-config formal interface %INTERFACE21%
+_MULTI_LINE_sh int %INTERFACE21%
+!
+
 conf t
+!
+_MULTI_LINE_interface %INTERFACE21% description BE_%DGWNUMBER%:%NODE1%:AE_1:%INTERFACE11%
+_MULTI_LINE_interface %INTERFACE21% bundle id %DGWNUMBER% mode active
+_MULTI_LINE_interface %INTERFACE21% lacp period short
+_MULTI_LINE_interface %INTERFACE21% carrier-delay up 1 down 0
+_MULTI_LINE_interface %INTERFACE21% load-interval 30
+_MULTI_LINE_interface %INTERFACE21% dampening
+_MULTI_LINE_no interface %INTERFACE21% shutdown
+!
+!
+_UNIQ_LINE_interface Bundle-Ether%DGWNUMBER% description %NODE1%:AE_1:200GE
+!
+root
+show commit changes diff
+!
+commit label NCTXXXX-1
+!
+
+=============
+Verification:
+=============
+
+_MULTI_LINE_show running-config formal interface %INTERFACE21%
+_MULTI_LINE_sh int %INTERFACE21%
+
+!
+!
+_UNIQ_LINE_sh run formal | i Bundle-Ether%DGWNUMBER%
+_UNIQ_LINE_sh int Bundle-Ether%DGWNUMBER%
+_UNIQ_LINE_sh int Bundle-Ether%DGWNUMBER% | i "rate|error|drop"
+_MULTI_LINE_sh int %INTERFACE21% | i "rate|error|drop"
+
+!
+_UNIQ_LINE_sh ospf nei Bundle-Ether%DGWNUMBER%
+_UNIQ_LINE_sh isis adj Bundle-Ether%DGWNUMBER%
+_UNIQ_LINE_sh mpls ldp neighbor Bundle-Ether%DGWNUMBER%
+_UNIQ_LINE_show pim neighbor Bundle-Ether%DGWNUMBER%
+!
+
+terminal len 0
+sh run
+admin sh run 
+admin sh platform
+admin sh inventory
+sh redundancy
+sh cdp neigh
+sh int desc
+sh ipv4 int br
+sh ipv6 int br
+sh ipv6 neighbors
+sh bundle brief
+sh ospf int br
+sh ospf nei
+sh mpls int
+sh mpls ldp nei br
+sh mpls traffic-eng forwarding
+sh pim int
+sh pim nei
+sh rsvp int
+sh rsvp nei
+sh isis int br
+sh isis nei
+sh bgp all all summary
+sh cef summary
+sh route summ
+sh mpls tr tunnels brie
+sh log last 200

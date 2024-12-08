@@ -97,9 +97,9 @@ const sections = [
 	'template cDIP',
 	'cdip',
 	'capacity',
-	'inventory',
 	'cSDEPingtest',
 	'cSDEBundle',
+	'inventory',
 	// 'documentation',
 	'action',
 ];
@@ -3920,7 +3920,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	function fillUserRights(userRights) {
 		let userName = '';
 		let oneUserRights = defaultUserRights.slice();
-
 		for (const [key, value] of Object.entries(userRights)) {
 			if (key === 'user') {
 				let idx = sections.indexOf(key);
@@ -3945,6 +3944,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 		}
+		// console.log(oneUserRights);
 		return `
 			<tr data-userName="${userName}">
 				${oneUserRights.reduce((res, current) => res + current, '')}
