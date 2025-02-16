@@ -32,9 +32,6 @@ _ONE_LINE_show interfaces diagnostics optics %INTERFACE% | match dbm
 
 _ONE_LINE_clear interfaces statistics %INTERFACE%
 
-Ping the remote IPv6 link local address from each side:
----------------------------------------------------------------
-
 _ONE_LINE_ping inet6 <remote link-local-IPv6-address> source < Interface Link-local IP of %INTERFACE% > count 1000 size 4400 rapid
 
 !
