@@ -1248,7 +1248,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
         try {
 			$row = $this->pdo->prepare($sql_query);
 			$row->execute($params_arr);
-			return $row->fetchall();
+			return $row->fetchall(\PDO::FETCH_ASSOC);
 		} catch (\PDOException $e){
 			$this->setSQLError($e, 'SQL error. "'.$sql_query);
 		}
@@ -1411,6 +1411,77 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 			], true);
 		}
 		return $this->getActivityFields($id);
+	}
+
+	function addObjectToTable($table_name, $fields_obj) {
+		if (count($fields_obj) < 1) {
+			return false;
+		}
+		$fields = "(";
+		$values = "(";
+		$values_arr = [];
+		$param_id = 1;
+		foreach ($fields_obj as $key => $value) {
+			$param = "param" . $param_id;
+			$fields .= "`" . $key ."`,";
+			$values .= ":" . $param . ",";
+			$values_arr[$param] = $value;
+			$param_id++;
+		}
+		$fields = rtrim($fields, ",") . ")";
+		$values = rtrim($values, ",") . ")";
+
+		$sql = "INSERT IGNORE INTO `" . $table_name. "` ". $fields . " VALUES ". $values; 
+		
+
+		$this->modSQL($sql, $values_arr, true);
+		return [$sql, print_r($values_arr, true)];
+	}
+
+	function selectObjectFromTable($table_name, $filters, $selected_fields = []) {
+		$filter = "";
+		$values_arr = [];
+		if (count($filters) < 1) {
+			$filter = "id<>0";
+		} else {
+			$param_id = 1;
+			foreach ($filters as $key => $value) {
+				$param = "param" . $param_id;
+				$filter .= "`" . $key ."`" . "=:" . $param . ",";
+				$values_arr[$param] = $value;
+				$param_id++;
+			}
+			$filter = rtrim($filter, ",");
+		}
+		if (count($selected_fields) > 0) {
+			$sanitize_fields = array_map(function($field) {
+				return "`" . $field . "`";
+			}, $selected_fields);
+			$select_fields = implode(",", $sanitize_fields);
+		} else {
+			$select_fields = "*";
+		}
+		$sql = "SELECT " . $select_fields . " FROM `" . $table_name . "` WHERE " . $filter;
+		// return $sql;
+		return $this->getSQL($sql, $values_arr);
+	}
+
+	function removeObjectFromTable($table_name, $id) {
+		if ($id < 1) {
+			return false;
+		}
+		$sql = "DELETE from `" . $table_name. "` ". "WHERE id=:id";
+		return $this->modSQL($sql, ["id" => $id], true);
+	}
+
+	function getUserID($userName) {
+		if ($table_res = $this->getSQL("SELECT id FROM users WHERE user_name=:user", [
+			'user'	=> $userName,
+		]))
+		{
+			return $table_res[0]['id'];
+		}
+		return 0;
 	}
 
 	function incActivityCounter($id, $mode = "mopCounter") {
