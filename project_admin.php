@@ -51,7 +51,8 @@ $number = $paramJSON['number'] ?? 0;
 $groups = $paramJSON['groups'] ?? 0;
 $id = isInt($paramJSON['id'] ?? 0);
 $group_id = isInt($paramJSON['group_id'] ?? 0);
-$group_idx = isInt($paramJSON['group_idx'] ?? 0);
+$group_fields = $paramJSON['group_fields'] ?? 0;
+// $group_idx = isInt($paramJSON['group_idx'] ?? 0);
 $text_field = $paramJSON['text_field'] ?? $_REQUEST['text_field'] ?? 0;
 
 if ($method !== 0)
@@ -60,9 +61,12 @@ if ($method !== 0)
 		$param_error_msg['answer'] = $project_object->addNewProject($value, $number, $text_field);
 	} elseif ($method === 'removeProject' && $id) {
         $param_error_msg['answer'] = $project_object->removeProject($id);
-    } elseif ($method === 'addGroupsToProject' && $id && $group_id) {
-        $param_error_msg['answer'] = $project_object->addGroupsToProject($id, $group_id, $group_idx);
-    } elseif ($method === 'getProjectsActivity' && $id) {
+    } elseif ($method === 'addGroupToProject' && $id && $group_id) {
+        $param_error_msg['answer'] = $project_object->addGroupToProject($id, $group_id);
+    } elseif ($method === 'changeProjectActivity' && $id && $group_id && count($group_fields) > 0) {
+        $param_error_msg['answer'] = $project_object->changeProjectActivity($id, $group_id, $group_fields);
+    }
+    elseif ($method === 'getProjectsActivity' && $id) {
         $param_error_msg['answer'] = $project_object->getProjectsActivity($id);
     } elseif ($method === 'addGroups' && $groups && count($groups) > 0) {
         $param_error_msg['answer'] = $project_object->addGroups($groups);

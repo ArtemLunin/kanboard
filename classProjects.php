@@ -62,16 +62,22 @@ class ProjectUtils extends \helperUtils\helperUtils {
     function getProjectsActivity($project_id) {
         return $this->db_object_project->selectObjectFromTable($this->tProjectsActivity["tableName"], ["project_id" => $project_id], $this->tProjectsActivity["fields"]);
     }
-    function getProjectGroupIdx($project_id) {
+    function getProjectGroupIdx($project_id, $group_id = 0) {
+        $sql_params = [];
         $sql = "SELECT COALESCE(MAX(`group_idx`), 0) AS group_idx FROM projects_activity WHERE `project_id`=:param1";
+        $sql_params['param1'] = $project_id;
+        if ($group_id !== 0) {
+            $sql = "SELECT group_idx FROM projects_activity WHERE `project_id`=:param1 AND `group_id`=:param2";
+            $sql_params['param2'] = $group_id;
+        }
         $group_idx = 0;
-        if ($table_res = $this->db_object_project->getSQL($sql, ['param1' => $project_id]))
+        if ($table_res = $this->db_object_project->getSQL($sql, $sql_params))
         {
-            $group_idx = $table_res[0]['group_idx'];
+            $group_idx = (int)$table_res[0]['group_idx'];
         }
         return $group_idx;
     }
-    function addGroupsToProject($project_id, $group_id, $group_idx) {
+    function addGroupToProject($project_id, $group_id) {
         $fields_obj = [
             "project_id" => $project_id,
             "group_id" => $group_id,
@@ -79,15 +85,47 @@ class ProjectUtils extends \helperUtils\helperUtils {
             "field_json_props" => "",
             "status" => 0,
         ];
-        // if ($group_idx == 0) {
-            // $group_idx_local = $this->getProjectGroupIdx($project_id) + 1;
-        // } else {
             $fields_obj['group_idx'] = $this->getProjectGroupIdx($project_id) + 1;
             $this->db_object_project->addObjectToTable($this->tProjectsActivity["tableName"], $fields_obj);
 
             return $this->getProjectsActivity($project_id);
-        // }
-        // return $this->db_object_project->addObjectToTable($this->tProjectsActivity["tableName"], $fields_obj);
+    }
+    function changeProjectActivity($project_id, $group_id, $group_fields) {
+        if (isset($group_fields['group_idx'])) {
+            $current_group_idx = $this->getProjectGroupIdx($project_id, $group_id);
+            $group_id_arr = [];
+            $nop = false;
+            $plus = true;
+            $sql = "SELECT `id`, `group_idx` FROM `projects_activity` WHERE `project_id`=:param1 AND ";
+            // $sql .= " `group_idx`>:param2 AND `group_idx`<=:param3";
+            if ($group_fields['group_idx'] < $current_group_idx) {
+                $sql .= " `group_idx`>=:param3 AND `group_idx`<:param2";
+            } elseif ($group_fields['group_idx'] > $current_group_idx) {
+                $sql .= " `group_idx`>:param2 AND `group_idx`<=:param3";
+                $plus = false;
+            } else {
+                $nop = true;
+            }
+            $sql .= " ORDER BY `id`";
+            if (!$nop && ($table_res = $this->db_object_project->getSQL($sql, ["param1" => $project_id, "param2" => $current_group_idx, "param3" => $group_fields['group_idx']]))) {
+                $sql_upd = "UPDATE `projects_activity` SET `group_idx`=:param1 WHERE `id`=:param2";
+                foreach ($table_res as $result) {
+                    $new_idx = ($plus) ? $result['group_idx'] + 1 : $result['group_idx'] - 1;
+                    $this->db_object_project->modSQL($sql_upd , [
+                        'param1' => $new_idx,
+                        'param2' => $result['id']
+                    ], false);
+                }
+                // array_column($table_res, 'id')
+                // $this->db_object_project->errorLog(print_r(array_column($table_res, 'id'), true), 1);
+                $sql_upd = "UPDATE `projects_activity` SET `group_idx`=:param1 WHERE `project_id`=:param2 AND `group_id`=:param3";
+                $this->db_object_project->modSQL($sql_upd , [
+                    'param1' => $group_fields['group_idx'],
+                    'param2' => $project_id,
+                    'param3' => $group_id,
+                ], false);
+            }
+        }
     }
 }
 
