@@ -4,6 +4,7 @@ const requestURL = 'backend.php',
 	automatorURL = 'utils.php',
 	requestURLTemplate = 'mop_admin.php',
     requestURLRender = 'mop_render.php',
+	requestURLProject = "project_admin.php",
     inputSelectorClass = 'input-edit';
 
 let wikiURL = '', wikiLDAPAuth = 0;
@@ -106,6 +107,8 @@ const sections = [
 
 
 const defaultUserRights = [];
+const ProjectUsersList = [];
+const groupsUsersList = [];
 
 sections.forEach((item, idx) => {
 	defaultUserRights[idx] = `<td data-${item}>&nbsp</td>`;
@@ -288,6 +291,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		newUserForm = document.querySelector('#new-user-form'),
 		cacheForm = document.querySelector('#cache_form'),
 		btnAddUser = document.querySelector('#btnAddUser'),
+		groupsList = document.querySelector('#groups-list'),
+		groupUsers = document.querySelector('#group-users'),
+		allUsers = document.querySelector('#all-users'),
+		addUserGroup = document.querySelector('#addUserGroup'),
+		removeUserFromGroup = document.querySelector('#deleteUserGroup'),
 		newUsernameInput = document.querySelector('#newUsername'),
 		newPasswordInput = document.querySelector('#newPassword'),
 		rightsUserName = document.querySelector('#rightsUserName'),
@@ -2241,6 +2249,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			method: 'getKanboardUsers',
 		}
 		sendRequest('POST', requestURL, body).then(showUsers);
+		body.method = 'getGroupsList';
+		sendRequest('POST', requestURLProject, body).then(showGroupsProject);
+
 	}
 
 	const getDataFromKanboard = (apiName, apiProps, container, addParameters = null) => {
@@ -3176,6 +3187,28 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
+	addUserGroup.addEventListener('click', function()
+	{
+		const selectedUser = document.querySelector('input[name="select-users-all"]:checked');
+		const body = {
+			method: 'addUserToGroup',
+			user_name: selectedUser.dataset.user_name,
+			group_id: groupsList.options[groupsList.selectedIndex].dataset.group_id
+		}
+		sendRequest('POST', requestURLProject, body).then(showGroupsProject);
+	});
+
+	removeUserFromGroup.addEventListener('click', function()
+	{
+		const selectedUser = document.querySelector('input[name="select-users-group"]:checked');
+		const body = {
+			method: 'removeUserFromGroup',
+			user_name: selectedUser.dataset.user_name,
+			group_id: groupsList.options[groupsList.selectedIndex].dataset.group_id
+		}
+		sendRequest('POST', requestURLProject, body).then(showGroupsProject);
+	});
+
 	document.querySelector('#downloadTemplate').addEventListener('click', function()
 	{
 		const arr_id_checked = getArraySelectedCbox(listDevices.querySelectorAll('.check_box'), 'cb_');
@@ -3909,11 +3942,63 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (data.success && data.success.answer) {
 			clearInputsForms();
 			usersList.textContent = '';
+			ProjectUsersList.length = 0;
 			data.success.answer.forEach((item) => {
 				usersList.insertAdjacentHTML('beforeend', `
 					${fillUserRights(item)}
 				`);
-			}) ;
+			});
+			allUsers.textContent = '';
+			let idx = 1;
+			ProjectUsersList.forEach((user) => {
+				allUsers.insertAdjacentHTML('beforeend', `
+					<input type="radio" name="select-users-all" data-user_name="${user}" id="project-user${idx}">
+					<label for="project-user${idx}">${user}</label>
+				`);
+				idx++;
+			});
+		}
+	}
+
+	function showGroupsProject(data) {
+		groupsUsersList.length = 0;
+		if (data.success && data.success.answer) {
+			groupsList.textContent = '';
+			let firstGroupID = 0;
+
+			data.success.answer.forEach((item) => {
+				groupsList.insertAdjacentHTML('beforeend', `
+					<OPTION value="${item.name}" data-group_id="${item.id}">${item.name}</OPTION>
+					`);
+				groupsUsersList.push({
+					"group_id": item.id,
+					"users": item.users
+				});
+				if (firstGroupID == 0) {
+					firstGroupID = item.id;
+				}
+			});
+			fillGroupUsers(firstGroupID);
+		}
+	}
+
+	function fillGroupUsers(group_id) {
+		groupUsers.textContent = '';
+
+		for (let group_obj of groupsUsersList) {
+			if (group_obj.group_id == group_id) {
+				if (group_obj.users) {
+					let idx = 1;
+					JSON.parse(group_obj.users).forEach((user) => {
+						groupUsers.insertAdjacentHTML('beforeend', `
+							<input type="radio" name="select-users-group" data-user_name="${user}" id="opt${idx}">
+  							<label for="opt${idx}">${user}</label>
+						`);
+						idx++;
+					});
+				}
+				break;
+			}
 		}
 	}
 
@@ -3927,6 +4012,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					userName = value;
 					oneUserRights[idx] = `<td data-${key}>${userName}</td>`;
 				}
+				ProjectUsersList.push(userName);
 			} else if (key === 'rights') {
 				value.forEach((right) => {
 					let idx = sections.indexOf(right.sectionName);
@@ -3944,7 +4030,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 		}
-		// console.log(oneUserRights);
 		return `
 			<tr data-userName="${userName}">
 				${oneUserRights.reduce((res, current) => res + current, '')}
@@ -5170,6 +5255,12 @@ window.addEventListener('DOMContentLoaded', () => {
 			btnType: 'new', 
 			btnText: 'Add new'});
 		getActivityFields(id);
+	});
+
+	groupsList.addEventListener('change', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		fillGroupUsers(target.options[target.selectedIndex].dataset.group_id);
 	});
 
 	const comboSelectChange = (e) => {

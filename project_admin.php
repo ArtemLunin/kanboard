@@ -34,6 +34,11 @@ if (!isset($_SESSION['logged_user'])) {
     exit;
 } else {
     $userID = $project_object->getUserID($_SESSION['logged_user']);
+    if (isset($_SESSION['SUPER_USER'])) {
+        $project_object->setRootAccess(true);
+    } else {
+        $project_object->setRootAccess(false);
+    }
 }
 
 if ($userID === 0) {
@@ -51,6 +56,7 @@ $number = $paramJSON['number'] ?? 0;
 $groups = $paramJSON['groups'] ?? 0;
 $id = isInt($paramJSON['id'] ?? 0);
 $group_id = isInt($paramJSON['group_id'] ?? 0);
+$user_name = $paramJSON['user_name'] ?? 0;
 $group_fields = $paramJSON['group_fields'] ?? 0;
 // $group_idx = isInt($paramJSON['group_idx'] ?? 0);
 $text_field = $paramJSON['text_field'] ?? $_REQUEST['text_field'] ?? 0;
@@ -63,13 +69,22 @@ if ($method !== 0)
         $param_error_msg['answer'] = $project_object->removeProject($id);
     } elseif ($method === 'addGroupToProject' && $id && $group_id) {
         $param_error_msg['answer'] = $project_object->addGroupToProject($id, $group_id);
+    } elseif ($method === 'removeGroupFromProject' && $id) {
+        $param_error_msg['answer'] = $project_object->removeGroupFromProject($id);
     } elseif ($method === 'changeProjectActivity' && $id && $group_id && count($group_fields) > 0) {
         $param_error_msg['answer'] = $project_object->changeProjectActivity($id, $group_id, $group_fields);
-    }
-    elseif ($method === 'getProjectsActivity' && $id) {
+    } elseif ($method === 'getProjectsActivity' && $id) {
         $param_error_msg['answer'] = $project_object->getProjectsActivity($id);
     } elseif ($method === 'addGroups' && $groups && count($groups) > 0) {
         $param_error_msg['answer'] = $project_object->addGroups($groups);
+    } elseif ($method === 'getGroupsList') {
+        $param_error_msg['answer'] = $project_object->getGroupsList();
+    } elseif($method === 'getUsersList') {
+        $param_error_msg['answer'] = $project_object->getUsersList();
+    } elseif($method === 'addUserToGroup' && $user_name && $group_id) {
+        $param_error_msg['answer'] = $project_object->addUserToGroup($user_name, $group_id);
+    } elseif($method === 'removeUserFromGroup' && $user_name && $group_id) {
+        $param_error_msg['answer'] = $project_object->removeUserFromGroup($user_name, $group_id);
     } elseif ($method === 'removeGroup' && $id) {
         $param_error_msg['answer'] = $project_object->removeGroup($id);
     }

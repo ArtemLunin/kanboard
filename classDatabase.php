@@ -1237,13 +1237,6 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		$this->errorLog($error_txt_info, 1);
 	}
 	// databaseUtilsMOP
-	// function totalTrim($str) {
-	// 	$string = htmlentities($str, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'utf-8');
-	// 	$string = str_replace("&nbsp;", " ", $string);
-	// 	return trim(html_entity_decode($string));
-	// }
-
-	// databaseUtilsMOP
     function getSQL($sql_query, $params_arr) {
         try {
 			$row = $this->pdo->prepare($sql_query);
@@ -1466,6 +1459,11 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		return $this->getSQL($sql, $values_arr);
 	}
 
+	function selectFieldFromTable($table_name, $filters, $field_name) {
+		$first_row = $this->selectObjectFromTable($table_name, $filters, [$field_name]);
+		return $first_row[0][$field_name];
+	}
+
 	function removeObjectFromTable($table_name, $id) {
 		if ($id < 1) {
 			return false;
@@ -1480,6 +1478,16 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		]))
 		{
 			return $table_res[0]['id'];
+		}
+		return 0;
+	}
+
+	function getOwnerProjectID($projectID) {
+		if ($table_res = $this->getSQL("SELECT user_id FROM projects WHERE id=:project_id", [
+			'project_id'	=> $projectID,
+		]))
+		{
+			return $table_res[0]['user_id'];
 		}
 		return 0;
 	}

@@ -698,6 +698,23 @@
 						<div class="capacity-frame my-2 p-2 border">
 							Capacity external link: <span class="extLink" id="capacity-frame-link"></span>
 						</div>
+						<div class="groups-mop my-2 p-2 border">
+							<div class="mr-4">
+								Groups <select name="groups-list" style="display: block;" id="groups-list"></select>
+							</div>
+							<div class="mr-4">
+								Group Users
+								<div class="group-users list" id="group-users"></div>
+							</div>
+							<div class="mr-4">
+								All Users
+								<div class="all-users list" id="all-users"></div>
+							</div>
+							<div class="mr-4">
+								<button type="submit" class="btn btn-sm btn-primary mr-2" id="addUserGroup">Add</button>
+								<button type="reset" class="btn btn-sm btn-warning mr-2" id="deleteUserGroup">Delete</button>
+							</div>
+						</div>
 						<form action="#" method="POST" id="cache_form">
 							<button class="btn btn-primary btn-sm" type="submit">Setup Cache</button>
 							<span class="bg-success d-none">Cache initialized</span>

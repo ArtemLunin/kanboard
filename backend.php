@@ -478,6 +478,11 @@ if ($projectID !== false && $method !== 0)
 			if ($rights) {
 				$_SESSION['logged_user'] = $kanboardUserName;
 				$_SESSION['password'] = $kanboardUserPass;
+				if ($kanboardUserName === SUPER_USER) {
+					$_SESSION['SUPER_USER'] = true;
+				} else {
+					$_SESSION['SUPER_USER'] = false;
+				}
 				$currentUser = $kanboardUserName;
 			}
 		}

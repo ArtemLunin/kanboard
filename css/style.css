@@ -711,3 +711,35 @@ a>img:hover  {
 	margin-left: 100px;
 	text-decoration: underline;
 }
+
+.groups-mop {
+	display: flex;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  width: 100px;
+}
+
+.list input[type="radio"] {
+  display: none;
+}
+
+.list label {
+  padding: 2px 2px;
+  /* border: 1px solid #ccc; */
+  margin-bottom: 0;
+  cursor: pointer;
+  /* border-radius: 4px; */
+  background: #f9f9f9;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.list label:hover {
+  background: #eee;
+}
+
+.list input[type="radio"]:checked + label {
+  background: #d0e8ff;
+  border-color: #3399ff;
+}
