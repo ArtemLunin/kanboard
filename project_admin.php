@@ -64,7 +64,7 @@ $text_field = $paramJSON['text_field'] ?? $_REQUEST['text_field'] ?? 0;
 if ($method !== 0)
 {
     if ($method === 'addProject' && $value && $number && $text_field) {
-		$param_error_msg['answer'] = $project_object->addNewProject($value, $number, $text_field);
+		$param_error_msg['answer'] = $project_object->addProject($value, $number, $text_field);
 	} elseif ($method === 'removeProject' && $id) {
         $param_error_msg['answer'] = $project_object->removeProject($id);
     } elseif ($method === 'addGroupToProject' && $id && $group_id) {

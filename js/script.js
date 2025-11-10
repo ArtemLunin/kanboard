@@ -101,6 +101,7 @@ const sections = [
 	'cSDEPingtest',
 	'cSDEBundle',
 	'inventory',
+	'projects',
 	// 'documentation',
 	'action',
 ];
@@ -109,6 +110,7 @@ const sections = [
 const defaultUserRights = [];
 const ProjectUsersList = [];
 const groupsUsersList = [];
+const groupsListInProjects = [];
 
 sections.forEach((item, idx) => {
 	defaultUserRights[idx] = `<td data-${item}>&nbsp</td>`;
@@ -300,6 +302,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		newPasswordInput = document.querySelector('#newPassword'),
 		rightsUserName = document.querySelector('#rightsUserName'),
 		rightsForm = document.querySelector('#rights-form');
+	// projects elements
+	const groupsListProjects = document.querySelector('#group-project-1');
 	const formsAuth = document.querySelectorAll('.form-auth');
 	// main elements
 	const ticketsContainer = document.querySelector('.tickets-container'),
@@ -1919,6 +1923,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			case 'inventory':
 				document.title = 'Inventory';
 				iniInventory();
+			case 'projects':
+				document.title = 'Projects';
+				iniProjects();
 			default:
 				break;
 		}
@@ -2251,7 +2258,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		sendRequest('POST', requestURL, body).then(showUsers);
 		body.method = 'getGroupsList';
 		sendRequest('POST', requestURLProject, body).then(showGroupsProject);
-
 	}
 
 	const getDataFromKanboard = (apiName, apiProps, container, addParameters = null) => {
@@ -3982,6 +3988,28 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	function showGroupsProjectSection(data) {
+		groupsListInProjects.length = 0;
+		if (data.success && data.success.answer) {
+			data.success.answer.forEach((item) => {
+				groupsListInProjects.push({
+					"id": item.id,
+					"name": item.name
+				});
+			});
+		}
+		fillGroupsProject(groupsListProjects);
+	}
+
+	function fillGroupsProject(groupsListFilled) {
+		groupsListFilled.textContent = '';
+		groupsListInProjects.forEach((item) => {
+			groupsListFilled.insertAdjacentHTML('beforeend', `
+					<OPTION value="${item.name}" data-group_id="${item.id}">${item.name}</OPTION>
+			`);
+		});
+	}
+
 	function fillGroupUsers(group_id) {
 		groupUsers.textContent = '';
 
@@ -4770,6 +4798,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
 			showActivityFields(data);
 		});
+	};
+
+	const iniProjects = () => {
+		const body = {
+			method: 'getGroupsList',
+		};
+		sendRequest('POST', requestURLProject, body).then(showGroupsProjectSection);
 	};
 
 	const iniInventory = () => {

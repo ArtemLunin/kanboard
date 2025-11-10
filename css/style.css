@@ -228,7 +228,7 @@ p {
 .tickets-container {
 	margin-top: 20px;
 }
-.ticket-title, .ticket-title-status, .ticket-title-excel-form { 
+.ticket-title, .ticket-title-status, .ticket-title-excel-form, .form-width { 
 	width: 100%;
 }
 .task-ticket, .task-ticket-excel, .table-statistics {

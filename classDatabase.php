@@ -115,6 +115,12 @@ class databaseUtils {
 		'accessType'	=> 'admin',
 	],
 	[
+		'pageName' => 'Projects',
+		'sectionName' => 'projects',
+		'sectionAttr'	=> 'projects',
+		'accessType'	=> 'admin',
+	],
+	[
 		'pageName' => 'Settings',
 		'sectionName' => 'settings',
 		'sectionAttr'	=> 'settings',

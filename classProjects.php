@@ -62,7 +62,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
         }
         return false;
     }
-    function addNewProject($p_name, $p_number, $p_description) {
+    function addroject($p_name, $p_number, $p_description) {
         $fields_obj = [
             "name" => $p_name,
             "number" => $p_number,
