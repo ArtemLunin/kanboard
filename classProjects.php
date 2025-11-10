@@ -9,7 +9,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
     private $tProjects = [
         "tableName" => "projects",
         "fields" => [
-            "name", "number", "description", "user_id", "start_date", "end_date", "last_activity_date", "status"
+            "id", "name", "number", "description", "user_id", "start_date", "end_date", "last_activity_date", "status"
         ]
     ];
     private $tGroups = [
@@ -62,7 +62,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
         }
         return false;
     }
-    function addroject($p_name, $p_number, $p_description) {
+    function addProject($p_name, $p_number, $p_description) {
         $fields_obj = [
             "name" => $p_name,
             "number" => $p_number,
@@ -70,7 +70,9 @@ class ProjectUtils extends \helperUtils\helperUtils {
             "user_id" => $this->userID,
             "status" => 0,
         ];
-        return $this->db_object_project->addObjectToTable($this->tProjects["tableName"], $fields_obj);
+        $new_project_id = $this->db_object_project->addObjectToTable($this->tProjects["tableName"], $fields_obj);
+        return $this->getProjectsActivity($new_project_id);
+
     }
     function removeProject($projectID) {
         // $owner_projectID = $this->getOwnerProjectID($projectID);
@@ -111,6 +113,9 @@ class ProjectUtils extends \helperUtils\helperUtils {
             }
         }
         return $this->getGroupsList();
+    }
+    function getProjectsList($filters = []) {
+        return $this->db_object_project->selectObjectFromTable($this->tProjects["tableName"], $filters, $this->tProjects["fields"]);
     }
     function getGroupsList($filters = []) {
         return $this->db_object_project->selectObjectFromTable($this->tGroups["tableName"], $filters, $this->tGroups["fields"]);
@@ -164,8 +169,17 @@ class ProjectUtils extends \helperUtils\helperUtils {
         }
         return false;
     }
-    function getProjectsActivity($project_id) {
-        return $this->db_object_project->selectObjectFromTable($this->tProjectsActivity["tableName"], ["project_id" => $project_id], $this->tProjectsActivity["fields"]);
+    function getProjectsActivity($projectID) {
+        if (!isset($projectID)) {
+            return null;
+        }
+        $project_info = $this->getProjectsList(["id" => $projectID]);
+        $project_activities = $this->db_object_project->selectObjectFromTable($this->tProjectsActivity["tableName"], ["project_id" => $projectID], $this->tProjectsActivity["fields"]);
+        return [
+            "info"  => $project_info,
+            "detail" => $project_activities
+        ];
+        // return $this->db_object_project->selectObjectFromTable($this->tProjectsActivity["tableName"], ["project_id" => $project_id], $this->tProjectsActivity["fields"]);
     }
     function getProjectGroupIdx($project_id, $group_id = 0) {
         $sql_params = [];

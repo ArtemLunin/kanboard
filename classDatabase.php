@@ -1266,6 +1266,15 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		}
 		return false;
 	}
+	// databaseUtilsMOP
+	function insSQL($sql_query, $params_arr) 
+	{
+		if ($this->modSQL($sql_query, $params_arr, true)) {
+			return $this->pdo->lastInsertId();
+		} else {
+			return null;
+		}
+	}
     function getOGPA($ogpa_group = 0) {
         if ($this->pdo) {
             $ogpa = [];
@@ -1432,9 +1441,8 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 
 		$sql = "INSERT IGNORE INTO `" . $table_name. "` ". $fields . " VALUES ". $values; 
 		
-
-		$this->modSQL($sql, $values_arr, true);
-		return [$sql, print_r($values_arr, true)];
+		return $this->insSQL($sql, $values_arr, true);
+		// return [$sql, print_r($values_arr, true)];
 	}
 
 	function selectObjectFromTable($table_name, $filters, $selected_fields = []) {

@@ -720,6 +720,9 @@ a>img:hover  {
   flex-direction: column;
   width: 100px;
 }
+.projects-list.list {
+	width: 100%;
+}
 
 .list input[type="radio"] {
   display: none;

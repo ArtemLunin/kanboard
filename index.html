@@ -1743,15 +1743,16 @@
 			<section class="section cSDEBundle">
 			</section>
 			<section class="section projects">
-				<form method="post" action="#" id="formNewProject">
+				<!-- <form method="post" action="#" id="formNewProject"> -->
 					<div class="row mx-0">
 						<div class="col-lg-9 col-sm-7 px-1">
+							<form method="post" action="#" id="formNewProject">
 							<div class="row">
 								<div class="col">Project Number</div>
 							</div>
 							<div class="row mb-1">
 								<div class="col">
-									<input type="text" id="projectNumber" name="projectNumber" class="form-width" placeholder="Project Number" required>
+									<input type="text" id="projectNumberVal" name="projectNumberVal" class="form-width" placeholder="Project Number" required>
 								</div>
 							</div>
 							<div class="row">
@@ -1759,7 +1760,7 @@
 							</div>
 							<div class="row mb-1">
 								<div class="col">
-									<input type="text" id="projectName" name="projectName" class="form-width" placeholder="Project Name" required>
+									<input type="text" id="projectNameVal" name="projectNameVal" class="form-width" placeholder="Project Name" required>
 								</div>
 							</div>
 							<div class="row">
@@ -1767,7 +1768,7 @@
 							</div>
 							<div class="row mb-1">
 								<div class="col">
-									<div class="text-area border border-dark p-1" contenteditable="true" id="projectText">
+									<div class="text-area border border-dark p-1" contenteditable="true" id="projectTextVal">
 									</div>
 								</div>
 							</div>
@@ -1775,11 +1776,33 @@
 								<div class="col">Group Name</div>
 							</div>
 							<div class="row mb-1">
+								<div class="col col-3">
+									<select class="group-project" id="group-project" data-group_idx="1"></select>
+									<button class="mop action js-group-append" type="button" title="Add to project">+</button>
+									<button class="mop action js-group-remove" type="button" title="Remove from project">-</button>
+								</div>
+								<div class="col col-3">
+									<div class="project-groups list border" id="project-groups">
+									</div>
+								</div>
+							</div>
+						</form>
+						</div>
+						<div class="col-lg-3 col-sm-5 px-1">
+							<div class="row">
+								<div class="col">Existing projects</div>
+							</div>
+							<div class="row mb-1">
 								<div class="col">
-									<select class="group-project" id="group-project-1" data-group_idx="1"></select>
+									<div class="projects-list list border" id="projects-list">
+									</div>
 								</div>
 							</div>
 						</div>
+					</div>
+					<div class="buttons">
+						<button class="mop" type="submit" id="projectSubmit">Create</button>
+						<button class="mop" type="reset" id="projectReset">Reset</button>
 					</div>
 				</form>
 			</section>

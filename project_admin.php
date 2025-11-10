@@ -51,15 +51,15 @@ if ($userID === 0) {
 
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? 0;
-$value = $paramJSON['value'] ?? 0;
-$number = $paramJSON['number'] ?? 0;
+$value = trim($paramJSON['value'] ?? '');
+$number = trim($paramJSON['number'] ?? '');
 $groups = $paramJSON['groups'] ?? 0;
 $id = isInt($paramJSON['id'] ?? 0);
 $group_id = isInt($paramJSON['group_id'] ?? 0);
 $user_name = $paramJSON['user_name'] ?? 0;
 $group_fields = $paramJSON['group_fields'] ?? 0;
 // $group_idx = isInt($paramJSON['group_idx'] ?? 0);
-$text_field = $paramJSON['text_field'] ?? $_REQUEST['text_field'] ?? 0;
+$text_field = trim($paramJSON['text_field'] ?? '');
 
 if ($method !== 0)
 {
@@ -67,6 +67,8 @@ if ($method !== 0)
 		$param_error_msg['answer'] = $project_object->addProject($value, $number, $text_field);
 	} elseif ($method === 'removeProject' && $id) {
         $param_error_msg['answer'] = $project_object->removeProject($id);
+    } elseif ($method === 'getProjectsList') {
+        $param_error_msg['answer'] = $project_object->getProjectsList();
     } elseif ($method === 'addGroupToProject' && $id && $group_id) {
         $param_error_msg['answer'] = $project_object->addGroupToProject($id, $group_id);
     } elseif ($method === 'removeGroupFromProject' && $id) {
