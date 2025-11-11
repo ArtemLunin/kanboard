@@ -75,10 +75,10 @@ class ProjectUtils extends \helperUtils\helperUtils {
 
     }
     function removeProject($projectID) {
-        // $owner_projectID = $this->getOwnerProjectID($projectID);
-        // if ($owner_projectID === $this->userID || $this->getRootAccess()) {
         if ($this->userCanEditProject($projectID)) {
-            return $this->db_object_project->removeObjectFromTable($this->tProjects["tableName"], $projectID);
+            if ($this->db_object_project->removeObjectFromTableFilter($this->tProjectsActivity["tableName"], ["project_id" => $projectID, "status" => 0])) {
+                return $this->db_object_project->removeObjectFromTable($this->tProjects["tableName"], $projectID);
+            }
         }
         return false;
     }
@@ -89,8 +89,6 @@ class ProjectUtils extends \helperUtils\helperUtils {
         return false;
     }
     function removeGroupFromProject($activityID) {
-        // $owner_projectID = $this->getOwnerProjectID($projectID);
-        // if ($owner_projectID === $this->userID || $this->getRootAccess()) {
         if ($this->userCanEditProject($projectID)) {
             if ($this->getGroupStatus($activityID) !== 0) {
                 return false;
@@ -176,7 +174,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
         $project_info = $this->getProjectsList(["id" => $projectID]);
         $project_activities = $this->db_object_project->selectObjectFromTable($this->tProjectsActivity["tableName"], ["project_id" => $projectID], $this->tProjectsActivity["fields"]);
         return [
-            "info"  => $project_info,
+            "info"  => $project_info[0],
             "detail" => $project_activities
         ];
         // return $this->db_object_project->selectObjectFromTable($this->tProjectsActivity["tableName"], ["project_id" => $project_id], $this->tProjectsActivity["fields"]);

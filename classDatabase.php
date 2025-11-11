@@ -1442,7 +1442,23 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		$sql = "INSERT IGNORE INTO `" . $table_name. "` ". $fields . " VALUES ". $values; 
 		
 		return $this->insSQL($sql, $values_arr, true);
-		// return [$sql, print_r($values_arr, true)];
+	}
+
+	function createFilterDB($filters, $split_str) {
+		$filter = "";
+		$values_arr = [];
+		$param_id = 1;
+		foreach ($filters as $key => $value) {
+			$param = "param" . $param_id;
+			$filter .= "`" . $key ."`" . "=:" . $param . ' ' . $split_str . ' ';
+			$values_arr[$param] = $value;
+			$param_id++;
+		}
+		$filter = rtrim(rtrim($filter), $split_str);
+		return [
+			"filter" => $filter,
+			"params" => $values_arr
+		];
 	}
 
 	function selectObjectFromTable($table_name, $filters, $selected_fields = []) {
@@ -1469,7 +1485,6 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 			$select_fields = "*";
 		}
 		$sql = "SELECT " . $select_fields . " FROM `" . $table_name . "` WHERE " . $filter;
-		// return $sql;
 		return $this->getSQL($sql, $values_arr);
 	}
 
@@ -1482,8 +1497,18 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		if ($id < 1) {
 			return false;
 		}
-		$sql = "DELETE from `" . $table_name. "` ". "WHERE id=:id";
+		$sql = "DELETE from `" . $table_name. "` ". "WHERE `id`=:id";
 		return $this->modSQL($sql, ["id" => $id], true);
+	}
+
+	function removeObjectFromTableFilter($table_name, $filters = []) {
+		if (count($filters) < 1) {
+			return false;
+		}
+		$filtered_arr = $this->createFilterDB($filters, "AND");
+
+		$sql = "DELETE from `" . $table_name. "` ". "WHERE " . $filtered_arr['filter'];
+		return $this->modSQL($sql, $filtered_arr['params'], true);
 	}
 
 	function getUserID($userName) {

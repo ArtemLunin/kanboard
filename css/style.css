@@ -483,6 +483,10 @@ button[type="button"] {
     color: white;
     margin-top: 10px;
 }
+button[type="button"].btn-danger {
+	background-color: #dc3545;
+	margin-left: 1rem;
+}
 button[type="button"].import-json {
     background-color: hsl(33, 50%, 50%);
     color: white;

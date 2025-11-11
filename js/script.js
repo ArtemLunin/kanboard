@@ -310,8 +310,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		projectName = document.querySelector('#projectNameVal'),
 		projectText = document.querySelector('#projectTextVal'),
 		projectsList = document.querySelector('#projects-list'),
+		formNewProject = document.querySelector('#formNewProject'),
 		// projectSubmit = document.querySelector('#projectSubmit'),
-
+		projectRemove = document.querySelector('#projectRemove'),
 		projectGroups = document.querySelector('#project-groups');
 	const formsAuth = document.querySelectorAll('.form-auth');
 	// main elements
@@ -3202,6 +3203,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
+	//project
 	addUserGroup.addEventListener('click', function()
 	{
 		const selectedUser = document.querySelector('input[name="select-users-all"]:checked');
@@ -3227,7 +3229,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	btnGroupAppend.addEventListener('click', (e) => {
 		const idx = groupsListProjects.options[groupsListProjects.selectedIndex].dataset.group_id;
 		projectGroups.insertAdjacentHTML('beforeend', `
-			<input type="radio" name="select-groups-project" data-user_name="${groupsListProjects.value}" id="opt-gr-pr${idx}">
+			<input type="radio" name="select-groups-project" data-group_name="${groupsListProjects.value}" id="opt-gr-pr${idx}">
 			<label for="opt-gr-pr${idx}">${groupsListProjects.value}</label>
 		`);
 	});
@@ -3239,6 +3241,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		selectedGroup.remove();
 	});
 
+	// projectAdd
 	formNewProject.addEventListener('submit', (e) => {
 		e.preventDefault();
 		const body = {
@@ -3250,8 +3253,32 @@ window.addEventListener('DOMContentLoaded', () => {
 		sendRequest('POST', requestURLProject, body).then(showProjectInfo);
 	});
 
+	// projectReset
 	formNewProject.addEventListener('reset', (e) => {
 		projectText.textContent = '';
+	});
+
+	projectRemove.addEventListener('click', (e) => {
+		const project = document.querySelector('input[name="select-projects"]:checked');
+		if (project) {
+			const body = {
+				method: 'removeProject',
+				id: project.dataset.project_id,
+			}
+			sendRequest('POST', requestURLProject, body).then(iniProjects);
+		}
+	});
+
+	projectsList.addEventListener('click', (e) => {
+		const target = e.target;
+		const selectedProject = (target.closest('INPUT'));
+		if (selectedProject) {
+			const body = {
+				method: 'getProjectsActivity',
+				id: selectedProject.dataset.project_id,
+			}
+			sendRequest('POST', requestURLProject, body).then(showProjectActivity);
+		}
 	});
 
 	document.querySelector('#downloadTemplate').addEventListener('click', function()
@@ -4033,11 +4060,33 @@ window.addEventListener('DOMContentLoaded', () => {
 			let idx = 1;
 			data.success.answer.forEach((item) => {
 				projectsList.insertAdjacentHTML('beforeend', `
-					<input type="radio" name="select-projects" data-user_name="${item.name}" id="opt-project-${idx}" data-project_id="${item.id}">
+					<input type="radio" name="select-projects" data-project_name="${item.name}" id="opt-project-${idx}" data-project_id="${item.id}">
 					<label for="opt-project-${idx}">${item.name}</label>
 				`);
 				idx++;
 			});
+		}
+		projectRemove.classList.add('d-none');
+		iniGroups();
+	}
+
+	function showProjectActivity(data) {
+		if (data.success && data.success.answer) {
+			const pdata = data.success.answer;
+			projectName.value = pdata.info.name;
+			projectNumber.value = pdata.info.number;
+			projectText.textContent = pdata.info.description;
+			projectGroups.textContent = '';
+			pdata.detail.forEach((item) => {
+				const groupIdx = groupsListInProjects.findIndex(gr => gr.id === item.group_id);
+				if (groupIdx >= 0) {
+					projectGroups.insertAdjacentHTML('beforeend', `
+						<input type="radio" name="select-groups-project" data-group_name="${groupsListInProjects[groupIdx].name}" id="opt-gr-pr${groupsListInProjects[groupIdx].id}">
+						<label for="opt-gr-pr${groupsListInProjects[groupIdx].id}">${groupsListInProjects[groupIdx].name}</label>
+					`);
+				}
+			});
+			projectRemove.classList.remove('d-none');
 		}
 	}
 
@@ -4860,12 +4909,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const iniProjects = () => {
 		const body = {
+			method: 'getProjectsList',
+		};
+		sendRequest('POST', requestURLProject, body).then(showProjectsList);
+	};
+
+	const iniGroups = () => {
+		const body = {
 			method: 'getGroupsList',
 		};
 		sendRequest('POST', requestURLProject, body).then(showGroupsProjectSection);
-		body.method = 'getProjectsList';
-		sendRequest('POST', requestURLProject, body).then(showProjectsList);
-		
 	};
 
 	const iniInventory = () => {
