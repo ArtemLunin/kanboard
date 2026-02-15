@@ -5,6 +5,7 @@ const requestURL = 'backend.php',
 	requestURLTemplate = 'mop_admin.php',
     requestURLRender = 'mop_render.php',
 	requestURLProject = "project_admin.php",
+	requestURLMOR = "mor_admin.php",
     inputSelectorClass = 'input-edit';
 
 let wikiURL = '', wikiLDAPAuth = 0;
@@ -76,6 +77,9 @@ let projectsMode = 0, activityProjectID = 0, activityGroupID = 0, activityInProj
 let projectGroupName = '';
 let resetProject = false;
 const subMenuClass = 'children-menu';
+//mor
+let gProjectNumber = 0,
+	gSiteCode = 0;
 
 const entityMap = {
   '&': '&amp;',
@@ -109,6 +113,7 @@ const sections = [
 	'cSDEBundle',
 	'inventory',
 	'projects',
+	'mor',
 	//'projects-info',
 	// 'documentation',
 	'action',
@@ -498,11 +503,26 @@ window.addEventListener('DOMContentLoaded', () => {
 		loadEFCR = document.querySelector('#loadEFCR');
 		// tEFCR = document.querySelector('.t-efcr');
 
+		//mor elements
+	const formMor = document.querySelector('#formMor'),
+		morSite = formMor.querySelector('#mor_site'),
+		morCA = formMor.querySelector('#mor_ca'),
+		mor_ProjectName = formMor.querySelector('#mor_project_name'),
+		morSiteAddress = formMor.querySelector('#mor_site_address'),
+		morRegion = formMor.querySelector('#mor_region'),
+		morCity = formMor.querySelector('#mor_city'),
+		morProvince = formMor.querySelector('#mor_province'),
+		morCountry = formMor.querySelector('#mor_country'),
+		morApprovingMgr = formMor.querySelector('#mor_approving_mgr'),
+		mor_project_contact = formMor.querySelector('#mor_project_contact'),
+		morTable = formMor.querySelector('#mor_table'),
+		morAddRow = formMor.querySelector('#js_mor_row_append'),
+		mor_requestor = formMor.querySelector('#mor_requestor');
+		let siteTable = [], caTable = [], rcpcTable = [];
+
 	const bundleLink = document.querySelector('.bundle-link');
 
-		btnNewActivity.dataset.prime_elem_id = 0;
-
-
+	btnNewActivity.dataset.prime_elem_id = 0;
 
 	let showMosaicEditItems = localStorage.getItem('showMosaicEditItems');
 	if (!showMosaicEditItems) {
@@ -1973,6 +1993,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				document.title = 'Projects';
 				projectsMode = 1;
 				iniProjects();
+				break;
+			case 'mor':
+				document.title = 'MOR';
+				iniMOR();
 				break;
 			// case 'projects-info':
 			// 	document.title = 'Projects Info';
@@ -5397,6 +5421,41 @@ window.addEventListener('DOMContentLoaded', () => {
 		dataTableInventory.ajax.reload();
 	};
 
+	const iniMOR = () => {
+		morSite.textContent = '';
+		morCA.textContent = '';
+		formMor.reset();
+		const body = {
+			method: 'getMORData',
+			value: 'site'
+		};
+		sendRequest('POST', requestURLMOR, body).then((data) => {
+			siteTable = data.success.answer.slice();
+			// console.log(siteTable);
+			for (const site of siteTable) {
+                morSite.insertAdjacentHTML('beforeend', `
+                    <OPTION value="${site.site}-${site.site_code}" data-id="${site.id}">${site.site}-${site.site_code}</OPTION>
+                `);
+            };
+            morSite.value = '';
+		});
+		body.value = 'ca';
+		sendRequest('POST', requestURLMOR, body).then((data) => {
+			// siteTable.length = 0;
+			caTable = data.success.answer.slice();
+			for (const ca of caTable) {
+                morCA.insertAdjacentHTML('beforeend', `
+                    <OPTION value="${ca.ca}" data-id="${ca.id}">${ca.ca}</OPTION>
+                `);
+            };
+            morCA.value = '';
+		});
+		body.value = 'rcpc';
+		sendRequest('POST', requestURLMOR, body).then((data) => {
+			rcpcTable = data.success.answer.slice();
+		});
+	}
+
 	const getChassisTags = (chassis_id) => {
 		const body = {
 			method: 'getChassisTags',
@@ -6110,6 +6169,109 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
+
+	//mor functions
+	function rowParts (trId) {
+		return `
+		<tr class="js-mor-tr-dyn" data-tr-id="${trId}">
+			<td><input type="text" class="mor js-mor-rcpc" name="mor_rcpc[]" value="" required></td>
+			<td><input type="text" class="mor js-mor-vendor-name" name="mor_vendor_name[]" value="" required></td>
+			<td>
+				<div class="mor-vendor-part-container">
+					<input type="text" class="mor js_vendor_part" name="mor_vendor_part[]" value="">
+					<ul class="mor-part-autocomplete mor-part-list d-none"></ul>
+				</div>
+			</td>
+			<td><input type="text" class="mor js-mor-part-descr" name="mor_part_descr[]" value=""></td>
+			<td><input type="text" class="mor" name="mor_quantity[]" value="" required></td>
+			<td><input type="text" class="mor" name="mor_uom[]" value="EA" required></td>
+			<td><input type="text" class="mor js-mor-oracle" name="mor_oracle[]" value="" required readonly></td>
+			<td><input type="text" class="mor" name="mor_task[]" value="" required></td>
+			<td><input type="text" class="mor js-mor-site-code" name="mor_site_code[]" value="" required></td>
+			<td><input type="text" class="mor js-mor-date-required" name="mor_date_required[]" value="" required></td>
+			<td><input type="text" class="mor" name="mor_org[]" value=""></td>
+			<td><input type="text" class="mor" name="mor_supplier_notes[]" value=""></td>
+		</tr>`;
+	}
+	
+	mor_requestor.addEventListener('change', (e) => {
+		if (mor_project_contact.value.trim() == '') {
+			mor_project_contact.value = e.target.value.trim();
+		}
+	});
+	morSite.addEventListener('change', (e) => {
+		const target = e.target;
+		const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
+		const siteIdx = siteTable.findIndex(site => site.id === id);
+		morSiteAddress.value = siteTable[siteIdx].address;
+		morCity.value = siteTable[siteIdx].site;
+		morRegion.value = siteTable[siteIdx].region;
+		morProvince.value = siteTable[siteIdx].province;
+		morCountry.value = siteTable[siteIdx].country;
+		gSiteCode = target.value;
+	});
+	morCA.addEventListener('change', (e) => {
+		const target = e.target;
+		const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
+		const caIdx = caTable.findIndex(ca => ca.id === id);
+		mor_ProjectName.value = caTable[caIdx].project_name;
+		morApprovingMgr.value = caTable[caIdx].project_owner;
+		gProjectNumber = caTable[caIdx].project_num;
+	});
+	morAddRow.addEventListener('click', (e) => {
+		if (gProjectNumber != 0 && gSiteCode != 0) {
+			const tbody = morTable.querySelector('TBODY');
+			if (tbody) {
+				let trId = (tbody.dataset.trId !== undefined) ? parseInt(tbody.dataset.trId, 10) : 1;
+				tbody.insertAdjacentHTML('beforeend', rowParts(trId));
+				tbody.dataset.trId = trId + 1;
+				const morTRDyn = tbody.querySelector(`.js-mor-tr-dyn[data-tr-id='${trId}']`);
+				if (morTRDyn) {
+					morTRDyn.querySelector('.js-mor-oracle').value = gProjectNumber;
+					morTRDyn.querySelector('.js-mor-site-code').value = gSiteCode;
+					const currentDate = new Date();
+					const formattedDate = currentDate.toISOString().split('T')[0];
+					morTRDyn.querySelector('.js-mor-date-required').value = formattedDate;
+				}
+			}
+		}
+	});
+
+	morTable.addEventListener('input', (e) => {
+		const target = e.target;
+		const morTRDyn = target.closest('.js-mor-tr-dyn');
+		if (morTRDyn) {
+			const morPartList = morTRDyn.querySelector('.mor-part-list');
+			if (target.classList.contains('js_vendor_part') && target.value.trim() != '') {
+				morPartList.textContent = '';
+				let partList = rcpcTable.filter(rcpc => rcpc.supplier_part.includes(target.value.trim().toUpperCase()));
+				partList.forEach(item => {
+					const li = document.createElement('li');
+					li.textContent = item.supplier_part;
+					li.dataset.id = item.id;
+					li.addEventListener('click', (e) => {
+						target.value = e.target.textContent;
+						const id = parseInt(e.target.dataset.id, 10);
+						const rcpcIdx = rcpcTable.findIndex(rcpc => rcpc.id === id);
+						morTRDyn.querySelector('.js-mor-rcpc').value = rcpcTable[rcpcIdx].rcpc;
+						morTRDyn.querySelector('.js-mor-vendor-name').value = rcpcTable[rcpcIdx].supplier;
+						morTRDyn.querySelector('.js-mor-part-descr').value = rcpcTable[rcpcIdx].descr;		
+						morPartList.classList.add('d-none'); 
+					});
+					morPartList.append(li);
+				});
+				morPartList.classList.remove('d-none');
+			} else {
+				morPartList.classList.add('d-none'); 
+			}
+		}
+	});
+
+	morTable.addEventListener('click', (e) => {
+		if (!e.target.classList.contains('js_vendor_part')) {
+			//morPartList.classList.add('d-none');
+		}
+	});
 
 	clearInputsForms();
 	iniInterface();

@@ -56,8 +56,8 @@ $number = trim($paramJSON['number'] ?? '');
 
 if ($method !== 0)
 {
-    if ($method === 'getSites') {
-		$param_error_msg['answer'] = $mor_object->getSites();
+    if ($method === 'getMORData') {
+		$param_error_msg['answer'] = $mor_object->getMORData($value);
     } elseif (false) {
         $reader = new Xlsx();
         $reader->setReadDataOnly(true);

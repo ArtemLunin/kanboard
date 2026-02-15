@@ -120,12 +120,12 @@ class databaseUtils {
 		'sectionAttr'	=> 'projects',
 		'accessType'	=> 'admin',
 	],
-	// [
-	// 	'pageName' => 'Projects Info',
-	// 	'sectionName' => 'projects-info',
-	// 	'sectionAttr'	=> 'projects-info',
-	// 	'accessType'	=> 'admin',
-	// ],
+	[
+		'pageName' => 'MOR',
+		'sectionName' => 'mor',
+		'sectionAttr'	=> 'mor',
+		'accessType'	=> 'admin',
+	],
 	[
 		'pageName' => 'Settings',
 		'sectionName' => 'settings',

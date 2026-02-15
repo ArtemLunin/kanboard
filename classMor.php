@@ -9,7 +9,7 @@ class MORUtils extends \helperUtils\helperUtils {
     private $tSite = [
         "tableName" => "sites",
         "fields" => [
-            "id", "bu", "region", "province", "site", "site_code", "ccli_code", "address", "country"
+            "id", "bu", "region", "province", "site", "site_code", "clli_code", "address", "country"
         ]
     ];
     private $tCA = [
@@ -50,9 +50,28 @@ class MORUtils extends \helperUtils\helperUtils {
     function loadDataCA($rows, $refreshTable = true) {
         $this->db_object_project->runInsertBulk($this->tCA["tableName"], array_slice($this->tCA["fields"], 1), $rows, $refreshTable);
     }
-    function getSites() {
-        $sites = $this->db_object_project->selectObjectFromTable($this->tSite["tableName"], [], $this->tSite["fields"], []);
-        return $sites;
+    function getMORData($mor_entity) {
+        $tableName = '';
+        $tableFields = [];
+        switch ($mor_entity) {
+            case 'site':
+                $tableName = $this->tSite["tableName"];
+                $tableFields = $this->tSite["fields"];
+                break;
+            case 'ca':
+                $tableName = $this->tCA["tableName"];
+                $tableFields = $this->tCA["fields"];
+                break;
+            case 'rcpc':
+                $tableName = $this->tRCPC["tableName"];
+                $tableFields = $this->tRCPC["fields"];
+                break;
+            default:
+                return false;
+                break;
+        }
+        // $sites = $this->db_object_project->selectObjectFromTable($this->tSite["tableName"], [], $this->tSite["fields"], []);
+        return $this->db_object_project->selectObjectFromTable($tableName, [], $tableFields, []);
     }
 }
 
