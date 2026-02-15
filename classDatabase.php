@@ -120,6 +120,12 @@ class databaseUtils {
 		'sectionAttr'	=> 'projects',
 		'accessType'	=> 'admin',
 	],
+	// [
+	// 	'pageName' => 'Projects Info',
+	// 	'sectionName' => 'projects-info',
+	// 	'sectionAttr'	=> 'projects-info',
+	// 	'accessType'	=> 'admin',
+	// ],
 	[
 		'pageName' => 'Settings',
 		'sectionName' => 'settings',
@@ -1444,48 +1450,122 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		return $this->insSQL($sql, $values_arr, true);
 	}
 
-	function createFilterDB($filters, $split_str) {
+	function createFilterDB($table_name, $filters, $split_str) {
 		$filter = "";
 		$values_arr = [];
 		$param_id = 1;
 		foreach ($filters as $key => $value) {
 			$param = "param" . $param_id;
-			$filter .= "`" . $key ."`" . "=:" . $param . ' ' . $split_str . ' ';
+			$filter .= "`" . $table_name . "`." . "`" . $key ."`" . "=:" . $param . ' ' . $split_str . ' ';
 			$values_arr[$param] = $value;
 			$param_id++;
 		}
 		$filter = rtrim(rtrim($filter), $split_str);
+		$filter = '(' . $filter . ')';
 		return [
 			"filter" => $filter,
 			"params" => $values_arr
 		];
 	}
+	function runUpdateSQL($tableName, $setFields, $filters) {
+        $fields_str = "";
+        $field_idx = 1;
+        $values_arr = [];
+        foreach ($setFields as $field => $value) {
+            $field_p = "pf" . $field_idx;
+            $fields_str .= "`" . $field . "`=:" . $field_p . ",";
+            $values_arr[$field_p] = $value;
+            $field_idx++;
+        }
+        $fields_str = rtrim($fields_str, ', ');
+        $filtered_arr = $this->createFilterDB($tableName, $filters, "AND");
+        $sql_upd = "UPDATE `" .$tableName. "` SET " . $fields_str . " WHERE " . $filtered_arr['filter'];
+		$this->errorLog($sql_upd);
+		$this->errorLog(print_r(array_merge($values_arr, $filtered_arr['params']), true));
+        // $this->modSQL($sql_upd , array_merge($values_arr, $filtered_arr['params']), false);
+    }
+	function runInsertSQL($tableName, $setFields) {
+        $fields_str = "";
+        $values_str = "";
+        $field_idx = 1;
+        $values_arr = [];
+        foreach ($setFields as $field => $value) {
+            $field_p = "pf" . $field_idx;
+            $fields_str .= "`" . $field . "`,";
+			$values_str .= ":" . $field_p . ",";
+            $values_arr[$field_p] = $value;
+            $field_idx++;
+        }
+        $fields_str = "(" . rtrim($fields_str, ', ') . ")";
+        $values_str = " VALUES (" . rtrim($values_str, ', ') . ")";
 
-	function selectObjectFromTable($table_name, $filters, $selected_fields = []) {
-		$filter = "";
-		$values_arr = [];
-		if (count($filters) < 1) {
-			$filter = "id<>0";
-		} else {
-			$param_id = 1;
-			foreach ($filters as $key => $value) {
-				$param = "param" . $param_id;
-				$filter .= "`" . $key ."`" . "=:" . $param . ",";
-				$values_arr[$param] = $value;
-				$param_id++;
+        $sql_upd = "INSERT INTO `" .$tableName. "` " . $fields_str . $values_str;
+        $this->modSQL($sql_upd , $values_arr, false);
+    }
+	function runInsertBulk($tableName, $tableFields, $rows, $refreshTable = true) {
+		$chunkSize = 10;
+		$chunks = array_chunk($rows, $chunkSize);
+		try {
+			$this->pdo->beginTransaction();
+			if ($refreshTable === true) {
+				$sql = "DELETE FROM `" . $tableName . "` " . " WHERE id>0";
+				$stmt = $this->pdo->prepare($sql);
+				$stmt->execute();
 			}
-			$filter = rtrim($filter, ",");
+			foreach ($chunks as $batch) {
+				$columnCount = count($batch[0]);
+				$rowPlaceholders = '(' . implode(',', array_fill(0, $columnCount, '?')) . ')';
+				$allPlaceholders = implode(',', array_fill(0, count($batch), $rowPlaceholders));
+				$allFields = '(' . implode(',', array_map(function($field) {
+					return "`" . $field . "`";
+				}, $tableFields)) . ')';
+				$sql = "INSERT INTO `" . $tableName . "` " . $allFields . " VALUES " . $allPlaceholders;
+				$params = [];
+				foreach ($batch as $row) {
+					foreach ($row as $value) {
+						$params[] = $value;
+					}
+				}
+				$stmt = $this->pdo->prepare($sql);
+				$stmt->execute($params);
+			}
+			$this->pdo->commit();
+		} catch (PDOException $e) 
+		{
+			$this->setSQLError($e, 'SQL error. "' . $sql);
+			$this->pdo->rollBack();
+		}
+	}
+	function selectObjectFromTable($table_name, $filters, $selected_fields = [], $order_by = []) {
+		$filter = "";
+		// $values_arr = [];
+		$select_fields = "";
+		$filtered_arr = [];
+		if (count($filters) < 1) {
+			$filtered_arr['filter'] = 'id<>:param1';
+			$filtered_arr['params'] = [
+				'param1'	=> 0
+			];
+		} else {
+			$filtered_arr = $this->createFilterDB($table_name, $filters, "AND");
 		}
 		if (count($selected_fields) > 0) {
-			$sanitize_fields = array_map(function($field) {
-				return "`" . $field . "`";
+			$sanitize_fields = array_map(function($field) use ($table_name) {
+				return "`" . $table_name . "`." . "`" . $field . "`";
 			}, $selected_fields);
 			$select_fields = implode(",", $sanitize_fields);
 		} else {
-			$select_fields = "*";
+			$select_fields = "`" . $table_name . "`." . "*";
 		}
-		$sql = "SELECT " . $select_fields . " FROM `" . $table_name . "` WHERE " . $filter;
-		return $this->getSQL($sql, $values_arr);
+		$orderby = "";
+		if (count($order_by) > 0) {
+			$order_by = array_map(function($n) {
+				return "`" . $n . "`";
+			}, $order_by);
+			$orderby = " ORDER BY " . implode(",", $order_by);
+		}
+		$sql = "SELECT " . $select_fields . " FROM `" . $table_name . "` WHERE " . $filtered_arr['filter'] . $orderby;
+		return $this->getSQL($sql, $filtered_arr['params']);
 	}
 
 	function selectFieldFromTable($table_name, $filters, $field_name) {
@@ -1505,10 +1585,10 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		if (count($filters) < 1) {
 			return false;
 		}
-		$filtered_arr = $this->createFilterDB($filters, "AND");
+		$filtered_arr = $this->createFilterDB($table_name, $filters, "AND");
 
 		$sql = "DELETE from `" . $table_name. "` ". "WHERE " . $filtered_arr['filter'];
-		return $this->modSQL($sql, $filtered_arr['params'], true);
+		return $this->modSQL($sql, $filtered_arr['params'], false);
 	}
 
 	function getUserID($userName) {

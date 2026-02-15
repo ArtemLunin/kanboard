@@ -21,7 +21,7 @@ $param_error_msg['answer'] = false;
 $userID = 0;
 
 function isInt($val) {
-    return filter_var($val, FILTER_VALIDATE_INT, ["options" => ["min_range" => 1]]);
+    return filter_var($val, FILTER_VALIDATE_INT, ["flags" => FILTER_NULL_ON_FAILURE, "options" => ["min_range" => 1]]) ?? 0;
 }
 
 $project_object = new myProjectUtils\ProjectUtils();
@@ -34,7 +34,7 @@ if (!isset($_SESSION['logged_user'])) {
     exit;
 } else {
     $userID = $project_object->getUserID($_SESSION['logged_user']);
-    if (isset($_SESSION['SUPER_USER'])) {
+    if (isset($_SESSION['SUPER_USER']) && $_SESSION['SUPER_USER']) {
         $project_object->setRootAccess(true);
     } else {
         $project_object->setRootAccess(false);
@@ -56,6 +56,9 @@ $number = trim($paramJSON['number'] ?? '');
 $groups = $paramJSON['groups'] ?? 0;
 $id = isInt($paramJSON['id'] ?? 0);
 $group_id = isInt($paramJSON['group_id'] ?? 0);
+$element = $paramJSON['element'] ?? '';
+$activity = $paramJSON['activity'] ?? '';
+$group_ids = $paramJSON['group_ids'] ?? 0;
 $user_name = $paramJSON['user_name'] ?? 0;
 $group_fields = $paramJSON['group_fields'] ?? 0;
 // $group_idx = isInt($paramJSON['group_idx'] ?? 0);
@@ -65,19 +68,27 @@ if ($method !== 0)
 {
     if ($method === 'addProject' && $value && $number && $text_field) {
 		$param_error_msg['answer'] = $project_object->addProject($value, $number, $text_field);
-	} elseif ($method === 'removeProject' && $id) {
+	} elseif ($method === 'changeProject' && $id && $value && $number && $text_field) {
+        $param_error_msg['answer'] = $project_object->changeProject($id, $value, $number, $text_field);
+    } elseif ($method === 'removeProject' && $id) {
         $param_error_msg['answer'] = $project_object->removeProject($id);
     } elseif ($method === 'getProjectsList') {
         $param_error_msg['answer'] = $project_object->getProjectsList();
-    } elseif ($method === 'addGroupToProject' && $id && $group_id) {
-        $param_error_msg['answer'] = $project_object->addGroupToProject($id, $group_id);
+    } elseif ($method === 'addGroupToProject' && $id && ($group_id || $group_ids)) {
+        $param_error_msg['answer'] = $project_object->addGroupToProject($id, $group_id ? $group_id : $group_ids);
     } elseif ($method === 'removeGroupFromProject' && $id) {
         $param_error_msg['answer'] = $project_object->removeGroupFromProject($id);
-    } elseif ($method === 'changeProjectActivity' && $id && $group_id && count($group_fields) > 0) {
-        $param_error_msg['answer'] = $project_object->changeProjectActivity($id, $group_id, $group_fields);
-    } elseif ($method === 'getProjectsActivity' && $id) {
+    } elseif ($method === 'changeProjectActivity' && $id && $group_id && $group_fields) {
+        $param_error_msg['answer'] = $project_object->changeProjectActivity($id, $group_id, $group_fields, $element, $activity);
+    } elseif ($method === 'getProjectsActivity') {
         $param_error_msg['answer'] = $project_object->getProjectsActivity($id);
-    } elseif ($method === 'addGroups' && $groups && count($groups) > 0) {
+    } elseif ($method === 'getProjectsActivityByID' && $id) {
+        $param_error_msg['answer'] = $project_object->getProjectsActivityByID($id);
+    }
+    elseif ($method === 'getProjectsActivityAll') {
+        $param_error_msg['answer'] = $project_object->getProjectsActivityAll();
+    }
+    elseif ($method === 'addGroups' && $groups && count($groups) > 0) {
         $param_error_msg['answer'] = $project_object->addGroups($groups);
     } elseif ($method === 'getGroupsList') {
         $param_error_msg['answer'] = $project_object->getGroupsList();

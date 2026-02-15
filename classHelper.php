@@ -15,4 +15,19 @@ class helperUtils {
 		$string = str_replace("&nbsp;", " ", $string);
 		return trim(html_entity_decode($string));
 	}
+
+	function backquoteForTables($objTables) {
+		$backquoted_fields = [];
+		foreach ($objTables as $tableName => $tableFields) {
+			$arr = array_map(function($field) use ($tableName) {
+				return "`" . $tableName . "`." . "`" . $field . "`";
+			}, $tableFields);
+			$backquoted_fields[] = implode(',', $arr);
+		}
+		return implode(',', $backquoted_fields);
+	}
+
+	function isInt($val) {
+		return filter_var($val, FILTER_VALIDATE_INT, ["flags" => FILTER_NULL_ON_FAILURE, "options" => ["min_range" => 1]]) ?? 0;
+	}
 }

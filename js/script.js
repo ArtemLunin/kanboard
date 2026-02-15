@@ -63,11 +63,18 @@ const documentProperties = {
 	legend: 'cSDE Ping Test',
 };
 
-// const cTemplateGroups = {
-// 	0: "RHSI and Service Delivery Environment",
-// 	1: "IP Core",
-// };
+//for project
+const cTemplateGroups = {
+	// 0: "RHSI and Service Delivery Environment",
+	"SDE": 0,
+	"IP Core": 1,
+	"Transport": 3,
+};
+
 let cTemplate = 0;
+let projectsMode = 0, activityProjectID = 0, activityGroupID = 0, activityInProjects = '0';
+let projectGroupName = '';
+let resetProject = false;
 const subMenuClass = 'children-menu';
 
 const entityMap = {
@@ -102,6 +109,7 @@ const sections = [
 	'cSDEBundle',
 	'inventory',
 	'projects',
+	//'projects-info',
 	// 'documentation',
 	'action',
 ];
@@ -111,6 +119,7 @@ const defaultUserRights = [];
 const ProjectUsersList = [];
 const groupsUsersList = [];
 const groupsListInProjects = [];
+const groupsIdxInProjects = [];
 
 sections.forEach((item, idx) => {
 	defaultUserRights[idx] = `<td data-${item}>&nbsp</td>`;
@@ -194,6 +203,16 @@ const dateToTimestamp = date_str => {
 		return ts;
 	}
 	return 0;
+};
+
+const datetimeToUSDate = datetime_str => {
+	const dateObject = new Date(datetime_str);
+	const options = {
+		year: 'numeric',
+		month: 'short',
+		day: 'numeric'
+	};
+	return dateObject.toLocaleDateString('en-US', options);
 };
 
 function tsPeriodDays (periodDays) {
@@ -306,14 +325,29 @@ window.addEventListener('DOMContentLoaded', () => {
 	const groupsListProjects = document.querySelector('#group-project'),
 		btnGroupAppend = document.querySelector('.js-group-append'),
 		btnGroupRemove = document.querySelector('.js-group-remove'),
+		// btnGroupUp = document.querySelector('.js-group-up'),
+		// btnGroupDown = document.querySelector('.js-group-down'),
+		projectNumberActivity = document.querySelector('#projectNumber'),
+		projectNameActivity = document.querySelector('#projectName'),
 		projectNumber = document.querySelector('#projectNumberVal'),
 		projectName = document.querySelector('#projectNameVal'),
 		projectText = document.querySelector('#projectTextVal'),
-		projectsList = document.querySelector('#projects-list'),
+		// projectsList = document.querySelector('#projects-list'),
+		projectsFullList = document.querySelector('#projects-full-list'),
+		projectsActivityArea = document.querySelector('#projects-activity-area'),
 		formNewProject = document.querySelector('#formNewProject'),
-		// projectSubmit = document.querySelector('#projectSubmit'),
-		projectRemove = document.querySelector('#projectRemove'),
+		inputProjectID = document.querySelector('#input_project_id'),
+		jsBackProjects = document.querySelector('.js-back-projects'),
+		activeProjects = document.querySelector('#active_projects'),
+		projectBriefData = document.querySelector('.project-brief-data'),
+		// inputProjectStatus = document.querySelector('#input_project_status'),
+		// inputGroupID = document.querySelector('#input_group_id'),	
+		projectSubmit = document.querySelector('#projectSubmit'),
+		btnProjectRemove = document.querySelector('#projectRemove'),
 		projectGroups = document.querySelector('#project-groups');
+		const dateInput = document.querySelector('#dateInput');
+		const $wrapper = $('#calendarWrapper');
+  		const $calendar = $('#calendar');
 	const formsAuth = document.querySelectorAll('.form-auth');
 	// main elements
 	const ticketsContainer = document.querySelector('.tickets-container'),
@@ -415,6 +449,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const formReset = document.querySelector('#formReset'),
         formSubmit = document.querySelector('#formSubmit'),
+        formSave = document.querySelector('#formSave'),
         formAdmin = document.querySelector('#formAdmin'),
         formFields = document.querySelector('#formFields'),
         adminViewElems = document.querySelectorAll('.admin-view'),
@@ -475,6 +510,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	const displayMOPElements = (adminView = false) => {
+		formSubmit.dataset.projectDownload = '0';
 		adminEnabled = adminView;
 		if (adminView) {
 			adminViewElems.forEach((elem) => {
@@ -1762,10 +1798,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const toggleSection = (showSection, addParams = {}) => {
-		// let currentSection = location.hash.substring(1);
 		if (showSection == '') return;
-			// || currentSection == showSection) 
-
 		document.title = startDocumentTitle;
 		location.hash = showSection;
 		let idx = 0;
@@ -1788,6 +1821,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				showSection === 'cdip' || 
 				showSection === 'cSDEPingtest' ||
 				showSection === 'cSDEBundle'
+				// showSection === 'projects-info'
 				) {
 				section[idx].append(renderMopDiv);
 			}
@@ -1797,6 +1831,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		clearOldData(showSection);
 
 		cTemplate = 0;
+		projectsMode = 0;
+		formSave.classList.add('d-none');
 
 		switch (showSection) {
 			case 'main':
@@ -1935,7 +1971,13 @@ window.addEventListener('DOMContentLoaded', () => {
 				iniInventory();
 			case 'projects':
 				document.title = 'Projects';
+				projectsMode = 1;
 				iniProjects();
+				break;
+			// case 'projects-info':
+			// 	document.title = 'Projects Info';
+			// 	projectsMode = 1;
+			// 	displayMOPElements(false);		
 			default:
 				break;
 		}
@@ -1961,7 +2003,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			} else if (target.dataset.section === 'login') {
 				toggleSignIn('show');
 			} else {
-				if (location.hash.substring(1) == target.dataset.section) return;
+				// не удалять - не срабатывает переход по подменю
+				// if (location.hash.substring(1) == target.dataset.section) return;
 
 				selectMenuItem(target.parentNode, target.dataset.section, (!!target.dataset.subsection) ? target.dataset.subsection : false);
 				toggleSection(target.dataset.section, 
@@ -3155,6 +3198,19 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
+	const clearProjectActivity = () => {
+		projectsFullList.querySelectorAll('.project-band').forEach(project => {
+			project.classList.remove('d-none');
+		});
+		formNewProject.classList.remove('d-none');
+		activeProjects.querySelector('legend').textContent = 'Projects info';
+		projectsActivityArea.textContent = '';
+		projectsActivityArea.classList.add('d-none');
+		projectBriefData.classList.add('d-none');
+		jsBackProjects.classList.add('d-none');
+		activityInProjects = '0';
+	};
+
 	btnDevicesSelect.addEventListener('click', () => {
 		if (typeof xls_files == 'undefined' || !xls_files) return false;
 		uploadAutomatorItems({
@@ -3228,56 +3284,256 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	btnGroupAppend.addEventListener('click', (e) => {
 		const idx = groupsListProjects.options[groupsListProjects.selectedIndex].dataset.group_id;
-		projectGroups.insertAdjacentHTML('beforeend', `
-			<input type="radio" name="select-groups-project" data-group_name="${groupsListProjects.value}" id="opt-gr-pr${idx}">
-			<label for="opt-gr-pr${idx}">${groupsListProjects.value}</label>
-		`);
+		const groupInprojectGroups = projectGroups.querySelector(`INPUT[data-group_name="${groupsListProjects.options[groupsListProjects.selectedIndex].value}"`);
+		if (groupInprojectGroups) {
+			return;
+		}
+		const body = {};
+		body.method = 'addGroupToProject';
+		body.id = inputProjectID.value;
+		body.group_ids = [idx];
+		sendRequest('POST', requestURLProject, body).then((data) => {
+			if (data.success && data.success.answer) {
+				showProjectActivity(data);
+				iniProjectsInfo();
+			}
+		});
 	});
 
 	btnGroupRemove.addEventListener('click', (e) => {
 		const selectedGroup = document.querySelector('input[name="select-groups-project"]:checked');
-		console.log(`label[for="opt-gr-pr${selectedGroup.id}"]`);
-		document.querySelector(`label[for="${selectedGroup.id}"]`).remove();
-		selectedGroup.remove();
+		if (selectedGroup) {
+			if (inputProjectID.value !== '0') {
+				const body = {
+					method: 'changeProjectActivity',
+					id: inputProjectID.value,
+					group_id: selectedGroup.dataset.group_id,
+					group_fields: {
+						group_idx: 0
+					}
+				}
+				sendRequest('POST', requestURLProject, body).then((data) => {
+					if (data.success && data.success.answer) {
+						document.querySelector(`label[for="${selectedGroup.id}"]`).remove();
+						selectedGroup.remove();
+						showProjectActivity(data);
+						iniProjectsInfo();
+					}
+				});
+			}
+		}
+	});
+
+	projectsFullList.addEventListener('click', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		const projectActivity = target.closest('.project-activity');
+		const projectSelected = target.closest('.project-header');
+		const projectInfo = target.closest('.project-info');
+		if (projectActivity && projectActivity.dataset.activity_id !== '0' && activityInProjects !== projectActivity.dataset.activity_id) {
+			activityInProjects = projectActivity.dataset.activity_id;
+			const currentProject = projectActivity.closest('.project-band');
+			e.currentTarget.querySelectorAll('.project-band').forEach(project => {
+				if (project !== currentProject) {
+					project.classList.add('d-none');
+				}
+			});
+			activityProjectID = projectActivity.dataset.project_id;
+			activityGroupID = projectActivity.dataset.group_id;
+			const body = {
+				method: 'getProjectsActivityByID',
+				id: projectActivity.dataset.activity_id,
+			}
+			projectBriefData.querySelector('#project-brief-number').value = currentProject.dataset.projectNumber;
+			projectBriefData.querySelector('#project-brief-name').value = currentProject.dataset.projectName;
+			projectBriefData.querySelector('#project-brief-description').value = currentProject.dataset.projectDescription;
+			projectBriefData.classList.remove('d-none');
+			sendRequest('POST', requestURLProject, body).then((data) => {
+				showProjectActivityForm(data, parseInt(projectActivity.dataset.ogpaGroup));
+			});
+			jsBackProjects.classList.remove('d-none');
+		} else if (projectSelected && jsBackProjects.classList.contains('d-none')) {
+			const body = {
+				method: 'getProjectsActivity',
+				id: projectSelected.dataset.project_id,
+			}
+			sendRequest('POST', requestURLProject, body).then(showProjectActivity);
+			inputProjectID.value = projectSelected.dataset.project_id;
+			projectSubmit.textContent = 'Save';
+		} else if (projectInfo) {
+			projectInfo.classList.toggle('expanded');
+		}
+	});
+
+	jsBackProjects.addEventListener('click', (e) => {
+		e.preventDefault();
+		clearProjectActivity();
 	});
 
 	// projectAdd
 	formNewProject.addEventListener('submit', (e) => {
 		e.preventDefault();
-		const body = {
-			method: 'addProject',
-			value: projectName.value.trim(),
-			number: projectNumber.value.trim(),
-			text_field: projectText.textContent.trim()
+		const body = {};
+		if (inputProjectID.value === '0') {
+			body.method = 'addProject';
+			body.value = projectName.value.trim();
+			body.number = projectNumber.value.trim();
+			body.text_field = projectText.value.trim();
+			sendRequest('POST', requestURLProject, body).then(iniProjects);
+		} else {
+			body.method = 'changeProject';
+			body.id = inputProjectID.value;
+			body.value = projectName.value.trim();
+			body.number = projectNumber.value.trim();
+			body.text_field = projectText.value.trim();
+			sendRequest('POST', requestURLProject, body).then((data) => {
+				const selectedGroup = document.querySelectorAll('input[name="select-groups-project"]');
+				const group_id_arr = [];
+				for (const groupElem of selectedGroup) {
+					group_id_arr.push(groupElem.dataset.group_id)
+				}
+				body.method = 'addGroupToProject';
+				body.id = inputProjectID.value;
+				body.group_ids = group_id_arr;
+				sendRequest('POST', requestURLProject, body).then(iniProjects);
+			});
 		}
-		sendRequest('POST', requestURLProject, body).then(showProjectInfo);
 	});
 
 	// projectReset
 	formNewProject.addEventListener('reset', (e) => {
-		projectText.textContent = '';
+		projectText.value = '';
+		inputProjectID.value = '0';
+		projectSubmit.textContent = 'Create';
+		projectGroups.textContent = '';
+		btnProjectRemove.classList.add('d-none');
 	});
 
-	projectRemove.addEventListener('click', (e) => {
+	btnProjectRemove.addEventListener('click', (e) => {
 		const project = document.querySelector('input[name="select-projects"]:checked');
-		if (project) {
+		titleDialogModal.innerText = 'Remove project';
+		questionDialogModal.innerText = `Do you really want to remove project number: ${projectNumber.value}?`;
+		btnDialogModal.setAttribute('modal-command', 'removeProject');
+		btnDialogModal.dataset['id'] = inputProjectID.value;
+		$('#dialogModal').modal({
+			keyboard: true
+		});
+	});
+
+	function removeProject(projectID) {
+		if (projectID !== '0') {
 			const body = {
 				method: 'removeProject',
-				id: project.dataset.project_id,
+				id: projectID,
 			}
-			sendRequest('POST', requestURLProject, body).then(iniProjects);
+			sendRequest('POST', requestURLProject, body).then((data) => {
+				if (data && data.success && data.success.answer) {
+					// projectText.value = '';
+					// projectNumber.value = '';
+					// projectName.value  = '';
+					// inputProjectID.value = '0';
+					// projectSubmit.textContent = 'Create';
+					// projectGroups.textContent = '';
+					// btnProjectRemove.classList.add('d-none');
+					formNewProject.reset();
+					iniProjectsInfo();
+				}
+			});
+		}
+	}
+
+	// projectsList.addEventListener('click', (e) => {
+	// 	const target = e.target;
+	// 	const selectedProject = (target.closest('INPUT'));
+	// 	if (selectedProject) {
+	// 		const body = {
+	// 			method: 'getProjectsActivity',
+	// 			id: selectedProject.dataset.project_id,
+	// 		}
+	// 		sendRequest('POST', requestURLProject, body).then(showProjectActivity);
+	// 		inputProjectID.value = selectedProject.dataset.project_id;
+	// 		projectSubmit.textContent = 'Save';
+	// 	}
+	// });
+
+	projectGroups.addEventListener('click', (e) => {
+		const target = e.target;
+		if (target.closest('.js-group-up') || target.closest('.js-group-down')) {
+			const parentDiv = target.closest('.js-group-project');
+			if (parentDiv) {
+				const selectedGroup = parentDiv.querySelector('input[name="select-groups-project"]');
+				const group_idx = parseInt(selectedGroup.dataset.group_idx);
+				let new_idx = 0;
+				const index = groupsIdxInProjects.indexOf(group_idx);
+				if (target.closest('.js-group-up') && index > 0) {
+					new_idx = groupsIdxInProjects[index - 1];
+				} else if (target.closest('.js-group-down') && index < (groupsIdxInProjects.length - 1)) {
+					new_idx = groupsIdxInProjects[index + 1];
+				}
+				if (new_idx != 0) {
+					const body = {
+						method: 'changeProjectActivity',
+						id: inputProjectID.value,
+						group_id: selectedGroup.dataset.group_id,
+						group_fields: {
+							group_idx: new_idx
+						}
+					}
+					sendRequest('POST', requestURLProject, body).then(showProjectActivity);					
+				}
+			}
 		}
 	});
 
-	projectsList.addEventListener('click', (e) => {
+	projectGroups.addEventListener('dragstart', (e) => {
 		const target = e.target;
-		const selectedProject = (target.closest('INPUT'));
-		if (selectedProject) {
-			const body = {
-				method: 'getProjectsActivity',
-				id: selectedProject.dataset.project_id,
+		const group = target.querySelector('input[name="select-groups-project"]');
+		if (group) {
+			e
+				.dataTransfer
+				.setData('text/plain', group.id);
+		}
+	});
+
+	projectGroups.addEventListener('dragover', (e) => {
+		e.preventDefault();
+	});
+
+	projectGroups.addEventListener('drop', (e) => {
+		const id = e.dataTransfer.getData('text/plain');
+		const target = e.target;
+		const group_elem = document.querySelector(`#${target.getAttribute('for')}`);
+		if (group_elem && group_elem.id !== id) {
+			const group_id = document.querySelector(`#${id}`).dataset.group_id;
+			if (group_elem.dataset.group_idx != '0') {
+				const body = {
+					method: 'changeProjectActivity',
+					id: inputProjectID.value,
+					group_id: group_id,
+					group_fields: {
+						group_idx: group_elem.dataset.group_idx
+					}
+				}
+				sendRequest('POST', requestURLProject, body).then((data) => {
+					showProjectActivity(data);
+					iniProjectsInfo();
+				});
 			}
-			sendRequest('POST', requestURLProject, body).then(showProjectActivity);
+		}
+	});
+
+	projectGroups.addEventListener('dragenter', (e) => {
+		const target = e.target;
+		// const group_elem = document.querySelector(`#${target.getAttribute('for')}`);
+		const draggable_parent = target.closest('.js-group-project');
+		if (target.nodeName === 'LABEL') {
+			const dragged_id = e.dataTransfer.getData('text/plain');
+			if (dragged_id != draggable_parent.id) {
+				e.currentTarget.querySelectorAll('.js-group-project').forEach(element => {
+					element.querySelector('label').style.backgroundColor = '';
+				});
+				target.style.backgroundColor = 'yellow';
+			}
 		}
 	});
 
@@ -3854,6 +4110,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				hideDialogButton.classList.remove('hidden');
 				questionDialogModal.classList.remove('question-dialog-import');
 				break;
+			case 'removeProject':
+				removeProject(target.dataset.id);
+				break;
 		}
 	};
 
@@ -4054,44 +4313,215 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	function showProjectsList(data) {
-		projectsList.textContent = '';
-		if (data.success && data.success.answer) {
-			let idx = 1;
-			data.success.answer.forEach((item) => {
-				projectsList.insertAdjacentHTML('beforeend', `
-					<input type="radio" name="select-projects" data-project_name="${item.name}" id="opt-project-${idx}" data-project_id="${item.id}">
-					<label for="opt-project-${idx}">${item.name}</label>
-				`);
-				idx++;
-			});
-		}
-		projectRemove.classList.add('d-none');
-		iniGroups();
-	}
+	// function showProjectsList(data) {
+	// 	projectsList.textContent = '';
+	// 	if (data.success && data.success.answer) {
+	// 		let idx = 1;
+	// 		data.success.answer.forEach((item) => {
+	// 			projectsList.insertAdjacentHTML('beforeend', `
+	// 				<input type="radio" name="select-projects" data-project_name="${item.name}" id="opt-project-${idx}" data-project_id="${item.id}">
+	// 				<label for="opt-project-${idx}">${item.name}</label>
+	// 			`);
+	// 			idx++;
+	// 		});
+	// 	}
+	// 	btnProjectRemove.classList.add('d-none');
+	// 	iniGroups();
+	// }
 
 	function showProjectActivity(data) {
 		if (data.success && data.success.answer) {
 			const pdata = data.success.answer;
 			projectName.value = pdata.info.name;
 			projectNumber.value = pdata.info.number;
-			projectText.textContent = pdata.info.description;
+			projectText.value = pdata.info.description;
 			projectGroups.textContent = '';
+			groupsIdxInProjects.length = 0;
 			pdata.detail.forEach((item) => {
 				const groupIdx = groupsListInProjects.findIndex(gr => gr.id === item.group_id);
 				if (groupIdx >= 0) {
+					groupsIdxInProjects.push(item.group_idx);
 					projectGroups.insertAdjacentHTML('beforeend', `
-						<input type="radio" name="select-groups-project" data-group_name="${groupsListInProjects[groupIdx].name}" id="opt-gr-pr${groupsListInProjects[groupIdx].id}">
-						<label for="opt-gr-pr${groupsListInProjects[groupIdx].id}">${groupsListInProjects[groupIdx].name}</label>
+						<div class="d-flex justify-content-between js-group-project group-draggable"  id="drag-gr-pr${groupsListInProjects[groupIdx].id}" draggable="true">
+						<div>
+							<input type="radio" name="select-groups-project" data-group_name="${groupsListInProjects[groupIdx].name}" data-id="${item.id}" data-group_idx="${item.group_idx}"
+							data-group_id="${groupsListInProjects[groupIdx].id}" id="opt-gr-pr${groupsListInProjects[groupIdx].id}">
+							<label for="opt-gr-pr${groupsListInProjects[groupIdx].id}">${groupsListInProjects[groupIdx].name}</label>
+						</div>
+						<!--<div>
+							<button class="mop action-group js-group-up" type="button" title="Up">↑</button>
+							<button class="mop action-group js-group-down" type="button" title="Down">↓</button>
+						</div>-->
+						</div>
 					`);
 				}
 			});
-			projectRemove.classList.remove('d-none');
+			btnProjectRemove.classList.remove('d-none');
 		}
 	}
 
-	function showProjectInfo(data) {
-		console.log(data);
+	function showProjectsInfo(data) {
+		const visualActivityReady = '&#10003';
+		projectsFullList.textContent = '';
+		clearProjectActivity();
+		if (data.success && data.success.answer) {
+			data.success.answer.forEach((project) => {
+				let totalActivities = 0;
+				let finishedActivities = 0;
+				let projectActivities = `
+				<div class="project-band" id="project-band-${project.info.id}" data-project-number="${project.info.number}" data-project-name="${project.info.name}" data-project-description="${project.info.description}">
+					<div class="project-header" data-project_name="${project.info.name}" data-project_id="${project.info.id}">
+						<div class="project-overflow-cut overflow-line-1">${project.info.number}</div>
+						<div class="project-overflow-cut">${project.info.name}</div>
+						<div class="project-overflow-cut overflow-line-1">${project.info.user_name}</div>
+					</div>
+					<div class="project-info param param-25">${project.info.description}</div>
+				`;
+				let last_activity_status = "waiting";
+				let last_activity_ready = "&nbsp;";
+				let start_date = project.info.start_date ? datetimeToUSDate(project.info.start_date) : "&nbsp;";
+				projectActivities += projectActivityGenerate({
+						activity_id: 0,
+						activity_date: start_date,
+						activity_status: "ready",
+						activity_ready: visualActivityReady,
+						group_name: "PM"
+					});
+				// `
+				// 	<div class="project-activity" data-activity_id="0">
+				// 		<div class="project-activity-date">10.10.2025</div>
+				// 		<div class="project-activity-graph">
+				// 			<div class="project-activity-line ready"></div>
+				// 			<div class="project-activity-circle ready"><span>&nbsp;</span></div>
+				// 		</div>
+				// 		<div>PM</div>
+				// 	</div>
+				// `;
+				project.detail.forEach((activity) => {
+					totalActivities++;
+					let activity_status = "waiting";
+					let activity_ready = "&nbsp;";
+					if (activity.status == 1) {
+						activity_status = "process";
+					} else if (activity.status == 2) {
+						finishedActivities++;
+						activity_status = "ready";
+						activity_ready = visualActivityReady;
+					}
+					let activity_date = "&nbsp;";
+					if (activity.last_activity_date) {
+						activity_date = datetimeToUSDate(activity.last_activity_date);
+					}
+					
+					projectActivities += projectActivityGenerate({
+						activity_id: activity.id,
+						project_id: activity.project_id,
+						group_id: activity.group_id,
+						ogpa_group: cTemplateGroups[activity.group_name] ?? 0,
+						activity_date: activity_date,
+						activity_status: activity_status,
+						activity_ready: activity_ready,
+						group_name: activity.group_name
+					});
+					// <div class="project-activity" data-activity_id="${activity.id}" data-project_id="${activity.project_id}" data-group_id="${activity.group_id}" data-ogpa-group="${cTemplateGroups[activity.group_name] ?? 0}">
+					// 	<div class="project-activity-date">${activity_date}</div>
+					// 	<div class="project-activity-graph">
+					// 		<div class="project-activity-line ${activity_status}"></div>
+					// 		<div class="project-activity-circle ${activity_status}"><span>${activity_ready}</span></div>
+					// 	</div>
+					// 	<div>${activity.group_name}</div>
+					// </div>
+					// `;
+					last_activity_status = activity_status;
+					last_activity_ready = activity_ready;
+
+				});
+				projectActivities += projectActivityGenerate({
+					activity_id: 0,
+					activity_status: (finishedActivities ==  totalActivities) ? "ready" : "waiting",
+					activity_ready: last_activity_ready,
+					group_name: 'In Production',
+					dnone: 'invisible'
+				});
+				projectActivities += `</div>`;
+				projectsFullList.insertAdjacentHTML('beforeend',projectActivities);
+			});
+		}
+	}
+
+	function projectActivityGenerate({activity_id = 0, project_id = 0, group_id = 0, ogpa_group = 0, activity_date = '&nbsp;', activity_status, activity_ready, group_name = '', dnone = ''}) {
+		return `
+			<div class="project-activity" data-activity_id="${activity_id}" data-project_id="${project_id}" data-group_id="${group_id}" data-ogpa-group="${ogpa_group}">
+				<div class="project-activity-date">${activity_date}</div>
+				<div class="project-activity-graph">
+						<div class="project-activity-line ${activity_status}"></div>
+						<div class="project-activity-circle ${activity_status} ${dnone}"><span>${activity_ready}</span></div>
+				</div>
+				<div>${group_name}</div>
+			</div>
+		`;
+	}
+
+
+	function projectGroupsListGenerate(groupID, groupName, activityID) {
+		return `
+		<div class="d-flex justify-content-between js-group-project group-draggable"  id="drag-gr-pr${groupID}" draggable="true">
+			<div>
+				<input type="radio" name="select-groups-project" data-group_name="${groupName}" data-id="${activityID}" data-group_idx="${item.group_idx}"
+				data-group_id="${groupID}" id="opt-gr-pr${groupID}">
+				<label for="opt-gr-pr${groupID}">${groupName}</label>
+			</div>
+		</div>`;
+	}
+
+	function showProjectActivityForm(data, ogpaGroup = 0) {
+		projectsActivityArea.textContent = '';
+		projectsActivityArea.classList.remove('d-none');
+		formNewProject.classList.add('d-none');
+		activeProjects.querySelector('legend').textContent = 'Selected project';
+		projectGroupName = '';
+		resetHardCodeDesign();
+		displayMOPElements(false);
+		projectsActivityArea.append(renderMopDiv);
+		if (data.success && data.success.answer) {
+			let fieldProps = [];
+			try {
+				fieldProps = JSON.parse(data.success.answer.detail.field_json_props);
+			} catch (e) {
+			}
+			projectGroupName = data.success.answer.detail.group_name;
+			cTemplate = ogpaGroup;
+			if (fieldProps.length == 0) {
+				formSubmit.innerText = 'Create';
+				formSubmit.dataset.projectDownload = '0';
+				formSave.classList.remove('d-none');
+				iniOGPA();
+			} else {
+				const dataObject = {
+					success: {
+						answer: fieldProps
+					}
+				};
+				showActivityFields(dataObject);
+				selPrimeElement.textContent = '';
+				selPrimeElement.insertAdjacentHTML('beforeend', `
+					<option value="${data.success.answer.detail.element}" selected>${data.success.answer.detail.element}</option>
+				`);
+				selActivity.textContent = '';
+				selActivity.insertAdjacentHTML('beforeend', `
+					<option value="${data.success.answer.detail.activity}" selected>${data.success.answer.detail.activity}</option>
+				`);
+				if (data.success.answer.detail.status === 2) {
+					formSubmit.dataset.projectDownload = '1';
+					formSubmit.innerText = 'Download';
+					formSave.classList.add('d-none');
+				} else {
+					formSubmit.dataset.projectDownload = '0';
+					formSubmit.innerText = 'Create';
+					formSave.classList.remove('d-none');
+				}
+			}
+		}
 	}
 
 	function showGroupsProjectSection(data) {
@@ -4106,6 +4536,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 		}
 		fillGroupsProject(groupsListProjects);
+		iniProjectsInfo();
 	}
 
 	function fillGroupsProject(groupsListFilled) {
@@ -4191,6 +4622,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		sendRequest('POST', requestURL, body).then(callback);
 	}
+
+	// function onDragStart(event) {
+	// 	event
+	// 		.dataTransfer
+	// 		.setData('text/plain', event.target.id);
+	// 	console.log(event.target.id);
+	// }
+
 
 	//init main
 	btnClearSettings.addEventListener('click', clearEditableFields);
@@ -4716,12 +5155,21 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (activity !== '') {
 				selPrimeElement.dataset.activity = (typeof extends_data === 'undefined' || extends_data['activity'] === undefined) ? '' : extends_data['activity'];
 			}
+			if (data.success.answer.length == 0) {
+				showOGPAActivity(null);
+				// patch for uknown groups in projects
+				formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
+					item.value = projectGroupName;
+				});
+				return false;
+			}
+			selPrimeElement.dispatchEvent(new Event('change'));
 		} else {
 			selPrimeElement.insertAdjacentHTML('beforeend', `
 				<option value="" selected></option>
 			`);
 		}
-		selPrimeElement.dispatchEvent(new Event('change'));
+		return true;
 	};
 
 	const showOGPAActivity = (data, extends_data = {}) => {
@@ -4735,17 +5183,25 @@ window.addEventListener('DOMContentLoaded', () => {
 				selActivity.insertAdjacentHTML('beforeend', `
 					<option data-id="${item.id}" value="${item.element}" ${selected}>${item.element}</option>
 				`);
-			}); 
+			});
+			if (data.success.answer.length == 0) {
+				return false;
+			}
 		} else {
 			selActivity.insertAdjacentHTML('beforeend', `
 				<option value="" selected></option>
 			`);
+			return false;
 		}
-		selActivity.dispatchEvent(new Event('change'));
+		if (formSubmit.dataset.projectDownload !== '1') {
+			selActivity.dispatchEvent(new Event('change'));
+		}
 	};
 
 	const showActivityFields = (data) => {
 		formFields.reset();
+		projectNumberActivity.removeAttribute('readonly');
+		projectNameActivity.removeAttribute('readonly');
 		document.querySelectorAll('fieldset.hidden').forEach(item => {
 			if (adminEnabled && !item.classList.contains('js-hard-code-design')) {
 				item.classList.remove('hidden');
@@ -4847,7 +5303,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				} catch (e) {
 				}
 			});
-			// checkInputsData(`.${inputSelectorClass}`);
 		}
 		if (!!hardCodeDesign[gActivityName] && !adminEnabled && (document.title == 'Roaming FCR' || document.title == 'eFCR')) {
 			showHardCodeDesign(hardCodeDesign[gActivityName].split(','));
@@ -4865,6 +5320,15 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 		});
 		checkInputsData(`.${inputSelectorClass}`);
+		if (projectsMode == 1) {
+			projectNumberActivity.value = projectBriefData.querySelector('#project-brief-number').value;
+			projectNameActivity.value = projectBriefData.querySelector('#project-brief-name').value;
+			projectNumberActivity.setAttribute('readonly', '');
+			projectNameActivity.setAttribute('readonly', '');
+			formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
+				item.value = projectGroupName;
+			});
+		}
 	};
 
 	const showChassisTags = (data) => {
@@ -4875,7 +5339,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 		}
 		fillInventoryTags(inventoryTagsSet);
-
 	};
 
 	const iniOGPA = (extends_data = '') => {
@@ -4911,8 +5374,16 @@ window.addEventListener('DOMContentLoaded', () => {
 		const body = {
 			method: 'getProjectsList',
 		};
-		sendRequest('POST', requestURLProject, body).then(showProjectsList);
+		// sendRequest('POST', requestURLProject, body).then(showProjectsList);
+		sendRequest('POST', requestURLProject, body).then(iniGroups);
 	};
+
+	const iniProjectsInfo = () => {
+			const body = {
+			method: 'getProjectsActivityAll',
+		};
+		sendRequest('POST', requestURLProject, body).then(showProjectsInfo);
+	}
 
 	const iniGroups = () => {
 		const body = {
@@ -5018,7 +5489,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	const submitAdminForm = (adminForm, activityID) => {
+	const submitAdminForm = (adminForm, activityID, projects_obj = {}) => {
 		let fieldGroups = [];
 		adminForm.querySelectorAll('fieldset:not(.renderOnly)').forEach(fieldset => {
 			let fieldGroup = {};
@@ -5050,14 +5521,39 @@ window.addEventListener('DOMContentLoaded', () => {
 			fieldGroup.fields = fieldsArr;
 			fieldGroups.push(fieldGroup);
 		});
-		const body = {
-			method: 'setActivityFields',
-			value: fieldGroups,
-			id: activityID,
-		};
-		sendRequest('POST', requestURLTemplate, body).then((data) => {
-			showActivityFields(data);
-		});
+		if (!!projects_obj['mode']) {
+			const body = {
+				method: 'changeProjectActivity',
+				id: projects_obj['project_id'],
+				group_id: projects_obj['group_id'],
+				element: selPrimeElement.value,
+				activity: selActivity.value,
+				group_fields: {
+					field_json_props: fieldGroups
+				}
+			}
+			if (!!projects_obj['target_date']) {
+				body.group_fields.target_date = projects_obj['target_date'];
+				// body.group_fields.save = 1;
+			}
+			if (!!projects_obj['reset']) {
+				body.group_fields.field_json_props = [];
+				body.element = '';
+				body.activity = '';
+			}
+			sendRequest('POST', requestURLProject, body).then((data) => {
+				iniProjectsInfo();
+			});	
+		} else {
+			const body = {
+				method: 'setActivityFields',
+				value: fieldGroups,
+				id: activityID,
+			};
+			sendRequest('POST', requestURLTemplate, body).then((data) => {
+				showActivityFields(data);
+			});
+		}
 	};
 
 	const submitRenderForm = (renderForm, gActivityID) => {
@@ -5165,6 +5661,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const resetHardCodeDesign = () => {
+		// console.log('resetHardCodeDesign');
 		for (const value of Object.values(hardCodeDesign)) {
 			const classesHide = value.split(',');
 			classesHide.forEach(item => {
@@ -5234,12 +5731,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		const target = e.target;
 	});
 
+	formReset.addEventListener('click', (e) => {
+		resetProject = true;
+	});
+
 	formFields.addEventListener('reset', (e) => {
 		const target = e.target;
 		target.querySelectorAll('fieldset').forEach(fieldset => {
-			// fieldset.querySelectorAll('.multirows[data-clone="1"]').forEach(row => {
-			// 	row.remove();
-			// });
 			removeChildElementFromCollection(fieldset, '.multirows[data-clone="1"]');
 			fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
 				ceil.value = 1;
@@ -5248,6 +5746,16 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 		formSubmit.classList.remove('edit');
 		showAll.checked = false;
+		if (projectsMode == 1 && resetProject) {
+			submitAdminForm(target, gActivityID, {
+				'mode': 1,
+				'reset': 1,
+				'project_id': activityProjectID,
+				'group_id': activityGroupID
+			});
+			formSave.classList.remove('d-none');
+		}
+		resetProject = false;
 	});
 
 	formFields.addEventListener('submit', (e) => {
@@ -5255,6 +5763,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		const target = e.target;
 		if (adminEnabled) {
 			submitAdminForm(target, gActivityID);
+		} else if (projectsMode == 1 && formSubmit.dataset.projectDownload === '0') {
+			submitAdminForm(target, gActivityID, {
+				'mode': 1,
+				'project_id': activityProjectID,
+				'group_id': activityGroupID
+			});
 		} else {
 			submitRenderForm(target, gActivityID);
 		}
@@ -5569,6 +6083,32 @@ window.addEventListener('DOMContentLoaded', () => {
 			checkInputsData(`.${inputSelectorClass}`, false);
 		});
 	});
+
+	$calendar.datepicker({
+		format: 'yyyy-mm-dd',
+		todayHighlight: true,
+		title: 'Target Date'
+		// autoclose: true
+	});
+
+	$('#formSave').on('click', function () {
+		$wrapper.toggle();
+	});
+
+	$calendar.on('changeDate', function (e) {
+		const date = e.format('yyyy-mm-dd');
+		onDateSelected(date);
+		$wrapper.hide();
+	});
+
+	function onDateSelected(date) {
+		submitAdminForm(formFields, gActivityID, {
+			'mode': 1,
+			'target_date': date,
+			'project_id': activityProjectID,
+			'group_id': activityGroupID
+		});
+	}
 
 
 	clearInputsForms();

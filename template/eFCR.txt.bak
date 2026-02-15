@@ -58,32 +58,3 @@ set security policies from-zone RCWIN-ROAMING to-zone MS1-Roaming-Node policy eF
 set security policies from-zone RCWIN-ROAMING to-zone MS1-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN match application junos-dns-udp
 set security policies from-zone RCWIN-ROAMING to-zone MS1-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN then permit
 
-ROAMING_FW01.ML02:
-set security zones security-zone RCWIN-ROAMING address-book address %dipCompanyName%-%dipCountryName%-DNS-%dipStartIndex% %ceilIP%/32
-
-set security policies from-zone ML02-Roaming-Node to-zone RCWIN-ROAMING policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-OUT match source-address ML02-eDNS-Pub-1-loop
-set security policies from-zone ML02-Roaming-Node to-zone RCWIN-ROAMING policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-OUT match destination-address %dipCompanyName%-%dipCountryName%-DNS-%dipStartIndex%
-set security policies from-zone ML02-Roaming-Node to-zone RCWIN-ROAMING policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-OUT match application junos-dns-tcp
-set security policies from-zone ML02-Roaming-Node to-zone RCWIN-ROAMING policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-OUT match application junos-dns-udp
-set security policies from-zone ML02-Roaming-Node to-zone RCWIN-ROAMING policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-OUT then permit
-
-set security policies from-zone RCWIN-ROAMING to-zone ML02-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN match source-address %dipCompanyName%-%dipCountryName%-DNS-%dipStartIndex%
-set security policies from-zone RCWIN-ROAMING to-zone ML02-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN match destination-address ML02-eDNS-Pub-1-loop
-set security policies from-zone RCWIN-ROAMING to-zone ML02-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN match application junos-dns-tcp
-set security policies from-zone RCWIN-ROAMING to-zone ML02-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN match application junos-dns-udp
-set security policies from-zone RCWIN-ROAMING to-zone ML02-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN then permit
-
-ROAMING_FW02.ML02:
-set security zones security-zone RCWIN-ROAMING address-book address %dipCompanyName%-%dipCountryName%-DNS-%dipStartIndex% %ceilIP%/32
-
-set security policies from-zone ML02-Roaming-Node to-zone RCWIN-ROAMING policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-OUT match source-address ML02-eDNS-Pub-2-loop
-set security policies from-zone ML02-Roaming-Node to-zone RCWIN-ROAMING policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-OUT match destination-address %dipCompanyName%-%dipCountryName%-DNS-%dipStartIndex%
-set security policies from-zone ML02-Roaming-Node to-zone RCWIN-ROAMING policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-OUT match application junos-dns-tcp
-set security policies from-zone ML02-Roaming-Node to-zone RCWIN-ROAMING policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-OUT match application junos-dns-udp
-set security policies from-zone ML02-Roaming-Node to-zone RCWIN-ROAMING policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-OUT then permit
-
-set security policies from-zone RCWIN-ROAMING to-zone ML02-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN match source-address %dipCompanyName%-%dipCountryName%-DNS-%dipStartIndex%
-set security policies from-zone RCWIN-ROAMING to-zone ML02-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN match destination-address ML02-eDNS-Pub-2-loop
-set security policies from-zone RCWIN-ROAMING to-zone ML02-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN match application junos-dns-tcp
-set security policies from-zone RCWIN-ROAMING to-zone ML02-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN match application junos-dns-udp
-set security policies from-zone RCWIN-ROAMING to-zone ML02-Roaming-Node policy eFCR%dipeFCRNumber%-%dipCompanyName%-%dipCountryName%-DNS-IN then permit

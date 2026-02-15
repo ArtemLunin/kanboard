@@ -14,8 +14,11 @@
 	<script src="js/popper.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="css/datatables.min.css">
 	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/css/bootstrap-datepicker.min.css">
 	<script src="js/bootstrap.min.js"></script>
 	<script type="text/javascript" charset="utf8" src="js/datatables.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/js/bootstrap-datepicker.min.js"></script>
 	<!-- <link rel="stylesheet" href="css/style.css"> -->
 	<script>
 		let script = document.createElement("script");
@@ -575,6 +578,7 @@
 									<th>cSDE Ping Test</th>
 									<th>cSDE Bundle</th>
 									<th>Inventory</th>
+									<th>Projects</th>
 									<th>Action</th>
 								</tr>
 							</thead>
@@ -690,6 +694,11 @@
 										<option value=""></option>
 										<option value="admin">admin</option>
 										<option value="user">user</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="projectsPage">Projects</label>
+									<select class="custom-select-sm mr-2" name="projects" id="projectsPage" data-selectname="projects">
+										<option value=""></option>
+										<option value="admin">admin</option>
 									</select>
 									<button type="submit" class="btn btn-sm btn-primary my-1 mr-2">Set</button>
 								</form>
@@ -1611,7 +1620,11 @@
 							</fieldset>
 							<div class="buttons">
 								<button class="mop" type="submit" id="formSubmit">Render</button>
+								<button class="mop d-none" type="button" id="formSave">Save</button>
 								<button class="mop" type="reset" id="formReset">Reset</button>
+								<div id="calendarWrapper" style="display:none;">
+									<div id="calendar"></div>
+								</div>
 							</div>
 						</form>
 						   
@@ -1743,50 +1756,74 @@
 			<section class="section cSDEBundle">
 			</section>
 			<section class="section projects">
+				<div class="container">
 				<form method="post" action="#" id="formNewProject">
-					<div class="row mx-0">
-						<div class="col-lg-9 col-sm-7 px-1">		
-							<div class="row">
-								<div class="col">Project Number</div>
+					<input type="hidden" name="project_id" id="input_project_id">
+					<input type="hidden" name="project_edit_status" id="project_edit_status" value="0">
+						<!-- <div class="col-lg-9 col-sm-7 px-1">		 -->
+						<fieldset>
+							<div class="param param-50">
+								<!-- <div class="col">Project Number</div> -->
+								<label for="projectNumberVal">Project Number</label>
+								<input type="text" id="projectNumberVal" name="projectNumberVal" class="mop " placeholder="Project Number" required>
 							</div>
-							<div class="row mb-1">
+							<!-- <div class="row mb-1">
 								<div class="col">
 									<input type="text" id="projectNumberVal" name="projectNumberVal" class="form-width" placeholder="Project Number" required>
 								</div>
+							</div> -->
+							<div class="param param-50">
+								<!-- <div class="col">Project Name</div> -->
+								<label for="projectNameVal">Project Name</label>
+								<input type="text" id="projectNameVal" name="projectNameVal" class="mop" placeholder="Project Name" required>
 							</div>
-							<div class="row">
-								<div class="col">Project Name</div>
-							</div>
-							<div class="row mb-1">
+							<!-- <div class="row mb-1">
 								<div class="col">
 									<input type="text" id="projectNameVal" name="projectNameVal" class="form-width" placeholder="Project Name" required>
 								</div>
+							</div> -->
+							<div class="param param-100">
+								<!-- <div class="col">Project Info</div> -->
+								<label for="projectTextVal">Project Info</label>
+								<textarea class="mop" name="projectTextVal" id="projectTextVal" cols="30" rows="7"></textarea>
 							</div>
-							<div class="row">
-								<div class="col">Project Info</div>
-							</div>
-							<div class="row mb-1">
+							<!-- <div class="row mb-1">
 								<div class="col">
 									<div class="text-area border border-dark p-1" contenteditable="true" id="projectTextVal">
 									</div>
 								</div>
-							</div>
-							<div class="row">
-								<div class="col">Group Name</div>
-							</div>
-							<div class="row mb-1">
-								<div class="col col-3">
-									<select class="group-project" id="group-project" data-group_idx="1"></select>
+							</div> -->
+							<div class="param-row groups-row">
+								<div class="param param-25">
+								<!-- <div class="col">Group Name</div> -->
+									<label for="">Group Name</label>
+									<select class="mop group-project" id="group-project" data-group_idx="1"></select>
 									<button class="mop action js-group-append" type="button" title="Add to project">+</button>
 									<button class="mop action js-group-remove" type="button" title="Remove from project">-</button>
 								</div>
-								<div class="col col-3">
-									<div class="project-groups list border" id="project-groups">
-									</div>
+								<div class="param param-25">
+									<div class="project-groups groups-dropzone list border" id="project-groups"></div>
 								</div>
 							</div>
-						</div>
-						<div class="col-lg-3 col-sm-5 px-1">
+							
+							<div class="row mb-1">
+								<div class="col col-3">
+									<!-- <select class="group-project" id="group-project" data-group_idx="1"></select> -->
+									<!-- <button class="mop action js-group-append" type="button" title="Add to project">+</button>
+									<button class="mop action js-group-remove" type="button" title="Remove from project">-</button> -->
+								</div>
+								<!-- <div class="col col-3 d-flex">
+									<div class="project-groups groups-dropzone list border" id="project-groups">
+									</div>
+								</div> -->
+							</div>
+							<div class="buttons">
+								<button class="mop" type="submit" id="projectSubmit">Create</button>
+								<button class="mop" type="reset" id="projectReset">Reset</button>
+								<button class="mop btn-danger d-none" type="button" id="projectRemove">Remove</button>
+							</div>
+						</fieldset>
+						<!-- <div class="col-lg-3 col-sm-5 px-1">
 							<div class="row">
 								<div class="col">Existing projects</div>
 							</div>
@@ -1796,14 +1833,55 @@
 									</div>
 								</div>
 							</div>
+						</div> -->
+					<!-- </div> -->
+				</form>
+				<fieldset id="active_projects">
+					<legend>Projects info</legend>
+					<a href="#" data-id="" title="Back to Projects List" class="js-back-projects d-none">
+						<img class="icon-edit icon-edit-sm" src="img/arrow_back.svg">
+					</a>
+					<div class="projects-full-list" id="projects-full-list"></div>
+				</fieldset>
+				<div class="project-brief-data d-none">
+					<div class="param-row">
+						<div class="param param-50">
+							<label for="project-brief-number">Project Number</label>
+							<input type="text" id="project-brief-number" name="project-brief-number" class="mop " placeholder="Project Number" readOnly="true">
+						</div>
+						<!-- <div class="project-brief-label">Project Number</div> -->
+						<!-- <div class="project-brief-input border border-dark p-1" id="project-brief-number"></div> -->
+						<div class="param param-50">
+							<label for="project-brief-name">Project Name</label>
+							<input type="text" id="project-brief-name" name="project-brief-name" class="mop " placeholder="Project Name" readOnly="true">
+						</div>
+						<!-- <div class="project-brief-label">Project Name</div>
+						<div class="project-brief-input border border-dark p-1" id="project-brief-name"></div> -->
+						<div class="param param-100">
+							<label for="project-brief-description">Project Info</label>
+							<textarea class="mop" name="project-brief-description" id="project-brief-description" cols="30" rows="7"></textarea>
+							<!-- <div class="project-brief-label">Project Info</div>
+							<div class="project-brief-input border border-dark p-1" id="project-brief-description"></div> -->
 						</div>
 					</div>
-					<div class="buttons">
-						<button class="mop" type="submit" id="projectSubmit">Create</button>
-						<button class="mop" type="reset" id="projectReset">Reset</button>
-						<button class="mop btn-danger d-none" type="button" id="projectRemove">Remove</button>
-					</div>
-				</form>
+				</div>
+				<div class="projects-activity-area d-none" id="projects-activity-area"></div>
+				</div>
+			</section>
+			<section class="section projects-info">
+				<!-- <a href="#" data-id="" title="Back to Projects List" class="js-back-projects d-none">
+					<img class="icon-edit icon-edit-sm" src="img/arrow_back.svg">
+				</a> -->
+				<!-- <div class="projects-full-list" id="projects-full-list"></div> -->
+				<!-- <div class="project-brief-data d-none">
+					<div class="project-brief-label">Project Number</div>
+					<div class="project-brief-input border border-dark p-1" id="project-brief-number"></div>
+					<div class="project-brief-label">Project Name</div>
+					<div class="project-brief-input border border-dark p-1" id="project-brief-name"></div>
+					<div class="project-brief-label">Project Info</div>
+					<div class="project-brief-input border border-dark p-1" id="project-brief-description"></div>
+				</div> -->
+				<!-- <div class="projects-activity-area d-none" id="projects-activity-area"></div> -->
 			</section>
 			<section class="section documentation">
 				<div class="container-documentation" style="display:none;">
@@ -2028,5 +2106,6 @@
 			</div>
 		</div>
 	</div>
+	<!-- <input type="date" id="dateInput" style="position:absolute; left:-9999px;"> -->
 </body>
 </html>
