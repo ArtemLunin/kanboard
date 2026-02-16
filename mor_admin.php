@@ -7,8 +7,10 @@ session_start();
 require 'vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xls;
-use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
+// use PhpOffice\PhpSpreadsheet\Writer\Xls;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
 \PhpOffice\PhpSpreadsheet\Cell\Cell::setValueBinder( new \PhpOffice\PhpSpreadsheet\Cell\AdvancedValueBinder() );
 
 require_once 'db_conf.php';
@@ -59,7 +61,7 @@ if ($method !== 0)
     if ($method === 'getMORData') {
 		$param_error_msg['answer'] = $mor_object->getMORData($value);
     } elseif (false) {
-        $reader = new Xlsx();
+        $reader = new XlsxReader();
         $reader->setReadDataOnly(true);
         $spreadsheet = $reader->load('./others/MOR/rcpc.xlsx');
         $worksheet = $spreadsheet->getActiveSheet();
@@ -104,7 +106,82 @@ if ($method !== 0)
         $mor_object->loadDataCA($rows);
     }
     $out_res = ['success' => $param_error_msg];
+    header('Content-type: application/json');
+    echo json_encode($out_res);
+} elseif (isset($_REQUEST['submitMOR'])) {
+    $filename = 'MOR_final.xlsx';
+    $spreadsheet = IOFactory::load('MOR_template.xlsx');
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setCellValue('A5', trim($_REQUEST['mor_type']) ?? '');
+    $sheet->setCellValue('C8', trim($_REQUEST['mor_ca']) ?? '');
+    $sheet->setCellValue('C9', trim($_REQUEST['mor_project_name']) ?? '');
+    $sheet->setCellValue('C10', trim($_REQUEST['mor_project_manager']) ?? '');
+    $sheet->setCellValue('C11', trim($_REQUEST['mor_site']) ?? '');
+    $sheet->setCellValue('C12', trim($_REQUEST['mor_date']) ?? '');
+    $sheet->setCellValue('C13', trim($_REQUEST['mor_requestor']) ?? '');
+    $sheet->setCellValue('C14', trim($_REQUEST['mor_region']) ?? '');
+    $sheet->setCellValue('C15', trim($_REQUEST['mor_requisition']) ?? '');
+    $sheet->setCellValue('C16', trim($_REQUEST['mor_add-info']) ?? '');
+    $sheet->setCellValue('G9', trim($_REQUEST['mor_project_contact']) ?? '');
+    $sheet->setCellValue('G10', trim($_REQUEST['mor_phone_number']) ?? '');
+    $sheet->setCellValue('G11', trim($_REQUEST['mor_site_address']) ?? '');
+    $sheet->setCellValue('G12', trim($_REQUEST['mor_city']) ?? '');
+    $sheet->setCellValue('G13', trim($_REQUEST['mor_province']) ?? '');
+    $sheet->setCellValue('G14', trim($_REQUEST['mor_postal_code']) ?? '');
+    $sheet->setCellValue('G15', trim($_REQUEST['mor_country']) ?? '');
+    $sheet->setCellValue('G16', trim($_REQUEST['mor_contractor']) ?? '');
+    $sheet->setCellValue('G17', trim($_REQUEST['mor_drop_ship']) ?? '');
+    $sheet->setCellValue('G18', trim($_REQUEST['mor_approving_mgr']) ?? '');
+    if (isset($_REQUEST['mor_rcpc'])) {
+        $rows_count = count($_REQUEST['mor_rcpc']);
+    }
+    // $sheet->fromArray([
+    //     'RCPC',
+    //     'Vendor Name',
+    //     'Vendor Part #',
+    //     'Part Description',
+    //     'Quantity',
+    //     'UOM',
+    //     'Oracle #',
+    //     'Task #',
+    //     'Site Code',
+    //     'Date Required (YYYY-MM-DD)',
+    //     'Org (MRF Only)',
+    //     'Supplier Notes (Filled by Material Planner)',
+    // ], 
+    // NULL, 
+    // 'A23');
+    $rowExcel = 23;
+    for ($row = 0; $row < $rows_count; $row++) { 
+        $sheet->fromArray([
+            $_REQUEST['mor_rcpc'][$row],
+            $_REQUEST['mor_vendor_name'][$row],
+            $_REQUEST['mor_vendor_part'][$row],
+            $_REQUEST['mor_part_descr'][$row],
+            $_REQUEST['mor_quantity'][$row],
+            $_REQUEST['mor_uom'][$row],
+            $_REQUEST['mor_oracle'][$row],
+            $_REQUEST['mor_task'][$row],
+            $_REQUEST['mor_site_code'][$row],
+            $_REQUEST['mor_date_required'][$row],
+            $_REQUEST['mor_org'][$row],
+            $_REQUEST['mor_supplier_notes'][$row],
+            ], 
+            NULL, 
+            'A'.$rowExcel);
+        $rowExcel++;
+    }
+    
+    $writer = new XlsxWriter($spreadsheet);
+    $writer->save($filename);
+
+    header("Content-Type: application/vnd.ms-excel; charset=utf-8");
+    header("Content-Disposition: attachment; filename=" . $filename);
+    header("Expires: 0");
+    header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+    header("Cache-Control: private", false);
+    $handle = fopen($filename, "r");
+    $contents = fread($handle, filesize($filename));
+    echo $contents;
 }
-header('Content-type: application/json');
-echo json_encode($out_res);
 

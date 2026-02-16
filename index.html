@@ -1871,6 +1871,7 @@
 			<section class="section mor">
 				<!-- <div class="container"> -->
 					<form method="POST" action="mor_admin.php" id="formMor">   
+						<input type="hidden" name="submitMOR">
 						<table class="table table-sm table-bordered mor">
 							<thead class="">
 								<tr>
@@ -1952,7 +1953,7 @@
 								<tr>
 									<td colspan="2">Date Submitted (YYYY-MM-DD)</td>
 									<td class="mor-bg-rose" colspan="2">
-										<input type="date" id="mor_date" value="2025-12-02" required>
+										<input type="date" id="mor_date" name="mor_date" value="2025-12-02" required>
 									</td>
 									<td>City</td>
 									<td class="mor-bg-rose" colspan="6">
