@@ -1503,7 +1503,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
         $this->modSQL($sql_upd , $values_arr, false);
     }
 	function runInsertBulk($tableName, $tableFields, $rows, $refreshTable = true) {
-		$chunkSize = 10;
+		$chunkSize = 100;
 		$chunks = array_chunk($rows, $chunkSize);
 		try {
 			$this->pdo->beginTransaction();
@@ -1530,11 +1530,13 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				$stmt->execute($params);
 			}
 			$this->pdo->commit();
+			return 'loaded';
 		} catch (PDOException $e) 
 		{
 			$this->setSQLError($e, 'SQL error. "' . $sql);
 			$this->pdo->rollBack();
 		}
+		return 'failed';
 	}
 	function selectObjectFromTable($table_name, $filters, $selected_fields = [], $order_by = []) {
 		$filter = "";

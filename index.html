@@ -724,6 +724,18 @@
 								<button type="reset" class="btn btn-sm btn-warning mr-2" id="deleteUserGroup">Delete</button>
 							</div>
 						</div>
+						<div class="uploads-mor my-2 p-2 border">
+							<h5>Upload MOR Excel Tables</h5>
+							<form id="uploadMORLoadData" action="#" method="POST" enctype="multipart/form-data">
+								<input type="hidden" id="morType" name="morType">
+								<input type="file" class="file-input-hidden" id="loadExcelCA" name="file" accept=".xlsx" data-mor-type="ca">
+								<input type="file" class="file-input-hidden" id="loadExcelRCPC" name="file" accept=".xlsx" data-mor-type="rcpc">
+								<input type="file" class="file-input-hidden" id="loadExcelSite" name="file" accept=".xlsx" data-mor-type="site">
+								<label for="loadExcelCA" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">CA</label>
+								<label for="loadExcelRCPC" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">RCPC</label>
+								<label for="loadExcelSite" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">Site</label>
+							</form>
+						</div>
 						<form action="#" method="POST" id="cache_form">
 							<button class="btn btn-primary btn-sm" type="submit">Setup Cache</button>
 							<span class="bg-success d-none">Cache initialized</span>
@@ -1948,12 +1960,14 @@
 										</select>
 									</td>
 									<td>Street Name</td>
-									<td class="mor-bg-rose" colspan="6">&nbsp;</td>
+									<td class="mor-bg-rose" colspan="6">
+										<input type="text" class="mor" name="mor_site_address2" id="mor_site_address2" value="" required>
+									</td>
 								</tr>
 								<tr>
 									<td colspan="2">Date Submitted (YYYY-MM-DD)</td>
 									<td class="mor-bg-rose" colspan="2">
-										<input type="date" id="mor_date" name="mor_date" value="2025-12-02" required>
+										<input type="text" class="mor" id="mor_date" name="mor_date" value="" required>
 									</td>
 									<td>City</td>
 									<td class="mor-bg-rose" colspan="6">

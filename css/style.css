@@ -570,6 +570,10 @@ button[type="button"].import-json {
     color: white;
     margin-top: 10px;
 }
+label.upload-mor {
+	background-color: hsl(152, 50%, 50%);
+    width: 50px;
+}
 button:active {
     -webkit-box-shadow: inset 1px 1px 10px #333;
     -moz-box-shadow:    inset 1px 1px 10px #333;

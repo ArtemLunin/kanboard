@@ -33,7 +33,6 @@ test_efcr.php
 template/dgw-cgw_ping.txt.bak
 template/dgw-cgw_ping.txt_
 template/dgw-cgw_ping.txt
-
 test.html
 MOR_final.xlsx
-.gitignore
+MOR_template.xlsx

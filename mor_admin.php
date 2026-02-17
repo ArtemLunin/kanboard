@@ -52,7 +52,8 @@ if ($userID === 0) {
 }
 
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
-$method = $paramJSON['method'] ?? 0;
+$method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
+$morType = $_REQUEST['morType'] ?? 0;
 $value = trim($paramJSON['value'] ?? '');
 $number = trim($paramJSON['number'] ?? '');
 
@@ -60,50 +61,32 @@ if ($method !== 0)
 {
     if ($method === 'getMORData') {
 		$param_error_msg['answer'] = $mor_object->getMORData($value);
-    } elseif (false) {
-        $reader = new XlsxReader();
-        $reader->setReadDataOnly(true);
-        $spreadsheet = $reader->load('./others/MOR/rcpc.xlsx');
-        $worksheet = $spreadsheet->getActiveSheet();
-        $highestColumn = $worksheet->getHighestDataColumn();
-        $highestRow    = $worksheet->getHighestDataRow();
+    } elseif ($method == 'loadMORCA' && $morType && $mor_object->getRootAccess()) {
+		$tmp = $_FILES['file']['tmp_name'];
+        if (($tmp != '') && is_uploaded_file($tmp)) 
+        {
+            $reader = new XlsxReader();
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($tmp);
+            $worksheet = $spreadsheet->getActiveSheet();
+            $highestColumn = $worksheet->getHighestDataColumn();
+            $highestRow    = $worksheet->getHighestDataRow();
 
-        $rows = $worksheet->rangeToArray(
-            "A1:{$highestColumn}{$highestRow}",
-            null,
-            true,
-            true,
-            true
-        );
-        $mor_object->loadDataRCPC($rows);
-
-        $spreadsheet = $reader->load('./others/MOR/site.xlsx');
-        $worksheet = $spreadsheet->getActiveSheet();
-        $highestColumn = $worksheet->getHighestDataColumn();
-        $highestRow    = $worksheet->getHighestDataRow();
-
-        $rows = $worksheet->rangeToArray(
-            "A1:{$highestColumn}{$highestRow}",
-            null,
-            true,
-            true,
-            true
-        );
-        $mor_object->loadDataSite($rows);
-
-        $spreadsheet = $reader->load('./others/MOR/ca.xlsx');
-        $worksheet = $spreadsheet->getActiveSheet();
-        $highestColumn = $worksheet->getHighestDataColumn();
-        $highestRow    = $worksheet->getHighestDataRow();
-
-        $rows = $worksheet->rangeToArray(
-            "A1:{$highestColumn}{$highestRow}",
-            null,
-            true,
-            true,
-            true
-        );
-        $mor_object->loadDataCA($rows);
+            $rows = $worksheet->rangeToArray(
+                "A1:{$highestColumn}{$highestRow}",
+                null,
+                true,
+                true,
+                true
+            );
+            if ($morType == 'ca') {  
+                $param_error_msg['answer'] = $mor_object->loadDataCA($rows);
+            } elseif ($morType == 'rcpc') {
+                $param_error_msg['answer'] = $mor_object->loadDataRCPC($rows);
+            } elseif ($morType == 'site') {
+                $param_error_msg['answer'] = $mor_object->loadDataSite($rows);
+            }
+        }
     }
     $out_res = ['success' => $param_error_msg];
     header('Content-type: application/json');
@@ -122,9 +105,10 @@ if ($method !== 0)
     $sheet->setCellValue('C14', trim($_REQUEST['mor_region']) ?? '');
     $sheet->setCellValue('C15', trim($_REQUEST['mor_requisition']) ?? '');
     $sheet->setCellValue('C16', trim($_REQUEST['mor_add-info']) ?? '');
-    $sheet->setCellValue('G9', trim($_REQUEST['mor_project_contact']) ?? '');
-    $sheet->setCellValue('G10', trim($_REQUEST['mor_phone_number']) ?? '');
-    $sheet->setCellValue('G11', trim($_REQUEST['mor_site_address']) ?? '');
+    $sheet->setCellValue('G8', trim($_REQUEST['mor_project_contact']) ?? '');
+    $sheet->setCellValue('G9', trim($_REQUEST['mor_phone_number']) ?? '');
+    $sheet->setCellValue('G10', trim($_REQUEST['mor_site_address']) ?? '');
+    $sheet->setCellValue('G11', trim($_REQUEST['mor_site_address2']) ?? '');
     $sheet->setCellValue('G12', trim($_REQUEST['mor_city']) ?? '');
     $sheet->setCellValue('G13', trim($_REQUEST['mor_province']) ?? '');
     $sheet->setCellValue('G14', trim($_REQUEST['mor_postal_code']) ?? '');

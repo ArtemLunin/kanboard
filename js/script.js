@@ -509,6 +509,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		morCA = formMor.querySelector('#mor_ca'),
 		mor_ProjectName = formMor.querySelector('#mor_project_name'),
 		morSiteAddress = formMor.querySelector('#mor_site_address'),
+		morSiteAddress2 = formMor.querySelector('#mor_site_address2'),
 		morRegion = formMor.querySelector('#mor_region'),
 		morCity = formMor.querySelector('#mor_city'),
 		morProvince = formMor.querySelector('#mor_province'),
@@ -518,6 +519,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		morTable = formMor.querySelector('#mor_table'),
 		morAddRow = formMor.querySelector('#js_mor_row_append'),
 		mor_requestor = formMor.querySelector('#mor_requestor');
+		const loadExcelCA = document.querySelector('#loadExcelCA'),
+		loadExcelRCPC = document.querySelector('#loadExcelRCPC'),
+		loadExcelSite = document.querySelector('#loadExcelSite');
+		const uploadMORLoadData = document.querySelector('#uploadMORLoadData'),
+		morType = document.querySelector('#morType');
 		let siteTable = [], caTable = [], rcpcTable = [];
 
 	const bundleLink = document.querySelector('.bundle-link');
@@ -4716,6 +4722,18 @@ window.addEventListener('DOMContentLoaded', () => {
 	loadEFCR.addEventListener('change', function(e) {
 		formEFCR.requestSubmit();
 	});
+
+	[loadExcelCA,loadExcelRCPC,loadExcelSite].forEach(element => {
+		element.addEventListener('change', function(e) {
+			const target = e.target;
+			[loadExcelCA,loadExcelRCPC,loadExcelSite].forEach(file_elem => {
+				file_elem.disabled = true;
+			});
+			target.disabled = false;
+			morType.value = target.dataset.morType;
+			uploadMORLoadData.requestSubmit();
+		});
+	});
 	
 
 	// btnClearData.addEventListener('click', function(e) {
@@ -5022,6 +5040,18 @@ window.addEventListener('DOMContentLoaded', () => {
 		sendFile('POST', requestURL, formData).then((data) => {
 			servicesImportLog(data.success.answer);
 			iniInventory();
+		});
+	});
+
+	uploadMORLoadData.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const formData = new FormData(e.target);
+		formData.append('method', 'loadMORCA');
+		sendFile('POST', requestURLMOR, formData).then((data) => {
+			[loadExcelCA,loadExcelRCPC,loadExcelSite].forEach(file_elem => {
+				file_elem.disabled = false;
+			});
+			e.target.reset();
 		});
 	});
 
@@ -5431,7 +5461,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		};
 		sendRequest('POST', requestURLMOR, body).then((data) => {
 			siteTable = data.success.answer.slice();
-			// console.log(siteTable);
 			for (const site of siteTable) {
                 morSite.insertAdjacentHTML('beforeend', `
                     <OPTION value="${site.site}-${site.site_code}" data-id="${site.id}">${site.site}-${site.site_code}</OPTION>
@@ -5441,7 +5470,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 		body.value = 'ca';
 		sendRequest('POST', requestURLMOR, body).then((data) => {
-			// siteTable.length = 0;
 			caTable = data.success.answer.slice();
 			for (const ca of caTable) {
                 morCA.insertAdjacentHTML('beforeend', `
@@ -5815,6 +5843,22 @@ window.addEventListener('DOMContentLoaded', () => {
 			formSave.classList.remove('d-none');
 		}
 		resetProject = false;
+	});
+
+	formMor.addEventListener('reset', (e) => {
+		setTimeout(() => {
+			morSite.value = "";
+			morCA.value = "";
+			gProjectNumber = 0;
+			gSiteCode = 0;
+			const tbody = morTable.querySelector('TBODY');
+			if (tbody) {
+				tbody.dataset.trId = 0;
+				tbody.querySelectorAll(`.js-mor-tr-dyn`).forEach(element => {
+					element.remove();
+				});
+			}
+		}, 0);
 	});
 
 	formFields.addEventListener('submit', (e) => {
@@ -6204,6 +6248,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
 		const siteIdx = siteTable.findIndex(site => site.id === id);
 		morSiteAddress.value = siteTable[siteIdx].address;
+		morSiteAddress2.value = siteTable[siteIdx].address;
 		morCity.value = siteTable[siteIdx].site;
 		morRegion.value = siteTable[siteIdx].region;
 		morProvince.value = siteTable[siteIdx].province;
