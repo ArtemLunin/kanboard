@@ -27,6 +27,14 @@ set_error_handler('exceptions_error_handler');
 $out_res = [];
 $param_error_msg['answer'] = false;
 $userID = 0;
+$accessType = false;
+
+$paramJSON = json_decode(file_get_contents("php://input"), TRUE);
+$method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
+$morType = $_REQUEST['morType'] ?? 0;
+$env = $paramJSON['env'] ?? $_REQUEST['env'] ?? 0;
+$value = trim($paramJSON['value'] ?? '');
+$number = trim($paramJSON['number'] ?? '');
 
 $mor_object = new myMORUtils\MORUtils();
 if (!isset($_SESSION['logged_user'])) {
@@ -42,6 +50,7 @@ if (!isset($_SESSION['logged_user'])) {
     } else {
         $mor_object->setRootAccess(false);
     }
+    $accessType = $mor_object->getRights($_SESSION['logged_user'], $env);
 }
 if ($userID === 0) {
     $param_error_msg['answer'] = 'Unauthorized';
@@ -51,17 +60,11 @@ if ($userID === 0) {
     exit;
 }
 
-$paramJSON = json_decode(file_get_contents("php://input"), TRUE);
-$method = $paramJSON['method'] ?? $_REQUEST['method'] ?? 0;
-$morType = $_REQUEST['morType'] ?? 0;
-$value = trim($paramJSON['value'] ?? '');
-$number = trim($paramJSON['number'] ?? '');
-
 if ($method !== 0)
 {
     if ($method === 'getMORData') {
 		$param_error_msg['answer'] = $mor_object->getMORData($value);
-    } elseif ($method == 'loadMORCA' && $morType && $mor_object->getRootAccess()) {
+    } elseif ($method == 'loadMORCA' && $morType && ($mor_object->getRootAccess() || $accessType === 'admin')) {
 		$tmp = $_FILES['file']['tmp_name'];
         if (($tmp != '') && is_uploaded_file($tmp)) 
         {

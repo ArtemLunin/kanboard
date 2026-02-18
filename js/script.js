@@ -220,6 +220,11 @@ const datetimeToUSDate = datetime_str => {
 	return dateObject.toLocaleDateString('en-US', options);
 };
 
+const datetimeToCaDate = () => {
+	const dateObject = new Date();
+	return dateObject.toLocaleDateString('fr-CA');
+};
+
 function tsPeriodDays (periodDays) {
 	const today = new Date(), prevDay = new Date();
 	let dayStart = 0, dayEnd = 0;
@@ -517,6 +522,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		morApprovingMgr = formMor.querySelector('#mor_approving_mgr'),
 		mor_project_contact = formMor.querySelector('#mor_project_contact'),
 		morTable = formMor.querySelector('#mor_table'),
+		morDateSubmitted = formMor.querySelector('#mor_date'),
 		morAddRow = formMor.querySelector('#js_mor_row_append'),
 		mor_requestor = formMor.querySelector('#mor_requestor');
 		const loadExcelCA = document.querySelector('#loadExcelCA'),
@@ -5047,6 +5053,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		e.preventDefault();
 		const formData = new FormData(e.target);
 		formData.append('method', 'loadMORCA');
+		formData.append('env', 'mor');
 		sendFile('POST', requestURLMOR, formData).then((data) => {
 			[loadExcelCA,loadExcelRCPC,loadExcelSite].forEach(file_elem => {
 				file_elem.disabled = false;
@@ -5457,6 +5464,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		formMor.reset();
 		const body = {
 			method: 'getMORData',
+			env: 'mor',
 			value: 'site'
 		};
 		sendRequest('POST', requestURLMOR, body).then((data) => {
@@ -5851,6 +5859,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			morCA.value = "";
 			gProjectNumber = 0;
 			gSiteCode = 0;
+			morDateSubmitted.value = datetimeToCaDate();
 			const tbody = morTable.querySelector('TBODY');
 			if (tbody) {
 				tbody.dataset.trId = 0;

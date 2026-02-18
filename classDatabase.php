@@ -1249,6 +1249,43 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		$this->errorLog($error_txt_info, 1);
 	}
 	// databaseUtilsMOP
+	function getRights($user, $password, $storedSession = false) {
+		$rights = [];
+		$token = null;
+		$sql = "SELECT id, user_name, password, user_rights FROM users WHERE user_name=:user";
+		$row = $this->pdo->prepare($sql);
+		$row->execute(['user' => $user]);
+		$result = $row->fetch();
+		if (isset($result['id']) && 
+			(password_verify($password, $result['password']) || $storedSession === true))
+		{
+			$rights = json_decode($result['user_rights'], true);
+			if ($rights) {
+				array_walk($rights, function (&$one_right) {
+					if ($one_right['pageName'] == 'Status') {
+						$one_right['pageName'] = 'Request';
+					}
+				});
+			}
+			$this->unauthorized = false;
+			if ($result['user_name'] === SUPER_USER) {
+				$this->root_access = true;
+				$rights = array_merge($rights, $this->superRights);
+				$uniqRights = [];
+				foreach ($rights as $key => $value) {
+					if (array_search($value['pageName'], $uniqRights) === false) {
+						$uniqRights[] = $value['pageName'];
+					} else {
+						unset($rights[$key]);
+					}
+				}
+			}
+		} else {
+			$rights = false;
+		}
+		return $rights;
+	}
+	// databaseUtilsMOP
     function getSQL($sql_query, $params_arr) {
         try {
 			$row = $this->pdo->prepare($sql_query);

@@ -27,6 +27,7 @@ class MORUtils extends \helperUtils\helperUtils {
     private $userID = 0;
     private $userName = '';
     private $root_access = false;
+    // private $admin_access = false;
     function __construct () {
         $this->db_object_project = new \mySQLDatabaseUtils\databaseUtilsMOP();
     }
@@ -36,10 +37,33 @@ class MORUtils extends \helperUtils\helperUtils {
     function setRootAccess($value) {
         $this->root_access = (bool) $value;
     }
+    // function getAdminAccess($value) {
+    //     return $this->admin_access;
+    // }
+    // function setAdminAccess($value) {
+    //     $this->admin_access = (bool) $value;
+    // }
     function getUserID($userName) {
         $this->userID = $this->db_object_project->getUserID($userName);
         $this->userName = $userName;
         return $this->userID;
+    }
+    function getRights($user, $section) {
+        $rights = $this->db_object_project->getRights($user, 'dummypass', true);
+        $accessType = false;
+        if ($rights != false) {
+            foreach ($rights as $item) {
+                if (isset($item['sectionName']) && $item['sectionName'] === $section) {
+                    if ($this->getRootAccess()) {
+                       $accessType = 'admin' ;
+                    } else {
+                        $accessType = $item['accessType'] ?? false;
+                    }
+                    break;
+                }
+            }
+        }
+        return $accessType;
     }
     function loadDataSite($rows, $refreshTable = true) {
         return $this->db_object_project->runInsertBulk($this->tSite["tableName"], array_slice($this->tSite["fields"], 1), $rows, $refreshTable);
