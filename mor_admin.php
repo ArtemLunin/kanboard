@@ -7,7 +7,6 @@ session_start();
 require 'vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-// use PhpOffice\PhpSpreadsheet\Writer\Xls;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
@@ -95,8 +94,8 @@ if ($method !== 0)
     header('Content-type: application/json');
     echo json_encode($out_res);
 } elseif (isset($_REQUEST['submitMOR'])) {
-    $filename = 'MOR_final.xlsx';
-    $spreadsheet = IOFactory::load('MOR_template.xlsx');
+    $filename = tempnam(sys_get_temp_dir(), 'xlsx');
+    $spreadsheet = IOFactory::load('template/MOR_template.xlsx');
     $sheet = $spreadsheet->getActiveSheet();
     $sheet->setCellValue('A5', trim($_REQUEST['mor_type']) ?? '');
     $sheet->setCellValue('C8', trim($_REQUEST['mor_ca']) ?? '');
@@ -122,22 +121,6 @@ if ($method !== 0)
     if (isset($_REQUEST['mor_rcpc'])) {
         $rows_count = count($_REQUEST['mor_rcpc']);
     }
-    // $sheet->fromArray([
-    //     'RCPC',
-    //     'Vendor Name',
-    //     'Vendor Part #',
-    //     'Part Description',
-    //     'Quantity',
-    //     'UOM',
-    //     'Oracle #',
-    //     'Task #',
-    //     'Site Code',
-    //     'Date Required (YYYY-MM-DD)',
-    //     'Org (MRF Only)',
-    //     'Supplier Notes (Filled by Material Planner)',
-    // ], 
-    // NULL, 
-    // 'A23');
     $rowExcel = 23;
     for ($row = 0; $row < $rows_count; $row++) { 
         $sheet->fromArray([
@@ -163,7 +146,7 @@ if ($method !== 0)
     $writer->save($filename);
 
     header("Content-Type: application/vnd.ms-excel; charset=utf-8");
-    header("Content-Disposition: attachment; filename=" . $filename);
+    header("Content-Disposition: attachment; filename='MOR_final.xlsx'");
     header("Expires: 0");
     header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
     header("Cache-Control: private", false);
