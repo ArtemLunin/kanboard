@@ -146,7 +146,7 @@ if ($method !== 0)
     $writer->save($filename);
 
     header("Content-Type: application/vnd.ms-excel; charset=utf-8");
-    header("Content-Disposition: attachment; filename='MOR_final.xlsx'");
+    header("Content-Disposition: attachment; filename=MOR_final.xlsx");
     header("Expires: 0");
     header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
     header("Cache-Control: private", false);

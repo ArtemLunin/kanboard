@@ -6255,7 +6255,21 @@ window.addEventListener('DOMContentLoaded', () => {
 	morSite.addEventListener('change', (e) => {
 		const target = e.target;
 		const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
-		const siteIdx = siteTable.findIndex(site => site.id === id);
+		const siteIdx = siteTable.findIndex(site => parseInt(site.id, 10) === id);
+		// const siteIdx = siteTable.findIndex((site, index) => {
+		// 	console.log("Проверяем элемент с индексом:", index);
+		// 	console.log("site.id =", site.id, "тип:", typeof site.id);
+		// 	console.log("id =", id, "тип:", typeof id);
+
+		// 	const isMatch = site.id === id;
+
+		// 	console.log("Совпадение:", isMatch);
+		// 	console.log("-------------------");
+
+		// 	return isMatch;
+		// 	});
+		console.log(id);
+		console.log(target.options[target.selectedIndex]);
 		morSiteAddress.value = siteTable[siteIdx].address;
 		morSiteAddress2.value = siteTable[siteIdx].address;
 		morCity.value = siteTable[siteIdx].site;
@@ -6267,7 +6281,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	morCA.addEventListener('change', (e) => {
 		const target = e.target;
 		const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
-		const caIdx = caTable.findIndex(ca => ca.id === id);
+		const caIdx = caTable.findIndex(ca => parseInt(ca.id, 10) === id);
 		mor_ProjectName.value = caTable[caIdx].project_name;
 		morApprovingMgr.value = caTable[caIdx].project_owner;
 		gProjectNumber = caTable[caIdx].project_num;
@@ -6306,7 +6320,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					li.addEventListener('click', (e) => {
 						target.value = e.target.textContent;
 						const id = parseInt(e.target.dataset.id, 10);
-						const rcpcIdx = rcpcTable.findIndex(rcpc => rcpc.id === id);
+						const rcpcIdx = rcpcTable.findIndex(rcpc => parseInt(rcpc.id, 10) === id);
 						morTRDyn.querySelector('.js-mor-rcpc').value = rcpcTable[rcpcIdx].rcpc;
 						morTRDyn.querySelector('.js-mor-vendor-name').value = rcpcTable[rcpcIdx].supplier;
 						morTRDyn.querySelector('.js-mor-part-descr').value = rcpcTable[rcpcIdx].descr;		

@@ -23,8 +23,6 @@ ALTER TABLE mop_fields.sql
 main.html
 datatabletest.js
 
-
-
 update/classDatabase.php
 update/index.html
 update/mop_render.php
@@ -37,3 +35,4 @@ test.html
 MOR_final.xlsx
 MOR_template.xlsx
 
+template/.~lock.*.xlsx#
