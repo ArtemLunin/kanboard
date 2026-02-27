@@ -1888,187 +1888,185 @@
 				</div>
 			</section>
 			<section class="section mor">
-				<!-- <div class="container"> -->
-					<form method="POST" action="mor_admin.php" id="formMor">   
-						<input type="hidden" name="submitMOR">
-						<table class="table table-sm table-bordered mor">
-							<thead class="">
-								<tr>
-									<th class="center" rowspan="3">Legend:</th>
-									<th class="mor-bg-rose">Required</th>
-									<th class="font-weight-bold center mor-bg-lblue fs-18" rowspan="3">Procurement & Supply Chain Material Request</th>
-								</tr>
-								<tr>
-									<th class="mor-bg-lellow">Optional*</th>
-								</tr>
-								<tr>
-									<th class="mor-bg-lgray">Completed by Material Planner</th>
-								</tr>
-								<tr>
-									<th class="mor-bg-sblue" colspan="3">&nbsp;</th>
-								</tr>
-								<tr>
-									<th class="center mor-bg-rose fs-28" colspan="3">
-										<select name="mor_type" id="mor_type">
-											<option>MOR – For Release</option>
-											<option>MOR - For Hold</option>
-											<option>MOR – R4B</option>
-											<option>MRF</option>
-										</select>
-									</th>
-								</tr>
-								<tr>
-									<th class="mor-bg-sblue" colspan="3">&nbsp;</th>
-								</tr>
-							</thead>
-						</table>
-						<table class="table table-sm table-bordered mor" id="mor_table">
-							<tbody>
-								<tr>
-									<td colspan="4" class="center font-weight-bold fs-18">Project Information</td>
-									<td colspan="8" class="center font-weight-bold fs-18">Shipping Details</td>
-								</tr>
-								<tr>
-									<td colspan="2">Network Project (e.g. RPATS) #</td>
-									<td class="mor-bg-rose" colspan="2">
-										<select class="mor" name="mor_ca" id="mor_ca" required>
-										</select>
-									</td>
-									<td class="font-weight-bold" rowspan="8">Ship to Address</td>
-									<td>Contact Name</td>
-									<td class="mor-bg-rose" colspan="6">
-										<input type="text" class="mor" name="mor_project_contact" id="mor_project_contact" value="" required>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">Network Project Name</td>
-									<td class="mor-bg-rose" colspan="2">
-										<input type="text" class="mor" name="mor_project_name" id="mor_project_name" value="" required>
-									</td>
-									<td>Phone Number</td>
-									<td class="mor-bg-rose" colspan="6">
-										<input type="tel" class="mor" name="mor_phone_number" id="mor_phone_number" pattern= "[0-9]{2,}" value="" required>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">Project Manager</td>
-									<td class="mor-bg-rose" colspan="2">
-										<input type="text" class="mor" name="mor_project_manager" id="mor_project_manager" value="" required>
-									</td>
-									<td>Street Number</td>
-									<td class="mor-bg-rose" colspan="6">
-										<input type="text" class="mor" name="mor_site_address" id="mor_site_address" value="" required>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">Site Name / Address</td>
-									<td class="mor-bg-rose" colspan="2">
-										<select class="mor" name="mor_site" id="mor_site">
-										</select>
-									</td>
-									<td>Street Name</td>
-									<td class="mor-bg-rose" colspan="6">
-										<input type="text" class="mor" name="mor_site_address2" id="mor_site_address2" value="" required>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">Date Submitted (YYYY-MM-DD)</td>
-									<td class="mor-bg-rose" colspan="2">
-										<input type="text" class="mor" id="mor_date" name="mor_date" value="" required>
-									</td>
-									<td>City</td>
-									<td class="mor-bg-rose" colspan="6">
-										<input type="text" class="mor" name="mor_city" id="mor_city" value="" required>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">Requestor/Planner</td>
-									<td class="mor-bg-rose" colspan="2">
-										<input type="text" class="mor" name="mor_requestor" id="mor_requestor" value="" required>
-									</td>
-									<td>Province</td>
-									<td class="mor-bg-rose" colspan="6">
-										<input type="text" class="mor" name="mor_province" id="mor_province" value="" required>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">Region / Area</td>
-									<td class="mor-bg-rose" colspan="2">
-										<input type="text" class="mor" name="mor_region" id="mor_region" value="" required>
-									</td>
-									<td>Postal Code (XXX XXX)</td>
-									<td class="mor-bg-rose" colspan="6">
-										<input type="text" class="mor" name="mor_postal_code" id="mor_postal_code" value="" required>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">Requisition / PO Number <span class="font-weight-bold text-danger">(comma seperated)</span></td>
-									<td class="mor-bg-lellow" colspan="2">
-										<input type="text" class="mor" name="mor_requisition" id="mor_requisition" value="">
-									</td>
-									<td>Country</td>
-									<td class="mor-bg-rose" colspan="6">
-										<input type="text" class="mor" name="mor_country" id="mor_country" value="" required>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2" rowspan="3">Additional Information / Approver Notes</td>
-									<td class="mor-bg-lellow" colspan="2" rowspan="3">
-										<textarea class="mor" name="mor_add-info" id="mor_add-info" cols="20" rows="3"></textarea>
-									</td>
-									<td colspan="2">Contractor</td>
-									<td class="mor-bg-lellow" colspan="6">
-										<input type="text" class="mor" name="mor_contractor" id="mor_contractor" value="N/A">
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">Drop Ship</td>
-									<td class="mor-bg-lellow" colspan="6">
-										<input type="text" class="mor" name="mor_drop_ship" id="mor_drop_ship" value="Yes">
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">Approving Mgr <span class="font-weight-bold text-danger">(semi-colon seperated)</span></td>
-									<td class="mor-bg-lellow" colspan="6">
-										<input type="text" class="mor" name="mor_approving_mgr" id="mor_approving_mgr" value="">
-									</td>
-								</tr>
-								<tr class="thead">
-									<td colspan="12">Material Planner</td>
-								</tr>
-								<tr>
-									<td class="center" colspan="2">Completed Sales Order #</td>
-									<td colspan="2">&nbsp;</td>
-									<td class="center" colspan="2">Completed Requisition #</td>
-									<td colspan="6">&nbsp;</td>
-								</tr>
-								<tr>
-									<td colspan="12" class="font-weight-bold center fs-18">C. Part Details 
-										<button class="mor action" id="js_mor_row_append" type="button" title="Add row">+</button>
-									</td>
-								</tr>
-								<tr class="thead">
-									<td class="mor-bg-rose">RCPC</td>
-									<td class="mor-bg-rose">Vendor Name</td>
-									<td class="mor-bg-lellow">Vendor Part #</td>
-									<td class="mor-bg-lellow">Part Description</td>
-									<td class="mor-bg-rose">Quantity</td>
-									<td class="mor-bg-rose">UOM</td>
-									<td class="mor-bg-rose">Oracle #</td>
-									<td class="mor-bg-rose">Task #</td>
-									<td class="mor-bg-rose">Site Code</td>
-									<td class="mor-bg-rose">Date Required (YYYY-MM-DD)</td>
-									<td>Org (MRF Only)</td>
-									<td>Supplier Notes (Filled by Material Planner)</td>
-								</tr>
-							</tbody>
-						</table>
-						<div class="buttons">
-							<button class="mop" type="submit" id="morSubmit">Create</button>
-							<button class="mop" type="reset" id="morReset">Reset</button>
-						</div>
-					</form>
-				<!-- </div> -->
+				<form method="POST" action="mor_admin.php" id="formMor">
+					<input type="hidden" name="submitMOR">
+					<table class="table table-sm table-bordered mor">
+						<thead class="">
+							<tr>
+								<th class="center" rowspan="3">Legend:</th>
+								<th class="mor-bg-rose">Required</th>
+								<th class="font-weight-bold center mor-bg-lblue fs-18" rowspan="3">Procurement & Supply Chain Material Request</th>
+							</tr>
+							<tr>
+								<th class="mor-bg-lellow">Optional*</th>
+							</tr>
+							<tr>
+								<th class="mor-bg-lgray">Completed by Material Planner</th>
+							</tr>
+							<tr>
+								<th class="mor-bg-sblue" colspan="3">&nbsp;</th>
+							</tr>
+							<tr>
+								<th class="center mor-bg-rose fs-28" colspan="3">
+									<select name="mor_type" id="mor_type">
+										<option>MOR – For Release</option>
+										<option>MOR - For Hold</option>
+										<option>MOR – R4B</option>
+										<option>MRF</option>
+									</select>
+								</th>
+							</tr>
+							<tr>
+								<th class="mor-bg-sblue" colspan="3">&nbsp;</th>
+							</tr>
+						</thead>
+					</table>
+					<table class="table table-sm table-bordered mor" id="mor_table">
+						<tbody>
+							<tr>
+								<td colspan="4" class="center font-weight-bold fs-18">Project Information</td>
+								<td colspan="8" class="center font-weight-bold fs-18">Shipping Details</td>
+							</tr>
+							<tr>
+								<td colspan="2">Network Project (e.g. RPATS) #</td>
+								<td class="mor-bg-rose" colspan="2">
+									<select class="mor" name="mor_ca" id="mor_ca" required>
+									</select>
+								</td>
+								<td class="font-weight-bold" rowspan="8">Ship to Address</td>
+								<td>Contact Name</td>
+								<td class="mor-bg-rose" colspan="6">
+									<input type="text" class="mor" name="mor_project_contact" id="mor_project_contact" value="" required>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">Network Project Name</td>
+								<td class="mor-bg-rose" colspan="2">
+									<input type="text" class="mor" name="mor_project_name" id="mor_project_name" value="" required>
+								</td>
+								<td>Phone Number</td>
+								<td class="mor-bg-rose" colspan="6">
+									<input type="tel" class="mor" name="mor_phone_number" id="mor_phone_number" pattern= "[0-9]{2,}" value="" required>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">Project Manager</td>
+								<td class="mor-bg-rose" colspan="2">
+									<input type="text" class="mor" name="mor_project_manager" id="mor_project_manager" value="" required>
+								</td>
+								<td>Street Number</td>
+								<td class="mor-bg-rose" colspan="6">
+									<input type="text" class="mor" name="mor_site_address" id="mor_site_address" value="" required>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">Site Name / Address</td>
+								<td class="mor-bg-rose" colspan="2">
+									<select class="mor" name="mor_site" id="mor_site">
+									</select>
+								</td>
+								<td>Street Name</td>
+								<td class="mor-bg-rose" colspan="6">
+									<input type="text" class="mor" name="mor_site_address2" id="mor_site_address2" value="" required>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">Date Submitted (YYYY-MM-DD)</td>
+								<td class="mor-bg-rose" colspan="2">
+									<input type="text" class="mor" id="mor_date" name="mor_date" value="" required>
+								</td>
+								<td>City</td>
+								<td class="mor-bg-rose" colspan="6">
+									<input type="text" class="mor" name="mor_city" id="mor_city" value="" required>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">Requestor/Planner</td>
+								<td class="mor-bg-rose" colspan="2">
+									<input type="text" class="mor" name="mor_requestor" id="mor_requestor" value="" required>
+								</td>
+								<td>Province</td>
+								<td class="mor-bg-rose" colspan="6">
+									<input type="text" class="mor" name="mor_province" id="mor_province" value="" required>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">Region / Area</td>
+								<td class="mor-bg-rose" colspan="2">
+									<input type="text" class="mor" name="mor_region" id="mor_region" value="" required>
+								</td>
+								<td>Postal Code (XXX XXX)</td>
+								<td class="mor-bg-rose" colspan="6">
+									<input type="text" class="mor" name="mor_postal_code" id="mor_postal_code" value="" required>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">Requisition / PO Number <span class="font-weight-bold text-danger">(comma seperated)</span></td>
+								<td class="mor-bg-lellow" colspan="2">
+									<input type="text" class="mor" name="mor_requisition" id="mor_requisition" value="">
+								</td>
+								<td>Country</td>
+								<td class="mor-bg-rose" colspan="6">
+									<input type="text" class="mor" name="mor_country" id="mor_country" value="" required>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2" rowspan="3">Additional Information / Approver Notes</td>
+								<td class="mor-bg-lellow" colspan="2" rowspan="3">
+									<textarea class="mor" name="mor_add-info" id="mor_add-info" cols="20" rows="3"></textarea>
+								</td>
+								<td colspan="2">Contractor</td>
+								<td class="mor-bg-lellow" colspan="6">
+									<input type="text" class="mor" name="mor_contractor" id="mor_contractor" value="N/A">
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">Drop Ship</td>
+								<td class="mor-bg-lellow" colspan="6">
+									<input type="text" class="mor" name="mor_drop_ship" id="mor_drop_ship" value="Yes">
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2">Approving Mgr <span class="font-weight-bold text-danger">(semi-colon seperated)</span></td>
+								<td class="mor-bg-lellow" colspan="6">
+									<input type="text" class="mor" name="mor_approving_mgr" id="mor_approving_mgr" value="">
+								</td>
+							</tr>
+							<tr class="thead">
+								<td colspan="12">Material Planner</td>
+							</tr>
+							<tr>
+								<td class="center" colspan="2">Completed Sales Order #</td>
+								<td colspan="2">&nbsp;</td>
+								<td class="center" colspan="2">Completed Requisition #</td>
+								<td colspan="6">&nbsp;</td>
+							</tr>
+							<tr>
+								<td colspan="12" class="font-weight-bold center fs-18">C. Part Details 
+									<button class="mor action" id="js_mor_row_append" type="button" title="Add row">+</button>
+								</td>
+							</tr>
+							<tr class="thead">
+								<td class="mor-bg-rose">RCPC</td>
+								<td class="mor-bg-rose">Vendor Name</td>
+								<td class="mor-bg-lellow">Vendor Part #</td>
+								<td class="mor-bg-lellow">Part Description</td>
+								<td class="mor-bg-rose">Quantity</td>
+								<td class="mor-bg-rose">UOM</td>
+								<td class="mor-bg-rose">Oracle #</td>
+								<td class="mor-bg-rose">Task #</td>
+								<td class="mor-bg-rose">Site Code</td>
+								<td class="mor-bg-rose">Date Required (YYYY-MM-DD)</td>
+								<td>Org (MRF Only)</td>
+								<td>Supplier Notes (Filled by Material Planner)</td>
+							</tr>
+						</tbody>
+					</table>
+					<div class="buttons">
+						<button class="mop" type="submit" id="morSubmit">Create</button>
+						<button class="mop" type="reset" id="morReset">Reset</button>
+					</div>
+				</form>
 			</section>
 			<section class="section documentation">
 				<div class="container-documentation" style="display:none;">
