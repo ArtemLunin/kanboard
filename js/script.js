@@ -6256,20 +6256,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const target = e.target;
 		const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
 		const siteIdx = siteTable.findIndex(site => parseInt(site.id, 10) === id);
-		// const siteIdx = siteTable.findIndex((site, index) => {
-		// 	console.log("Проверяем элемент с индексом:", index);
-		// 	console.log("site.id =", site.id, "тип:", typeof site.id);
-		// 	console.log("id =", id, "тип:", typeof id);
 
-		// 	const isMatch = site.id === id;
-
-		// 	console.log("Совпадение:", isMatch);
-		// 	console.log("-------------------");
-
-		// 	return isMatch;
-		// 	});
-		console.log(id);
-		console.log(target.options[target.selectedIndex]);
 		morSiteAddress.value = siteTable[siteIdx].address;
 		morSiteAddress2.value = siteTable[siteIdx].address;
 		morCity.value = siteTable[siteIdx].site;
