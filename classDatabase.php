@@ -1245,7 +1245,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 	}
     function setSQLError($pdo_exception, $error_text)
 	{
-		$error_txt_info = $error_text.' Text: '.$pdo_exception->getMessage().', file: '.$pdo_exception->getFile().', line: '.$pdo_exception->getLine();
+		$error_txt_info = $error_text.' Text: ' . $pdo_exception->getMessage() . ', file: '.$pdo_exception->getFile() . ', line: ' . $pdo_exception->getLine();
 		$this->errorLog($error_txt_info, 1);
 	}
 	// databaseUtilsMOP
@@ -1517,9 +1517,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
         $fields_str = rtrim($fields_str, ', ');
         $filtered_arr = $this->createFilterDB($tableName, $filters, "AND");
         $sql_upd = "UPDATE `" .$tableName. "` SET " . $fields_str . " WHERE " . $filtered_arr['filter'];
-		$this->errorLog($sql_upd);
-		$this->errorLog(print_r(array_merge($values_arr, $filtered_arr['params']), true));
-        // $this->modSQL($sql_upd , array_merge($values_arr, $filtered_arr['params']), false);
+		// $this->errorLog(print_r(array_merge($values_arr, $filtered_arr['params']), true));
     }
 	function runInsertSQL($tableName, $setFields) {
         $fields_str = "";
@@ -1568,7 +1566,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 			}
 			$this->pdo->commit();
 			return 'loaded';
-		} catch (PDOException $e) 
+		} catch (\PDOException $e) 
 		{
 			$this->setSQLError($e, 'SQL error. "' . $sql);
 			$this->pdo->rollBack();

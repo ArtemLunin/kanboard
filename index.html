@@ -701,7 +701,7 @@
 										<option value=""></option>
 										<option value="admin">admin</option>
 									</select>
-									<label class="input-group-text-sm mr-1" for="morPage">Projects</label>
+									<label class="input-group-text-sm mr-1" for="morPage">MOR</label>
 									<select class="custom-select-sm mr-2" name="mor" id="morPage" data-selectname="mor">
 										<option value=""></option>
 										<option value="admin">admin</option>
@@ -731,7 +731,7 @@
 								<button type="reset" class="btn btn-sm btn-warning mr-2" id="deleteUserGroup">Delete</button>
 							</div>
 						</div>
-						<div class="uploads-mor my-2 p-2 border">
+						<!-- <div class="uploads-mor my-2 p-2 border">
 							<h5>Upload MOR Excel Tables</h5>
 							<form id="uploadMORLoadData" action="#" method="POST" enctype="multipart/form-data">
 								<input type="hidden" id="morType" name="morType">
@@ -742,7 +742,7 @@
 								<label for="loadExcelRCPC" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">RCPC</label>
 								<label for="loadExcelSite" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">Site</label>
 							</form>
-						</div>
+						</div> -->
 						<form action="#" method="POST" id="cache_form">
 							<button class="btn btn-primary btn-sm" type="submit">Setup Cache</button>
 							<span class="bg-success d-none">Cache initialized</span>
@@ -1888,8 +1888,26 @@
 				</div>
 			</section>
 			<section class="section mor">
+				<div class="uploads-mor my-2 p-2 border">
+					<div class="uploads-header">
+						<span class="mb-2">Upload MOR Excel Tables</span>
+						<img class="icon-edit icon-edit-sm mb-2 cursor-pointer" id="mor-uploads-show" src="img/expand_content.svg">
+						<img class="icon-edit icon-edit-sm mb-2 cursor-pointer d-none" id="mor-uploads-hide" src="img/collapse_content.svg">
+					</div>
+					<form id="uploadMORLoadData" action="#" method="POST" enctype="multipart/form-data">
+						<input type="hidden" id="morType" name="morType">
+						<input type="file" class="file-input-hidden" id="loadExcelCA" name="file" accept=".xlsx" data-mor-type="ca">
+						<input type="file" class="file-input-hidden" id="loadExcelRCPC" name="file" accept=".xlsx" data-mor-type="rcpc">
+						<input type="file" class="file-input-hidden" id="loadExcelSite" name="file" accept=".xlsx" data-mor-type="site">
+						<label for="loadExcelCA" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">CA</label>
+						<label for="loadExcelRCPC" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">RCPC</label>
+						<label for="loadExcelSite" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">Site</label>
+					</form>
+					<div class="mor-uploads-status"></div>
+				</div>
 				<form method="POST" action="mor_admin.php" id="formMor">
 					<input type="hidden" name="submitMOR">
+					<input type="hidden" name="morForReleaseFlag" value="0" id="morForReleaseFlag">
 					<table class="table table-sm table-bordered mor">
 						<thead class="">
 							<tr>
@@ -1909,10 +1927,11 @@
 							<tr>
 								<th class="center mor-bg-rose fs-28" colspan="3">
 									<select name="mor_type" id="mor_type">
-										<option>MOR – For Release</option>
-										<option>MOR - For Hold</option>
-										<option>MOR – R4B</option>
-										<option>MRF</option>
+										<option value="MOR - To Order" data-mor-type="1">MOR - To Order</option>
+										<option value="MOR - For Release" data-mor-type="2">MOR - For Release</option>
+										<option value="MOR - For Hold" data-mor-type="1">MOR - For Hold</option>
+										<option value="MOR - R4B" data-mor-type="1">MOR - R4B</option>
+										<option value="MRF" data-mor-type="1">MRF</option>
 									</select>
 								</th>
 							</tr>
@@ -1933,10 +1952,17 @@
 									<select class="mor" name="mor_ca" id="mor_ca" required>
 									</select>
 								</td>
-								<td class="font-weight-bold" rowspan="8">Ship to Address</td>
-								<td>Contact Name</td>
-								<td class="mor-bg-rose" colspan="6">
-									<input type="text" class="mor" name="mor_project_contact" id="mor_project_contact" value="" required>
+								<td colspan="8" rowspan="8" class="mor-template">
+									<table class="table table-sm table-bordered mor-inner">
+											<colgroup>
+												<col style="width: 15%;" />
+												<col style="width: 15%;" />
+												<col span="6" />
+											</colgroup>
+											<tbody>
+												
+											</tbody>
+									</table>
 								</td>
 							</tr>
 							<tr>
@@ -1944,20 +1970,13 @@
 								<td class="mor-bg-rose" colspan="2">
 									<input type="text" class="mor" name="mor_project_name" id="mor_project_name" value="" required>
 								</td>
-								<td>Phone Number</td>
-								<td class="mor-bg-rose" colspan="6">
-									<input type="tel" class="mor" name="mor_phone_number" id="mor_phone_number" pattern= "[0-9]{2,}" value="" required>
-								</td>
 							</tr>
 							<tr>
 								<td colspan="2">Project Manager</td>
 								<td class="mor-bg-rose" colspan="2">
 									<input type="text" class="mor" name="mor_project_manager" id="mor_project_manager" value="" required>
 								</td>
-								<td>Street Number</td>
-								<td class="mor-bg-rose" colspan="6">
-									<input type="text" class="mor" name="mor_site_address" id="mor_site_address" value="" required>
-								</td>
+								
 							</tr>
 							<tr>
 								<td colspan="2">Site Name / Address</td>
@@ -1965,19 +1984,12 @@
 									<select class="mor" name="mor_site" id="mor_site">
 									</select>
 								</td>
-								<td>Street Name</td>
-								<td class="mor-bg-rose" colspan="6">
-									<input type="text" class="mor" name="mor_site_address2" id="mor_site_address2" value="" required>
-								</td>
+
 							</tr>
 							<tr>
 								<td colspan="2">Date Submitted (YYYY-MM-DD)</td>
 								<td class="mor-bg-rose" colspan="2">
 									<input type="text" class="mor" id="mor_date" name="mor_date" value="" required>
-								</td>
-								<td>City</td>
-								<td class="mor-bg-rose" colspan="6">
-									<input type="text" class="mor" name="mor_city" id="mor_city" value="" required>
 								</td>
 							</tr>
 							<tr>
@@ -1985,29 +1997,19 @@
 								<td class="mor-bg-rose" colspan="2">
 									<input type="text" class="mor" name="mor_requestor" id="mor_requestor" value="" required>
 								</td>
-								<td>Province</td>
-								<td class="mor-bg-rose" colspan="6">
-									<input type="text" class="mor" name="mor_province" id="mor_province" value="" required>
-								</td>
+								
 							</tr>
 							<tr>
 								<td colspan="2">Region / Area</td>
 								<td class="mor-bg-rose" colspan="2">
 									<input type="text" class="mor" name="mor_region" id="mor_region" value="" required>
 								</td>
-								<td>Postal Code (XXX XXX)</td>
-								<td class="mor-bg-rose" colspan="6">
-									<input type="text" class="mor" name="mor_postal_code" id="mor_postal_code" value="" required>
-								</td>
+								
 							</tr>
 							<tr>
 								<td colspan="2">Requisition / PO Number <span class="font-weight-bold text-danger">(comma seperated)</span></td>
 								<td class="mor-bg-lellow" colspan="2">
 									<input type="text" class="mor" name="mor_requisition" id="mor_requisition" value="">
-								</td>
-								<td>Country</td>
-								<td class="mor-bg-rose" colspan="6">
-									<input type="text" class="mor" name="mor_country" id="mor_country" value="" required>
 								</td>
 							</tr>
 							<tr>
@@ -2064,6 +2066,7 @@
 					</table>
 					<div class="buttons">
 						<button class="mop" type="submit" id="morSubmit">Create</button>
+						<button class="mop" type="button" id="morSend">Send</button>
 						<button class="mop" type="reset" id="morReset">Reset</button>
 					</div>
 				</form>
@@ -2291,6 +2294,112 @@
 			</div>
 		</div>
 	</div>
-	<!-- <input type="date" id="dateInput" style="position:absolute; left:-9999px;"> -->
+
+	<template id="morForRelease">
+		<tr>
+			<td class="font-weight-bold" rowspan="4">Ship from Address</td>
+			<td>Contact Name</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_project_contact_from" id="mor_project_contact_from" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Phone Number</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="tel" class="mor" name="mor_phone_number_from" id="mor_phone_number_from" pattern= "[0-9]{2,}" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Street Number</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_site_address_from" id="mor_site_address_from" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Shipp details from</td>
+			<td class="mor-bg-rose" colspan="6">
+				<select class="mor" name="mor_site_from" id="mor_site_from">
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td class="font-weight-bold" rowspan="4">Ship to Address</td>
+			<td>Contact Name</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_project_contact_to" id="mor_project_contact_to" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Phone Number</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_phone_number_to" id="mor_phone_number_to" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Street Number</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_site_address_to" id="mor_site_address_to" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Shipp details to</td>
+			<td class="mor-bg-rose" colspan="6">
+				<select class="mor" name="mor_site_to" id="mor_site_to">
+				</select>
+			</td>
+		</tr>
+	</template>
+
+	<template id="morForOthers">
+		<tr>
+			<td class="font-weight-bold" rowspan="8">Ship to Address</td>
+			<td>Contact Name</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_project_contact" id="mor_project_contact" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Phone Number</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="tel" class="mor" name="mor_phone_number" id="mor_phone_number" pattern= "[0-9]{2,}" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Street Number</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_site_address" id="mor_site_address" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Street Name</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_site_address2" id="mor_site_address2" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>City</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_city" id="mor_city" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Province</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_province" id="mor_province" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Postal Code (XXX XXX)</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_postal_code" id="mor_postal_code" value="" required>
+			</td>
+		</tr>
+		<tr>
+			<td>Country</td>
+			<td class="mor-bg-rose" colspan="6">
+				<input type="text" class="mor" name="mor_country" id="mor_country" value="" required>
+			</td>
+		</tr>
+	</template>
 </body>
 </html>

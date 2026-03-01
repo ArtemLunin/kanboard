@@ -152,6 +152,36 @@ h3 {
 .table td {
 	vertical-align: middle;
 }
+.section.mor {
+	position: relative;
+}
+.uploads-mor {
+	position: absolute;
+	top: 60px;
+	left: 10px;
+	width: 300px;
+	z-index: 10;
+	background-color: #f0f0f0;
+	height: 30px;
+  	overflow-y: hidden;
+	&.showned {
+		height: 80px;
+	}
+}
+.uploads-header {
+	display: flex;
+	justify-content: space-between;
+  	align-items: center;
+}
+td.mor-template {
+	padding: 0;
+}
+.table.mor-inner {
+	margin: 0;
+}
+/* table.mor-inner>tbody {
+
+} */
 .table.mor th.center, .table.mor td.center {
 	vertical-align: middle;
 	text-align: center;
@@ -258,7 +288,6 @@ main {
 .section, .set-rights {
 	display: none;
 }
-
 p {
 	margin: 0;
 }
@@ -277,9 +306,6 @@ p {
 .modify-container {
 	border-radius: 6px;
 }
-/* .section.status {
-	font-size: 12px;
-} */
 .tickets-container {
 	margin-top: 20px;
 }

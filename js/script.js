@@ -72,6 +72,28 @@ const cTemplateGroups = {
 	"Transport": 3,
 };
 
+//for MOR
+// const fillMorContact = (element, value) => {
+// 	if (element.value.trim() == '') {
+// 		element.value = value;
+// 	}
+// };
+
+// const classMorForOthers = {
+// 	set morProjectContact(value) {
+// 		const elem = document.querySelector('#mor_project_contact');
+// 		this.fillMorContact(elem, value);
+// 	}
+// };
+
+// const classMorForRelease = {
+// 	set morProjectContact(value) {
+// 		const elem = document.querySelector('#mor_project_contact');
+// 		elem.value = value;
+// 		// console.log(value);
+// 	}
+// }
+
 let cTemplate = 0;
 let projectsMode = 0, activityProjectID = 0, activityGroupID = 0, activityInProjects = '0';
 let projectGroupName = '';
@@ -511,20 +533,21 @@ window.addEventListener('DOMContentLoaded', () => {
 		//mor elements
 	const formMor = document.querySelector('#formMor'),
 		morSite = formMor.querySelector('#mor_site'),
+		morSend = formMor.querySelector('#morSend'),
 		morCA = formMor.querySelector('#mor_ca'),
 		mor_ProjectName = formMor.querySelector('#mor_project_name'),
-		morSiteAddress = formMor.querySelector('#mor_site_address'),
-		morSiteAddress2 = formMor.querySelector('#mor_site_address2'),
-		morRegion = formMor.querySelector('#mor_region'),
-		morCity = formMor.querySelector('#mor_city'),
-		morProvince = formMor.querySelector('#mor_province'),
-		morCountry = formMor.querySelector('#mor_country'),
 		morApprovingMgr = formMor.querySelector('#mor_approving_mgr'),
-		mor_project_contact = formMor.querySelector('#mor_project_contact'),
+		// mor_project_contact = formMor.querySelector('#mor_project_contact'),
 		morTable = formMor.querySelector('#mor_table'),
 		morDateSubmitted = formMor.querySelector('#mor_date'),
 		morAddRow = formMor.querySelector('#js_mor_row_append'),
 		mor_requestor = formMor.querySelector('#mor_requestor');
+		const morInnerBody = document.querySelector('table.mor-inner>tbody'),
+		morForOthers = document.querySelector('#morForOthers'),
+		morForRelease = document.querySelector('#morForRelease'),
+		morSelector = document.querySelector('#mor_type');
+		const morForReleaseFlag = document.querySelector('#morForReleaseFlag');
+		const uploadsMor = document.querySelector('.uploads-mor');
 		const loadExcelCA = document.querySelector('#loadExcelCA'),
 		loadExcelRCPC = document.querySelector('#loadExcelRCPC'),
 		loadExcelSite = document.querySelector('#loadExcelSite');
@@ -2138,6 +2161,11 @@ window.addEventListener('DOMContentLoaded', () => {
 									showMosaicEditItems = '0';
 								}
 								localStorage.setItem('showMosaicEditItems', showMosaicEditItems);
+							} else if (sectionName === 'mor') {
+								if (accessType === 'user')
+								{
+									uploadsMor.classList.add('d-none');
+								}
 							}
 						}
 					}
@@ -4740,7 +4768,25 @@ window.addEventListener('DOMContentLoaded', () => {
 			uploadMORLoadData.requestSubmit();
 		});
 	});
+
+	morSelector.addEventListener('change', function(e) {
+		const target = e.target;
+		if (target.dataset.morType == undefined || target.dataset.morType != target.options[target.selectedIndex].dataset.morType) {
+			target.dataset.morType = target.options[target.selectedIndex].dataset.morType;
+			switchMORTables(target.dataset.morType);
+		}
+	});
 	
+	document.querySelector('#mor-uploads-show').addEventListener('click', (e) => {
+		e.target.classList.add('d-none');
+		document.querySelector('#mor-uploads-hide').classList.remove('d-none');
+		uploadsMor.classList.add('showned');
+	});
+	document.querySelector('#mor-uploads-hide').addEventListener('click', (e) => {
+		e.target.classList.add('d-none');
+		document.querySelector('#mor-uploads-show').classList.remove('d-none');
+		uploadsMor.classList.remove('showned');
+	});
 
 	// btnClearData.addEventListener('click', function(e) {
 	// 	clearDevicesDataTemp();
@@ -5057,9 +5103,21 @@ window.addEventListener('DOMContentLoaded', () => {
 		sendFile('POST', requestURLMOR, formData).then((data) => {
 			[loadExcelCA,loadExcelRCPC,loadExcelSite].forEach(file_elem => {
 				file_elem.disabled = false;
+				if (data.success && data.success.answer) {
+					document.querySelector('.mor-uploads-status').textContent = `${data.success.table} ${data.success.answer}`; 
+					if (data.success.answer == 'loaded') {
+						document.querySelector('.mor-uploads-status').classList.add('bg-success');
+						document.querySelector('.mor-uploads-status').classList.remove('bg-warning');
+					} else {
+						document.querySelector('.mor-uploads-status').textContent += '. Wrong XLSX?';
+						document.querySelector('.mor-uploads-status').classList.remove('bg-success');
+						document.querySelector('.mor-uploads-status').classList.add('bg-warning');
+					}
+				}
 			});
 			e.target.reset();
 		});
+		formMor.reset();
 	});
 
 	const removeChildElementFromCollection = (collection, selector) => {
@@ -5490,7 +5548,23 @@ window.addEventListener('DOMContentLoaded', () => {
 		sendRequest('POST', requestURLMOR, body).then((data) => {
 			rcpcTable = data.success.answer.slice();
 		});
-	}
+		morSelector.dispatchEvent(new Event('change'));
+	};
+
+	const switchMORTables = (mor_id) => {
+		morInnerBody.textContent = '';
+		switch (mor_id) {
+			case '1':
+				morInnerBody.append(morForOthers.content.cloneNode(true));
+				morForReleaseFlag.value = '0';
+				break;
+			case '2':
+				morInnerBody.append(morForRelease.content.cloneNode(true));
+				morForReleaseFlag.value = '1';
+				break;
+		}
+		morSite.dispatchEvent(new Event('change'));
+	};
 
 	const getChassisTags = (chassis_id) => {
 		const body = {
@@ -5855,10 +5929,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	formMor.addEventListener('reset', (e) => {
 		setTimeout(() => {
-			morSite.value = "";
-			morCA.value = "";
+			morSite.value = '';
+			morCA.value = '';
 			gProjectNumber = 0;
 			gSiteCode = 0;
+			morForReleaseFlag.value = '0';
+			morSelector.dispatchEvent(new Event('change'));
 			morDateSubmitted.value = datetimeToCaDate();
 			const tbody = morTable.querySelector('TBODY');
 			if (tbody) {
@@ -5868,6 +5944,16 @@ window.addEventListener('DOMContentLoaded', () => {
 				});
 			}
 		}, 0);
+	});
+
+	morSend.addEventListener('click', (e) => {
+		if (formMor.reportValidity()) {
+			formMor.requestSubmit();
+			const link = document.createElement("a");
+			link.href ="mailto:niw.boms@rci.rogers.com";
+			link.click();
+			link.remove();
+		}
 	});
 
 	formFields.addEventListener('submit', (e) => {
@@ -6248,21 +6334,46 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 	
 	mor_requestor.addEventListener('change', (e) => {
-		if (mor_project_contact.value.trim() == '') {
-			mor_project_contact.value = e.target.value.trim();
+		const fillMorContact = (element, value) => {
+			if (element.value.trim() == '') {
+				element.value = value;
+			}
+		};
+		switch (morForReleaseFlag.value) {
+			case '1':
+				fillMorContact(formMor.querySelector('#mor_project_contact_from'), e.target.value.trim());
+				fillMorContact(formMor.querySelector('#mor_project_contact_to'), e.target.value.trim());
+				break;
+			case '0':
+				fillMorContact(formMor.querySelector('#mor_project_contact'), e.target.value.trim());
+				break;
 		}
 	});
 	morSite.addEventListener('change', (e) => {
 		const target = e.target;
-		const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
-		const siteIdx = siteTable.findIndex(site => parseInt(site.id, 10) === id);
+		try {
+			const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
+			const siteIdx = siteTable.findIndex(site => parseInt(site.id, 10) === id);
+			document.querySelector('#mor_region').value = siteTable[siteIdx].region;
+			switch (morForReleaseFlag.value) {
+				case '1':
+					formMor.querySelector('#mor_site_from').innerHTML = target.innerHTML;
+					formMor.querySelector('#mor_site_from').value = '';
+					formMor.querySelector('#mor_site_to').innerHTML = target.innerHTML;
+					formMor.querySelector('#mor_site_to').value = '';
+					break;
+				case '0':
+					document.querySelector('#mor_site_address').value = siteTable[siteIdx].address;
+					document.querySelector('#mor_site_address2').value = siteTable[siteIdx].address;
+					document.querySelector('#mor_city').value = siteTable[siteIdx].site;
+					document.querySelector('#mor_province').value = siteTable[siteIdx].province;
+					document.querySelector('#mor_country').value = siteTable[siteIdx].country;
+					break;
+			}
+			mor_requestor.dispatchEvent(new Event('change'));
+		} catch (e) {
+		}
 
-		morSiteAddress.value = siteTable[siteIdx].address;
-		morSiteAddress2.value = siteTable[siteIdx].address;
-		morCity.value = siteTable[siteIdx].site;
-		morRegion.value = siteTable[siteIdx].region;
-		morProvince.value = siteTable[siteIdx].province;
-		morCountry.value = siteTable[siteIdx].country;
 		gSiteCode = target.value;
 	});
 	morCA.addEventListener('change', (e) => {
@@ -6325,6 +6436,23 @@ window.addEventListener('DOMContentLoaded', () => {
 	morTable.addEventListener('click', (e) => {
 		if (!e.target.classList.contains('js_vendor_part')) {
 			//morPartList.classList.add('d-none');
+		}
+	});
+
+	morInnerBody.addEventListener('change', (e) => {
+		const target = e.target.closest('select');
+		if (target && morForReleaseFlag.value == '1') {
+			try {
+				const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
+				const siteIdx = siteTable.findIndex(site => parseInt(site.id, 10) === id);
+				if (target.id == 'mor_site_from') {
+					document.querySelector('#mor_site_address_from').value = siteTable[siteIdx].address;
+				} else if (target.id == 'mor_site_to') {
+					document.querySelector('#mor_site_address_to').value = siteTable[siteIdx].address;
+				}
+			} catch (e) {
+				console.error(e);
+			}
 		}
 	});
 
