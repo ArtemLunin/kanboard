@@ -17,7 +17,8 @@ let gPrimeElementID = 0,
     adminEnabled = 1,
     totalInputs = 0,
     changedInputs = 0,
-	templateDip = 0;
+	templateDip = 0,
+	templateDDP = 0;
 	// templateMop = 0;
 
 const hardCodeDesign = {
@@ -124,6 +125,8 @@ const sections = [
 	'services',
 	'template',
 	'mop',
+	'ddptemplate',
+	'ddp',
 	'ctemplate',
 	'cmop',
 	'template DIP',
@@ -136,7 +139,6 @@ const sections = [
 	'inventory',
 	'projects',
 	'mor',
-	//'projects-info',
 	// 'documentation',
 	'action',
 ];
@@ -481,6 +483,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const formReset = document.querySelector('#formReset'),
         formSubmit = document.querySelector('#formSubmit'),
+        ddpFormSubmit = document.querySelector('#ddpFormSubmit'),
         formSave = document.querySelector('#formSave'),
         formAdmin = document.querySelector('#formAdmin'),
         formFields = document.querySelector('#formFields'),
@@ -497,6 +500,7 @@ window.addEventListener('DOMContentLoaded', () => {
         selPrimeElement = document.querySelector('#primeElement'),
         divCounter = document.querySelector('.counter-pb'),
 		renderMopDiv = document.querySelector('#render_mop'),
+		renderDDPDiv = document.querySelector('#render_ddp'),
 		docTitle = document.querySelector('#docTitle'),
         showAll = document.querySelector('#showAll'),
 		efcrFields = document.querySelector('#efcrFields'),
@@ -535,6 +539,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		morSite = formMor.querySelector('#mor_site'),
 		morSend = formMor.querySelector('#morSend'),
 		morCA = formMor.querySelector('#mor_ca'),
+		morCAList = document.querySelector('.mor-ca-list'),
 		mor_ProjectName = formMor.querySelector('#mor_project_name'),
 		morApprovingMgr = formMor.querySelector('#mor_approving_mgr'),
 		// mor_project_contact = formMor.querySelector('#mor_project_contact'),
@@ -583,9 +588,24 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	// const fillEFCR = (dataTableE, item) => {
-	// 	dataTableE.row.add(item);
-	// };
+	const displayDDPElements = (adminView = false) => {
+		adminEnabled = adminView;
+		if (adminView) {
+			adminViewElems.forEach((elem) => {
+				if (!elem.classList.contains('js-superOnly') || 
+				(currentUser === 'super' && elem.classList.contains('js-superOnly'))) {
+					setAvailFormElements(elem, false);
+				}
+			});
+			ddpFormSubmit.innerText = 'Apply';
+		} else {
+			adminViewElems.forEach((elem) => {
+				setAvailFormElements(elem, true);
+			});
+			ddpFormSubmit.innerText = 'Create';
+		}
+	};
+
 
 	const periodChange = (e, buttonApi, dataTable, node, config) => {
 		const target = buttonApi.nodes()[0];
@@ -1879,6 +1899,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				// showSection === 'projects-info'
 				) {
 				section[idx].append(renderMopDiv);
+			} else if (showSection === 'ddp' || 
+				showSection === 'templateDDP'
+			) {
+				section[idx].append(renderDDPDiv);
 			}
 			section[idx].style.display = "block";
 		}
@@ -2021,6 +2045,16 @@ window.addEventListener('DOMContentLoaded', () => {
 					iniOGPA(addParams);
 				}
 				break;
+			case 'templateDDP':
+				document.title = 'Template DDP';
+				templateDDP = 1;
+				displayDDPElements(true);
+				break;
+			case 'ddp':
+				document.title = 'DDP';
+				templateDDP = 0;
+				displayDDPElements(false);
+				break;
 			case 'inventory':
 				document.title = 'Inventory';
 				iniInventory();
@@ -2033,10 +2067,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				document.title = 'MOR';
 				iniMOR();
 				break;
-			// case 'projects-info':
-			// 	document.title = 'Projects Info';
-			// 	projectsMode = 1;
-			// 	displayMOPElements(false);		
 			default:
 				break;
 		}
@@ -5518,7 +5548,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const iniMOR = () => {
 		morSite.textContent = '';
-		morCA.textContent = '';
+		// morCA.textContent = '';
 		formMor.reset();
 		const body = {
 			method: 'getMORData',
@@ -5537,11 +5567,11 @@ window.addEventListener('DOMContentLoaded', () => {
 		body.value = 'ca';
 		sendRequest('POST', requestURLMOR, body).then((data) => {
 			caTable = data.success.answer.slice();
-			for (const ca of caTable) {
-                morCA.insertAdjacentHTML('beforeend', `
-                    <OPTION value="${ca.ca}" data-id="${ca.id}">${ca.ca}</OPTION>
-                `);
-            };
+			// for (const ca of caTable) {
+            //     morCA.insertAdjacentHTML('beforeend', `
+            //         <OPTION value="${ca.ca}" data-id="${ca.id}">${ca.ca}</OPTION>
+            //     `);
+            // };
             morCA.value = '';
 		});
 		body.value = 'rcpc';
@@ -6324,7 +6354,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			<td><input type="text" class="mor js-mor-part-descr" name="mor_part_descr[]" value=""></td>
 			<td><input type="text" class="mor" name="mor_quantity[]" value="" required></td>
 			<td><input type="text" class="mor" name="mor_uom[]" value="EA" required></td>
-			<td><input type="text" class="mor js-mor-oracle" name="mor_oracle[]" value="" required readonly></td>
+			<td><input type="text" class="mor js-mor-oracle" name="mor_oracle[]" value="" required></td>
 			<td><input type="text" class="mor" name="mor_task[]" value="" required></td>
 			<td><input type="text" class="mor js-mor-site-code" name="mor_site_code[]" value="" required></td>
 			<td><input type="text" class="mor js-mor-date-required" name="mor_date_required[]" value="" required></td>
@@ -6376,16 +6406,17 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		gSiteCode = target.value;
 	});
-	morCA.addEventListener('change', (e) => {
-		const target = e.target;
-		const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
-		const caIdx = caTable.findIndex(ca => parseInt(ca.id, 10) === id);
-		mor_ProjectName.value = caTable[caIdx].project_name;
-		morApprovingMgr.value = caTable[caIdx].project_owner;
-		gProjectNumber = caTable[caIdx].project_num;
-	});
+	// morCA.addEventListener('change', (e) => {
+	// 	const target = e.target;
+	// 	const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
+	// 	const caIdx = caTable.findIndex(ca => parseInt(ca.id, 10) === id);
+	// 	mor_ProjectName.value = caTable[caIdx].project_name;
+	// 	morApprovingMgr.value = caTable[caIdx].project_owner;
+	// 	gProjectNumber = caTable[caIdx].project_num;
+	// });
 	morAddRow.addEventListener('click', (e) => {
-		if (gProjectNumber != 0 && gSiteCode != 0) {
+		// if (gProjectNumber != 0 && gSiteCode != 0) {
+		if (gSiteCode != 0) {
 			const tbody = morTable.querySelector('TBODY');
 			if (tbody) {
 				let trId = (tbody.dataset.trId !== undefined) ? parseInt(tbody.dataset.trId, 10) : 1;
@@ -6427,9 +6458,38 @@ window.addEventListener('DOMContentLoaded', () => {
 					morPartList.append(li);
 				});
 				morPartList.classList.remove('d-none');
+			} else if (target.classList.contains('js-mor-oracle') && target.value.trim() != '') {
+				gProjectNumber = target.value.trim();
 			} else {
 				morPartList.classList.add('d-none'); 
 			}
+		}
+	});
+
+	morCA.addEventListener('input', (e) => {
+		const target = e.target;
+		const caValue = target.value.trim().toUpperCase();
+		if (caValue !== '') {
+			let caList = caTable.filter(ca => ca.ca.includes(caValue));
+			morCAList.textContent = '';
+			caList.forEach(item => {
+				const li = document.createElement('li');
+				li.textContent = item.ca;
+				li.dataset.id = item.id;
+				li.addEventListener('click', (e) => {
+					target.value = e.target.textContent;
+					const id = parseInt(e.target.dataset.id, 10);
+					const caIdx = caTable.findIndex(ca => parseInt(ca.id, 10) === id);
+					mor_ProjectName.value = caTable[caIdx].project_name;
+					morApprovingMgr.value = caTable[caIdx].project_owner;
+					gProjectNumber = caTable[caIdx].project_num;
+					morCAList.classList.add('d-none');
+				});
+				morCAList.append(li);
+			});
+			morCAList.classList.remove('d-none');
+		} else {
+			morCAList.classList.add('d-none');
 		}
 	});
 

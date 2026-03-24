@@ -108,6 +108,18 @@ class databaseUtils {
 		'sectionAttr'	=> 'cSDEBundle',
 		'accessType'	=> 'admin',
 	],
+	// 	[
+	// 	'pageName' => 'Template DDP',
+	// 	'sectionName' => 'templateDDP',
+	// 	'sectionAttr'	=> 'templateDDP',
+	// 	'accessType'	=> 'admin',
+	// ],
+	// [
+	// 	'pageName' => 'DDP',
+	// 	'sectionName' => 'ddp',
+	// 	'sectionAttr'	=> 'ddp',
+	// 	'accessType'	=> 'admin',
+	// ],
 	[
 		'pageName' => 'Inventory',
 		'sectionName' => 'inventory',
@@ -1558,7 +1570,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				$params = [];
 				foreach ($batch as $row) {
 					foreach ($row as $value) {
-						$params[] = $value;
+						$params[] = $value ?? '';
 					}
 				}
 				$stmt = $this->pdo->prepare($sql);
@@ -1571,7 +1583,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 			$this->setSQLError($e, 'SQL error. "' . $sql);
 			$this->pdo->rollBack();
 		}
-		return 'failed';
+		return 'failed.' . $e->getMessage();
 	}
 	function selectObjectFromTable($table_name, $filters, $selected_fields = [], $order_by = []) {
 		$filter = "";

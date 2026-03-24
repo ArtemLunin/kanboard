@@ -165,7 +165,8 @@ h3 {
 	height: 30px;
   	overflow-y: hidden;
 	&.showned {
-		height: 80px;
+		height: 90px;
+		overflow: auto;
 	}
 }
 .uploads-header {
@@ -207,10 +208,10 @@ td.mor-template {
 	background-color: #9dc3e6;
 	padding: 0;
 }
-.mor-vendor-part-container {
+.mor-vendor-part-container, .mor-ca-container {
 	position: relative;
 }
-.mor-part-autocomplete {
+.mor-part-autocomplete, .mor-ca-autocomplete {
 	position: absolute;
   top: 100%;
   left: 0;
@@ -224,11 +225,11 @@ td.mor-template {
   overflow-y: auto;
   z-index: 1000;
 }
-.mor-part-autocomplete li {
+.mor-part-autocomplete li, .mor-ca-autocomplete li {
 	padding: 8px;
 	cursor: pointer;
 }
-.mor-part-autocomplete li:hover {
+.mor-part-autocomplete li:hover, .mor-ca-autocomplete li:hover {
 	background-color: #f0f0f0;
 }
 .fs-18 {

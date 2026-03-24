@@ -1660,6 +1660,67 @@
 			<section class="section dip"></section>
 			<section class="section templatecDIP"></section>
 			<section class="section cdip"></section>
+			<section class="section templateDDP">
+				<div class="container" id="render_ddp">
+					<div class="params">
+						<form method="post" action="ddp_render.php" id="ddpFormFields" enctype="multipart/form-data">
+							<fieldset id="ddpGroup1" class="">
+								<legend>Project Info</legend>
+								<div class="param param-half">
+									<label for="ddpProjectNumber">Project Number/revision</label>
+									<input type="text" class="mop" name="ddpProjectNumber" id="ddpProjectNumber" value="D250152A01">
+									
+								</div>
+								<div class="param param-half">
+									<label for="ddpProjectName">Project Title</label>
+									<input type="text" class="mop" name="ddpProjectName" id="ddpProjectName" value="2025 dSDE MPC7E Card Installation">
+								</div>
+								<div class="param param-half">
+									<label for="ddpProjectOracle">Oracle/ Task Code</label>
+									<input type="text" class="mop" name="ddpProjectOracle" id="ddpProjectOracle" value="303971/ 8.08">
+								</div>
+								<div class="param param-half">
+									<label for="ddpNumber">DDP Number</label>
+									<input type="text" class="mop" name="ddpNumber" id="ddpNumber" value="PDSJ1-DDP-D250152A01-001-A">
+								</div>
+								<div class="param param-half">
+									<label for="ddpSite">Site</label>
+									<input type="text" class="mop" name="ddpSite" id="ddpSite" value="541 Kenmount Rd, St. John's, NL">
+								</div>
+								<div class="param param-half">
+									<label for="ddpCCLI">CLLI</label>
+										<input type="text" class="mop" name="ddpCCLI" id="ddpCCLI" value="STJHNFAS/ NFSJ/ S0222">
+								</div>
+								<div class="param param-half">
+									<label for="ddpVersion">Version</label>
+									<input type="text" class="mop" name="ddpVersion" id="ddpVersion" value="1.0" size="10">
+								</div>
+								<div class="param param-half">
+									<label for="ddpRevisionDate">Revision Date</label>
+									<input type="text" class="mop" name="ddpRevisionDate" id="ddpRevisionDate" value="July 18, 2025">
+								</div>
+								<div class="param param-half">
+									<label for="ddpRequestedDate">Requested Completion Date</label>
+									<input type="text" class="mop" name="ddpRequestedDate" id="ddpRequestedDate" value="ASAP">
+								</div>
+								<div class="param param-half">
+									<label for="ddpSpecialist">EE Specialist</label>
+									<input type="text" class="mop" name="ddpSpecialist" id="ddpSpecialist" value="Brandon StCoeur">
+								</div>
+							</fieldset>
+							<div class="buttons">
+								<button class="mop" type="submit" id="ddpFormSubmit">Render</button>
+								<button class="mop d-none" type="button" id="ddpFormSave">Save</button>
+								<button class="mop" type="reset" id="ddpFormReset">Reset</button>
+								<div id="calendarWrapper" style="display:none;">
+									<div id="calendar"></div>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			</section>
+			<section class="section ddp"></section>
 			<!-- <section class="section capacity">
 				<fieldset class="">
 					<legend>Uplink/Downlink Information</legend>
@@ -1949,8 +2010,12 @@
 							<tr>
 								<td colspan="2">Network Project (e.g. RPATS) #</td>
 								<td class="mor-bg-rose" colspan="2">
-									<select class="mor" name="mor_ca" id="mor_ca" required>
-									</select>
+									<!-- <select class="mor" name="mor_ca" id="mor_ca" required>
+									</select> -->
+									<div class="mor-ca-container">
+										<input type="text" class="mor" name="mor_ca" value="" id="mor_ca">
+										<ul class="mor-ca-autocomplete mor-ca-list d-none"></ul>
+									</div>
 								</td>
 								<td colspan="8" rowspan="8" class="mor-template">
 									<table class="table table-sm table-bordered mor-inner">
@@ -2316,7 +2381,7 @@
 			</td>
 		</tr>
 		<tr>
-			<td>Shipp details from</td>
+			<td>Shipping details from</td>
 			<td class="mor-bg-rose" colspan="6">
 				<select class="mor" name="mor_site_from" id="mor_site_from">
 				</select>
@@ -2342,7 +2407,7 @@
 			</td>
 		</tr>
 		<tr>
-			<td>Shipp details to</td>
+			<td>Shipping details to</td>
 			<td class="mor-bg-rose" colspan="6">
 				<select class="mor" name="mor_site_to" id="mor_site_to">
 				</select>
