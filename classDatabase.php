@@ -67,6 +67,18 @@ class databaseUtils {
 		'accessType'	=> 'admin',
 	],
 	[
+		'pageName' => 'tTemplate',
+		'sectionName' => 'ttemplate',
+		'sectionAttr'	=> 'ttemplate',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'tMOP',
+		'sectionName' => 'tmop',
+		'sectionAttr'	=> 'tmop',
+		'accessType'	=> 'admin',
+	],
+	[
 		'pageName' => 'Template DIP',
 		'sectionName' => 'templateDIP',
 		'sectionAttr'	=> 'templateDIP',
@@ -91,6 +103,18 @@ class databaseUtils {
 		'accessType'	=> 'admin',
 	],
 	[
+		'pageName' => 'Template tDIP',
+		'sectionName' => 'templatetDIP',
+		'sectionAttr'	=> 'templatetDIP',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'tDIP',
+		'sectionName' => 'tdip',
+		'sectionAttr'	=> 'tdip',
+		'accessType'	=> 'admin',
+	],
+	[
 		'pageName' => 'Capacity',
 		'sectionName' => 'capacity',
 		'sectionAttr'	=> 'capacity',
@@ -108,18 +132,18 @@ class databaseUtils {
 		'sectionAttr'	=> 'cSDEBundle',
 		'accessType'	=> 'admin',
 	],
-	// 	[
-	// 	'pageName' => 'Template DDP',
-	// 	'sectionName' => 'templateDDP',
-	// 	'sectionAttr'	=> 'templateDDP',
-	// 	'accessType'	=> 'admin',
-	// ],
-	// [
-	// 	'pageName' => 'DDP',
-	// 	'sectionName' => 'ddp',
-	// 	'sectionAttr'	=> 'ddp',
-	// 	'accessType'	=> 'admin',
-	// ],
+		[
+		'pageName' => 'Template DDP',
+		'sectionName' => 'templateDDP',
+		'sectionAttr'	=> 'templateDDP',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'DDP',
+		'sectionName' => 'ddp',
+		'sectionAttr'	=> 'ddp',
+		'accessType'	=> 'admin',
+	],
 	[
 		'pageName' => 'Inventory',
 		'sectionName' => 'inventory',
@@ -1351,7 +1375,11 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
 				$this->errorLog($error_txt_info, 1);
 			}
-			return null;
+			return 
+				[[
+					'id' => 0,
+					'element' => '',
+				]];
         }
     }
 

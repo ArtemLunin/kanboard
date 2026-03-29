@@ -67,35 +67,13 @@ const documentProperties = {
 
 //for project
 const cTemplateGroups = {
-	// 0: "RHSI and Service Delivery Environment",
 	"SDE": 0,
 	"IP Core": 1,
 	"Transport": 3,
 };
 
-//for MOR
-// const fillMorContact = (element, value) => {
-// 	if (element.value.trim() == '') {
-// 		element.value = value;
-// 	}
-// };
 
-// const classMorForOthers = {
-// 	set morProjectContact(value) {
-// 		const elem = document.querySelector('#mor_project_contact');
-// 		this.fillMorContact(elem, value);
-// 	}
-// };
-
-// const classMorForRelease = {
-// 	set morProjectContact(value) {
-// 		const elem = document.querySelector('#mor_project_contact');
-// 		elem.value = value;
-// 		// console.log(value);
-// 	}
-// }
-
-let cTemplate = 0;
+let cTemplate = 0, tTemplate = 0;
 let projectsMode = 0, activityProjectID = 0, activityGroupID = 0, activityInProjects = '0';
 let projectGroupName = '';
 let resetProject = false;
@@ -125,17 +103,21 @@ const sections = [
 	'services',
 	'template',
 	'mop',
-	'ddptemplate',
-	'ddp',
 	'ctemplate',
 	'cmop',
+	'ttemplate',
+	'tmop',
 	'template DIP',
 	'dip',
 	'template cDIP',
 	'cdip',
+	'template tDIP',
+	'tdip',
 	'capacity',
 	'cSDEPingtest',
 	'cSDEBundle',
+	'ddptemplate',
+	'ddp',
 	'inventory',
 	'projects',
 	'mor',
@@ -487,6 +469,7 @@ window.addEventListener('DOMContentLoaded', () => {
         formSave = document.querySelector('#formSave'),
         formAdmin = document.querySelector('#formAdmin'),
         formFields = document.querySelector('#formFields'),
+        formFieldsDDP = document.querySelector('#formFieldsDDP'),
         adminViewElems = document.querySelectorAll('.admin-view'),
         btnNewPrimeElem = document.querySelector('#btnNewPrimeElem'),
         btnEditPrimeElem = document.querySelector('#btnEditPrimeElem'),
@@ -503,6 +486,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		renderDDPDiv = document.querySelector('#render_ddp'),
 		docTitle = document.querySelector('#docTitle'),
         showAll = document.querySelector('#showAll'),
+        showAllDDP = document.querySelector('#showAllDDP'),
 		efcrFields = document.querySelector('#efcrFields'),
 		comboSelect = document.querySelectorAll('.combo-select'),
 		btnsCeilAreaAppend = document.querySelectorAll('.js-ceil-area-append'),
@@ -546,6 +530,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		morTable = formMor.querySelector('#mor_table'),
 		morDateSubmitted = formMor.querySelector('#mor_date'),
 		morAddRow = formMor.querySelector('#js_mor_row_append'),
+		morDelRow = formMor.querySelector('#js_mor_row_remove'),
 		mor_requestor = formMor.querySelector('#mor_requestor');
 		const morInnerBody = document.querySelector('table.mor-inner>tbody'),
 		morForOthers = document.querySelector('#morForOthers'),
@@ -1893,7 +1878,11 @@ window.addEventListener('DOMContentLoaded', () => {
 				showSection === 'dip' || 
 				showSection === 'cmop' ||
 				showSection === 'templatecDIP' ||
+				showSection === 'templatetDIP' ||
+				showSection === 'tmop' ||
+				showSection === 'ttemplate' ||
 				showSection === 'cdip' || 
+				showSection === 'tdip' || 
 				showSection === 'cSDEPingtest' ||
 				showSection === 'cSDEBundle'
 				// showSection === 'projects-info'
@@ -1910,6 +1899,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		clearOldData(showSection);
 
 		cTemplate = 0;
+		tTemplate = 0;
 		projectsMode = 0;
 		formSave.classList.add('d-none');
 
@@ -1959,13 +1949,13 @@ window.addEventListener('DOMContentLoaded', () => {
 				getBooksList();
 				break;
 			case 'template':
-				document.title = 'Template MOP';
+				document.title = 'Template';
 				templateDip = 0;
 				displayMOPElements(true);
 				iniOGPA();
 				break;
 			case 'templateDIP':
-				document.title = 'Template DIP';
+				document.title = 'sZTM Template';
 				templateDip = 1;
 				displayMOPElements(true);
 				iniOGPA();
@@ -1977,16 +1967,31 @@ window.addEventListener('DOMContentLoaded', () => {
 				displayMOPElements(true);
 				iniOGPA();
 				break;
+			case 'ttemplate':
+				document.title = 'tTemplate';
+				templateDip = 0;
+				tTemplate = 1;
+				displayMOPElements(true);
+				iniOGPA();
+				break;
 			case 'templatecDIP':
-				document.title = 'Template cDIP';
+				document.title = 'cZTM Template';
 				templateDip = 1;
 				cTemplate = 2;
+				displayMOPElements(true);
+				iniOGPA();
+				break;
+			case 'templatetDIP':
+				document.title = 'tZTM Template';
+				templateDip = 1;
+				tTemplate = 1;
 				displayMOPElements(true);
 				iniOGPA();
 				break;
 			case 'mop':
 				document.title = 'MOP';
 				docTitle.value = 'Method of Procedure (MOP)';
+				// docTitle.value = 'Zero Touch MOP (ZTM)';
 				templateDip = 0;
 				gCounterMode = "mopCounter";
 				displayMOPElements(false);
@@ -1995,24 +2000,47 @@ window.addEventListener('DOMContentLoaded', () => {
 			case 'cmop':
 				document.title = 'cMOP';
 				docTitle.value = 'Method of Procedure (MOP)';
+				// docTitle.value = 'Zero Touch MOP (ZTM)';
 				templateDip = 0;
 				cTemplate = 1;
 				gCounterMode = "mopCounter";
 				displayMOPElements(false);
 				iniOGPA();
 				break;
+			case 'tmop':
+				document.title = 'tMOP';
+				docTitle.value = 'Method of Procedure (MOP)';
+				// docTitle.value = 'Zero Touch MOP (ZTM)';
+				templateDip = 0;
+				tTemplate = 1;
+				// gCounterMode = "mopCounter";
+				displayMOPElements(false);
+				iniOGPA();
+				break;
 			case 'cdip':
-				document.title = 'cDIP';
-				docTitle.value = 'Design Implementation Procedure (DIP)';
+				document.title = 'cZTM';
+				// docTitle.value = 'Design Implementation Procedure (DIP)';
+				docTitle.value = 'Zero Touch MOP (ZTM)';
 				templateDip = 0;
 				cTemplate = 2;
 				gCounterMode = "mopCounter";
 				displayMOPElements(false);
 				iniOGPA();
 				break;
+			case 'tdip':
+				document.title = 'tZTM';
+				// docTitle.value = 'Design Implementation Procedure (DIP)';
+				docTitle.value = 'Zero Touch MOP (ZTM)';
+				templateDip = 0;
+				tTemplate = 1;
+				// gCounterMode = "mopCounter";
+				displayMOPElements(false);
+				iniOGPA();
+				break;
 			case 'dip':
-				document.title = 'DIP';
-				docTitle.value = 'Design Implementation Procedure (DIP)';
+				document.title = 'sZTM';
+				// docTitle.value = 'Design Implementation Procedure (DIP)';
+				docTitle.value = 'Zero Touch MOP (ZTM)';
 				templateDip = 1;
 				gCounterMode = "dipCounter";
 				displayMOPElements(false);
@@ -2049,11 +2077,13 @@ window.addEventListener('DOMContentLoaded', () => {
 				document.title = 'Template DDP';
 				templateDDP = 1;
 				displayDDPElements(true);
+				iniDDP();
 				break;
 			case 'ddp':
 				document.title = 'DDP';
 				templateDDP = 0;
 				displayDDPElements(false);
+				iniDDP();
 				break;
 			case 'inventory':
 				document.title = 'Inventory';
@@ -2149,12 +2179,32 @@ window.addEventListener('DOMContentLoaded', () => {
 				data.success.answer.rights.forEach(({pageName, sectionAttr, sectionName, accessType}) => {
 					if (pageName !== 'Documentation' && sectionName !== 'main')
 					{
-						if (pageName.toUpperCase() === 'MOP' || pageName.toUpperCase() === 'DIP') {
+						if (pageName.toUpperCase() === 'DDP' || pageName.toUpperCase() === 'MOR') {
 							pageName = pageName.toUpperCase();
-						} else if (pageName === 'Ctemplate') {
+						} else if (pageName.toUpperCase() === 'DIP')  {
+							pageName = 'sZTM';
+						} else if (pageName.toUpperCase() === 'MOP') {
+							pageName = 'MOP';
+						} else if (pageName.toUpperCase() === 'TEMPLATE') {
+							pageName = 'Template';
+						} else if (pageName.toUpperCase() === 'CTEMPLATE') {
 							pageName = 'cTemplate';
-						} else if (pageName === 'Cmop') {
+						} else if (pageName.toUpperCase() === 'CMOP' ) {
 							pageName = 'cMOP';
+						} else if (pageName.toUpperCase() === 'CDIP') {
+							pageName = 'cZTM';
+						} else if (pageName.toUpperCase() === 'TEMPLATE DIP') {
+							pageName = 'sZTM Template';
+						} else if (pageName.toUpperCase() === 'TEMPLATE CDIP') {
+							pageName = 'cZTM Template';
+						} else if (pageName.toUpperCase() === 'TEMPLATE TDIP') {
+							pageName = 'tZTM Template';
+						} else if (pageName.toUpperCase() === 'TDIP') {
+							pageName = 'tZTM';
+						} else if (pageName.toUpperCase() === 'TTEMPLATE') {
+							pageName = 'tTemplate';
+						} else if (pageName.toUpperCase() === 'TMOP') {
+							pageName = 'tMOP';
 						}
 						if (accessType != '') {	
 							rights[sectionName] = accessType;
@@ -4517,15 +4567,6 @@ window.addEventListener('DOMContentLoaded', () => {
 						activity_ready: activity_ready,
 						group_name: activity.group_name
 					});
-					// <div class="project-activity" data-activity_id="${activity.id}" data-project_id="${activity.project_id}" data-group_id="${activity.group_id}" data-ogpa-group="${cTemplateGroups[activity.group_name] ?? 0}">
-					// 	<div class="project-activity-date">${activity_date}</div>
-					// 	<div class="project-activity-graph">
-					// 		<div class="project-activity-line ${activity_status}"></div>
-					// 		<div class="project-activity-circle ${activity_status}"><span>${activity_ready}</span></div>
-					// 	</div>
-					// 	<div>${activity.group_name}</div>
-					// </div>
-					// `;
 					last_activity_status = activity_status;
 					last_activity_ready = activity_ready;
 
@@ -5309,6 +5350,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				// patch for uknown groups in projects
 				formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
 					item.value = projectGroupName;
+					if (tTemplate != 0) {
+						const key = Object.keys(cTemplateGroups).find(k => cTemplateGroups[k] === 3);
+						item.value = key;
+					}
 				});
 				return false;
 			}
@@ -5340,7 +5385,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			selActivity.insertAdjacentHTML('beforeend', `
 				<option value="" selected></option>
 			`);
-			return false;
+			// return false;
 		}
 		if (formSubmit.dataset.projectDownload !== '1') {
 			selActivity.dispatchEvent(new Event('change'));
@@ -5464,7 +5509,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
 			if (cTemplate) {
 				item.value = item.dataset.ctemplate.trim();
-			} else {
+			} else if (tTemplate) {
+				item.value = item.dataset.ttemplate.trim();
+			}
+			else {
 				item.value = item.dataset.default.trim();
 			}
 		});
@@ -5493,7 +5541,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	const iniOGPA = (extends_data = '') => {
 		const body = {
 			method: 'getOGPA',
-			ogpa_group: cTemplate,
+			ogpa_group: getOGPANum(),
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
 			showOGPA(data, extends_data);
@@ -5508,6 +5556,11 @@ window.addEventListener('DOMContentLoaded', () => {
 			showOGPAActivity(data, extends_data);
 		});
 	};
+
+	function getOGPANum() {
+		return (cTemplate == 0) ? ((tTemplate == 1) ? 3 : 0) : cTemplate;
+	}
+
 	const getActivityFields = (activityID) => {
 		resetHardCodeDesign();
 		const body = {
@@ -5581,6 +5634,16 @@ window.addEventListener('DOMContentLoaded', () => {
 		morSelector.dispatchEvent(new Event('change'));
 	};
 
+	const iniDDP = () => {
+		showActivityFieldsDDP();
+	};
+
+	const showActivityFieldsDDP = ()  => {
+		formFieldsDDP.reset();
+		showRenderOnlyElements();
+		showAllDDP.dispatchEvent(new Event('click'));
+	};
+
 	const switchMORTables = (mor_id) => {
 		morInnerBody.textContent = '';
 		switch (mor_id) {
@@ -5621,7 +5684,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const body = {
 			method: method,
 			value: value,
-			ogpa_group: cTemplate,
+			ogpa_group: getOGPANum(),
 		};
 		sendRequest('POST', requestURLTemplate, body).then(callback);
 	};
@@ -5860,7 +5923,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const resetHardCodeDesign = () => {
-		// console.log('resetHardCodeDesign');
 		for (const value of Object.values(hardCodeDesign)) {
 			const classesHide = value.split(',');
 			classesHide.forEach(item => {
@@ -5956,6 +6018,31 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		resetProject = false;
 	});
+	formFieldsDDP.addEventListener('reset', (e) => {
+		const target = e.target;
+		resetMultirows(target);
+		showAllDDP.checked = false;
+	});
+
+	const resetMultirows = (formElement) => 
+	{
+		formElement.querySelectorAll('fieldset').forEach(fieldset => {
+			removeChildElementFromCollection(fieldset, '.multirows[data-clone="1"]');
+			fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
+				ceil.value = 1;
+				fieldset.querySelector(`#${ceil.dataset.id}`).value = "";
+			})
+		});
+	};
+
+	function showRenderOnlyElements () {
+		document.querySelectorAll('.renderOnly').forEach(item => {
+			if (!item.classList.contains('js-hard-code-design')) {
+				setAvailFormElements(item, !!adminEnabled);
+			} else {
+			}
+		});
+	}
 
 	formMor.addEventListener('reset', (e) => {
 		setTimeout(() => {
@@ -5964,6 +6051,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			gProjectNumber = 0;
 			gSiteCode = 0;
 			morForReleaseFlag.value = '0';
+			morDelRow.dataset.trId = '0';
 			morSelector.dispatchEvent(new Event('change'));
 			morDateSubmitted.value = datetimeToCaDate();
 			const tbody = morTable.querySelector('TBODY');
@@ -5980,7 +6068,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (formMor.reportValidity()) {
 			formMor.requestSubmit();
 			const link = document.createElement("a");
-			link.href ="mailto:niw.boms@rci.rogers.com";
+			link.href =`mailto:niw.boms@rci.rogers.com?subject=${morCA.value} - ${morSelector.value}&cc=wirelinedataengineer@rci.rogers.com`;
 			link.click();
 			link.remove();
 		}
@@ -6024,6 +6112,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
+	formFieldsDDP.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		submitRenderForm(target, 0);
+	});
+
 	btnNewPrimeElem.addEventListener('click', (e) => {
 		e.preventDefault();
 		const target = e.target;
@@ -6041,7 +6135,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const body = {
 			method: methodName,
 			value: newPrimeElem.value,
-			ogpa_group: cTemplate,
+			ogpa_group: getOGPANum(),
 			id: id,
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
@@ -6189,21 +6283,23 @@ window.addEventListener('DOMContentLoaded', () => {
 		delElement('delActivity', showOGPAActivity, id);
 	});
 
-	showAll.addEventListener('click', (e) => {
-		if (e.target.checked) {
-			document.querySelectorAll('fieldset.hidden').forEach(item => {
-				if (!item.classList.contains('js-hard-code-design'))
-				{
-					item.classList.remove('hidden');
-					item.classList.add('showned');
-				}
-			});
-		} else {
-			document.querySelectorAll('fieldset.showned').forEach(item => {
-				item.classList.add('hidden');
-				item.classList.remove('showned');
-			});
-		}
+	[showAll, showAllDDP].forEach(element => {
+		element.addEventListener('click', (e) => {
+			if (e.target.checked) {
+				document.querySelectorAll('fieldset.hidden').forEach(item => {
+					if (!item.classList.contains('js-hard-code-design'))
+					{
+						item.classList.remove('hidden');
+						item.classList.add('showned');
+					}
+				});
+			} else {
+				document.querySelectorAll('fieldset.showned').forEach(item => {
+					item.classList.add('hidden');
+					item.classList.remove('showned');
+				});
+			}
+		});
 	});
 
 	// aExport.addEventListener('click', (e) => {
@@ -6434,6 +6530,20 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
+	morDelRow.addEventListener('click', (e) => {
+		let trId = (morDelRow.dataset.trId !== undefined) ? parseInt(morDelRow.dataset.trId, 10) : 0;
+		// if (trId !== 0) {
+			const tbody = morTable.querySelector('TBODY');
+			if (tbody) {
+				const morTRDyn = tbody.querySelector(`.js-mor-tr-dyn[data-tr-id='${trId}']`);
+				if (morTRDyn) {
+					morTRDyn.remove();
+					morDelRow.dataset.trId = 0;
+				}
+			}
+		// }
+	});
+
 	morTable.addEventListener('input', (e) => {
 		const target = e.target;
 		const morTRDyn = target.closest('.js-mor-tr-dyn');
@@ -6494,8 +6604,12 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	morTable.addEventListener('click', (e) => {
-		if (!e.target.classList.contains('js_vendor_part')) {
-			//morPartList.classList.add('d-none');
+		// if (!e.target.classList.contains('js_vendor_part')) {
+		// }
+		const target = e.target;
+		const morTRDyn = target.closest('.js-mor-tr-dyn');
+		if (morTRDyn) {
+			morDelRow.dataset.trId = morTRDyn.dataset.trId
 		}
 	});
 

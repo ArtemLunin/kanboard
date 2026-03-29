@@ -139,4 +139,39 @@ class helperUtils {
 	function isInt($val) {
 		return filter_var($val, FILTER_VALIDATE_INT, ["flags" => FILTER_NULL_ON_FAILURE, "options" => ["min_range" => 1]]) ?? 0;
 	}
+
+	//template methods
+
+	static function addImageToDoc($extTemplateProcessor, $fieldImage) {
+		if (isset($_FILES[$fieldImage['field_name']]) && is_uploaded_file($_FILES[$fieldImage['field_name']]['tmp_name'])) {
+			try {
+				$extTemplateProcessor->setImageValue($fieldImage['field_name'], [
+					'path' => $_FILES[$fieldImage['field_name']]['tmp_name'],
+					'width' => $fieldImage['width'], 
+					'height' => $fieldImage['height'],
+				]);
+			}
+			catch (Exception $e) {
+				$extTemplateProcessor->setValue($fieldImage['field_name'], $fieldImage['noFileMsg']);
+			}
+		} else {
+			$extTemplateProcessor->setValue($fieldImage['field_name'], $fieldImage['noFileMsg']);
+		}
+	}
+
+	static function setSimpleValueToDoc($extTemplateProcessor, $param, $value) {
+		$extTemplateProcessor->setValue($param, htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
+	}
+	static function setArrayValuesToDoc($extTemplateProcessor, $param, $values) {
+		foreach ($values as $val_idx => $val_arr) {
+
+			// $instance = new self(); 
+			// $instance->errorLog(print_r($val_arr, true));
+
+			foreach ($val_arr as $par_name => $par_value) {
+				$values[$val_idx][$par_name] = htmlentities($par_value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8");
+			}
+		}
+		$extTemplateProcessor->cloneRowAndSetValues($param, $values);
+	}
 }

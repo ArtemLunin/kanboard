@@ -554,7 +554,6 @@
 			</section>
 			<section class="section settings">
 				<div class="row">
-					<!-- <div class="col-1 px-0"></div> -->
 					<div class="col-12">
 						<table class="table table-sm table-bordered table-hover table-users">
 							<thead>
@@ -566,17 +565,23 @@
 									<th>Statistics</th>
 									<th>Automator</th>
 									<th>Services</th>
-									<th>Template MOP</th>
+									<th>Template</th>
 									<th>MOP</th>
 									<th>cTemplate</th>
 									<th>cMOP</th>
-									<th>Template DIP</th>
-									<th>DIP</th>
-									<th>Template cDIP</th>
-									<th>cDIP</th>
+									<th>tTemplate</th>
+									<th>tMOP</th>
+									<th>sZTM Template</th>
+									<th>sZTM</th>
+									<th>cZTM Template</th>
+									<th>cZTM</th>
+									<th>tZTM Template</th>
+									<th>tZTM</th>
 									<th>Capacity</th>
 									<th>cSDE Ping Test</th>
 									<th>cSDE Bundle</th>
+									<th>Template DDP</th>
+									<th>DDP</th>
 									<th>Inventory</th>
 									<th>Projects</th>
 									<th>MOR</th>
@@ -628,12 +633,12 @@
 										<option value="admin">admin</option>
 										<option value="user">user</option>
 									</select>
-									<label class="input-group-text-sm mr-1" for="templatePage">Template MOP</label>
+									<label class="input-group-text-sm mr-1" for="templatePage">sTemplate </label>
 									<select class="custom-select-sm mr-2" name="template" id="templatePage" data-selectname="template">
 										<option value=""></option>
 										<option value="admin">admin</option>
 									</select>
-									<label class="input-group-text-sm mr-1" for="mopPage">MOP</label>
+									<label class="input-group-text-sm mr-1" for="mopPage">sMOP</label>
 									<select class="custom-select-sm mr-2" name="mop" id="mopPage" data-selectname="mop">
 										<option value=""></option>
 										<option value="admin">admin</option>
@@ -650,24 +655,46 @@
 										<option value="admin">admin</option>
 										<option value="user">user</option>
 									</select>
-									<label class="input-group-text-sm mr-1" for="templatePageDIP">Template DIP</label>
+									<label class="input-group-text-sm mr-1" for="ttemplatePage">tTemplate</label>
+									<select class="custom-select-sm mr-2" name="ttemplate" id="ttemplatePage" data-selectname="ttemplate">
+										<option value=""></option>
+										<option value="admin">admin</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="tmopPage">tMOP</label>
+									<select class="custom-select-sm mr-2" name="tmop" id="tmopPage" data-selectname="tmop">
+										<option value=""></option>
+										<option value="admin">admin</option>
+										<option value="user">user</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="templatePageDIP">sZTM Template</label>
 									<select class="custom-select-sm mr-2" name="template DIP" id="templatePageDIP" data-selectname="template DIP">
 										<option value=""></option>
 										<option value="admin">admin</option>
 									</select>
-									<label class="input-group-text-sm mr-1" for="dipPage">DIP</label>
+									<label class="input-group-text-sm mr-1" for="dipPage">sZTM</label>
 									<select class="custom-select-sm mr-2" name="dip" id="dipPage" data-selectname="dip">
 										<option value=""></option>
 										<option value="admin">admin</option>
 										<option value="user">user</option>
 									</select>
-									<label class="input-group-text-sm mr-1" for="templatePagecDIP">Template cDIP</label>
+									<label class="input-group-text-sm mr-1" for="templatePagecDIP">cZTM Template</label>
 									<select class="custom-select-sm mr-2" name="template cDIP" id="templatePagecDIP" data-selectname="template cDIP">
 										<option value=""></option>
 										<option value="admin">admin</option>
 									</select>
-									<label class="input-group-text-sm mr-1" for="cdipPage">cDIP</label>
+									<label class="input-group-text-sm mr-1" for="cdipPage">cZTM</label>
 									<select class="custom-select-sm mr-2" name="cdip" id="cdipPage" data-selectname="cdip">
+										<option value=""></option>
+										<option value="admin">admin</option>
+										<option value="user">user</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="templatePagetDIP">tZTM Template</label>
+									<select class="custom-select-sm mr-2" name="template tDIP" id="templatePagetDIP" data-selectname="template tDIP">
+										<option value=""></option>
+										<option value="admin">admin</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="tdipPage">tZTM</label>
+									<select class="custom-select-sm mr-2" name="tdip" id="tdipPage" data-selectname="tdip">
 										<option value=""></option>
 										<option value="admin">admin</option>
 										<option value="user">user</option>
@@ -686,6 +713,17 @@
 									</select>
 									<label class="input-group-text-sm mr-1" for="cSDEBundlePage">CSD Bundle</label>
 									<select class="custom-select-sm mr-2" name="cSDEBundle" id="cSDEBundlePage" data-selectname="cSDEBundle">
+										<option value=""></option>
+										<option value="admin">admin</option>
+										<option value="user">user</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="templatePageDDP">Template DDP</label>
+									<select class="custom-select-sm mr-2" name="template DDP" id="templatePageDDP" data-selectname="template DDP">
+										<option value=""></option>
+										<option value="admin">admin</option>
+									</select>
+									<label class="input-group-text-sm mr-1" for="cddpPage">DDP</label>
+									<select class="custom-select-sm mr-2" name="ddp" id="cddpPage" data-selectname="ddp">
 										<option value=""></option>
 										<option value="admin">admin</option>
 										<option value="user">user</option>
@@ -911,7 +949,8 @@
 									<input type="text" name="actField32" class="mop renderData" data-value_name="actField32" id="actField32" value="Network Management and Ops" readonly>
 								</div>
 								<div class="param param-half">
-									<input type="text" name="actField34" class="mop renderData" data-value_name="actField34" data-ctemplate="IP Core" id="actField34" data-default="RHSI and Service Delivery Environment" readonly>
+									<input type="text" name="actField34" class="mop renderData" data-value_name="actField34" data-ctemplate="IP Core" id="actField34" 
+									data-ttemplate="Transport Operations" data-default="RHSI and Service Delivery Environment" readonly>
 								</div>
 								<div class="param param-50">
 									<label for="primeElement">Prime Element</label>
@@ -1656,14 +1695,28 @@
 			<section class="section mop"></section>
 			<section class="section ctemplate"></section>
 			<section class="section cmop"></section>
+			<section class="section ttemplate"></section>
+			<section class="section tmop"></section>
 			<section class="section templateDIP"></section>
 			<section class="section dip"></section>
 			<section class="section templatecDIP"></section>
 			<section class="section cdip"></section>
+			<section class="section templatetDIP"></section>
+			<section class="section tdip"></section>
 			<section class="section templateDDP">
 				<div class="container" id="render_ddp">
 					<div class="params">
-						<form method="post" action="ddp_render.php" id="ddpFormFields" enctype="multipart/form-data">
+						<form method="post" action="ddp_render.php" id="formFieldsDDP" enctype="multipart/form-data">
+							<fieldset>
+								<legend></legend>
+								<div class="param param-full renderOnly">
+									<label class="switch">
+										<input type="checkbox" id="showAllDDP" checked>
+										<span class="slider round"></span>
+									</label>
+									Show all fields
+								</div>
+							</fieldset>
 							<fieldset id="ddpGroup1" class="">
 								<legend>Project Info</legend>
 								<div class="param param-half">
@@ -1706,6 +1759,90 @@
 								<div class="param param-half">
 									<label for="ddpSpecialist">EE Specialist</label>
 									<input type="text" class="mop" name="ddpSpecialist" id="ddpSpecialist" value="Brandon StCoeur">
+								</div>
+							</fieldset>
+							<fieldset id="ddpGroup2" class="hidden">
+								<legend>HIGH LEVEL DIAGRAM</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<input type="file" class="mop renderOnly" id="diagram_hl" name="diagram_hl" accept="image/png, image/jpeg" />
+							</fieldset>
+							<fieldset id="ddpGroup3" class="hidden">
+								<legend>Site Level Drawing</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<input type="file" class="mop renderOnly" id="diagram_sl" name="diagram_sl" accept="image/png, image/jpeg" />
+							</fieldset>
+							<fieldset id="ddpGroup4" class="hidden">
+								<legend>MATERIALS</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
+								<input type="hidden" name="rows_ceilRcpc" id="rows_ceilRcpc" data-id="ceilRcpc" data-parent="self" value="1">
+								<input type="hidden" name="ceilRcpc[]" id="ceilRcpc">
+								<div class="param-row">
+									<div class="param param-20">
+										<label for="ceil_rcpc_1">RCPC</label>
+									</div>
+									<div class="param param-20">
+										<label for="ceil_vendor_1">Vendor</label>
+									</div>
+									<div class="param param-20">
+										<label for="ceil_part_1">Part</label>
+									</div>
+									<div class="param param-20">
+										<label for="ceil_description_1">Description</label>
+									</div>
+									<div class="param param-20">
+										<label for="ceil_qty_1">Qty</label>
+									</div>
+								</div>
+								<div class="param-row multirows">
+									<div class="param param-20">
+										<input type="text" class="mop" name="ceil_rcpc_1" id="ceil_rcpc_1" data-name="ceilRcpc" data-id="1" value="" required>
+									</div>
+									<div class="param param-20">
+										<input type="text" class="mop" name="ceil_vendor_1" id="ceil_vendor_1" data-name="ceilVendor" data-id="1" value="" required>
+									</div>          
+									<div class="param param-20">
+										<input type="text" class="mop" name="ceil_part_1" id="ceil_part_1" data-name="ceilPart" data-id="1" value="" required>
+									</div>
+									<div class="param param-20">
+										<input type="text" class="mop" name="ceil_description_1" id="ceil_description_1" data-name="ceilDescription" data-id="1" value="">
+									</div>
+									<div class="param param-20">
+										<input type="text" class="mop" name="ceil_qty_1" id="ceil_qty_1" data-name="ceilQty" data-id="1" value="">
+									</div>
+								</div>
+								<div class="param-row ceil-btns">
+									<button class="mop action renderOnly js-ceil-area-append" type="button" title="Add row">+</button>
+									<button class="mop action renderOnly js-ceil-area-remove hidden" type="button" title="Remove row">-</button>
+								</div>
+							</fieldset>
+							<fieldset id="ddpGroup5" class="hidden">
+								<legend>Scope of work</legend>
+								<div class="param param-full">
+									<label for="workDescription">Work Description</label>
+									<textarea class="mop" name="workDescription" id="workDescription" cols="30" rows="5"></textarea>
+									&nbsp;
+								</div>
+								<div class="param">
+									<input type="file" class="mop renderOnly" id="diagram_hw" name="diagram_hw" accept="image/png, image/jpeg" />
+									<!-- <div class="param param-half"> -->
+										<label for="hardwareCaption">Hardware caption</label>
+										<input type="text" class="mop" name="hardwareCaption" id="hardwareCaption" value="">
+									<!-- </div> -->
 								</div>
 							</fieldset>
 							<div class="buttons">
@@ -2111,6 +2248,7 @@
 							<tr>
 								<td colspan="12" class="font-weight-bold center fs-18">C. Part Details 
 									<button class="mor action" id="js_mor_row_append" type="button" title="Add row">+</button>
+									<button class="mor action" id="js_mor_row_remove" type="button" title="Delete row">-</button>
 								</td>
 							</tr>
 							<tr class="thead">
