@@ -1,7 +1,12 @@
 {
     "require": {
         "guzzlehttp/guzzle": "^7.0",
-        "phpoffice/phpspreadsheet": "^1.23"
+        "phpoffice/phpspreadsheet": "^1.23",
+        "krustnic/docx-merge": "^1.0",
+        "jupitern/docx": "^1.0",
+        "tinybutstrong/tinybutstrong": "^3.15",
+        "tinybutstrong/opentbs": "^1.12",
+        "phpoffice/phpword": "^1.4"
     },
     "autoload": {
        "psr-4": {

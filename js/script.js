@@ -72,9 +72,13 @@ const cTemplateGroups = {
 	"Transport": 3,
 };
 
+const projectActivitiesList = [];
+let currentProjectReadyStatus = 0;
+const projectDocsList = [];
+
 
 let cTemplate = 0, tTemplate = 0;
-let projectsMode = 0, activityProjectID = 0, activityGroupID = 0, activityInProjects = '0';
+let projectsMode = 0, activityProjectID = 0, activityGroupID = 0, activityInProjects = '0', projectFileNumber = 0;
 let projectGroupName = '';
 let resetProject = false;
 const subMenuClass = 'children-menu';
@@ -3353,6 +3357,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		projectBriefData.classList.add('d-none');
 		jsBackProjects.classList.add('d-none');
 		activityInProjects = '0';
+		projectActivitiesList.length = 0;
+		currentProjectReadyStatus = 0;
 	};
 
 	btnDevicesSelect.addEventListener('click', () => {
@@ -3468,7 +3474,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	projectsFullList.addEventListener('click', (e) => {
+	projectsFullList.addEventListener('click', async (e) => {
 		e.preventDefault();
 		const target = e.target;
 		const projectActivity = target.closest('.project-activity');
@@ -3495,7 +3501,67 @@ window.addEventListener('DOMContentLoaded', () => {
 			sendRequest('POST', requestURLProject, body).then((data) => {
 				showProjectActivityForm(data, parseInt(projectActivity.dataset.ogpaGroup));
 			});
+			console.log(tTemplate);
 			jsBackProjects.classList.remove('d-none');
+		} else if (projectActivity && projectActivity.dataset.activity_id == '0' && currentProjectReadyStatus == 1) {
+			const currentProject = projectActivity.closest('.project-band');
+			projectBriefData.querySelector('#project-brief-number').value = currentProject.dataset.projectNumber;
+			projectBriefData.querySelector('#project-brief-name').value = currentProject.dataset.projectName;
+			projectBriefData.querySelector('#project-brief-description').value = currentProject.dataset.projectDescription;
+			projectsActivityArea.textContent = '';
+			projectsActivityArea.classList.remove('d-none');
+			projectsActivityArea.append(renderMopDiv);
+			resetHardCodeDesign();
+			displayMOPElements(false);
+			projectFileNumber = 0;
+			projectDocsList.length = 0;
+			const downloadProject = target.closest('[data-download-project]');
+			if (downloadProject) {
+				// projectActivitiesList.forEach(activity => {
+				for (const activity of projectActivitiesList) 
+				{
+					const currentActivityItem = currentProject.querySelector(`.project-activity[data-activity_id='${activity}']`);
+					if (currentActivityItem) {
+						cTemplate = parseInt(currentActivityItem.dataset.ogpaGroup);
+						console.log('ctemplate', cTemplate);
+						const data = await sendRequest('POST', requestURLProject, {
+							method: 'getProjectsActivityByID',
+							id: activity,
+						});
+						// if (data) {
+						// await sendRequest('POST', requestURLProject, {
+						// 	method: 'getProjectsActivityByID',
+						// 	id: activity,
+						// }).then((data) => {
+							if (data && data.success && data.success.answer) {
+								let fieldProps = [];
+								try {
+									fieldProps = JSON.parse(data.success.answer.detail.field_json_props);
+								} catch (e) {
+								}
+								const dataObject = {
+									success: {
+										answer: fieldProps
+									}
+								};
+								cTemplate = getOGPANum();
+								console.log('getProjectsActivityByID', cTemplate);
+								projectGroupName = data.success.answer.detail.group_name;
+								showActivityFields(dataObject);
+								fillCTemplateFields(formAdmin);
+								fillSelectField(selPrimeElement, data.success.answer.detail.element, true);
+								fillSelectField(selActivity, data.success.answer.detail.activity, true);
+								formSubmit.dataset.projectDownload = '1';
+								formSubmit.innerText = 'Download';
+								await submitRenderForm(formFields, activity, 1);
+							}
+						// });
+					}
+				}
+				if (projectFileNumber == projectActivitiesList.length) {
+					console.log(projectDocsList);
+				}
+			}
 		} else if (projectSelected && jsBackProjects.classList.contains('d-none')) {
 			const body = {
 				method: 'getProjectsActivity',
@@ -4531,16 +4597,6 @@ window.addEventListener('DOMContentLoaded', () => {
 						activity_ready: visualActivityReady,
 						group_name: "PM"
 					});
-				// `
-				// 	<div class="project-activity" data-activity_id="0">
-				// 		<div class="project-activity-date">10.10.2025</div>
-				// 		<div class="project-activity-graph">
-				// 			<div class="project-activity-line ready"></div>
-				// 			<div class="project-activity-circle ready"><span>&nbsp;</span></div>
-				// 		</div>
-				// 		<div>PM</div>
-				// 	</div>
-				// `;
 				project.detail.forEach((activity) => {
 					totalActivities++;
 					let activity_status = "waiting";
@@ -4548,6 +4604,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					if (activity.status == 1) {
 						activity_status = "process";
 					} else if (activity.status == 2) {
+						projectActivitiesList.push(activity.id);
 						finishedActivities++;
 						activity_status = "ready";
 						activity_ready = visualActivityReady;
@@ -4571,6 +4628,9 @@ window.addEventListener('DOMContentLoaded', () => {
 					last_activity_ready = activity_ready;
 
 				});
+				if (finishedActivities ==  totalActivities) {
+					currentProjectReadyStatus = 1;
+				}
 				projectActivities += projectActivityGenerate({
 					activity_id: 0,
 					activity_status: (finishedActivities ==  totalActivities) ? "ready" : "waiting",
@@ -4592,7 +4652,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						<div class="project-activity-line ${activity_status}"></div>
 						<div class="project-activity-circle ${activity_status} ${dnone}"><span>${activity_ready}</span></div>
 				</div>
-				<div>${group_name}</div>
+				<div class="group_name" data-download-project>${group_name}</div>
 			</div>
 		`;
 	}
@@ -4638,14 +4698,16 @@ window.addEventListener('DOMContentLoaded', () => {
 					}
 				};
 				showActivityFields(dataObject);
-				selPrimeElement.textContent = '';
-				selPrimeElement.insertAdjacentHTML('beforeend', `
-					<option value="${data.success.answer.detail.element}" selected>${data.success.answer.detail.element}</option>
-				`);
-				selActivity.textContent = '';
-				selActivity.insertAdjacentHTML('beforeend', `
-					<option value="${data.success.answer.detail.activity}" selected>${data.success.answer.detail.activity}</option>
-				`);
+				fillSelectField(selPrimeElement, data.success.answer.detail.element, true);
+				fillSelectField(selActivity, data.success.answer.detail.activity, true);
+				// selPrimeElement.textContent = '';
+				// selPrimeElement.insertAdjacentHTML('beforeend', `
+				// 	<option value="${data.success.answer.detail.element}" selected>${data.success.answer.detail.element}</option>
+				// `);
+				// selActivity.textContent = '';
+				// selActivity.insertAdjacentHTML('beforeend', `
+				// 	<option value="${data.success.answer.detail.activity}" selected>${data.success.answer.detail.activity}</option>
+				// `);
 				if (data.success.answer.detail.status === 2) {
 					formSubmit.dataset.projectDownload = '1';
 					formSubmit.innerText = 'Download';
@@ -5506,16 +5568,17 @@ window.addEventListener('DOMContentLoaded', () => {
 			showHardCodeDesign(hardCodeDesign['Capacity Upgrade'].split(','));
 			// documentProperties
 		}
-		formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
-			if (cTemplate) {
-				item.value = item.dataset.ctemplate.trim();
-			} else if (tTemplate) {
-				item.value = item.dataset.ttemplate.trim();
-			}
-			else {
-				item.value = item.dataset.default.trim();
-			}
-		});
+		fillCTemplateFields(formAdmin);
+		// formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
+		// 	if (cTemplate) {
+		// 		item.value = item.dataset.ctemplate.trim();
+		// 	} else if (tTemplate) {
+		// 		item.value = item.dataset.ttemplate.trim();
+		// 	}
+		// 	else {
+		// 		item.value = item.dataset.default.trim();
+		// 	}
+		// });
 		checkInputsData(`.${inputSelectorClass}`);
 		if (projectsMode == 1) {
 			projectNumberActivity.value = projectBriefData.querySelector('#project-brief-number').value;
@@ -5526,6 +5589,28 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.value = projectGroupName;
 			});
 		}
+	};
+
+	const fillCTemplateFields = (targetForm) => {
+		targetForm.querySelectorAll('[data-ctemplate]').forEach( item => {
+			if (cTemplate) {
+				item.value = item.dataset.ctemplate.trim();
+			} else if (tTemplate) {
+				item.value = item.dataset.ttemplate.trim();
+			}
+			else {
+				item.value = item.dataset.default.trim();
+			}
+		});
+	};
+
+	const fillSelectField = (selectElement, selectValue, needToClear = false) => {
+		if (needToClear) {
+			selectElement.textContent = '';
+		}
+		selectElement.insertAdjacentHTML('beforeend', `
+			<option value="${selectValue}" selected>${selectValue}</option>
+		`);
 	};
 
 	const showChassisTags = (data) => {
@@ -5576,7 +5661,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		const body = {
 			method: 'getProjectsList',
 		};
-		// sendRequest('POST', requestURLProject, body).then(showProjectsList);
 		sendRequest('POST', requestURLProject, body).then(iniGroups);
 	};
 
@@ -5818,7 +5902,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
-	const submitRenderForm = (renderForm, gActivityID) => {
+	const submitRenderForm = async (renderForm, gActivityID, complexDoc = 0) => {
 		formAdmin.querySelectorAll('.renderData').forEach(item => {
 			const added_input = document.createElement("input");
 			added_input.name = item.dataset['value_name'];
@@ -5826,18 +5910,14 @@ window.addEventListener('DOMContentLoaded', () => {
 			added_input.type = "hidden";
 			renderForm.append(added_input);
 		});
-		const added_ActivityID = document.createElement("input");
-		added_ActivityID.name = 'activityID';
-		added_ActivityID.value = gActivityID;
-		added_ActivityID.type = "hidden";
-		const added_counterMode = document.createElement("input");
-		added_counterMode.name = 'counterMode';
-		added_counterMode.value = gCounterMode;
-		added_counterMode.type = "hidden";
-		
-		renderForm.append(added_ActivityID);
-		renderForm.append(added_counterMode);
-		
+
+		document.querySelector('#complexDoc').value = complexDoc;
+		document.querySelector('#projectFileNumber').value = projectFileNumber;
+		document.querySelector('#counterMode').value = gCounterMode;
+		document.querySelector('#activityID').value = gActivityID;
+		document.querySelector('#projectGroupName').value = projectGroupName;
+		document.querySelector('#projectDocsList').value = JSON.stringify(projectDocsList);
+			
 		const rows_object = {}
 		renderForm.querySelectorAll("[data-parent='self']").forEach(item => {
 			const rows_arr = [];
@@ -5861,7 +5941,19 @@ window.addEventListener('DOMContentLoaded', () => {
 			item.closest('fieldset').querySelector(`#${item_name}`).value = JSON.stringify(rows_object[item_name]);
 		});
 		setImpactedNCTList();
-		renderForm.submit();
+		if (complexDoc != 0) {
+			// console.log('prepare to send', projectFileNumber);
+			const formData = new FormData(renderForm);
+			const data = await sendFile('POST', requestURLRender, formData);
+			if (data && data.success && data.success.answer) {
+				projectFileNumber = parseInt(data.success.answer.projectFileNumber);
+				projectDocsList.push(data.success.answer.storedFile);
+				// console.log('sendFile', projectFileNumber);
+			}
+			return data;
+		} else {
+			renderForm.submit();
+		}
 		formSubmit.classList.remove('edit');
 	};
 
@@ -5998,6 +6090,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	formFields.addEventListener('reset', (e) => {
 		const target = e.target;
+		console.log('resetting');
 		target.querySelectorAll('fieldset').forEach(fieldset => {
 			removeChildElementFromCollection(fieldset, '.multirows[data-clone="1"]');
 			fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
@@ -6115,7 +6208,12 @@ window.addEventListener('DOMContentLoaded', () => {
 	formFieldsDDP.addEventListener('submit', (e) => {
 		e.preventDefault();
 		const target = e.target;
-		submitRenderForm(target, 0);
+		if (adminEnabled) {
+			submitAdminForm(target, 100);
+		} else {
+			submitRenderForm(target, 0);
+			
+		}
 	});
 
 	btnNewPrimeElem.addEventListener('click', (e) => {

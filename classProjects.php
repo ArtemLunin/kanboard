@@ -230,6 +230,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
         if (count($activity_res["detail"]) > 0) {
             $activity_res["detail"]["group_name"] = $this->getGroupName($activity_res["detail"]["group_id"]);
         }
+
         return $activity_res;
     }
     function getProjectsActivityAll() {

@@ -2208,6 +2208,20 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		}
 	}
 
+	function storeDocFile($tmpFileName, $resultFileName, $activity, $projectGroupName) {
+		$fileName = $projectGroupName . '_' . $resultFileName;
+		if (!copy($tmpFileName, self::PATHEXPORTFILE .'/' . $fileName)) {
+			return false;
+		}
+		// $exportFile = fopen($fileName, 'w');
+		// if (!$exportFile) {
+		// 	return false;
+		// }
+		// fwrite($exportFile, $tmpFileName);
+		// fclose($exportFile);
+		return $fileName;
+	}
+
 	function getInventory() {
 		if ($this->pdo) {
 			$dataset = [];

@@ -27,6 +27,9 @@ $efcrOutput = [];
 $ercfProcess = [];
 $activityID = 0;
 $counterMode = 0;
+$complexDoc = 0;
+$projectFileNumber = 0;
+$projectGroupName = '';
 
 $dgw_file = '';
 $conf_handle = null;
@@ -87,6 +90,18 @@ foreach ($_POST as $param => $value) {
     }
     if ($param === 'counterMode') {
         $counterMode = $value;
+        continue;
+    }
+    if ($param === 'complexDoc') {
+        $complexDoc = (int)$value;
+        continue;
+    }
+    if ($param === 'projectFileNumber') {
+        $projectFileNumber = (int)$value;
+        continue;
+    }
+    if ($param === 'projectGroupName') {
+        $projectGroupName = $value;
         continue;
     }
     if (is_array($value)) {
@@ -298,6 +313,22 @@ if ($implFile != false) {
 }
 $sourceZip->close();
 
+
+if ($complexDoc != 0) {
+    header('Content-type: application/json');
+    if (($fileNameDocx = $db_object->storeDocFile($filename, $resultFileName, $activityID, $projectGroupName)) != false) {
+        echo json_encode(['success' => [
+                'answer' => [
+                    'storedFile' => $fileNameDocx,
+                    'projectFileNumber' => $projectFileNumber + 1,
+                ]
+            ]
+        ]);
+    } else {
+        echo json_encode(['success' => false]);
+    }
+    exit;
+}
 if ($exportDGWConfig !== false) {
     header("Content-Type: text/plain; charset=utf-8");
     header("Content-Disposition: attachment; filename=dgw_config.txt");
