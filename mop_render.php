@@ -3,6 +3,8 @@ require 'vendor/autoload.php';
 require_once 'db_conf.php';
 require_once 'classDatabase.php';
 
+use DocxMerge\DocxMerge;
+// use Jupitern\Docx;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $db_object = new mySQLDatabaseUtils\databaseUtilsMOP();
@@ -30,6 +32,8 @@ $counterMode = 0;
 $complexDoc = 0;
 $projectFileNumber = 0;
 $projectGroupName = '';
+$projectActivityCount = 0;
+$projectDocsList = null;
 
 $dgw_file = '';
 $conf_handle = null;
@@ -102,6 +106,14 @@ foreach ($_POST as $param => $value) {
     }
     if ($param === 'projectGroupName') {
         $projectGroupName = $value;
+        continue;
+    }
+    if ($param === 'projectActivityCount') {
+        $projectActivityCount = $value;
+        continue;
+    }
+    if ($param === 'projectDocsList') {
+        $projectDocsList =  json_decode($value, true);
         continue;
     }
     if (is_array($value)) {
@@ -314,19 +326,102 @@ if ($implFile != false) {
 $sourceZip->close();
 
 
-if ($complexDoc != 0) {
+if ($complexDoc == 1) {
     header('Content-type: application/json');
     if (($fileNameDocx = $db_object->storeDocFile($filename, $resultFileName, $activityID, $projectGroupName)) != false) {
-        echo json_encode(['success' => [
-                'answer' => [
-                    'storedFile' => $fileNameDocx,
-                    'projectFileNumber' => $projectFileNumber + 1,
+
+        // if ($projectFileNumber == $projectActivityCount) 
+        // {
+        //     if ($projectDocsList != null) {
+        //         array_push($projectDocsList, $fileNameDocx);
+        //         $db_object->errorLog(print_r($projectDocsList, true));
+        //         header('Content-type: application/json');
+        //         echo json_encode(['success' => [
+        //                 'answer' => [
+        //                     'files' => $projectDocsList,
+        //                 ]
+        //             ]
+        //         ]);
+        //         exit;
+        //         // $outDocFile = tempnam(sys_get_temp_dir(), 'docx');
+        //         // array_walk($projectDocsList, function (&$file_name) {
+		// 		// 	$file_name = 'temp/' . $file_name;
+		// 		// });
+        //         // $dm = new DocxMerge();
+        //         // $dm->merge($projectDocsList, $outDocFile);
+
+        //         $dm = new DocxMerge();
+        //         $dm->merge( [
+        //             "temp/doc_135.docx",
+        //             "temp/doc_136.docx"
+        //         ], "temp/result.docx" );
+
+        //         header("Content-Type: application/vnd.ms-word; charset=utf-8");
+        //         header("Content-Disposition: attachment; filename="."compDoc.docx");
+        //         header("Expires: 0");
+        //         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+        //         header("Cache-Control: private", false);
+        //         $handle = fopen("temp/result.docx", "r");
+        //         $contents = fread($handle, filesize("temp/result.docx"));
+        //         echo $contents;
+        //         exit;
+        //     } else {
+        //         header('Content-type: application/json');
+        //         echo json_encode(['success' => [
+        //                 'answer' => [
+        //                     'error' => 'bad list files',
+        //                 ]
+        //             ]
+        //         ]);
+        //         exit;
+        //     }
+        // } else {
+            
+            echo json_encode(['success' => [
+                    'answer' => [
+                        'storedFile' => $fileNameDocx,
+                        'projectFileNumber' => $projectFileNumber + 1,
+                    ]
                 ]
-            ]
-        ]);
+            ]);
+        // }
     } else {
         echo json_encode(['success' => false]);
     }
+    exit;
+}
+if ($complexDoc == 2) {
+    $outDocFile = "temp/result.docx";
+    array_walk($projectDocsList, function (&$file_name) {
+        $file_name = 'temp/' . $file_name;
+    });
+
+    $docsListWithBlankPage = [];
+    foreach ($projectDocsList as $key => $value) {
+        $docsListWithBlankPage[] = $value;
+        if ($key < count($projectDocsList) - 1) {
+            $docsListWithBlankPage[] = 'template/mop_blank.docx';
+        }
+    }
+    $dm = new DocxMerge();
+    $result = $dm->merge($docsListWithBlankPage, $outDocFile);
+
+    // $docxMerge = \Jupitern\Docx\DocxMerge::instance()
+	// ->addFiles($projectDocsList)
+	// ->save($outDocFile, true);
+
+    header("Content-Type: application/vnd.ms-word; charset=utf-8");
+    header("Content-Disposition: attachment; filename=".$resultFileName);
+    header("Expires: 0");
+    header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+    header("Cache-Control: private", false);
+    $handle = fopen($outDocFile, "r");
+    $contents = fread($handle, filesize($outDocFile));
+    echo $contents;
+    foreach ($projectDocsList as $file_) {
+        unlink($file_);
+    }
+    unlink($outDocFile);
     exit;
 }
 if ($exportDGWConfig !== false) {

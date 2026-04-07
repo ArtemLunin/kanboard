@@ -2209,7 +2209,12 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 	}
 
 	function storeDocFile($tmpFileName, $resultFileName, $activity, $projectGroupName) {
-		$fileName = $projectGroupName . '_' . $resultFileName;
+		function sanitize_filename($filename) {
+			$forbidden = ["/", "\\", "?", "%", "*", ":", "|", '"', "<", ">"];
+			return str_replace($forbidden, '-', $filename);
+		}
+		// $fileName = $projectGroupName . ' ' . $resultFileName;
+		$fileName = sanitize_filename($projectGroupName . ' ' . $resultFileName); 
 		if (!copy($tmpFileName, self::PATHEXPORTFILE .'/' . $fileName)) {
 			return false;
 		}
