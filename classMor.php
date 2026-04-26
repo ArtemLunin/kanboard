@@ -24,6 +24,12 @@ class MORUtils extends \helperUtils\helperUtils {
                 "id", "supplier_part", "rcpc", "supplier", "descr"
         ]
     ];
+    private $tMOR_fields = [
+          "tableName" => "mor_fields",
+          "fields" => [
+            "id", "group_id", "field_json_props"
+          ]
+    ];
     private $userID = 0;
     private $userName = '';
     private $root_access = false;
@@ -95,5 +101,8 @@ class MORUtils extends \helperUtils\helperUtils {
                 break;
         }
         return $this->db_object_project->selectObjectFromTable($tableName, [], $tableFields, []);
+    }
+    function getMORUserGroups() {
+        return ["groups" => $this->db_object_project->getMORUserGroups($this->userName)];
     }
 }

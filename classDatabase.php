@@ -1369,6 +1369,9 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 							'element' => $result['element'],
 						];
 					}
+				} elseif ($ogpa_group == '100') {
+					// only for DDP
+					return $this->addPrimeElement('DDP', $ogpa_group);
 				}
 				return $ogpa;
 			} catch (Throwable $e) {
@@ -1557,7 +1560,6 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
         $fields_str = rtrim($fields_str, ', ');
         $filtered_arr = $this->createFilterDB($tableName, $filters, "AND");
         $sql_upd = "UPDATE `" .$tableName. "` SET " . $fields_str . " WHERE " . $filtered_arr['filter'];
-		// $this->errorLog(print_r(array_merge($values_arr, $filtered_arr['params']), true));
     }
 	function runInsertSQL($tableName, $setFields) {
         $fields_str = "";
@@ -1676,6 +1678,22 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 			return $table_res[0]['id'];
 		}
 		return 0;
+	}
+	function getMORUserGroups($userName) {
+		$groupsList = [];
+		if ($table_res = $this->getSQL("SELECT `id`, `name`, `users` FROM `groups`", [])) {
+			foreach ($table_res as $result)
+			{
+				$usersList = json_decode($result['users'], true);
+				if (in_array($userName, $usersList) || $userName == SUPER_USER) {
+					$groupsList[] = [
+						'id' => $result['id'],
+						'group' => $result['name']
+					];
+				}
+			}
+		}
+		return $groupsList;
 	}
 
 	function getOwnerProjectID($projectID) {

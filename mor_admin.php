@@ -34,7 +34,12 @@ $morType = $_REQUEST['morType'] ?? 0;
 $morForReleaseFlag = $_REQUEST['morForReleaseFlag'] ?? 0;
 $env = $paramJSON['env'] ?? $_REQUEST['env'] ?? 0;
 $value = trim($paramJSON['value'] ?? '');
+$id = $paramJSON['id'] ?? 0;
 $number = trim($paramJSON['number'] ?? '');
+// $saveMOR = isset($_REQUEST['saveMOR']) ? 1 : 0;
+// $submitMOR = (isset($_REQUEST['submitMOR']) && $saveMOR === 0) ? 1 : 0;
+$submitMOR = isset($_REQUEST['submitMOR']) ? 1 : 0;
+// $morGroupID = isset($_REQUEST['morGroupID']) ? (int)$_REQUEST['morGroupID'] : 0;
 
 $mor_object = new myMORUtils\MORUtils();
 if (!isset($_SESSION['logged_user'])) {
@@ -91,11 +96,16 @@ if ($method !== 0)
                 $param_error_msg['answer'] = $mor_object->loadDataSite($rows);
             }
         }
-    }
+    } elseif ($method === 'getMORUserGroups') {
+        $param_error_msg['answer'] = $mor_object->getMORUserGroups();
+    } elseif ($method == 'saveMORData') {
+        $mor_object->errorLog(print_r(json_decode($value, true), true));
+        $param_error_msg['answer'] = 'save mor data';
+    } 
     $out_res = ['success' => $param_error_msg];
     header('Content-type: application/json');
     echo json_encode($out_res);
-} elseif (isset($_REQUEST['submitMOR'])) {
+} elseif ($submitMOR) {
     $filename = tempnam(sys_get_temp_dir(), 'xlsx');
     $spreadsheet = IOFactory::load('template/MOR_template.xlsx');
     if ($morForReleaseFlag) {

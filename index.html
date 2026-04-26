@@ -769,18 +769,6 @@
 								<button type="reset" class="btn btn-sm btn-warning mr-2" id="deleteUserGroup">Delete</button>
 							</div>
 						</div>
-						<!-- <div class="uploads-mor my-2 p-2 border">
-							<h5>Upload MOR Excel Tables</h5>
-							<form id="uploadMORLoadData" action="#" method="POST" enctype="multipart/form-data">
-								<input type="hidden" id="morType" name="morType">
-								<input type="file" class="file-input-hidden" id="loadExcelCA" name="file" accept=".xlsx" data-mor-type="ca">
-								<input type="file" class="file-input-hidden" id="loadExcelRCPC" name="file" accept=".xlsx" data-mor-type="rcpc">
-								<input type="file" class="file-input-hidden" id="loadExcelSite" name="file" accept=".xlsx" data-mor-type="site">
-								<label for="loadExcelCA" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">CA</label>
-								<label for="loadExcelRCPC" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">RCPC</label>
-								<label for="loadExcelSite" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">Site</label>
-							</form>
-						</div> -->
 						<form action="#" method="POST" id="cache_form">
 							<button class="btn btn-primary btn-sm" type="submit">Setup Cache</button>
 							<span class="bg-success d-none">Cache initialized</span>
@@ -950,7 +938,8 @@
 								</div>
 								<div class="param param-half">
 									<input type="text" name="actField34" class="mop renderData" data-value_name="actField34" data-ctemplate="IP Core" id="actField34" 
-									data-ttemplate="Transport Operations" data-default="RHSI and Service Delivery Environment" readonly>
+									data-ttemplate="Transport Operations" 
+									data-ddptemplate="RHSI and Service Delivery Environment" data-default="RHSI and Service Delivery Environment" readonly>
 								</div>
 								<div class="param param-50">
 									<label for="primeElement">Prime Element</label>
@@ -970,7 +959,7 @@
 									<input type="text" class="mop admin-view ogpa-new hidden" name="newPrimeElement" id="newPrimeElement" value="">
 									<button type="button" class="mop admin-view hidden" id="btnNewPrimeElem" data-type="new">Add new</button>
 								</div>
-								<div class="param param-50">
+								<div class="param param-50 selectActivity">
 									<label for="activity">Activity</label>
 									<div>
 										<input type="hidden" name="actField37" class="mop renderData" data-value_name="actField37" id="actField37" value="Activity" readonly>
@@ -978,15 +967,15 @@
 											<option value="null" selected>Not selected</option>
 										</select>
 										<button type="button" class="mop action admin-view hidden" id="btnDelActivity" title="Delete">-</button>
-										<button type="button" class="mop action admin-view hidden" id="btnEditActivity" data-elem_name_id="newActivity"
+										<button type="button" class="mop action admin-view hidden js-btnEditActivity" id="btnEditActivity" data-elem_name_id="newActivity"
 										data-btn_new_id="btnNewActivity" title="Rename">
 											<span class="material-symbols-outlined" style="font-size: 14px;">
 											edit_square
 											</span>
 										</button>
 									</div>
-									<input type="text" class="mop admin-view ogpa-new hidden" name="newActivity" id="newActivity" value="">
-									<button type="button" class="mop admin-view hidden" id="btnNewActivity">Add new</button>
+									<input type="text" class="mop admin-view ogpa-new hidden js-newActivity" name="newActivity" id="newActivity" value="">
+									<button type="button" class="mop admin-view hidden js-btnNewActivity" id="btnNewActivity">Add new</button>
 								</div>
 							</fieldset>
 						</form>
@@ -1714,18 +1703,73 @@
 			<section class="section templateDDP">
 				<div class="container" id="render_ddp">
 					<div class="params">
-						<form method="post" action="ddp_render.php" id="formFieldsDDP" enctype="multipart/form-data">
+						<form action="" method="POST" id="formAdminDDP" enctype="multipart/form-data">
 							<fieldset>
 								<legend></legend>
 								<div class="param param-full renderOnly">
 									<label class="switch">
-										<input type="checkbox" id="showAllDDP" checked>
+										<input type="checkbox" id="showAllDDP">
 										<span class="slider round"></span>
 									</label>
 									Show all fields
 								</div>
+								<!-- <div class="param param-half">
+									<input type="text" name="actField31" class="mop renderData text" data-value_name="actField31" id="actField31" value="Organization" readonly>
+								</div> -->
+								<div class="param param-50">
+									<input type="text" name="actField101" class="mop renderData text" data-value_name="actField101" id="actField101" value="Group" readonly>
+									<input type="text" name="actField102" class="mop renderData" data-value_name="actField102" data-ctemplate="IP Core" id="actField102" 
+									data-ttemplate="Transport Operations" 
+									data-ddptemplate="RHSI and Service Delivery Environment" data-default="RHSI and Service Delivery Environment" readonly>
+								</div>
+								<div class="param param-50 selectActivity">
+									<label for="activity">Activity</label>
+									<div>
+										<input type="hidden" name="actField103" class="mop renderData" data-value_name="actField103" id="actField103" value="Activity" readonly>
+										<select class="mop select-btns renderData ogpa-new" name="activityDDP" id="activityDDP" data-value_name="actField104">
+											<option value="null" selected>Not selected</option>
+										</select>
+										<button type="button" class="mop action admin-view hidden" id="btnDelActivityDDP" title="Delete">-</button>
+										<button type="button" class="mop action admin-view hidden js-btnEditActivity" id="btnEditActivityDDP" data-elem_name_id="newActivityDDP"
+										data-btn_new_id="btnNewActivityDDP" title="Rename">
+											<span class="material-symbols-outlined" style="font-size: 14px;">
+											edit_square
+											</span>
+										</button>
+									</div>
+									<input type="text" class="mop admin-view ogpa-new hidden js-newActivity" name="newActivityDDP" id="newActivityDDP" value="">
+									<button type="button" class="mop admin-view hidden js-btnNewActivity" id="btnNewActivityDDP">Add new</button>
+								</div>
+								<!-- <div class="param param-half">
+									<input type="text" name="actField32" class="mop renderData" data-value_name="actField32" id="actField32" value="Network Management and Ops" readonly>
+								</div> -->
+								<!-- <div class="param param-50">
+									<input type="text" name="actField102" class="mop renderData" data-value_name="actField102" data-ctemplate="IP Core" id="actField102" 
+									data-ttemplate="Transport Operations" 
+									data-ddptemplate="RHSI and Service Delivery Environment" data-default="RHSI and Service Delivery Environment" readonly>
+								</div> -->
+								<!-- <div class="param param-50">
+									<label for="primeElement">Prime Element</label>
+									<div>
+										<input type="hidden" name="actField35" class="mop renderData" data-value_name="actField35" id="actField35" value="Prime Element" readonly>
+										<select class="mop select-btns renderData ogpa-new" name="primeElement" id="primeElement" data-value_name="actField36">
+											<option value="" selected></option>
+										</select>
+										<button type="button" class="mop action admin-view hidden" id="btnDelPrimeElem" title="Delete">-</button>
+										<button type="button" class="mop action admin-view hidden" id="btnEditPrimeElem" data-elem_name_id="newPrimeElement"
+										data-btn_new_id="btnNewPrimeElem" title="Rename">
+											<span class="material-symbols-outlined" style="font-size: 14px;">
+											edit_square
+											</span>
+										</button>
+									</div>
+									<input type="text" class="mop admin-view ogpa-new hidden" name="newPrimeElement" id="newPrimeElement" value="">
+									<button type="button" class="mop admin-view hidden" id="btnNewPrimeElem" data-type="new">Add new</button>
+								</div> -->
 							</fieldset>
-							<fieldset id="ddpGroup1" class="">
+						</form>
+						<form method="post" action="ddp_render.php" id="formFieldsDDP" enctype="multipart/form-data">
+							<fieldset id="group101" class="">
 								<legend>Project Info</legend>
 								<div class="param param-half">
 									<label for="ddpProjectNumber">Project Number/revision</label>
@@ -1769,7 +1813,7 @@
 									<input type="text" class="mop" name="ddpSpecialist" id="ddpSpecialist" value="Brandon StCoeur">
 								</div>
 							</fieldset>
-							<fieldset id="ddpGroup2" class="hidden">
+							<fieldset id="group102" class="hidden">
 								<legend>HIGH LEVEL DIAGRAM</legend>
 								<div class="param param-full admin-view hidden">
 									<label class="switch">
@@ -1779,7 +1823,7 @@
 								</div>
 								<input type="file" class="mop renderOnly" id="diagram_hl" name="diagram_hl" accept="image/png, image/jpeg" />
 							</fieldset>
-							<fieldset id="ddpGroup3" class="hidden">
+							<fieldset id="group103" class="hidden">
 								<legend>Site Level Drawing</legend>
 								<div class="param param-full admin-view hidden">
 									<label class="switch">
@@ -1789,7 +1833,7 @@
 								</div>
 								<input type="file" class="mop renderOnly" id="diagram_sl" name="diagram_sl" accept="image/png, image/jpeg" />
 							</fieldset>
-							<fieldset id="ddpGroup4" class="hidden">
+							<fieldset id="group104" class="hidden">
 								<legend>MATERIALS</legend>
 								<div class="param param-full admin-view hidden">
 									<label class="switch">
@@ -1838,21 +1882,63 @@
 									<button class="mop action renderOnly js-ceil-area-remove hidden" type="button" title="Remove row">-</button>
 								</div>
 							</fieldset>
-							<fieldset id="ddpGroup5" class="hidden">
+							<fieldset id="group105" class="hidden">
 								<legend>Scope of work</legend>
+								<div class="param param-full admin-view hidden">
+									<label class="switch">
+										<input type="checkbox">
+										<span class="slider round"></span>
+									</label>
+								</div>
 								<div class="param param-full">
 									<label for="workDescription">Work Description</label>
 									<textarea class="mop" name="workDescription" id="workDescription" cols="30" rows="5"></textarea>
 									&nbsp;
 								</div>
-								<div class="param">
+								<div class="param renderOnly">
+									<label for="diagram_hw">Diagram Hardware</label>
 									<input type="file" class="mop renderOnly" id="diagram_hw" name="diagram_hw" accept="image/png, image/jpeg" />
-									<!-- <div class="param param-half"> -->
-										<label for="hardwareCaption">Hardware caption</label>
-										<input type="text" class="mop" name="hardwareCaption" id="hardwareCaption" value="">
-									<!-- </div> -->
+									<label for="hardwareCaption">Hardware caption</label>
+									<input type="text" class="mop" name="hardwareCaption" id="hardwareCaption" value="">
+								</div>
+								<div class="param param-full">
+									<label for="workDescription">Cable Run List</label>
+									<textarea class="mop" name="cableRunList" id="cableRunList" cols="30" rows="5"></textarea>
+								</div>
+								<div class="param param-full renderOnly">
+									<label for="rack_layout">Rack Layout (docx)</label>
+									<input type="file" class="mop renderOnly" id="rack_layout" name="rack_layout[]" multiple accept=".docx" />
+								</div>
+								<div class="param param-full renderOnly">
+									<label for="floor_plan">Floor Plan (docx)</label>
+									<input type="file" class="mop renderOnly" id="floor_plan" name="floor_plan[]" accept=".docx" />
+								</div>
+								<div class="param param-full">
+									<label for="powerReq">Power Requirements</label>
+									<textarea class="mop" name="powerReq" id="powerReq" cols="30" rows="5"></textarea>
+								</div>
+								<div class="param param-full">
+									<label for="powerOnReq">Power on/Turn up</label>
+									<textarea class="mop" name="powerOnReq" id="powerOnReq" cols="30" rows="5"></textarea>
+								</div>
+								<div class="param param-full">
+									<label for="networkManagement">Network Management</label>
+									<textarea class="mop" name="networkManagement" id="networkManagement" cols="30" rows="5"></textarea>
+								</div>
+								<div class="param param-full">
+									<label for="testAcceptance">Test and Acceptance/Commissioning</label>
+									<textarea class="mop" name="testAcceptance" id="testAcceptance" cols="30" rows="5"></textarea>
+								</div>
+								<div class="param param-full renderOnly">
+									Supporting Documentation<br>
+									<label for="edsFile">EDS (docx)</label>
+									<input type="file" class="mop renderOnly" id="edsFile" name="edsFile[]" accept=".docx" />
+									<label for="basicMopFile">Basic MOP (docx)</label>
+									<input type="file" class="mop renderOnly" id="basicMopFile" name="basicMopFile[]" accept=".docx" />
 								</div>
 							</fieldset>
+							<!-- <fieldset id="group106" class="hidden">							
+							</fieldset> -->
 							<div class="buttons">
 								<button class="mop" type="submit" id="ddpFormSubmit">Render</button>
 								<button class="mop d-none" type="button" id="ddpFormSave">Save</button>
@@ -2111,8 +2197,14 @@
 					</form>
 					<div class="mor-uploads-status"></div>
 				</div>
+				<div class="groups-mor my-2 p-2 border">
+					Group:
+					<select name="morGroup" id="morGroup" required></select>
+				</div>
 				<form method="POST" action="mor_admin.php" id="formMor">
 					<input type="hidden" name="submitMOR">
+					<input type="hidden" name="saveMOR" id="saveMOR" disabled>
+					<input type="hidden" name="morGroupID" id="morGroupID" disabled>
 					<input type="hidden" name="morForReleaseFlag" value="0" id="morForReleaseFlag">
 					<table class="table table-sm table-bordered mor">
 						<thead class="">
@@ -2278,6 +2370,7 @@
 					<div class="buttons">
 						<button class="mop" type="submit" id="morSubmit">Create</button>
 						<button class="mop" type="button" id="morSend">Send</button>
+						<button class="mop btn-info" type="button" id="morSave">Save</button>
 						<button class="mop" type="reset" id="morReset">Reset</button>
 					</div>
 				</form>
@@ -2453,9 +2546,6 @@
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-					<!-- <button type="button" class="btn btn-warning" id="buttonTemplateDelete"
-						title="Delete selected">Delete</button> -->
-					<!-- <button type="button" class="btn btn-primary" id="buttonTemplateSelect">Save changes</button> -->
 				</div>
 			</div>
 		</div>

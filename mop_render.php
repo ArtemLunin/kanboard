@@ -403,6 +403,18 @@ if ($complexDoc == 2) {
             $docsListWithBlankPage[] = 'template/mop_blank.docx';
         }
     }
+    //add mor file (test)
+    if (true) {
+        $filename_mor = tempnam(sys_get_temp_dir(), 'docx');
+        copy('temp/mor_blank.docx', $filename_mor);
+        $sourceZip = new \ZipArchive();
+        $sourceZip->open($filename_mor);
+        $sourceZip->deleteName('word/embeddings/oleObject1.xlsx');
+        $sourceZip->addFile('temp/impl.xlsx', 'word/embeddings/oleObject1.xlsx');
+        $sourceZip->close();
+        $docsListWithBlankPage[] = $filename_mor;
+    }
+
     $dm = new DocxMerge();
     $result = $dm->merge($docsListWithBlankPage, $outDocFile);
 

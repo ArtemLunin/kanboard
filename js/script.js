@@ -18,8 +18,9 @@ let gPrimeElementID = 0,
     totalInputs = 0,
     changedInputs = 0,
 	templateDip = 0,
-	templateDDP = 0;
+	templateDDP = 0,
 	// templateMop = 0;
+	ogpaDDP = 100;
 
 const hardCodeDesign = {
 	'Add/Change/Remove Roaming': 'js-eFCR-view',
@@ -77,7 +78,7 @@ const projectActivitiesList = [];
 const projectDocsList = [];
 
 
-let cTemplate = 0, tTemplate = 0;
+let cTemplate = 0, tTemplate = 0, ddpTemplate = 0;
 let projectsMode = 0, activityProjectID = 0, activityGroupID = 0, activityInProjects = '0', projectFileNumber = 0;
 let projectGroupName = '';
 let resetProject = false;
@@ -472,6 +473,7 @@ window.addEventListener('DOMContentLoaded', () => {
         ddpFormSubmit = document.querySelector('#ddpFormSubmit'),
         formSave = document.querySelector('#formSave'),
         formAdmin = document.querySelector('#formAdmin'),
+        formAdminDDP = document.querySelector('#formAdminDDP'),
         formFields = document.querySelector('#formFields'),
         formFieldsDDP = document.querySelector('#formFieldsDDP'),
         adminViewElems = document.querySelectorAll('.admin-view'),
@@ -479,11 +481,16 @@ window.addEventListener('DOMContentLoaded', () => {
         btnEditPrimeElem = document.querySelector('#btnEditPrimeElem'),
         btnDelPrimeElement = document.querySelector('#btnDelPrimeElem'),
         btnNewActivity = document.querySelector('#btnNewActivity'),
+        btnNewActivityDDP = document.querySelector('#btnNewActivityDDP'),
         btnEditActivity = document.querySelector('#btnEditActivity'),
+        btnEditActivityDDP = document.querySelector('#btnEditActivityDDP'),
         btnDelActivity = document.querySelector('#btnDelActivity'),
+        btnDelActivityDDP = document.querySelector('#btnDelActivityDDP'),
         newPrimeElem = document.querySelector('#newPrimeElement'),
         newActivity = document.querySelector('#newActivity'),
+        newActivityDDP = document.querySelector('#newActivityDDP'),
         selActivity = document.querySelector('#activity'),
+        selActivityDDP = document.querySelector('#activityDDP'),
         selPrimeElement = document.querySelector('#primeElement'),
         divCounter = document.querySelector('.counter-pb'),
 		renderMopDiv = document.querySelector('#render_mop'),
@@ -526,6 +533,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	const formMor = document.querySelector('#formMor'),
 		morSite = formMor.querySelector('#mor_site'),
 		morSend = formMor.querySelector('#morSend'),
+		morSave = formMor.querySelector('#morSave'),
+		saveMor = formMor.querySelector('#saveMOR'),
+		morGroupID = document.querySelector('#morGroupID'),
 		morCA = formMor.querySelector('#mor_ca'),
 		morCAList = document.querySelector('.mor-ca-list'),
 		mor_ProjectName = formMor.querySelector('#mor_project_name'),
@@ -535,7 +545,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		morDateSubmitted = formMor.querySelector('#mor_date'),
 		morAddRow = formMor.querySelector('#js_mor_row_append'),
 		morDelRow = formMor.querySelector('#js_mor_row_remove'),
-		mor_requestor = formMor.querySelector('#mor_requestor');
+		mor_requestor = formMor.querySelector('#mor_requestor'),
+		selMorGroup = document.querySelector('#morGroup');
 		const morInnerBody = document.querySelector('table.mor-inner>tbody'),
 		morForOthers = document.querySelector('#morForOthers'),
 		morForRelease = document.querySelector('#morForRelease'),
@@ -552,6 +563,8 @@ window.addEventListener('DOMContentLoaded', () => {
 	const bundleLink = document.querySelector('.bundle-link');
 
 	btnNewActivity.dataset.prime_elem_id = 0;
+	btnNewActivityDDP.dataset.prime_elem_id = 0;
+
 
 	let showMosaicEditItems = localStorage.getItem('showMosaicEditItems');
 	if (!showMosaicEditItems) {
@@ -1904,6 +1917,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		cTemplate = 0;
 		tTemplate = 0;
+		ddpTemplate = 0;
 		projectsMode = 0;
 		formSave.classList.add('d-none');
 
@@ -2077,14 +2091,16 @@ window.addEventListener('DOMContentLoaded', () => {
 			case 'templateDDP':
 				document.title = 'Template DDP';
 				templateDDP = 1;
+				ddpTemplate = 1;
 				displayDDPElements(true);
-				iniDDP();
+				iniOGPA();
 				break;
 			case 'ddp':
 				document.title = 'DDP';
 				templateDDP = 0;
+				ddpTemplate = 1;
 				displayDDPElements(false);
-				iniDDP();
+				iniOGPA();
 				break;
 			case 'inventory':
 				document.title = 'Inventory';
@@ -3500,7 +3516,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			sendRequest('POST', requestURLProject, body).then((data) => {
 				showProjectActivityForm(data, parseInt(projectActivity.dataset.ogpaGroup));
 			});
-			console.log(tTemplate);
 			jsBackProjects.classList.remove('d-none');
 		} else if (projectActivity && projectActivity.dataset.activity_id == '0') {
 			const currentProject = projectActivity.closest('.project-band');
@@ -3564,9 +3579,7 @@ window.addEventListener('DOMContentLoaded', () => {
 							}
 						}
 					}
-					console.log(projectFileNumber, projectActivitiesList.length);
 					if (projectFileNumber == projectActivitiesList.length) {
-						console.log('request doc');
 						submitRenderForm(formFields, activity, 2);
 					}
 				}
@@ -4688,9 +4701,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		resetHardCodeDesign();
 		displayMOPElements(false);
 		toggleProjectsActivityArea('show', renderMopDiv);
-		// projectsActivityArea.textContent = '';
-		// projectsActivityArea.classList.remove('d-none');
-		// projectsActivityArea.append(renderMopDiv);
 		if (data.success && data.success.answer) {
 			let fieldProps = [];
 			try {
@@ -4713,14 +4723,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				showActivityFields(dataObject);
 				fillSelectField(selPrimeElement, data.success.answer.detail.element, true);
 				fillSelectField(selActivity, data.success.answer.detail.activity, true);
-				// selPrimeElement.textContent = '';
-				// selPrimeElement.insertAdjacentHTML('beforeend', `
-				// 	<option value="${data.success.answer.detail.element}" selected>${data.success.answer.detail.element}</option>
-				// `);
-				// selActivity.textContent = '';
-				// selActivity.insertAdjacentHTML('beforeend', `
-				// 	<option value="${data.success.answer.detail.activity}" selected>${data.success.answer.detail.activity}</option>
-				// `);
 				if (data.success.answer.detail.status === 2) {
 					formSubmit.dataset.projectDownload = '1';
 					formSubmit.innerText = 'Download';
@@ -5454,14 +5456,18 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const showOGPAActivity = (data, extends_data = {}) => {
-		selActivity.textContent = '';
+		let activity = selActivity;
+		if (getOGPANum() == ogpaDDP) {
+			activity = selActivityDDP;
+		}
+		activity.textContent = '';
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(item => {
 				let selected = '';
 				if (extends_data['activity'] === item.element) {
 					selected = 'selected';
 				}
-				selActivity.insertAdjacentHTML('beforeend', `
+				activity.insertAdjacentHTML('beforeend', `
 					<option data-id="${item.id}" value="${item.element}" ${selected}>${item.element}</option>
 				`);
 			});
@@ -5469,18 +5475,19 @@ window.addEventListener('DOMContentLoaded', () => {
 				return false;
 			}
 		} else {
-			selActivity.insertAdjacentHTML('beforeend', `
+			activity.insertAdjacentHTML('beforeend', `
 				<option value="" selected></option>
 			`);
 			// return false;
 		}
 		if (formSubmit.dataset.projectDownload !== '1') {
-			selActivity.dispatchEvent(new Event('change'));
+			activity.dispatchEvent(new Event('change'));
 		}
 	};
 
 	const showActivityFields = (data) => {
 		formFields.reset();
+		formFieldsDDP.reset();
 		projectNumberActivity.removeAttribute('readonly');
 		projectNameActivity.removeAttribute('readonly');
 		document.querySelectorAll('fieldset.hidden').forEach(item => {
@@ -5490,12 +5497,13 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.classList.add('hidden');
 			}
 		});
-		document.querySelectorAll('.renderOnly').forEach(item => {
-			if (!item.classList.contains('js-hard-code-design')) {
-				setAvailFormElements(item, !!adminEnabled);
-			} else {
-			}
-		});
+		showRenderOnlyElements();
+		// document.querySelectorAll('.renderOnly').forEach(item => {
+		// 	if (!item.classList.contains('js-hard-code-design')) {
+		// 		setAvailFormElements(item, !!adminEnabled);
+		// 	} else {
+		// 	}
+		// });
 
 		efcrFields.value = "";
 		const efcrFieldsArr = [];
@@ -5593,7 +5601,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			showHardCodeDesign(hardCodeDesign['Capacity Upgrade'].split(','));
 			// documentProperties
 		}
-		fillCTemplateFields(formAdmin);
+		[formAdmin, formAdminDDP].forEach(form => {
+			fillCTemplateFields(form);
+		});
 		// formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
 		// 	if (cTemplate) {
 		// 		item.value = item.dataset.ctemplate.trim();
@@ -5668,7 +5678,16 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	function getOGPANum() {
-		return (cTemplate == 0) ? ((tTemplate == 1) ? 3 : 0) : cTemplate;
+		let ogpaNum = 0;
+		if (tTemplate == 1) {
+			ogpaNum = 3;
+		} else if (ddpTemplate == 1) {
+			ogpaNum = ogpaDDP;
+		} else {
+			ogpaNum = cTemplate;
+		}
+		// return (cTemplate == 0) ? ((tTemplate == 1) ? 3 : 0) : cTemplate;
+		return ogpaNum;
 	}
 
 	const getActivityFields = (activityID) => {
@@ -5710,7 +5729,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const iniMOR = () => {
 		morSite.textContent = '';
-		// morCA.textContent = '';
+		selMorGroup.textContent = '';
 		formMor.reset();
 		const body = {
 			method: 'getMORData',
@@ -5729,11 +5748,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		body.value = 'ca';
 		sendRequest('POST', requestURLMOR, body).then((data) => {
 			caTable = data.success.answer.slice();
-			// for (const ca of caTable) {
-            //     morCA.insertAdjacentHTML('beforeend', `
-            //         <OPTION value="${ca.ca}" data-id="${ca.id}">${ca.ca}</OPTION>
-            //     `);
-            // };
             morCA.value = '';
 		});
 		body.value = 'rcpc';
@@ -5741,6 +5755,21 @@ window.addEventListener('DOMContentLoaded', () => {
 			rcpcTable = data.success.answer.slice();
 		});
 		morSelector.dispatchEvent(new Event('change'));
+		
+		sendRequest('POST', requestURLMOR, {
+			method: 'getMORUserGroups',
+			env: 'mor',
+		}).then((data) => {
+			for (const group of data.success.answer.groups) {
+                selMorGroup.insertAdjacentHTML('beforeend', `
+                    <OPTION value="${group.group}" data-group-id="${group.id}">${group.group}</OPTION>
+                `);
+            };
+            if (data.success.answer.groups.length > 1) 
+			{
+				selMorGroup.value = '';
+			}
+		});
 	};
 
 	const iniDDP = () => {
@@ -5850,7 +5879,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		const elem_name_id = `#${elem.dataset.elem_name_id}`,
 			btn_new_id = `#${elem.dataset.btn_new_id}`;
-		
 		document.querySelector(elem_name_id).value = editableName;
 		chgBtnType(document.querySelector(btn_new_id), {
 			dataset: {
@@ -6151,7 +6179,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 
-	function showRenderOnlyElements () {
+	function showRenderOnlyElements() {
 		document.querySelectorAll('.renderOnly').forEach(item => {
 			if (!item.classList.contains('js-hard-code-design')) {
 				setAvailFormElements(item, !!adminEnabled);
@@ -6166,6 +6194,12 @@ window.addEventListener('DOMContentLoaded', () => {
 			morCA.value = '';
 			gProjectNumber = 0;
 			gSiteCode = 0;
+			saveMor.disabled = true;
+			morGroupID.disabled = true;
+			morGroupID.value = 0;
+			if (selMorGroup.length > 1) {
+				selMorGroup.value = '';			
+			}
 			morForReleaseFlag.value = '0';
 			morDelRow.dataset.trId = '0';
 			morSelector.dispatchEvent(new Event('change'));
@@ -6187,6 +6221,51 @@ window.addEventListener('DOMContentLoaded', () => {
 			link.href =`mailto:niw.boms@rci.rogers.com?subject=${morCA.value} - ${morSelector.value}&cc=wirelinedataengineer@rci.rogers.com`;
 			link.click();
 			link.remove();
+		}
+	});
+	morSave.addEventListener('click', async (e) => {
+		if (formMor.reportValidity()) {
+			saveMor.disabled = false;
+			try {
+				morGroupID.value = selMorGroup.options[selMorGroup.selectedIndex].dataset.groupId;
+				morGroupID.disabled = false;
+				const formData = new FormData(formMor);
+				const data = {};
+
+				for (let [key, value] of formData.entries()) {
+					if (key.endsWith('[]')) {
+						const cleanKey = key.slice(0, -2);
+						
+						if (!data[cleanKey]) {
+							data[cleanKey] = formData.getAll(key);
+						}
+					} else {
+						data[key] = value;
+					}
+				}
+
+				const fieldGroups = JSON.stringify(data);
+				sendRequest('POST', requestURLMOR, {
+					method: 'saveMORData',
+					value: fieldGroups,
+					id: morGroupID.value,
+					env: 'mor',
+				}).then((data) => {
+					console.log(data);
+				});
+				// const data = new URLSearchParams(formData);
+				// const response = await fetch('mor_admin.php', {
+				// 	method: 'POST',
+				// 	headers: {
+				// 		'Content-Type': 'application/x-www-form-urlencoded'
+				// 	},
+				// 	body: data
+				// });
+				// const result = await response.json();
+			} catch (e) {
+				console.error(e);
+				selMorGroup.focus();
+			}
 		}
 	});
 
@@ -6232,10 +6311,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		e.preventDefault();
 		const target = e.target;
 		if (adminEnabled) {
-			submitAdminForm(target, 100);
+			console.log(gActivityID);
+			submitAdminForm(target, gActivityID);
 		} else {
-			submitRenderForm(target, 0);
-			
+			submitRenderForm(target, submitRenderForm);
 		}
 	});
 
@@ -6277,53 +6356,89 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	btnEditActivity.addEventListener('click', (e) => {
-		e.preventDefault();
-		const target = e.target.closest('button');
-		if (target.classList.contains('pressed')) {
-			switchBtnMode({
-				elem: target,
-				newMode: 1,
-				editableName: '', 
-				btnType: 'new', 
-				btnText: 'Add new'});
-		} else {
-			switchBtnMode({
-				elem: target,
-				newMode: 0,
-				editableName: selActivity.value, 
-				btnType: 'mod', 
-				btnText: 'Change'});
-		}
+	[btnEditActivity,btnEditActivityDDP].forEach(btnEditActivity => {
+		btnEditActivity.addEventListener('click', (e) => {
+			e.preventDefault();
+			const target = e.target.closest('button');
+			const selectActivity = target.closest('.selectActivity').querySelector('select');
+			if (target.classList.contains('pressed')) {
+				switchBtnMode({
+					elem: target,
+					newMode: 1,
+					editableName: '', 
+					btnType: 'new', 
+					btnText: 'Add new'});
+			} else {
+				switchBtnMode({
+					elem: target,
+					newMode: 0,
+					editableName: selectActivity.value, 
+					btnType: 'mod', 
+					btnText: 'Change'});
+			}
+		});
 	});
 
 	btnNewActivity.addEventListener('click', (e) => {
 		e.preventDefault();
 		const target = e.target;
-		if (!checkTextValue(newActivity.value)) {
+		addNewActivity(newActivity, target);
+		// if (!checkTextValue(newActivity.value)) {
+		// 	return false;
+		// }
+
+		// let methodName = 'addActivity';
+		// let id = 0;
+		// if (target.dataset['type'] === 'mod') {
+		// 	methodName = 'modActivity';
+		// 	id = target.dataset.id;
+		// }
+
+		// const body = {
+		// 	method: methodName,
+		// 	value: newActivity.value,
+		// 	id: id,
+		// 	parentId: target.dataset.prime_elem_id
+		// };
+		// sendRequest('POST', requestURLTemplate, body).then((data) => {
+		// 	if (data && data.success && data.success.answer) {
+		// 		showOGPAActivity(data, {'activity':newActivity.value});
+		// 		newActivity.value = '';
+		// 	}
+		// });
+	});
+
+	btnNewActivityDDP.addEventListener('click', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		addNewActivity(newActivityDDP, target);
+	});
+
+	function addNewActivity(activityField, btnNewActivityElem) {
+		if (!checkTextValue(activityField.value)) {
 			return false;
 		}
 
 		let methodName = 'addActivity';
 		let id = 0;
-		if (target.dataset['type'] === 'mod') {
+		if (btnNewActivityElem.dataset['type'] === 'mod') {
 			methodName = 'modActivity';
 			id = target.dataset.id;
 		}
 
 		const body = {
 			method: methodName,
-			value: newActivity.value,
+			value: activityField.value,
 			id: id,
-			parentId: target.dataset.prime_elem_id
+			parentId: btnNewActivityElem.dataset.prime_elem_id
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
 			if (data && data.success && data.success.answer) {
-				showOGPAActivity(data, {'activity':newActivity.value});
-				newActivity.value = '';
+				showOGPAActivity(data, {'activity':activityField.value});
+				activityField.value = '';
 			}
 		});
-	});
+	}
 
 	selPrimeElement.addEventListener('change', (e) => {
 		e.preventDefault();
@@ -6331,6 +6446,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		try {
 			const id = target.options[target.selectedIndex].dataset.id;
 			btnNewActivity.dataset.prime_elem_id = id;
+			btnNewActivityDDP.dataset.prime_elem_id = id;
 			btnNewPrimeElem.dataset.prime_elem_id = id;
 			gPrimeElementID = id;
 			const activity = target.dataset.activity;
@@ -6342,25 +6458,31 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	selActivity.addEventListener('change', (e) => {
-		e.preventDefault();
-		const target = e.target;
-		let id = 0;
-		try {
-			id = target.options[target.selectedIndex].dataset.id;
-			btnNewActivity.dataset.id = id;
-		} catch (e) {
-		}
-		gActivityID = id;
-		gActivityName = target.value;
-		newActivity.value = '';
-		switchBtnMode({
-			elem: btnEditActivity,
-			newMode: 1,
-			editableName: '', 
-			btnType: 'new', 
-			btnText: 'Add new'});
-		getActivityFields(id);
+	[selActivity,selActivityDDP].forEach(selectActivity => {
+		selectActivity.addEventListener('change', (e) => {
+			e.preventDefault();
+			const target = e.target;
+			const btnNewActivity_ = target.closest('.selectActivity').querySelector('.js-btnNewActivity');
+			const newActivity_ = target.closest('.selectActivity').querySelector('.js-newActivity');
+			const btnEditActivity_ = target.closest('.selectActivity').querySelector('.js-btnEditActivity');
+			
+			let id = 0;
+			try {
+				id = target.options[target.selectedIndex].dataset.id;
+				btnNewActivity_.dataset.id = id;
+			} catch (e) {
+			}
+			gActivityID = id;
+			gActivityName = target.value;
+			newActivity_.value = '';
+			switchBtnMode({
+				elem: btnEditActivity_,
+				newMode: 1,
+				editableName: '', 
+				btnType: 'new', 
+				btnText: 'Add new'});
+			getActivityFields(id);
+		});
 	});
 
 	groupsList.addEventListener('change', (e) => {
@@ -6398,10 +6520,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		delElement('delPrimeElement', showOGPA, selPrimeElement.value);
 	});
 
-	btnDelActivity.addEventListener('click', (e) => {
-		e.preventDefault();
-		const id = selActivity.options[activity.selectedIndex].dataset.id;
-		delElement('delActivity', showOGPAActivity, id);
+	[btnDelActivity, btnDelActivityDDP].forEach(element => {
+		element.addEventListener('click', (e) => {
+			e.preventDefault();
+			const target = e.target;
+			const selectActivity = target.closest('.selectActivity').querySelector('select');
+			const id = selectActivity.options[selectActivity.selectedIndex].dataset.id;
+			delElement('delActivity', showOGPAActivity, id);
+		});
 	});
 
 	[showAll, showAllDDP].forEach(element => {
@@ -6422,40 +6548,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 		});
 	});
-
-	// aExport.addEventListener('click', (e) => {
-	// 	e.preventDefault();
-	// 	const body = {
-	// 		method: 'exportToJSON',
-	// 		primeElement: selPrimeElement.value,
-	// 		activity: selActivity.value,
-	// 	};
-	// 	sendRequest('POST', requestURLTemplate, body).then((data) => {
-	// 		exportDownload.classList.add('hidden');
-	// 		if (data && data.success && data.success.answer) {
-	// 			const temp_href = exportDownload.querySelector('A');
-	// 			temp_href.href = data.success.answer;
-	// 			temp_href.click();
-	// 		} else {
-	// 			showRequestError('Export to JSON unsuccessful');
-	// 		}
-	// 	});
-	// });
-
-	// aImport.addEventListener('change', (e) => {
-	// 	e.preventDefault();
-	// 	const target = e.target;
-	// 	showModalDialog({
-	// 		attributes: [
-	// 			{'modal-command': 'importOGPA'},
-	// 			// {'data-file-name': target.files[0].name},
-	// 			{'data-element': selPrimeElement.value},
-	// 			{'data-activity': selActivity.value},
-	// 		],
-	// 		dialogTitle: 'Import OGPA config',
-	// 		dialogQuestion: `Do you want to import OGPA from JSON (current settings will be overwritten)?`,
-	// 	});
-	// });
 
 	const btnAreaAppend = (target) => {
 		const fieldset = target.closest('fieldset');
@@ -6623,16 +6715,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		gSiteCode = target.value;
 	});
-	// morCA.addEventListener('change', (e) => {
-	// 	const target = e.target;
-	// 	const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
-	// 	const caIdx = caTable.findIndex(ca => parseInt(ca.id, 10) === id);
-	// 	mor_ProjectName.value = caTable[caIdx].project_name;
-	// 	morApprovingMgr.value = caTable[caIdx].project_owner;
-	// 	gProjectNumber = caTable[caIdx].project_num;
-	// });
+
 	morAddRow.addEventListener('click', (e) => {
-		// if (gProjectNumber != 0 && gSiteCode != 0) {
 		if (gSiteCode != 0) {
 			const tbody = morTable.querySelector('TBODY');
 			if (tbody) {
@@ -6725,8 +6809,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	morTable.addEventListener('click', (e) => {
-		// if (!e.target.classList.contains('js_vendor_part')) {
-		// }
 		const target = e.target;
 		const morTRDyn = target.closest('.js-mor-tr-dyn');
 		if (morTRDyn) {

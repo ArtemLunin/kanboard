@@ -174,6 +174,16 @@ h3 {
 	justify-content: space-between;
   	align-items: center;
 }
+.groups-mor {
+	position: absolute;
+	top: 100px;
+	left: 10px;
+	width: 300px;
+	z-index: 9;
+	background-color: #f0f0f0;
+	height: 35px;
+  	overflow-y: hidden;
+}
 td.mor-template {
 	padding: 0;
 }
@@ -591,6 +601,9 @@ button[type="button"].action-group {
 button[type="button"].btn-danger {
 	background-color: #dc3545;
 	margin-left: 1rem;
+}
+button[type="button"].btn-info {
+	background-color: #29a3e0;
 }
 button[type="button"].import-json {
     background-color: hsl(33, 50%, 50%);

@@ -140,15 +140,35 @@ class helperUtils {
 		return filter_var($val, FILTER_VALIDATE_INT, ["flags" => FILTER_NULL_ON_FAILURE, "options" => ["min_range" => 1]]) ?? 0;
 	}
 
+	function getUploadedFileExt($uploadedFile) {
+		return strtolower(pathinfo($uploadedFile, PATHINFO_EXTENSION));
+	}
+
 	//template methods
 
 	static function addImageToDoc($extTemplateProcessor, $fieldImage) {
 		if (isset($_FILES[$fieldImage['field_name']]) && is_uploaded_file($_FILES[$fieldImage['field_name']]['tmp_name'])) {
 			try {
+				$maxWidth = 600; 
+				$maxHeight = 700;
+				$size = getimagesize($_FILES[$fieldImage['field_name']]['tmp_name']);
+				
+				$sourceWidth = $size[0];
+				$sourceHeight = $size[1];
+				$ratioW = $maxWidth / $sourceWidth;
+				$ratioH = $maxHeight / $sourceHeight;
+				$scale = min($ratioW, $ratioH);
+				if ($scale > 1) {
+					$scale = 1;
+				}
+				$targetWidth = $sourceWidth * $scale; 
+				$targetHeight = $sourceHeight * $scale;
+				// $targetHeight = $targetWidth * ($sourceHeight / $sourceWidth);
 				$extTemplateProcessor->setImageValue($fieldImage['field_name'], [
 					'path' => $_FILES[$fieldImage['field_name']]['tmp_name'],
-					'width' => $fieldImage['width'], 
-					'height' => $fieldImage['height'],
+					'width' => $targetWidth, 
+					'height' => $targetHeight,
+					'ratio'  => true
 				]);
 			}
 			catch (Exception $e) {
