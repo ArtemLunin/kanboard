@@ -35,9 +35,8 @@ $morForReleaseFlag = $_REQUEST['morForReleaseFlag'] ?? 0;
 $env = $paramJSON['env'] ?? $_REQUEST['env'] ?? 0;
 $value = trim($paramJSON['value'] ?? '');
 $id = $paramJSON['id'] ?? 0;
+$id = (int)$id;
 $number = trim($paramJSON['number'] ?? '');
-// $saveMOR = isset($_REQUEST['saveMOR']) ? 1 : 0;
-// $submitMOR = (isset($_REQUEST['submitMOR']) && $saveMOR === 0) ? 1 : 0;
 $submitMOR = isset($_REQUEST['submitMOR']) ? 1 : 0;
 // $morGroupID = isset($_REQUEST['morGroupID']) ? (int)$_REQUEST['morGroupID'] : 0;
 
@@ -68,7 +67,7 @@ if ($userID === 0) {
 if ($method !== 0)
 {
     if ($method === 'getMORData') {
-		$param_error_msg['answer'] = $mor_object->getMORData($value);
+		$param_error_msg['answer'] = $mor_object->getMORData($value, $id);
     } elseif ($method == 'loadMORCA' && $morType && ($mor_object->getRootAccess() || $accessType === 'admin')) {
 		$tmp = $_FILES['file']['tmp_name'];
         if (($tmp != '') && is_uploaded_file($tmp)) 
@@ -98,9 +97,8 @@ if ($method !== 0)
         }
     } elseif ($method === 'getMORUserGroups') {
         $param_error_msg['answer'] = $mor_object->getMORUserGroups();
-    } elseif ($method == 'saveMORData') {
-        $mor_object->errorLog(print_r(json_decode($value, true), true));
-        $param_error_msg['answer'] = 'save mor data';
+    } elseif ($method == 'saveMORData' && $id != 0) {
+        $param_error_msg['answer'] = $mor_object->saveMORData($id, $value);
     } 
     $out_res = ['success' => $param_error_msg];
     header('Content-type: application/json');
@@ -121,7 +119,7 @@ if ($method !== 0)
     $sheet->setCellValue('C13', trim($_REQUEST['mor_requestor']) ?? '');
     $sheet->setCellValue('C14', trim($_REQUEST['mor_region']) ?? '');
     $sheet->setCellValue('C15', trim($_REQUEST['mor_requisition']) ?? '');
-    $sheet->setCellValue('C16', trim($_REQUEST['mor_add-info']) ?? '');
+    $sheet->setCellValue('C16', trim($_REQUEST['mor_add_info']) ?? '');
     if ($morForReleaseFlag == 0) {
         $sheet->setCellValue('G8', trim($_REQUEST['mor_project_contact']) ?? '');
         $sheet->setCellValue('G9', trim($_REQUEST['mor_phone_number']) ?? '');

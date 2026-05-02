@@ -2202,10 +2202,12 @@
 					<select name="morGroup" id="morGroup" required></select>
 				</div>
 				<form method="POST" action="mor_admin.php" id="formMor">
-					<input type="hidden" name="submitMOR">
+					<input type="hidden" name="submitMOR" id="submitMOR">
 					<input type="hidden" name="saveMOR" id="saveMOR" disabled>
 					<input type="hidden" name="morGroupID" id="morGroupID" disabled>
 					<input type="hidden" name="morForReleaseFlag" value="0" id="morForReleaseFlag">
+					<input type="hidden" name="morCollectParts" value="0" id="morCollectParts">
+					<input type="hidden" name="morProjectNum" value="0" id="morProjectNum">
 					<table class="table table-sm table-bordered mor">
 						<thead class="">
 							<tr>
@@ -2247,8 +2249,6 @@
 							<tr>
 								<td colspan="2">Network Project (e.g. RPATS) #</td>
 								<td class="mor-bg-rose" colspan="2">
-									<!-- <select class="mor" name="mor_ca" id="mor_ca" required>
-									</select> -->
 									<div class="mor-ca-container">
 										<input type="text" class="mor" name="mor_ca" value="" id="mor_ca">
 										<ul class="mor-ca-autocomplete mor-ca-list d-none"></ul>
@@ -2317,7 +2317,7 @@
 							<tr>
 								<td colspan="2" rowspan="3">Additional Information / Approver Notes</td>
 								<td class="mor-bg-lellow" colspan="2" rowspan="3">
-									<textarea class="mor" name="mor_add-info" id="mor_add-info" cols="20" rows="3"></textarea>
+									<textarea class="mor" name="mor_add_info" id="mor_add_info" cols="20" rows="3"></textarea>
 								</td>
 								<td colspan="2">Contractor</td>
 								<td class="mor-bg-lellow" colspan="6">

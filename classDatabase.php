@@ -1560,6 +1560,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
         $fields_str = rtrim($fields_str, ', ');
         $filtered_arr = $this->createFilterDB($tableName, $filters, "AND");
         $sql_upd = "UPDATE `" .$tableName. "` SET " . $fields_str . " WHERE " . $filtered_arr['filter'];
+		$this->modSQL($sql_upd , array_merge($values_arr, $filtered_arr['params']), false);
     }
 	function runInsertSQL($tableName, $setFields) {
         $fields_str = "";
@@ -1649,7 +1650,11 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 
 	function selectFieldFromTable($table_name, $filters, $field_name) {
 		$first_row = $this->selectObjectFromTable($table_name, $filters, [$field_name]);
-		return $first_row[0][$field_name];
+		$field_value = null;
+		if (count($first_row)) {
+			$field_value = $first_row[0][$field_name];
+		}
+		return $field_value;
 	}
 
 	function removeObjectFromTable($table_name, $id) {
@@ -1671,7 +1676,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 	}
 
 	function getUserID($userName) {
-		if ($table_res = $this->getSQL("SELECT id FROM users WHERE user_name=:user", [
+		if ($table_res = $this->getSQL("SELECT `id` FROM `users` WHERE `user_name`=:user", [
 			'user'	=> $userName,
 		]))
 		{
@@ -1679,13 +1684,14 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		}
 		return 0;
 	}
-	function getMORUserGroups($userName) {
+	function getMORUserGroups($userName, $groupID = null) {
 		$groupsList = [];
 		if ($table_res = $this->getSQL("SELECT `id`, `name`, `users` FROM `groups`", [])) {
 			foreach ($table_res as $result)
 			{
 				$usersList = json_decode($result['users'], true);
-				if (in_array($userName, $usersList) || $userName == SUPER_USER) {
+				if ((in_array($userName, $usersList) && ($groupID === null || $groupID === (int)$result['id'])) 
+					|| $userName == SUPER_USER) {
 					$groupsList[] = [
 						'id' => $result['id'],
 						'group' => $result['name']

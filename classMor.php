@@ -80,9 +80,10 @@ class MORUtils extends \helperUtils\helperUtils {
     function loadDataCA($rows, $refreshTable = true) {
         return $this->db_object_project->runInsertBulk($this->tCA["tableName"], array_slice($this->tCA["fields"], 1), $rows, $refreshTable);
     }
-    function getMORData($mor_entity) {
+    function getMORData($mor_entity, $groupID = 0) {
         $tableName = '';
         $tableFields = [];
+        $tableFilters = [];
         switch ($mor_entity) {
             case 'site':
                 $tableName = $this->tSite["tableName"];
@@ -96,13 +97,41 @@ class MORUtils extends \helperUtils\helperUtils {
                 $tableName = $this->tRCPC["tableName"];
                 $tableFields = $this->tRCPC["fields"];
                 break;
+            case 'savedData':
+                if ($groupID === 0) {
+                    return false;
+                }
+                $tableName = $this->tMOR_fields["tableName"];
+                $tableFields = $this->tMOR_fields["fields"];
+                $tableFilters = ["group_id" => $groupID];
+                break;
             default:
                 return false;
                 break;
         }
-        return $this->db_object_project->selectObjectFromTable($tableName, [], $tableFields, []);
+        return $this->db_object_project->selectObjectFromTable($tableName, $tableFilters, $tableFields, []);
     }
-    function getMORUserGroups() {
-        return ["groups" => $this->db_object_project->getMORUserGroups($this->userName)];
+    function getMORUserGroups($groupID = null) {
+        return ["groups" => $this->db_object_project->getMORUserGroups($this->userName, $groupID)];
+    }
+    function saveMORData($groupID, $fields) {
+        $groups = $this->getMORUserGroups($this->userName, $groupID);
+		if (count($groups["groups"])) {
+            if ($this->issetGroup($groupID) === null) {
+                $this->db_object_project->runInsertSQL($this->tMOR_fields["tableName"], [
+                    'group_id'	=> $groupID,
+                    'field_json_props'	=> $fields
+                ]);
+            } else {
+                $this->db_object_project->runUpdateSQL($this->tMOR_fields["tableName"], [
+                    'field_json_props'	=> $fields
+                ], ["group_id" => $groupID]);
+            }
+            return true;
+	    }
+        return false;
+	}
+    private function issetGroup($groupID) {
+        return $this->db_object_project->selectFieldFromTable($this->tMOR_fields["tableName"], ["group_id" => $groupID], "group_id");
     }
 }

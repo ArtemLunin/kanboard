@@ -233,7 +233,7 @@ const datetimeToUSDate = datetime_str => {
 
 const datetimeToCaDate = () => {
 	const dateObject = new Date();
-	return dateObject.toLocaleDateString('fr-CA');
+	return dateObject.toISOString().split('T')[0];
 };
 
 function tsPeriodDays (periodDays) {
@@ -530,22 +530,25 @@ window.addEventListener('DOMContentLoaded', () => {
 		// tEFCR = document.querySelector('.t-efcr');
 
 		//mor elements
+	const morCollectPartsSelector = 'morCollectParts';
 	const formMor = document.querySelector('#formMor'),
 		morSite = formMor.querySelector('#mor_site'),
 		morSend = formMor.querySelector('#morSend'),
 		morSave = formMor.querySelector('#morSave'),
 		saveMor = formMor.querySelector('#saveMOR'),
-		morGroupID = document.querySelector('#morGroupID'),
 		morCA = formMor.querySelector('#mor_ca'),
 		morCAList = document.querySelector('.mor-ca-list'),
 		mor_ProjectName = formMor.querySelector('#mor_project_name'),
+		morProjectNum = formMor.querySelector('#morProjectNum'),
 		morApprovingMgr = formMor.querySelector('#mor_approving_mgr'),
 		// mor_project_contact = formMor.querySelector('#mor_project_contact'),
 		morTable = formMor.querySelector('#mor_table'),
+		tbodyMorTable = morTable.querySelector('TBODY'),
 		morDateSubmitted = formMor.querySelector('#mor_date'),
 		morAddRow = formMor.querySelector('#js_mor_row_append'),
 		morDelRow = formMor.querySelector('#js_mor_row_remove'),
 		mor_requestor = formMor.querySelector('#mor_requestor'),
+		morCollectParts = formMor.querySelector(`#${morCollectPartsSelector}`),
 		selMorGroup = document.querySelector('#morGroup');
 		const morInnerBody = document.querySelector('table.mor-inner>tbody'),
 		morForOthers = document.querySelector('#morForOthers'),
@@ -2234,7 +2237,7 @@ window.addEventListener('DOMContentLoaded', () => {
 							<li data-section="${sectionAttr}" data-access="${accessType}" ${add_attrs}>${pageName}</li>
 							`);
 							if (!!sectionChildren[sectionName] && typeof sectionChildren[sectionName] === 'object' && !Array.isArray(sectionChildren[sectionName])) {
-								for (const [key, value] of Object.entries (sectionChildren[sectionName])) {
+								for (const [key, value] of Object.entries(sectionChildren[sectionName])) {
 									menu.insertAdjacentHTML('beforeend', `<li data-section="${sectionAttr}" 
 									data-visible-name="${key}" 
 									data-access="${accessType}" data-element="${value[0]}" data-activity="${value[1]}"
@@ -5762,14 +5765,17 @@ window.addEventListener('DOMContentLoaded', () => {
 		}).then((data) => {
 			for (const group of data.success.answer.groups) {
                 selMorGroup.insertAdjacentHTML('beforeend', `
-                    <OPTION value="${group.group}" data-group-id="${group.id}">${group.group}</OPTION>
+                    <OPTION value="${group.id}" data-group-id="${group.id}">${group.group}</OPTION>
                 `);
             };
-            if (data.success.answer.groups.length > 1) 
-			{
-				selMorGroup.value = '';
-			}
+			resetSelect(selMorGroup);
 		});
+	};
+
+	const resetSelect = (formSelect) => {
+		if (formSelect.length > 1) {
+			formSelect.value = '';			
+		}
 	};
 
 	const iniDDP = () => {
@@ -6195,22 +6201,18 @@ window.addEventListener('DOMContentLoaded', () => {
 			gProjectNumber = 0;
 			gSiteCode = 0;
 			saveMor.disabled = true;
-			morGroupID.disabled = true;
-			morGroupID.value = 0;
-			if (selMorGroup.length > 1) {
-				selMorGroup.value = '';			
-			}
+			// resetSelect(selMorGroup);
 			morForReleaseFlag.value = '0';
 			morDelRow.dataset.trId = '0';
 			morSelector.dispatchEvent(new Event('change'));
 			morDateSubmitted.value = datetimeToCaDate();
-			const tbody = morTable.querySelector('TBODY');
-			if (tbody) {
-				tbody.dataset.trId = 0;
-				tbody.querySelectorAll(`.js-mor-tr-dyn`).forEach(element => {
+			if (tbodyMorTable) {
+				tbodyMorTable.dataset.trId = 0;
+				tbodyMorTable.querySelectorAll(`.js-mor-tr-dyn`).forEach(element => {
 					element.remove();
 				});
 			}
+			morCollectParts.value = '0';
 		}, 0);
 	});
 
@@ -6227,8 +6229,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (formMor.reportValidity()) {
 			saveMor.disabled = false;
 			try {
-				morGroupID.value = selMorGroup.options[selMorGroup.selectedIndex].dataset.groupId;
-				morGroupID.disabled = false;
 				const formData = new FormData(formMor);
 				const data = {};
 
@@ -6248,20 +6248,11 @@ window.addEventListener('DOMContentLoaded', () => {
 				sendRequest('POST', requestURLMOR, {
 					method: 'saveMORData',
 					value: fieldGroups,
-					id: morGroupID.value,
+					id: selMorGroup.value,
 					env: 'mor',
 				}).then((data) => {
-					console.log(data);
+					// console.log(data);
 				});
-				// const data = new URLSearchParams(formData);
-				// const response = await fetch('mor_admin.php', {
-				// 	method: 'POST',
-				// 	headers: {
-				// 		'Content-Type': 'application/x-www-form-urlencoded'
-				// 	},
-				// 	body: data
-				// });
-				// const result = await response.json();
 			} catch (e) {
 				console.error(e);
 				selMorGroup.focus();
@@ -6515,6 +6506,65 @@ window.addEventListener('DOMContentLoaded', () => {
 		element.addEventListener('change', comboSelectChange); 
 	});
 
+	selMorGroup.addEventListener('change', (e) => {
+		const target = e.target;
+		const group_id = target.value;
+		const body = {
+			method: 'getMORData',
+			env: 'mor',
+			value: 'savedData',
+			id: group_id
+		};
+		formMor.reset();
+		sendRequest('POST', requestURLMOR, body).then((data) => {
+			if (data && data.success && data.success.answer && data.success.answer[0] && data.success.answer[0].field_json_props) {
+				const simpleParams = {};
+				const arrayEntries = [];
+				const fieldProps = JSON.parse(data.success.answer[0].field_json_props);
+				Object.entries(fieldProps).forEach(([key, value]) => {
+					if (Array.isArray(value)) {
+						arrayEntries.push([key, value]);
+					} else {
+						simpleParams[key] = value;
+					}
+				});
+
+				for (const simpleParam in simpleParams) {
+					const formElement = document.querySelector(`#${simpleParam}`);
+					if (formElement) {
+						formElement.value = simpleParams[simpleParam];
+					}
+				}
+
+				const arrParts = [];
+				if (arrayEntries.length > 0) {
+					const rowCount = arrayEntries[0][1].length;
+					for (let i = 0; i < rowCount; i++) {
+						const rowObject = {};
+						arrayEntries.forEach(([key, values]) => {
+							rowObject[key] = values[i] !== undefined ? values[i] : null;
+						});
+						arrParts.push(rowObject);
+					}
+					tbodyMorTable.insertAdjacentHTML('beforeend', genRowParts(1, arrParts));
+					tbodyMorTable.dataset.trId = countRowsByClass('.js-mor-tr-dyn') + 1;
+				} else {
+					let caList = caTable.filter(ca => ca.ca.includes(morCA.value));
+					const rowObject = {};
+					rowObject['mor_oracle'] = morProjectNum.value;
+					rowObject['mor_date_required'] = datetimeToCaDate();
+					rowObject['mor_site_code'] = morSite.value;
+					arrParts.push(rowObject);
+				}
+
+				// morSite.dispatchEvent(new Event('change'));
+				mor_requestor.dispatchEvent(new Event('change'));
+			}
+		});	
+		// target.value = group_id;
+		// console.log(target.value);
+	});
+
 	btnDelPrimeElement.addEventListener('click', (e) => {
 		e.preventDefault();
 		delElement('delPrimeElement', showOGPA, selPrimeElement.value);
@@ -6649,27 +6699,84 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 	//mor functions
-	function rowParts (trId) {
-		return `
-		<tr class="js-mor-tr-dyn" data-tr-id="${trId}">
-			<td><input type="text" class="mor js-mor-rcpc" name="mor_rcpc[]" value="" required></td>
-			<td><input type="text" class="mor js-mor-vendor-name" name="mor_vendor_name[]" value="" required></td>
-			<td>
-				<div class="mor-vendor-part-container">
-					<input type="text" class="mor js_vendor_part" name="mor_vendor_part[]" value="">
-					<ul class="mor-part-autocomplete mor-part-list d-none"></ul>
-				</div>
-			</td>
-			<td><input type="text" class="mor js-mor-part-descr" name="mor_part_descr[]" value=""></td>
-			<td><input type="text" class="mor" name="mor_quantity[]" value="" required></td>
-			<td><input type="text" class="mor" name="mor_uom[]" value="EA" required></td>
-			<td><input type="text" class="mor js-mor-oracle" name="mor_oracle[]" value="" required></td>
-			<td><input type="text" class="mor" name="mor_task[]" value="" required></td>
-			<td><input type="text" class="mor js-mor-site-code" name="mor_site_code[]" value="" required></td>
-			<td><input type="text" class="mor js-mor-date-required" name="mor_date_required[]" value="" required></td>
-			<td><input type="text" class="mor" name="mor_org[]" value=""></td>
-			<td><input type="text" class="mor" name="mor_supplier_notes[]" value=""></td>
-		</tr>`;
+	// function genRowParts(trId) {
+	// 	return `
+	// 	<tr class="js-mor-tr-dyn" data-tr-id="${trId}">
+	// 		<td><input type="text" class="mor js-mor-rcpc" name="mor_rcpc[]" value="" required></td>
+	// 		<td><input type="text" class="mor js-mor-vendor-name" name="mor_vendor_name[]" value="" required></td>
+	// 		<td>
+	// 			<div class="mor-vendor-part-container">
+	// 				<input type="text" class="mor js_vendor_part" name="mor_vendor_part[]" value="">
+	// 				<ul class="mor-part-autocomplete mor-part-list d-none"></ul>
+	// 			</div>
+	// 		</td>
+	// 		<td><input type="text" class="mor js-mor-part-descr" name="mor_part_descr[]" value=""></td>
+	// 		<td><input type="text" class="mor" name="mor_quantity[]" value="" required></td>
+	// 		<td><input type="text" class="mor" name="mor_uom[]" value="EA" required></td>
+	// 		<td><input type="text" class="mor js-mor-oracle" name="mor_oracle[]" value="" required></td>
+	// 		<td><input type="text" class="mor" name="mor_task[]" value="" required></td>
+	// 		<td><input type="text" class="mor js-mor-site-code" name="mor_site_code[]" value="" required></td>
+	// 		<td><input type="text" class="mor js-mor-date-required" name="mor_date_required[]" value="" required></td>
+	// 		<td><input type="text" class="mor" name="mor_org[]" value=""></td>
+	// 		<td><input type="text" class="mor" name="mor_supplier_notes[]" value=""></td>
+	// 	</tr>`;
+	// }
+	function genRowParts(trId, arrParts = []) {
+		const isEmpty = !Array.isArray(arrParts) || arrParts.length === 0;
+		const items = isEmpty ? [{}] : arrParts;
+
+		return items.map((item, index) => {
+			// Updated ID calculation: simple addition with index
+			const currentTrId = trId + index;
+			
+			/**
+			 * Helper function to safely retrieve values from the item object.
+			 * If the original array was empty, always returns an empty string.
+			 * * @param {string} key - The data key to find.
+			 * @param {string} defaultValue - Value to return if key is missing.
+			 */
+			const val = (key, defaultValue = "") => {
+				if (isEmpty) return defaultValue; 
+				return (item[key] !== undefined ? item[key] : defaultValue);
+			};
+
+			return `
+			<tr class="js-mor-tr-dyn" data-tr-id="${currentTrId}">
+				<td><input type="text" class="mor js-mor-rcpc" name="mor_rcpc[]" value="${val('mor_rcpc')}" required></td>
+				<td><input type="text" class="mor js-mor-vendor-name" name="mor_vendor_name[]" value="${val('mor_vendor_name')}" required></td>
+				<td>
+					<div class="mor-vendor-part-container">
+						<input type="text" class="mor js_vendor_part" name="mor_vendor_part[]" value="${val('mor_vendor_part')}">
+						<ul class="mor-part-autocomplete mor-part-list d-none"></ul>
+					</div>
+				</td>
+				<td><input type="text" class="mor js-mor-part-descr" name="mor_part_descr[]" value="${val('mor_part_descr')}"></td>
+				<td><input type="text" class="mor" name="mor_quantity[]" value="${val('mor_quantity')}" required></td>
+				<td><input type="text" class="mor" name="mor_uom[]" value="${val('mor_uom', 'EA')}" required></td>
+				<td><input type="text" class="mor js-mor-oracle" name="mor_oracle[]" value="${val('mor_oracle')}" required></td>
+				<td><input type="text" class="mor" name="mor_task[]" value="${val('mor_task')}" required></td>
+				<td><input type="text" class="mor js-mor-site-code" name="mor_site_code[]" value="${val('mor_site_code')}" required></td>
+				<td><input type="text" class="mor js-mor-date-required" name="mor_date_required[]" value="${val('mor_date_required')}" required></td>
+				<td><input type="text" class="mor" name="mor_org[]" value="${val('mor_org')}"></td>
+				<td><input type="text" class="mor" name="mor_supplier_notes[]" value="${val('mor_supplier_notes')}"></td>
+			</tr>`;
+		}).join('');
+	}
+
+	function countRowsByClass(className) {
+		return document.querySelectorAll(className).length;
+	}
+
+	function collectArrParams(trId, collectStr) {
+		const row = document.querySelector(`.js-mor-tr-dyn[data-tr-id='${trId}']`);
+		if (!row) {
+			return;
+		}
+		const inputs = row.querySelectorAll('input');
+		const namesArray = Array.from(inputs).map(input => {
+			return input.name.replace('[]', '');
+		});
+		collectStr.value = JSON.stringify(namesArray);
 	}
 	
 	mor_requestor.addEventListener('change', (e) => {
@@ -6712,39 +6819,35 @@ window.addEventListener('DOMContentLoaded', () => {
 			mor_requestor.dispatchEvent(new Event('change'));
 		} catch (e) {
 		}
-
 		gSiteCode = target.value;
 	});
 
 	morAddRow.addEventListener('click', (e) => {
 		if (gSiteCode != 0) {
-			const tbody = morTable.querySelector('TBODY');
-			if (tbody) {
-				let trId = (tbody.dataset.trId !== undefined) ? parseInt(tbody.dataset.trId, 10) : 1;
-				tbody.insertAdjacentHTML('beforeend', rowParts(trId));
-				tbody.dataset.trId = trId + 1;
-				const morTRDyn = tbody.querySelector(`.js-mor-tr-dyn[data-tr-id='${trId}']`);
+			// if (tbody) {
+				let trId = (tbodyMorTable.dataset.trId !== undefined) ? parseInt(tbodyMorTable.dataset.trId, 10) : 1;
+				tbodyMorTable.insertAdjacentHTML('beforeend', genRowParts(trId));
+				tbodyMorTable.dataset.trId = trId + 1;
+				const morTRDyn = tbodyMorTable.querySelector(`.js-mor-tr-dyn[data-tr-id='${trId}']`);
 				if (morTRDyn) {
-					morTRDyn.querySelector('.js-mor-oracle').value = gProjectNumber;
+					morTRDyn.querySelector('.js-mor-oracle').value = morProjectNum.value;
 					morTRDyn.querySelector('.js-mor-site-code').value = gSiteCode;
-					const currentDate = new Date();
-					const formattedDate = currentDate.toISOString().split('T')[0];
-					morTRDyn.querySelector('.js-mor-date-required').value = formattedDate;
+					morTRDyn.querySelector('.js-mor-date-required').value = datetimeToCaDate();
+					if (morCollectParts.value == '0') {
+						collectArrParams(trId, morCollectParts);
+					}
 				}
-			}
+			// }
 		}
 	});
 
 	morDelRow.addEventListener('click', (e) => {
 		let trId = (morDelRow.dataset.trId !== undefined) ? parseInt(morDelRow.dataset.trId, 10) : 0;
-		// if (trId !== 0) {
-			const tbody = morTable.querySelector('TBODY');
-			if (tbody) {
-				const morTRDyn = tbody.querySelector(`.js-mor-tr-dyn[data-tr-id='${trId}']`);
-				if (morTRDyn) {
-					morTRDyn.remove();
-					morDelRow.dataset.trId = 0;
-				}
+		// if (tbodyMorTable) {
+			const morTRDyn = tbodyMorTable.querySelector(`.js-mor-tr-dyn[data-tr-id='${trId}']`);
+			if (morTRDyn) {
+				morTRDyn.remove();
+				morDelRow.dataset.trId = 0;
 			}
 		// }
 	});
@@ -6774,7 +6877,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				});
 				morPartList.classList.remove('d-none');
 			} else if (target.classList.contains('js-mor-oracle') && target.value.trim() != '') {
-				gProjectNumber = target.value.trim();
+				// gProjectNumber = target.value.trim();
+				morProjectNum.value = target.value.trim();
 			} else {
 				morPartList.classList.add('d-none'); 
 			}
@@ -6797,7 +6901,9 @@ window.addEventListener('DOMContentLoaded', () => {
 					const caIdx = caTable.findIndex(ca => parseInt(ca.id, 10) === id);
 					mor_ProjectName.value = caTable[caIdx].project_name;
 					morApprovingMgr.value = caTable[caIdx].project_owner;
-					gProjectNumber = caTable[caIdx].project_num;
+					// gProjectNumber = caTable[caIdx].project_num;
+					morProjectNum.value = caTable[caIdx].project_num;
+					console.log(morProjectNum.value);
 					morCAList.classList.add('d-none');
 				});
 				morCAList.append(li);

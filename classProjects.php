@@ -55,8 +55,6 @@ class ProjectUtils extends \helperUtils\helperUtils {
         return ($this->getOwnerProjectID($projectID) === $this->userID || $this->getRootAccess());
     }
     function userCanEditActivity($projectID, $groupID) {
-        // $activity_status = $this->db_object_project->selectFieldFromTable($this->tProjectsActivity["tableName"], ["project_id" => $projectID, "group_id" => $groupID], "status");
-        // return (($activity_status === 0 || $activity_status === 1) && ($this->userInGroup($groupID) || $this->getRootAccess()));
         return ($this->userInGroup($groupID) || $this->getRootAccess());
     }
     function userInGroup($groupID) {
@@ -182,11 +180,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
         return $this->getGroupsList();
     }
     function getProjectsList($filters = []) {
-        // return $this->db_object_project->selectObjectFromTable($this->tProjects["tableName"], $filters, $this->tProjects["fields"], ["number"]);
-        // $sql = 'SELECT '
         $selected_fields = $this->backquoteForTables([
-            // $this->tProjects["tableName"] => $this->tProjects["fields"],
-            // $this->tUsers["tableName"] => ["user_name"]
             "t1" => $this->tProjects["fields"],
             "t2" => ["user_name"]
         ]);

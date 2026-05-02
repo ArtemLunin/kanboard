@@ -54,8 +54,6 @@ function genCMDBlock($arr_str, $blockName) {
     return $cmd_out;
 }
 
-// $db_object->errorLog(print_r($_POST, true));
-
 if (isset($_POST['efcrFields']) && $efcrFile) {
     $efcrFieldsArr = json_decode($_POST['efcrFields'], true);
     if (!$efcrFieldsArr || !(is_array($efcrFieldsArr)) || count($efcrFieldsArr) == 0) {

@@ -119,6 +119,11 @@ class helperUtils {
 		}
 		return true;
 	}
+	function writeErrorMessage($errorObject) {
+
+		$error_txt_info = $errorObject->getMessage().', file: '.$errorObject->getFile().', line: '.$errorObject->getLine();
+		$this->errorLog($error_txt_info, 1);
+	}
     function totalTrim($str) {
 		$string = htmlentities($str, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'utf-8');
 		$string = str_replace("&nbsp;", " ", $string);
