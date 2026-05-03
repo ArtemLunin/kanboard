@@ -131,7 +131,74 @@ class MORUtils extends \helperUtils\helperUtils {
 	    }
         return false;
 	}
+    function resetMORData($groupID) {
+        $groups = $this->getMORUserGroups($this->userName, $groupID);
+        if (count($groups["groups"])) {
+            return $this->db_object_project->removeObjectFromTableFilter($this->tMOR_fields["tableName"], ["group_id" => $groupID]);
+        }
+        return false;
+    }
     private function issetGroup($groupID) {
         return $this->db_object_project->selectFieldFromTable($this->tMOR_fields["tableName"], ["group_id" => $groupID], "group_id");
+    }
+    function writeXLSX($requestArr, $spreadsheet, $morFlag) {
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setCellValue('A5', trim($requestArr['mor_type']) ?? '');
+        $sheet->setCellValue('C8', trim($requestArr['mor_ca']) ?? '');
+        $sheet->setCellValue('C9', trim($requestArr['mor_project_name']) ?? '');
+        $sheet->setCellValue('C10', trim($requestArr['mor_project_manager']) ?? '');
+        $sheet->setCellValue('C11', trim($requestArr['mor_site']) ?? '');
+        $sheet->setCellValue('C12', trim($requestArr['mor_date']) ?? '');
+        $sheet->setCellValue('C13', trim($requestArr['mor_requestor']) ?? '');
+        $sheet->setCellValue('C14', trim($requestArr['mor_region']) ?? '');
+        $sheet->setCellValue('C15', trim($requestArr['mor_requisition']) ?? '');
+        $sheet->setCellValue('C16', trim($requestArr['mor_add_info']) ?? '');
+        if ($morFlag == 0) {
+            $sheet->setCellValue('G8', trim($requestArr['mor_project_contact']) ?? '');
+            $sheet->setCellValue('G9', trim($requestArr['mor_phone_number']) ?? '');
+            $sheet->setCellValue('G10', trim($requestArr['mor_site_address']) ?? '');
+            $sheet->setCellValue('G11', trim($requestArr['mor_site_address2']) ?? '');
+            $sheet->setCellValue('G12', trim($requestArr['mor_city']) ?? '');
+            $sheet->setCellValue('G13', trim($requestArr['mor_province']) ?? '');
+            $sheet->setCellValue('G14', trim($requestArr['mor_postal_code']) ?? '');
+            $sheet->setCellValue('G15', trim($requestArr['mor_country']) ?? '');
+        }
+        $sheet->setCellValue('G16', trim($requestArr['mor_contractor']) ?? '');
+        $sheet->setCellValue('G17', trim($requestArr['mor_drop_ship']) ?? '');
+        $sheet->setCellValue('G18', trim($requestArr['mor_approving_mgr']) ?? '');
+        if ($morFlag) {
+            $sheet->setCellValue('G8', trim($requestArr['mor_project_contact_from']) ?? '');
+            $sheet->setCellValue('G9', trim($requestArr['mor_phone_number_from']) ?? '');
+            $sheet->setCellValue('G10', trim($requestArr['mor_site_address_from']) ?? '');
+            $sheet->setCellValue('G11', trim($requestArr['mor_site_from']) ?? '');
+            $sheet->setCellValue('G12', trim($requestArr['mor_project_contact_to']) ?? '');
+            $sheet->setCellValue('G13', trim($requestArr['mor_phone_number_to']) ?? '');
+            $sheet->setCellValue('G14', trim($requestArr['mor_site_address_to']) ?? '');
+            $sheet->setCellValue('G15', trim($requestArr['mor_site_to']) ?? '');
+        }
+        if (isset($requestArr['mor_rcpc'])) {
+            $rows_count = count($requestArr['mor_rcpc']);
+        }
+        $rowExcel = 23;
+        for ($row = 0; $row < $rows_count; $row++) { 
+            $sheet->fromArray([
+                $requestArr['mor_rcpc'][$row],
+                $requestArr['mor_vendor_name'][$row],
+                $requestArr['mor_vendor_part'][$row],
+                $requestArr['mor_part_descr'][$row],
+                $requestArr['mor_quantity'][$row],
+                $requestArr['mor_uom'][$row],
+                $requestArr['mor_oracle'][$row],
+                $requestArr['mor_task'][$row],
+                $requestArr['mor_site_code'][$row],
+                $requestArr['mor_date_required'][$row],
+                $requestArr['mor_org'][$row],
+                $requestArr['mor_supplier_notes'][$row],
+                ], 
+                NULL, 
+                'A'. $rowExcel);
+            $rowExcel++;
+        }
+        return $spreadsheet;
     }
 }

@@ -535,6 +535,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		morSite = formMor.querySelector('#mor_site'),
 		morSend = formMor.querySelector('#morSend'),
 		morSave = formMor.querySelector('#morSave'),
+		morReset = formMor.querySelector('#morReset'),
 		saveMor = formMor.querySelector('#saveMOR'),
 		morCA = formMor.querySelector('#mor_ca'),
 		morCAList = document.querySelector('.mor-ca-list'),
@@ -3526,9 +3527,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			projectBriefData.querySelector('#project-brief-name').value = currentProject.dataset.projectName;
 			projectBriefData.querySelector('#project-brief-description').value = currentProject.dataset.projectDescription;
 			toggleProjectsActivityArea('show', renderMopDiv);
-			// projectsActivityArea.textContent = '';
-			// projectsActivityArea.classList.remove('d-none');
-			// projectsActivityArea.append(renderMopDiv);
 			resetHardCodeDesign();
 			displayMOPElements(false);
 			projectFileNumber = 0;
@@ -5788,19 +5786,21 @@ window.addEventListener('DOMContentLoaded', () => {
 		showAllDDP.dispatchEvent(new Event('click'));
 	};
 
-	const switchMORTables = (mor_id) => {
+	const switchMORTables = (mor_id, raiseMorSiteEvent = true) => {
 		morInnerBody.textContent = '';
 		switch (mor_id) {
-			case '1':
+			case '0':
 				morInnerBody.append(morForOthers.content.cloneNode(true));
 				morForReleaseFlag.value = '0';
 				break;
-			case '2':
+			case '1':
 				morInnerBody.append(morForRelease.content.cloneNode(true));
 				morForReleaseFlag.value = '1';
 				break;
 		}
-		morSite.dispatchEvent(new Event('change'));
+		// if (raiseMorSiteEvent) {
+			morSite.dispatchEvent(new Event('change'));
+		// }
 	};
 
 	const getChassisTags = (chassis_id) => {
@@ -6194,6 +6194,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
+	morReset.addEventListener('click', (e) => {
+		e.preventDefault();
+		resetMORData(selMorGroup.value);
+		formMor.reset();
+	});
+
 	formMor.addEventListener('reset', (e) => {
 		setTimeout(() => {
 			morSite.value = '';
@@ -6214,6 +6220,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 			morCollectParts.value = '0';
 		}, 0);
+	});
+	formMor.addEventListener('resetSubmit', (e) => {
 	});
 
 	morSend.addEventListener('click', (e) => {
@@ -6259,6 +6267,15 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 	});
+	function resetMORData(group_id) {
+		sendRequest('POST', requestURLMOR, {
+			method: 'resetMORData',
+			id: group_id,
+			env: 'mor',
+		}).then((data) => {
+			// console.log(data);
+		});
+	}
 
 	formFields.addEventListener('submit', (e) => {
 		e.preventDefault();
@@ -6520,21 +6537,26 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (data && data.success && data.success.answer && data.success.answer[0] && data.success.answer[0].field_json_props) {
 				const simpleParams = {};
 				const arrayEntries = [];
+				let mor_flag = '0';
 				const fieldProps = JSON.parse(data.success.answer[0].field_json_props);
 				Object.entries(fieldProps).forEach(([key, value]) => {
 					if (Array.isArray(value)) {
 						arrayEntries.push([key, value]);
 					} else {
 						simpleParams[key] = value;
+						if (key === 'morForReleaseFlag') {
+							mor_flag = value;
+						}
 					}
 				});
-
+				switchMORTables(mor_flag);
 				for (const simpleParam in simpleParams) {
 					const formElement = document.querySelector(`#${simpleParam}`);
 					if (formElement) {
 						formElement.value = simpleParams[simpleParam];
 					}
 				}
+				gSiteCode = morSite.value;
 
 				const arrParts = [];
 				if (arrayEntries.length > 0) {
@@ -6556,8 +6578,6 @@ window.addEventListener('DOMContentLoaded', () => {
 					rowObject['mor_site_code'] = morSite.value;
 					arrParts.push(rowObject);
 				}
-
-				// morSite.dispatchEvent(new Event('change'));
 				mor_requestor.dispatchEvent(new Event('change'));
 			}
 		});	
@@ -6798,7 +6818,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	morSite.addEventListener('change', (e) => {
 		const target = e.target;
 		try {
-			const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
+			const id = (target.options[target.selectedIndex] !== undefined) ? parseInt(target.options[target.selectedIndex].dataset.id, 10) : siteTable[0].id;
 			const siteIdx = siteTable.findIndex(site => parseInt(site.id, 10) === id);
 			document.querySelector('#mor_region').value = siteTable[siteIdx].region;
 			switch (morForReleaseFlag.value) {
@@ -6818,6 +6838,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 			mor_requestor.dispatchEvent(new Event('change'));
 		} catch (e) {
+			// console.error(e);
 		}
 		gSiteCode = target.value;
 	});
@@ -6903,7 +6924,6 @@ window.addEventListener('DOMContentLoaded', () => {
 					morApprovingMgr.value = caTable[caIdx].project_owner;
 					// gProjectNumber = caTable[caIdx].project_num;
 					morProjectNum.value = caTable[caIdx].project_num;
-					console.log(morProjectNum.value);
 					morCAList.classList.add('d-none');
 				});
 				morCAList.append(li);

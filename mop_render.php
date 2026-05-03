@@ -2,14 +2,20 @@
 require 'vendor/autoload.php';
 require_once 'db_conf.php';
 require_once 'classDatabase.php';
+require_once 'classMor.php';
 
 use DocxMerge\DocxMerge;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
 // use Jupitern\Docx;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $db_object = new mySQLDatabaseUtils\databaseUtilsMOP();
 
 $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/mop_template.docx');
+
 $efcrFile = file('template/eFCR.txt');
 $efcrFile2 = false;
 $efcr_res = false;
@@ -403,14 +409,73 @@ if ($complexDoc == 2) {
     }
     //add mor file (test)
     if (true) {
-        $filename_mor = tempnam(sys_get_temp_dir(), 'docx');
-        copy('temp/mor_blank.docx', $filename_mor);
-        $sourceZip = new \ZipArchive();
-        $sourceZip->open($filename_mor);
-        $sourceZip->deleteName('word/embeddings/oleObject1.xlsx');
-        $sourceZip->addFile('temp/impl.xlsx', 'word/embeddings/oleObject1.xlsx');
-        $sourceZip->close();
-        $docsListWithBlankPage[] = $filename_mor;
+        $group_id = 15;
+        $mor_object = new myMORUtils\MORUtils();
+        $db_mor = $mor_object->getMORData('savedData', $group_id);
+        $morFields = json_decode($db_mor[0]['field_json_props'], true);
+        if ($morFields) {
+            $morForReleaseFlag = $morFields['morForReleaseFlag'] ?? 0;;
+            $filename = tempnam(sys_get_temp_dir(), 'xlsx');
+            $spreadsheetObj = IOFactory::load('template/MOR_template.xlsx');
+            if ($morForReleaseFlag) {
+                $spreadsheetObj = IOFactory::load('template/MOR_template_release.xlsx');
+            }
+            $spreadsheetObj = $mor_object->writeXLSX($morFields, $spreadsheetObj, $morForReleaseFlag);
+            $writer = new XlsxWriter($spreadsheetObj);
+            $writer->save($filename);
+            $filename_mor = tempnam(sys_get_temp_dir(), 'docx');
+            copy('template/mor_blank.docx', $filename_mor);
+            $zip = new \ZipArchive();
+            if ($zip->open($filename_mor) !== true) {
+                die("Не удалось открыть файл.");
+            }
+            $docXml = $zip->getFromName('word/document.xml');
+            $dom = new DOMDocument();
+            $dom->loadXML($docXml);
+            $xpath = new DOMXPath($dom);
+            $xpath->registerNamespace("w", "http://schemas.openxmlformats.org/wordprocessingml/2006/main");
+            $xpath->registerNamespace("v", "urn:schemas-microsoft-com:vml");
+            $xpath->registerNamespace("o", "urn:schemas-microsoft-com:office:office");
+            $xpath->registerNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+
+            $bookmarkMOR = $xpath->query("//w:bookmarkStart[@w:name='MOR_FILES']")->item(0)->parentNode;
+            $relsXml = $zip->getFromName('word/_rels/document.xml.rels');
+            $relsDom = new DOMDocument();
+            $relsDom->loadXML($relsXml);
+            $docx_object = new helperUtils\DocxProcessor($dom, $relsDom, $xpath, $zip, $db_object);
+            $docx_object->embedOleAttachments([['tmp_name' => $filename, 'name' => 'MOR.xlsx']], 'excel-48.png', 'xlsx', $bookmarkMOR);
+            $docx_object->saveToZip();
+
+            $contentTypesXml = $zip->getFromName('[Content_Types].xml');
+            if (strpos($contentTypesXml, 'Extension="bin"') === false) {
+                $ctDom = new DOMDocument();
+                $ctDom->loadXML($contentTypesXml);
+                $newNode = $ctDom->createElement('Default');
+                $newNode->setAttribute('Extension', 'bin');
+                $newNode->setAttribute('ContentType', 'application/vnd.openxmlformats-officedocument.oleObject');
+                $ctDom->documentElement->appendChild($newNode);
+                $zip->addFromString('[Content_Types].xml', $ctDom->saveXML());
+            }
+
+            $zip->close();
+
+            copy($filename_mor, 'temp/test.docx');
+            $docsListWithBlankPage[] = $filename_mor;
+        } else {
+            $db_object->errorLog('MOR data is corrupted, group_id:' . $group_id);
+        }
+        // $db_object->errorLog(print_r($morFields, true));
+        // if ($arr_mor) {
+        //     $db_object->errorLog(print_r($arr_mor, true));
+        // }
+        // $filename_mor = tempnam(sys_get_temp_dir(), 'docx');
+        // copy('temp/mor_blank.docx', $filename_mor);
+        // $sourceZip = new \ZipArchive();
+        // $sourceZip->open($filename_mor);
+        // $sourceZip->deleteName('word/embeddings/oleObject1.xlsx');
+        // $sourceZip->addFile('temp/impl.xlsx', 'word/embeddings/oleObject1.xlsx');
+        // $sourceZip->close();
+        // $docsListWithBlankPage[] = $filename_mor;
     }
 
     $dm = new DocxMerge();

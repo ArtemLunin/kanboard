@@ -72,147 +72,16 @@ $flooPlan = $xpath->query("//w:bookmarkStart[@w:name='FLOOR_PLAN']")->item(0)->p
 $edsFile = $xpath->query("//w:bookmarkStart[@w:name='EDS_FILE']")->item(0)->parentNode;
 $basicMopFile = $xpath->query("//w:bookmarkStart[@w:name='BASIC_MOP_FILE']")->item(0)->parentNode;
 
-// if (!$bookmark) {
-//     $zip->close();
-//     die("Закладка RACK_LAYOUT_PREVIEW не найдена.");
-// }
-
-// $targetParagraph = $bookmark->parentNode;
-
 $relsXml = $zip->getFromName('word/_rels/document.xml.rels');
 $relsDom = new DOMDocument();
 $relsDom->loadXML($relsXml);
 
-/**
- * Logic for dynamic embedding of Word documents (.docx) as OLE objects.
- * * Features:
- * 1. Each attachment is wrapped in its own paragraph (<w:p>).
- * 2. Original filenames are displayed as captions below the icons using a line break.
- * 3. All logic, variables, and comments are standardized in English.
- */
-
-// if ($count > 0) {
-//     /** @var string $iconPath Local path to the static Word icon asset */
-//     $iconPath = 'img/word-48.png'; 
-
-//     /** @var DOMNode $documentBody Parent node where new paragraphs will be inserted */
-//     $documentBody = $targetParagraph->parentNode;
-
-//     for ($i = 0; $i < $count; $i++) {
-//         // Skip files with upload errors
-//         if ($uploadedFiles['error'][$i] !== UPLOAD_ERR_OK) {
-//             continue;
-//         }
-//         if ($db_object->getUploadedFileExt($uploadedFiles['name'][$i]) !== 'docx') continue;
-
-//         /** @var string $uniqueIndex Identifier generated to avoid XML ID collisions */
-//         $uniqueIndex = time() . "_" . $i; 
-//         $tempFilePath = $uploadedFiles['tmp_name'][$i];
-//         $originalFileName = $uploadedFiles['name'][$i];
-        
-//         /** Define internal paths within the OpenXML archive structure */
-//         $internalOlePath = "word/embeddings/oleObject{$uniqueIndex}.docx";
-//         $internalImagePath = "word/media/image_icon_{$uniqueIndex}.png";
-
-//         // Inject files into the ZIP archive
-//         $zip->addFile($tempFilePath, $internalOlePath);
-//         if (file_exists($iconPath)) {
-//             $zip->addFile($iconPath, $internalImagePath);
-//         }
-
-//         /** @var string $relIdOle Relationship ID for the OLE binary */
-//         $relIdOle = "rIdOle{$uniqueIndex}";
-//         /** @var string $relIdImg Relationship ID for the visual icon */
-//         $relIdImg = "rIdImg{$uniqueIndex}";
-
-//         // Register relationships in word/_rels/document.xml.rels
-//         // Note: Ensure the addRel helper function is defined globally
-//         addRel($relsDom, $relIdOle, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject', $internalOlePath);
-//         addRel($relsDom, $relIdImg, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image', $internalImagePath);
-
-//         /**
-//          * XML STRUCTURE GENERATION
-//          * Create a dedicated paragraph to house the icon and the filename caption.
-//          */
-//         $newParagraph = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:p");
-        
-//         // Clone formatting properties from the template placeholder paragraph
-//         $paragraphProperties = $xpath->query("w:pPr", $targetParagraph)->item(0);
-//         if ($paragraphProperties) {
-//             $newParagraph->appendChild($paragraphProperties->cloneNode(true));
-//         }
-
-//         /** ICON RUN: Contains the clickable OLE object */
-//         $iconRun = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
-//         $objectContainer = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:object");
-        
-//         // VML Shape: Defines the visual boundaries of the icon
-//         $vmlShape = $dom->createElementNS("urn:schemas-microsoft-com:vml", "v:shape");
-//         $vmlShape->setAttribute('id', "_x0000_i" . $uniqueIndex);
-//         $vmlShape->setAttribute('style', "width:72pt;height:72pt"); 
-//         $vmlShape->setAttribute('o:ole', ""); 
-//         $vmlShape->setAttribute('alt', $originalFileName); 
-
-//         $imageData = $dom->createElementNS("urn:schemas-microsoft-com:vml", "v:imagedata");
-//         $imageData->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdImg);
-//         $imageData->setAttribute('o:title', $originalFileName);
-        
-//         $vmlShape->appendChild($imageData);
-//         $objectContainer->appendChild($vmlShape);
-        
-//         // OLEObject: Links the shape to the embedded binary content
-//         $oleObject = $dom->createElementNS("urn:schemas-microsoft-com:office:office", "o:OLEObject");
-//         $oleObject->setAttribute('Type', 'Embed');
-//         $oleObject->setAttribute('ProgID', 'Word.Document.12');
-//         $oleObject->setAttribute('ShapeID', "_x0000_i" . $uniqueIndex);
-//         $oleObject->setAttribute('DrawAspect', 'Icon');
-//         $oleObject->setAttribute('ObjectID', "_" . $uniqueIndex);
-//         $oleObject->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdOle);
-        
-//         $objectContainer->appendChild($oleObject);
-//         $iconRun->appendChild($objectContainer);
-//         $newParagraph->appendChild($iconRun);
-
-//         /** CAPTION RUN: Displays the filename below the icon */
-//         $captionRun = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
-        
-//         // Insert a line break to separate the text from the icon
-//         $lineBreak = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:br");
-//         $captionRun->appendChild($lineBreak);
-        
-//         // Optional: Apply formatting to the caption text (e.g., smaller font size)
-//         $runProperties = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:rPr");
-//         $fontSize = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:sz");
-//         $fontSize->setAttribute('w:val', '18'); // Equivalent to 9pt
-//         $runProperties->appendChild($fontSize);
-//         $captionRun->appendChild($runProperties);
-
-//         $textNode = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:t");
-//         $textNode->nodeValue = $originalFileName;
-//         $captionRun->appendChild($textNode);
-        
-//         $newParagraph->appendChild($captionRun);
-        
-//         // Place the newly constructed paragraph into the document structure
-//         $documentBody->insertBefore($newParagraph, $targetParagraph);
-//     }
-    
-//     // Clean up: Remove the original template bookmark paragraph
-//     $documentBody->removeChild($targetParagraph);
-// } else {
-//     // If no files are provided, ensure the template placeholder is removed
-//     if ($targetParagraph && $targetParagraph->parentNode) {
-//         $targetParagraph->parentNode->removeChild($targetParagraph);
-//     }
-// }
-
-embedOleAttachments($_FILES['rack_layout'], 'word-48.png', 'docx', $bookmarkDoc);
-embedOleAttachments($_FILES['floor_plan'], 'word-48.png', 'docx', $flooPlan);
-embedOleAttachments($_FILES['edsFile'], 'word-48.png', 'docx', $edsFile);
-embedOleAttachments($_FILES['basicMopFile'], 'word-48.png', 'docx', $basicMopFile);
-
-$zip->addFromString('word/document.xml', $dom->saveXML());
-$zip->addFromString('word/_rels/document.xml.rels', $relsDom->saveXML());
+$docx_object = new helperUtils\DocxProcessor($dom, $relsDom, $xpath, $zip, $db_object);
+$docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['rack_layout']), 'word-48.png', 'docx', $bookmarkDoc);
+$docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['floor_plan']), 'word-48.png', 'docx', $flooPlan);
+$docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['edsFile']), 'word-48.png', 'docx', $edsFile);
+$docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['basicMopFile']), 'word-48.png', 'docx', $basicMopFile);
+$docx_object->saveToZip();
 
 $contentTypesXml = $zip->getFromName('[Content_Types].xml');
 if (strpos($contentTypesXml, 'Extension="bin"') === false) {
@@ -237,137 +106,137 @@ $contents = fread($handle, filesize($filename));
 echo $contents;
 }
 
-function addRel($dom, $id, $type, $target) {
-    $root = $dom->documentElement;
-    $rel = $dom->createElement('Relationship');
-    $rel->setAttribute('Id', $id);
-    $rel->setAttribute('Type', $type);
-    $rel->setAttribute('Target', str_replace('word/', '', $target));
-    $root->appendChild($rel);
-}
+// function addRel($dom, $id, $type, $target) {
+//     $root = $dom->documentElement;
+//     $rel = $dom->createElement('Relationship');
+//     $rel->setAttribute('Id', $id);
+//     $rel->setAttribute('Type', $type);
+//     $rel->setAttribute('Target', str_replace('word/', '', $target));
+//     $root->appendChild($rel);
+// }
 
-/**
- * Function for dynamic embedding of various file types as OLE objects.
- * * @param array $uploadedFiles Array from $_FILES['input_name']
- * @param string $iconFileName Name of the icon file in the assets folder
- * @param string $fileType Expected file extension (e.g., 'docx')
- * @param DOMNode $targetParagraph The paragraph node found via bookmark search
- */
-function embedOleAttachments($uploadedFiles, $iconFileName, $fileType, $targetParagraph) {
-    global $dom, $relsDom, $xpath, $zip, $db_object;
-    if (!$targetParagraph || !$targetParagraph->parentNode) {
-        return;
-    }
-    /** @var DOMNode $documentBody Parent node where new paragraphs will be inserted */
-    $documentBody = $targetParagraph->parentNode;
-    $count = isset($uploadedFiles['name']) ? count($uploadedFiles['name']) : 0;
-    $iconPath = 'img/' . $iconFileName;
-    if ($count > 0) {
-        for ($i = 0; $i < $count; $i++) {
-            // Skip files with upload errors
-            if ($uploadedFiles['error'][$i] !== UPLOAD_ERR_OK) {
-                continue;
-            }
-            // Validate file extension
-            if ($db_object->getUploadedFileExt($uploadedFiles['name'][$i]) !== $fileType) {
-                continue;
-            }
+// /**
+//  * Function for dynamic embedding of various file types as OLE objects.
+//  * * @param array $uploadedFiles Array from $_FILES['input_name']
+//  * @param string $iconFileName Name of the icon file in the assets folder
+//  * @param string $fileType Expected file extension (e.g., 'docx')
+//  * @param DOMNode $targetParagraph The paragraph node found via bookmark search
+//  */
+// function embedOleAttachments($uploadedFiles, $iconFileName, $fileType, $targetParagraph) {
+//     global $dom, $relsDom, $xpath, $zip, $db_object;
+//     if (!$targetParagraph || !$targetParagraph->parentNode) {
+//         return;
+//     }
+//     /** @var DOMNode $documentBody Parent node where new paragraphs will be inserted */
+//     $documentBody = $targetParagraph->parentNode;
+//     $count = isset($uploadedFiles['name']) ? count($uploadedFiles['name']) : 0;
+//     $iconPath = 'img/' . $iconFileName;
+//     if ($count > 0) {
+//         for ($i = 0; $i < $count; $i++) {
+//             // Skip files with upload errors
+//             if ($uploadedFiles['error'][$i] !== UPLOAD_ERR_OK) {
+//                 continue;
+//             }
+//             // Validate file extension
+//             if ($db_object->getUploadedFileExt($uploadedFiles['name'][$i]) !== $fileType) {
+//                 continue;
+//             }
 
-            /** @var string $uniqueIndex Identifier generated to avoid XML ID collisions */
-            $uniqueIndex = time() . "_" . $i . "_" . uniqid(); 
-            $tempFilePath = $uploadedFiles['tmp_name'][$i];
-            $originalFileName = $uploadedFiles['name'][$i];
+//             /** @var string $uniqueIndex Identifier generated to avoid XML ID collisions */
+//             $uniqueIndex = time() . "_" . $i . "_" . uniqid(); 
+//             $tempFilePath = $uploadedFiles['tmp_name'][$i];
+//             $originalFileName = $uploadedFiles['name'][$i];
             
-            /** Define internal paths within the OpenXML archive structure */
-            $internalOlePath = "word/embeddings/oleObject{$uniqueIndex}.{$fileType}";
-            $internalImagePath = "word/media/image_icon_{$uniqueIndex}.png";
+//             /** Define internal paths within the OpenXML archive structure */
+//             $internalOlePath = "word/embeddings/oleObject{$uniqueIndex}.{$fileType}";
+//             $internalImagePath = "word/media/image_icon_{$uniqueIndex}.png";
 
-            // Inject files into the ZIP archive
-            $zip->addFile($tempFilePath, $internalOlePath);
-            if (file_exists($iconPath)) {
-                $zip->addFile($iconPath, $internalImagePath);
-            }
+//             // Inject files into the ZIP archive
+//             $zip->addFile($tempFilePath, $internalOlePath);
+//             if (file_exists($iconPath)) {
+//                 $zip->addFile($iconPath, $internalImagePath);
+//             }
 
-            /** @var string $relIdOle Relationship ID for the OLE binary */
-            $relIdOle = "rIdOle{$uniqueIndex}";
-            /** @var string $relIdImg Relationship ID for the visual icon */
-            $relIdImg = "rIdImg{$uniqueIndex}";
+//             /** @var string $relIdOle Relationship ID for the OLE binary */
+//             $relIdOle = "rIdOle{$uniqueIndex}";
+//             /** @var string $relIdImg Relationship ID for the visual icon */
+//             $relIdImg = "rIdImg{$uniqueIndex}";
 
-            // Register relationships in word/_rels/document.xml.rels
-            // addRel function must be defined globally to work here
-            addRel($relsDom, $relIdOle, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject', $internalOlePath);
-            addRel($relsDom, $relIdImg, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image', $internalImagePath);
+//             // Register relationships in word/_rels/document.xml.rels
+//             // addRel function must be defined globally to work here
+//             addRel($relsDom, $relIdOle, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject', $internalOlePath);
+//             addRel($relsDom, $relIdImg, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image', $internalImagePath);
 
-            /**
-             * XML STRUCTURE GENERATION
-             * Create a dedicated paragraph to house the icon and the filename caption.
-             */
-            $newParagraph = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:p");
+//             /**
+//              * XML STRUCTURE GENERATION
+//              * Create a dedicated paragraph to house the icon and the filename caption.
+//              */
+//             $newParagraph = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:p");
             
-            // Clone formatting properties from the template placeholder paragraph
-            $paragraphProperties = $xpath->query("w:pPr", $targetParagraph)->item(0);
-            if ($paragraphProperties) {
-                $newParagraph->appendChild($paragraphProperties->cloneNode(true));
-            }
+//             // Clone formatting properties from the template placeholder paragraph
+//             $paragraphProperties = $xpath->query("w:pPr", $targetParagraph)->item(0);
+//             if ($paragraphProperties) {
+//                 $newParagraph->appendChild($paragraphProperties->cloneNode(true));
+//             }
 
-            /** ICON RUN: Contains the clickable OLE object */
-            $iconRun = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
-            $objectContainer = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:object");
+//             /** ICON RUN: Contains the clickable OLE object */
+//             $iconRun = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
+//             $objectContainer = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:object");
             
-            // VML Shape: Defines the visual boundaries of the icon
-            $vmlShape = $dom->createElementNS("urn:schemas-microsoft-com:vml", "v:shape");
-            $vmlShape->setAttribute('id', "_x0000_i" . $uniqueIndex);
-            $vmlShape->setAttribute('style', "width:72pt;height:72pt"); 
-            $vmlShape->setAttribute('o:ole', ""); 
-            $vmlShape->setAttribute('alt', $originalFileName); 
+//             // VML Shape: Defines the visual boundaries of the icon
+//             $vmlShape = $dom->createElementNS("urn:schemas-microsoft-com:vml", "v:shape");
+//             $vmlShape->setAttribute('id', "_x0000_i" . $uniqueIndex);
+//             $vmlShape->setAttribute('style', "width:72pt;height:72pt"); 
+//             $vmlShape->setAttribute('o:ole', ""); 
+//             $vmlShape->setAttribute('alt', $originalFileName); 
 
-            $imageData = $dom->createElementNS("urn:schemas-microsoft-com:vml", "v:imagedata");
-            $imageData->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdImg);
-            $imageData->setAttribute('o:title', $originalFileName);
+//             $imageData = $dom->createElementNS("urn:schemas-microsoft-com:vml", "v:imagedata");
+//             $imageData->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdImg);
+//             $imageData->setAttribute('o:title', $originalFileName);
             
-            $vmlShape->appendChild($imageData);
-            $objectContainer->appendChild($vmlShape);
+//             $vmlShape->appendChild($imageData);
+//             $objectContainer->appendChild($vmlShape);
             
-            // OLEObject: Links the shape to the embedded binary content
-            $oleObject = $dom->createElementNS("urn:schemas-microsoft-com:office:office", "o:OLEObject");
-            $oleObject->setAttribute('Type', 'Embed');
-            // Set ProgID based on file type
-            $progId = ($fileType === 'docx') ? 'Word.Document.12' : 'Acrobat.Document.DC';
-            $oleObject->setAttribute('ProgID', $progId);
-            $oleObject->setAttribute('ShapeID', "_x0000_i" . $uniqueIndex);
-            $oleObject->setAttribute('DrawAspect', 'Icon');
-            $oleObject->setAttribute('ObjectID', "_" . $uniqueIndex);
-            $oleObject->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdOle);
+//             // OLEObject: Links the shape to the embedded binary content
+//             $oleObject = $dom->createElementNS("urn:schemas-microsoft-com:office:office", "o:OLEObject");
+//             $oleObject->setAttribute('Type', 'Embed');
+//             // Set ProgID based on file type
+//             $progId = ($fileType === 'docx') ? 'Word.Document.12' : 'Acrobat.Document.DC';
+//             $oleObject->setAttribute('ProgID', $progId);
+//             $oleObject->setAttribute('ShapeID', "_x0000_i" . $uniqueIndex);
+//             $oleObject->setAttribute('DrawAspect', 'Icon');
+//             $oleObject->setAttribute('ObjectID', "_" . $uniqueIndex);
+//             $oleObject->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdOle);
             
-            $objectContainer->appendChild($oleObject);
-            $iconRun->appendChild($objectContainer);
-            $newParagraph->appendChild($iconRun);
+//             $objectContainer->appendChild($oleObject);
+//             $iconRun->appendChild($objectContainer);
+//             $newParagraph->appendChild($iconRun);
 
-            /** CAPTION RUN: Displays the filename below the icon */
-            $captionRun = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
+//             /** CAPTION RUN: Displays the filename below the icon */
+//             $captionRun = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
             
-            // Insert a line break to separate the text from the icon
-            $lineBreak = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:br");
-            $captionRun->appendChild($lineBreak);
+//             // Insert a line break to separate the text from the icon
+//             $lineBreak = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:br");
+//             $captionRun->appendChild($lineBreak);
             
-            // Apply formatting to the caption text
-            $runProperties = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:rPr");
-            $fontSize = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:sz");
-            $fontSize->setAttribute('w:val', '18'); // Equivalent to 9pt
-            $runProperties->appendChild($fontSize);
-            $captionRun->appendChild($runProperties);
+//             // Apply formatting to the caption text
+//             $runProperties = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:rPr");
+//             $fontSize = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:sz");
+//             $fontSize->setAttribute('w:val', '18'); // Equivalent to 9pt
+//             $runProperties->appendChild($fontSize);
+//             $captionRun->appendChild($runProperties);
 
-            $textNode = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:t");
-            $textNode->nodeValue = $originalFileName;
-            $captionRun->appendChild($textNode);
+//             $textNode = $dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:t");
+//             $textNode->nodeValue = $originalFileName;
+//             $captionRun->appendChild($textNode);
             
-            $newParagraph->appendChild($captionRun);
+//             $newParagraph->appendChild($captionRun);
             
-            // Place the newly constructed paragraph into the document structure
-            $documentBody->insertBefore($newParagraph, $targetParagraph);
-        }
-    }
+//             // Place the newly constructed paragraph into the document structure
+//             $documentBody->insertBefore($newParagraph, $targetParagraph);
+//         }
+//     }
 
-    // Always clean up: Remove the original template bookmark/placeholder paragraph
-    $documentBody->removeChild($targetParagraph);
-}
+//     // Always clean up: Remove the original template bookmark/placeholder paragraph
+//     $documentBody->removeChild($targetParagraph);
+// }
