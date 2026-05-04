@@ -108,7 +108,6 @@ foreach ($_POST as $param => $value) {
     }
     if ($param === 'groupList') {
         $groupList = json_decode($value, true);
-        $db_object->errorLog($groupList, true);
         continue;
     }
     if ($param === 'projectFileNumber') {
@@ -340,62 +339,13 @@ $sourceZip->close();
 if ($complexDoc == 1) {
     header('Content-type: application/json');
     if (($fileNameDocx = $db_object->storeDocFile($filename, $resultFileName, $activityID, $projectGroupName)) != false) {
-
-        // if ($projectFileNumber == $projectActivityCount) 
-        // {
-        //     if ($projectDocsList != null) {
-        //         array_push($projectDocsList, $fileNameDocx);
-        //         $db_object->errorLog(print_r($projectDocsList, true));
-        //         header('Content-type: application/json');
-        //         echo json_encode(['success' => [
-        //                 'answer' => [
-        //                     'files' => $projectDocsList,
-        //                 ]
-        //             ]
-        //         ]);
-        //         exit;
-        //         // $outDocFile = tempnam(sys_get_temp_dir(), 'docx');
-        //         // array_walk($projectDocsList, function (&$file_name) {
-		// 		// 	$file_name = 'temp/' . $file_name;
-		// 		// });
-        //         // $dm = new DocxMerge();
-        //         // $dm->merge($projectDocsList, $outDocFile);
-
-        //         $dm = new DocxMerge();
-        //         $dm->merge( [
-        //             "temp/doc_135.docx",
-        //             "temp/doc_136.docx"
-        //         ], "temp/result.docx" );
-
-        //         header("Content-Type: application/vnd.ms-word; charset=utf-8");
-        //         header("Content-Disposition: attachment; filename="."compDoc.docx");
-        //         header("Expires: 0");
-        //         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-        //         header("Cache-Control: private", false);
-        //         $handle = fopen("temp/result.docx", "r");
-        //         $contents = fread($handle, filesize("temp/result.docx"));
-        //         echo $contents;
-        //         exit;
-        //     } else {
-        //         header('Content-type: application/json');
-        //         echo json_encode(['success' => [
-        //                 'answer' => [
-        //                     'error' => 'bad list files',
-        //                 ]
-        //             ]
-        //         ]);
-        //         exit;
-        //     }
-        // } else {
-            
-            echo json_encode(['success' => [
-                    'answer' => [
-                        'storedFile' => $fileNameDocx,
-                        'projectFileNumber' => $projectFileNumber + 1,
-                    ]
+        echo json_encode(['success' => [
+                'answer' => [
+                    'storedFile' => $fileNameDocx,
+                    'projectFileNumber' => $projectFileNumber + 1,
                 ]
-            ]);
-        // }
+            ]
+        ]);
     } else {
         echo json_encode(['success' => false]);
     }
@@ -414,26 +364,28 @@ if ($complexDoc == 2) {
             $docsListWithBlankPage[] = 'template/mop_blank.docx';
         }
     }
-    //add mor file (test)
     if (isset($groupList) && is_array($groupList) && count($groupList) > 0) {
-        $db_object->errorLog($groupList, true);
-    }
-    if (true) {
-        $db_object->errorLog(print_r($groupList, true));
-        $group_id = 15;
-        $mor_object = new myMORUtils\MORUtils();
-        $db_mor = $mor_object->getMORData('savedData', $group_id);
-        $morFields = json_decode($db_mor[0]['field_json_props'], true);
-        if ($morFields) {
-            $morForReleaseFlag = $morFields['morForReleaseFlag'] ?? 0;;
-            $filename = tempnam(sys_get_temp_dir(), 'xlsx');
-            $spreadsheetObj = IOFactory::load('template/MOR_template.xlsx');
-            if ($morForReleaseFlag) {
-                $spreadsheetObj = IOFactory::load('template/MOR_template_release.xlsx');
+        $xls_attachments = [];
+        foreach ($groupList as $group_prop) {
+            $mor_object = new myMORUtils\MORUtils();
+            $db_mor = $mor_object->getMORData('savedData', (int)$group_prop['id']);
+            $morFields = json_decode($db_mor[0]['field_json_props'], true);
+            if ($morFields) {
+                $morForReleaseFlag = $morFields['morForReleaseFlag'] ?? 0;;
+                $filename = tempnam(sys_get_temp_dir(), 'xlsx');
+                $spreadsheetObj = IOFactory::load('template/MOR_template.xlsx');
+                if ($morForReleaseFlag) {
+                    $spreadsheetObj = IOFactory::load('template/MOR_template_release.xlsx');
+                }
+                $spreadsheetObj = $mor_object->writeXLSX($morFields, $spreadsheetObj, $morForReleaseFlag);
+                $writer = new XlsxWriter($spreadsheetObj);
+                $writer->save($filename);
+                $xls_attachments[] = ['tmp_name' => $filename, 'name' => $group_prop['name'] . '_MOR.xlsx'];
+            } else {
+                $db_object->errorLog('MOR data is corrupted, group_name:' . $group_prop['name']);
             }
-            $spreadsheetObj = $mor_object->writeXLSX($morFields, $spreadsheetObj, $morForReleaseFlag);
-            $writer = new XlsxWriter($spreadsheetObj);
-            $writer->save($filename);
+        }
+        if (count($xls_attachments) > 0) {
             $filename_mor = tempnam(sys_get_temp_dir(), 'docx');
             copy('template/mor_blank.docx', $filename_mor);
             $zip = new \ZipArchive();
@@ -454,7 +406,7 @@ if ($complexDoc == 2) {
             $relsDom = new DOMDocument();
             $relsDom->loadXML($relsXml);
             $docx_object = new helperUtils\DocxProcessor($dom, $relsDom, $xpath, $zip, $db_object);
-            $docx_object->embedOleAttachments([['tmp_name' => $filename, 'name' => 'MOR.xlsx']], 'excel-48.png', 'xlsx', $bookmarkMOR);
+            $docx_object->embedOleAttachments($xls_attachments, 'excel-48.png', 'xlsx', $bookmarkMOR);
             $docx_object->saveToZip();
 
             $contentTypesXml = $zip->getFromName('[Content_Types].xml');
@@ -472,30 +424,10 @@ if ($complexDoc == 2) {
 
             copy($filename_mor, 'temp/test.docx');
             $docsListWithBlankPage[] = $filename_mor;
-        } else {
-            $db_object->errorLog('MOR data is corrupted, group_id:' . $group_id);
         }
-        // $db_object->errorLog(print_r($morFields, true));
-        // if ($arr_mor) {
-        //     $db_object->errorLog(print_r($arr_mor, true));
-        // }
-        // $filename_mor = tempnam(sys_get_temp_dir(), 'docx');
-        // copy('temp/mor_blank.docx', $filename_mor);
-        // $sourceZip = new \ZipArchive();
-        // $sourceZip->open($filename_mor);
-        // $sourceZip->deleteName('word/embeddings/oleObject1.xlsx');
-        // $sourceZip->addFile('temp/impl.xlsx', 'word/embeddings/oleObject1.xlsx');
-        // $sourceZip->close();
-        // $docsListWithBlankPage[] = $filename_mor;
     }
-
     $dm = new DocxMerge();
     $result = $dm->merge($docsListWithBlankPage, $outDocFile);
-
-    // $docxMerge = \Jupitern\Docx\DocxMerge::instance()
-	// ->addFiles($projectDocsList)
-	// ->save($outDocFile, true);
-
     header("Content-Type: application/vnd.ms-word; charset=utf-8");
     header("Content-Disposition: attachment; filename=".$resultFileName);
     header("Expires: 0");
@@ -509,6 +441,7 @@ if ($complexDoc == 2) {
     }
     unlink($outDocFile);
     exit;
+}
 }
 if ($exportDGWConfig !== false) {
     header("Content-Type: text/plain; charset=utf-8");
@@ -528,5 +461,4 @@ if ($exportDGWConfig !== false) {
     $handle = fopen($filename, "r");
     $contents = fread($handle, filesize($filename));
     echo $contents;
-}
 }

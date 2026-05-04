@@ -3039,14 +3039,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		mosaicTable.ajax.reload();
 	};
 
-	// const clearDevicesDataTemp = () => {
-	// 	const body = {
-	// 		env: 'services',
-	// 		call: 'clearDevicesDataTemp',
-	// 	};
-	// 	sendRequest('POST', requestURL, body).then(getMosaic);
-	// };
-
 	const updateDevicesData = (args) => {
 		const body = {
 			env: 'services',
@@ -3536,7 +3528,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (downloadProject) {
 				let finishedActivities = 0;
 				let totalActivities = 0;
-				// const groupIds = JSON.parse(projectActivity.dataset.groupsList);
 				currentProject.querySelectorAll('.project-activity').forEach(activityElem => {
 					if (activityElem.dataset.activity_id != '0') {
 						totalActivities++;
@@ -3581,8 +3572,9 @@ window.addEventListener('DOMContentLoaded', () => {
 						}
 					}
 					if (projectFileNumber == projectActivitiesList.length) {
-						formFields.querySelector('#groupList').value = projectActivity.dataset.groupsList;
-						// console.log(formFields.querySelector('#groupList').value);
+						const proj_ = JSON.parse(document.querySelector('#projectGroupsAct').textContent);
+						const gr_list = JSON.stringify(proj_[projectActivity.dataset.project_id]);
+						formFields.querySelector('#groupList').value = gr_list;
 						submitRenderForm(formFields, activity, 2);
 					}
 				}
@@ -3677,20 +3669,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 		}
 	}
-
-	// projectsList.addEventListener('click', (e) => {
-	// 	const target = e.target;
-	// 	const selectedProject = (target.closest('INPUT'));
-	// 	if (selectedProject) {
-	// 		const body = {
-	// 			method: 'getProjectsActivity',
-	// 			id: selectedProject.dataset.project_id,
-	// 		}
-	// 		sendRequest('POST', requestURLProject, body).then(showProjectActivity);
-	// 		inputProjectID.value = selectedProject.dataset.project_id;
-	// 		projectSubmit.textContent = 'Save';
-	// 	}
-	// });
 
 	projectGroups.addEventListener('click', (e) => {
 		const target = e.target;
@@ -4600,10 +4578,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		const visualActivityReady = '&#10003';
 		projectsFullList.textContent = '';
 		clearProjectActivity();
-
+		const projectGroupsAct = {};
 		if (data.success && data.success.answer) {
 			data.success.answer.forEach((project) => {
-				const groupIds = new Set();
+				const groupIds = [];
 				let totalActivities = 0;
 				let finishedActivities = 0;
 				let projectActivities = `
@@ -4642,7 +4620,10 @@ window.addEventListener('DOMContentLoaded', () => {
 					if (activity.last_activity_date) {
 						activity_date = datetimeToUSDate(activity.last_activity_date);
 					}
-					groupIds.add(activity.group_id);
+					groupIds.push({
+						id: activity.group_id,
+						name: activity.group_name
+					});
 					projectActivities += projectActivityGenerate({
 						activity_id: activity.id,
 						project_id: activity.project_id,
@@ -4660,25 +4641,29 @@ window.addEventListener('DOMContentLoaded', () => {
 				});
 				projectActivities += projectActivityGenerate({
 					activity_id: 0,
+					project_id: project.info.id,
 					activity_status: (finishedActivities ==  totalActivities) ? "ready" : "waiting",
 					activity_ready: last_activity_ready,
 					group_name: 'Master ZTM',
 					dnone: 'invisible',
-					groupIds: groupIds
+					// group_Ids: groupIds
 				});
 				projectActivities += `</div>`;
 				projectsFullList.insertAdjacentHTML('beforeend', projectActivities);
+				projectGroupsAct[project.info.id] = groupIds;
 			});
 		}
+		// console.log(projectGroupsAct);
+		document.querySelector('#projectGroupsAct').textContent = JSON.stringify(projectGroupsAct);
 	}
 
-	function projectActivityGenerate({activity_id = 0, project_id = 0, group_id = 0, ogpa_group = 0, activity_date = '&nbsp;', activity_status, activity_ready, group_name = '', dnone = '', activity_finished = 0, groupIds = null}) {
-		let groupIds_out = "";
-		if (groupIds !== null) {
-			groupIds_out = `data-groups-list="${JSON.stringify([...groupIds])}"`;
-		}
+	function projectActivityGenerate({activity_id = 0, project_id = 0, group_id = 0, ogpa_group = 0, activity_date = '&nbsp;', activity_status, activity_ready, group_name = '', dnone = '', activity_finished = 0, group_Ids = null}) {
+		// let groupIds_out = "";
+		// if (group_Ids !== null) {
+		// 	groupIds_out = `data-groups-list="${JSON.stringify(group_Ids)}"`;
+		// }
 		return `
-			<div class="project-activity" ${groupIds_out} data-activity_id="${activity_id}" data-project_id="${project_id}" data-group_id="${group_id}" data-activity_finished="${activity_finished}" data-ogpa-group="${ogpa_group}">
+			<div class="project-activity" data-activity_id="${activity_id}" data-project_id="${project_id}" data-group_id="${group_id}" data-activity_finished="${activity_finished}" data-ogpa-group="${ogpa_group}">
 				<div class="project-activity-date">${activity_date}</div>
 				<div class="project-activity-graph">
 						<div class="project-activity-line ${activity_status}"></div>
@@ -4946,10 +4931,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.querySelector('#mor-uploads-show').classList.remove('d-none');
 		uploadsMor.classList.remove('showned');
 	});
-
-	// btnClearData.addEventListener('click', function(e) {
-	// 	clearDevicesDataTemp();
-	// });
 
 	tableUsers.addEventListener('click', actionForUsers);
 	rightsForm.addEventListener('submit', (e) => {
@@ -5851,7 +5832,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		elem.classList.remove('pressed');
 		const elem_name_id = `#${elem.dataset.elem_name_id}`,
 			btn_new_id = `#${elem.dataset.btn_new_id}`;
-		
 		document.querySelector(elem_name_id).value = editableName;
 		chgBtnType(document.querySelector(btn_new_id), {
 			dataset: {
@@ -6385,29 +6365,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		e.preventDefault();
 		const target = e.target;
 		addNewActivity(newActivity, target);
-		// if (!checkTextValue(newActivity.value)) {
-		// 	return false;
-		// }
-
-		// let methodName = 'addActivity';
-		// let id = 0;
-		// if (target.dataset['type'] === 'mod') {
-		// 	methodName = 'modActivity';
-		// 	id = target.dataset.id;
-		// }
-
-		// const body = {
-		// 	method: methodName,
-		// 	value: newActivity.value,
-		// 	id: id,
-		// 	parentId: target.dataset.prime_elem_id
-		// };
-		// sendRequest('POST', requestURLTemplate, body).then((data) => {
-		// 	if (data && data.success && data.success.answer) {
-		// 		showOGPAActivity(data, {'activity':newActivity.value});
-		// 		newActivity.value = '';
-		// 	}
-		// });
 	});
 
 	btnNewActivityDDP.addEventListener('click', (e) => {
@@ -6455,6 +6412,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			switchToNew(btnEditPrimeElem);
 			iniOGPAActivity(id, {'activity':activity});
 		} catch (e) {
+			console.error(e);
 			iniOGPAActivity(0);
 			showActivityFields(null);
 		}
@@ -6709,30 +6667,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-
-	//mor functions
-	// function genRowParts(trId) {
-	// 	return `
-	// 	<tr class="js-mor-tr-dyn" data-tr-id="${trId}">
-	// 		<td><input type="text" class="mor js-mor-rcpc" name="mor_rcpc[]" value="" required></td>
-	// 		<td><input type="text" class="mor js-mor-vendor-name" name="mor_vendor_name[]" value="" required></td>
-	// 		<td>
-	// 			<div class="mor-vendor-part-container">
-	// 				<input type="text" class="mor js_vendor_part" name="mor_vendor_part[]" value="">
-	// 				<ul class="mor-part-autocomplete mor-part-list d-none"></ul>
-	// 			</div>
-	// 		</td>
-	// 		<td><input type="text" class="mor js-mor-part-descr" name="mor_part_descr[]" value=""></td>
-	// 		<td><input type="text" class="mor" name="mor_quantity[]" value="" required></td>
-	// 		<td><input type="text" class="mor" name="mor_uom[]" value="EA" required></td>
-	// 		<td><input type="text" class="mor js-mor-oracle" name="mor_oracle[]" value="" required></td>
-	// 		<td><input type="text" class="mor" name="mor_task[]" value="" required></td>
-	// 		<td><input type="text" class="mor js-mor-site-code" name="mor_site_code[]" value="" required></td>
-	// 		<td><input type="text" class="mor js-mor-date-required" name="mor_date_required[]" value="" required></td>
-	// 		<td><input type="text" class="mor" name="mor_org[]" value=""></td>
-	// 		<td><input type="text" class="mor" name="mor_supplier_notes[]" value=""></td>
-	// 	</tr>`;
-	// }
 	function genRowParts(trId, arrParts = []) {
 		const isEmpty = !Array.isArray(arrParts) || arrParts.length === 0;
 		const items = isEmpty ? [{}] : arrParts;
@@ -6837,32 +6771,28 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	morAddRow.addEventListener('click', (e) => {
 		if (gSiteCode != 0) {
-			// if (tbody) {
-				let trId = (tbodyMorTable.dataset.trId !== undefined) ? parseInt(tbodyMorTable.dataset.trId, 10) : 1;
-				tbodyMorTable.insertAdjacentHTML('beforeend', genRowParts(trId));
-				tbodyMorTable.dataset.trId = trId + 1;
-				const morTRDyn = tbodyMorTable.querySelector(`.js-mor-tr-dyn[data-tr-id='${trId}']`);
-				if (morTRDyn) {
-					morTRDyn.querySelector('.js-mor-oracle').value = morProjectNum.value;
-					morTRDyn.querySelector('.js-mor-site-code').value = gSiteCode;
-					morTRDyn.querySelector('.js-mor-date-required').value = datetimeToCaDate();
-					if (morCollectParts.value == '0') {
-						collectArrParams(trId, morCollectParts);
-					}
+			let trId = (tbodyMorTable.dataset.trId !== undefined) ? parseInt(tbodyMorTable.dataset.trId, 10) : 1;
+			tbodyMorTable.insertAdjacentHTML('beforeend', genRowParts(trId));
+			tbodyMorTable.dataset.trId = trId + 1;
+			const morTRDyn = tbodyMorTable.querySelector(`.js-mor-tr-dyn[data-tr-id='${trId}']`);
+			if (morTRDyn) {
+				morTRDyn.querySelector('.js-mor-oracle').value = morProjectNum.value;
+				morTRDyn.querySelector('.js-mor-site-code').value = gSiteCode;
+				morTRDyn.querySelector('.js-mor-date-required').value = datetimeToCaDate();
+				if (morCollectParts.value == '0') {
+					collectArrParams(trId, morCollectParts);
 				}
-			// }
+			}
 		}
 	});
 
 	morDelRow.addEventListener('click', (e) => {
 		let trId = (morDelRow.dataset.trId !== undefined) ? parseInt(morDelRow.dataset.trId, 10) : 0;
-		// if (tbodyMorTable) {
-			const morTRDyn = tbodyMorTable.querySelector(`.js-mor-tr-dyn[data-tr-id='${trId}']`);
-			if (morTRDyn) {
-				morTRDyn.remove();
-				morDelRow.dataset.trId = 0;
-			}
-		// }
+		const morTRDyn = tbodyMorTable.querySelector(`.js-mor-tr-dyn[data-tr-id='${trId}']`);
+		if (morTRDyn) {
+			morTRDyn.remove();
+			morDelRow.dataset.trId = 0;
+		}
 	});
 
 	morTable.addEventListener('input', (e) => {
