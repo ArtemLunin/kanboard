@@ -36,6 +36,7 @@ $ercfProcess = [];
 $activityID = 0;
 $counterMode = 0;
 $complexDoc = 0;
+$groupList = null;
 $projectFileNumber = 0;
 $projectGroupName = '';
 $projectActivityCount = 0;
@@ -86,7 +87,7 @@ foreach ($_POST as $param => $value) {
         ];
     }
 }
-
+$db_object->errorLog($_POST, true);
 foreach ($_POST as $param => $value) {
     if (in_array($param, $efcrFieldsArr)) {
         $ercfProcess[$param] = $value;
@@ -102,6 +103,12 @@ foreach ($_POST as $param => $value) {
     }
     if ($param === 'complexDoc') {
         $complexDoc = (int)$value;
+        $db_object->errorLog($complexDoc, true);
+        continue;
+    }
+    if ($param === 'groupList') {
+        $groupList = json_decode($value, true);
+        $db_object->errorLog($groupList, true);
         continue;
     }
     if ($param === 'projectFileNumber') {
@@ -408,7 +415,11 @@ if ($complexDoc == 2) {
         }
     }
     //add mor file (test)
+    if (isset($groupList) && is_array($groupList) && count($groupList) > 0) {
+        $db_object->errorLog($groupList, true);
+    }
     if (true) {
+        $db_object->errorLog(print_r($groupList, true));
         $group_id = 15;
         $mor_object = new myMORUtils\MORUtils();
         $db_mor = $mor_object->getMORData('savedData', $group_id);

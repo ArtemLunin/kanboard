@@ -189,10 +189,6 @@ class helperUtils {
 	}
 	static function setArrayValuesToDoc($extTemplateProcessor, $param, $values) {
 		foreach ($values as $val_idx => $val_arr) {
-
-			// $instance = new self(); 
-			// $instance->errorLog(print_r($val_arr, true));
-
 			foreach ($val_arr as $par_name => $par_value) {
 				$values[$val_idx][$par_name] = htmlentities($par_value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8");
 			}
@@ -261,7 +257,6 @@ class DocxProcessor {
         $documentBody = $targetParagraph->parentNode;
         $iconPath = 'img/' . $iconFileName;
 
-		$this->db_object->errorLog(print_r($files, true));
         if (!empty($files)) {
             foreach ($files as $i => $file) {
                 $tempFilePath = $file['tmp_name'];
@@ -271,7 +266,6 @@ class DocxProcessor {
                 if ($this->db_object->getUploadedFileExt($originalFileName) !== $fileType) {
                     continue;
                 }
-				$this->db_object->errorLog(print_r($this->db_object->getUploadedFileExt($originalFileName), true));
                 /** @var string $uniqueIndex Identifier generated to avoid XML ID collisions */
                 $uniqueIndex = time() . "_" . $i . "_" . uniqid(); 
                 
@@ -368,7 +362,6 @@ class DocxProcessor {
                 $newParagraph->appendChild($captionRun);
                 // Insert the new paragraph into the document
                 $documentBody->insertBefore($newParagraph, $targetParagraph);
-				$this->db_object->errorLog('saved');
             }
         }
 
@@ -378,7 +371,6 @@ class DocxProcessor {
 	public function saveToZip() {
 		$this->zip->addFromString('word/document.xml', $this->dom->saveXML());
 		$this->zip->addFromString('word/_rels/document.xml.rels', $this->relsDom->saveXML());
-		$this->db_object->errorLog('saved xml');
 	}
 
     /**

@@ -2156,7 +2156,6 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				array_push($out_str_dgw_config, createConfigOnTemplate($node_name, $node_arr, $templatedgwcgwconfig), ['', '']);
 				array_push($out_str_dgw_verification, createConfigOnTemplate($node_name, $node_arr, $templatedgwcgwverification), ['', '']);
 			} elseif (strpos(strtolower($node_name), 'cgw') !== false) {
-				// $this->errorLog($node_name."\n".print_r($node_arr, true));
 				$out_nodes_cgw = array_merge($out_nodes_cgw, $node_arr);
 				array_push($out_str_cgw_config, createConfigOnTemplate($node_name, $node_arr, $templatecgwdgwconfig), ['', '']);
 				array_push($out_str_cgw_verification, createConfigOnTemplate($node_name, $node_arr, $templatecgwdgwverification), ['', '']);
