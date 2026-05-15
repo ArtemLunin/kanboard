@@ -37,7 +37,9 @@ if ($method !== 0)
 {
     if ($method === 'getOGPA') {
         $param_error_msg['answer'] = $db_object->getOGPA($ogpa_group);
-    } elseif ($method === 'getOGPAActivity' && $value && is_string($value)) {
+    } elseif ($method === 'setOGPADDP' && $ogpa_group && $value) {
+		$param_error_msg['answer'] = $db_object->setOGPADDP($ogpa_group, $value);
+	} elseif ($method === 'getOGPAActivity' && $value && is_string($value)) {
 		$param_error_msg['answer'] = $db_object->getOGPAActivity($value);
 	} elseif ($method === 'addPrimeElement' && $value && is_string($value)) {
 		$param_error_msg['answer'] = $db_object->addPrimeElement($value, $ogpa_group);

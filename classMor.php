@@ -115,7 +115,7 @@ class MORUtils extends \helperUtils\helperUtils {
         return ["groups" => $this->db_object_project->getMORUserGroups($this->userName, $groupID)];
     }
     function saveMORData($groupID, $fields) {
-        $groups = $this->getMORUserGroups($this->userName, $groupID);
+        $groups = $this->getMORUserGroups($groupID);
 		if (count($groups["groups"])) {
             if ($this->issetGroup($groupID) === null) {
                 $this->db_object_project->runInsertSQL($this->tMOR_fields["tableName"], [
@@ -132,7 +132,7 @@ class MORUtils extends \helperUtils\helperUtils {
         return false;
 	}
     function resetMORData($groupID) {
-        $groups = $this->getMORUserGroups($this->userName, $groupID);
+        $groups = $this->getMORUserGroups($groupID);
         if (count($groups["groups"])) {
             return $this->db_object_project->removeObjectFromTableFilter($this->tMOR_fields["tableName"], ["group_id" => $groupID]);
         }

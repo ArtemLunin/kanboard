@@ -148,7 +148,6 @@ class ProjectUtils extends \helperUtils\helperUtils {
             } else {
                 $this->db_object_project->addObjectToTable($this->tProjectsActivity["tableName"], $fields_obj);
             }
-            // $this->logProject($projectID, 'group `' . $this->getGroupName($groupID) . '` was added to project `' . $this->getProjectName($projectID) . '` by user `' . $this->userName . '`');
             return $this->getProjectsActivity($projectID);
         }
         return false;

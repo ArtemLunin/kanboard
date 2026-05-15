@@ -22,6 +22,13 @@ let gPrimeElementID = 0,
 	// templateMop = 0;
 	ogpaDDP = 100;
 
+const groupsDDP = {
+	"null": "DDP",
+	"sde": "DDP_sde",
+	"ipcore": "DDP_ipcore",
+	"tarnsport": "DDP_transport"
+};
+
 const hardCodeDesign = {
 	'Add/Change/Remove Roaming': 'js-eFCR-view',
 	'Add/Change/Remove': 'js-eFCR2-view',
@@ -491,6 +498,7 @@ window.addEventListener('DOMContentLoaded', () => {
         newActivityDDP = document.querySelector('#newActivityDDP'),
         selActivity = document.querySelector('#activity'),
         selActivityDDP = document.querySelector('#activityDDP'),
+        selGroupsDDP = document.querySelector('#groupsDDP'),
         selPrimeElement = document.querySelector('#primeElement'),
         divCounter = document.querySelector('.counter-pb'),
 		renderMopDiv = document.querySelector('#render_mop'),
@@ -2097,14 +2105,16 @@ window.addEventListener('DOMContentLoaded', () => {
 				templateDDP = 1;
 				ddpTemplate = 1;
 				displayDDPElements(true);
-				iniOGPA();
+				iniDDP();
+				// iniOGPA();
 				break;
 			case 'ddp':
 				document.title = 'DDP';
 				templateDDP = 0;
 				ddpTemplate = 1;
 				displayDDPElements(false);
-				iniOGPA();
+				iniDDP();
+				// iniOGPA();
 				break;
 			case 'inventory':
 				document.title = 'Inventory';
@@ -3560,6 +3570,7 @@ window.addEventListener('DOMContentLoaded', () => {
 								};
 								cTemplate = getOGPANum();
 								projectGroupName = data.success.answer.detail.group_name;
+								console.log(projectGroupName);
 								showActivityFields(dataObject);
 								fillCTemplateFields(formAdmin);
 								fillSelectField(selPrimeElement, data.success.answer.detail.element, true);
@@ -3567,6 +3578,7 @@ window.addEventListener('DOMContentLoaded', () => {
 								formSubmit.dataset.projectDownload = '1';
 								formFields.querySelector('#projectActivityCount').value = projectActivitiesList.length;
 								formSubmit.innerText = 'Download';
+								console.log(activity);
 								await submitRenderForm(formFields, activity, 1);
 							}
 						}
@@ -3575,7 +3587,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						const proj_ = JSON.parse(document.querySelector('#projectGroupsAct').textContent);
 						const gr_list = JSON.stringify(proj_[projectActivity.dataset.project_id]);
 						formFields.querySelector('#groupList').value = gr_list;
-						submitRenderForm(formFields, activity, 2);
+						// submitRenderForm(formFields, activity, 2);
 					}
 				}
 			}
@@ -5406,13 +5418,22 @@ window.addEventListener('DOMContentLoaded', () => {
 				if (!!extends_data && extends_data['element'] === item.element) {
 					selected = 'selected';
 				}
-				
 				selPrimeElement.insertAdjacentHTML('beforeend', `
 					<option data-id="${item.id}" value="${item.element}" ${selected}>${item.element}</option>
 				`);
+				if (ddpTemplate == 1) {
+					const option = selGroupsDDP.querySelector(`option[value="${item.element}"]`);
+					if (option) {
+						option.dataset.id = `${item.id}`;
+					}
+				}
 			});
-			if (activity !== '') {
-				selPrimeElement.dataset.activity = (typeof extends_data === 'undefined' || extends_data['activity'] === undefined) ? '' : extends_data['activity'];
+			try {
+				if (activity !== '') {
+					selPrimeElement.dataset.activity = (typeof extends_data === 'undefined' || extends_data['activity'] === undefined) ? '' : extends_data['activity'];
+				}
+			} catch (e) {
+				location.reload();
 			}
 			if (data.success.answer.length == 0) {
 				showOGPAActivity(null);
@@ -5426,7 +5447,11 @@ window.addEventListener('DOMContentLoaded', () => {
 				});
 				return false;
 			}
-			selPrimeElement.dispatchEvent(new Event('change'));
+			if (ddpTemplate == 1) {
+				selGroupsDDP.dispatchEvent(new Event('change'));
+			} else {
+				selPrimeElement.dispatchEvent(new Event('change'));
+			}
 		} else {
 			selPrimeElement.insertAdjacentHTML('beforeend', `
 				<option value="" selected></option>
@@ -5584,16 +5609,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		[formAdmin, formAdminDDP].forEach(form => {
 			fillCTemplateFields(form);
 		});
-		// formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
-		// 	if (cTemplate) {
-		// 		item.value = item.dataset.ctemplate.trim();
-		// 	} else if (tTemplate) {
-		// 		item.value = item.dataset.ttemplate.trim();
-		// 	}
-		// 	else {
-		// 		item.value = item.dataset.default.trim();
-		// 	}
-		// });
 		checkInputsData(`.${inputSelectorClass}`);
 		if (projectsMode == 1) {
 			projectNumberActivity.value = projectBriefData.querySelector('#project-brief-number').value;
@@ -5666,7 +5681,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		} else {
 			ogpaNum = cTemplate;
 		}
-		// return (cTemplate == 0) ? ((tTemplate == 1) ? 3 : 0) : cTemplate;
 		return ogpaNum;
 	}
 
@@ -5750,20 +5764,28 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const resetSelect = (formSelect) => {
-		if (formSelect.length > 1) {
+		// if (formSelect.length > 1) {
 			formSelect.value = '';			
-		}
+		// }
 	};
 
 	const iniDDP = () => {
-		showActivityFieldsDDP();
+		// showActivityFieldsDDP();
+		const body = {
+			method: 'setOGPADDP',
+			ogpa_group: getOGPANum(),
+			value: Object.values(groupsDDP)		
+		};
+		sendRequest('POST', requestURLTemplate, body).then((data) => {
+			showOGPA(data, '');
+		});
 	};
 
-	const showActivityFieldsDDP = ()  => {
-		formFieldsDDP.reset();
-		showRenderOnlyElements();
-		showAllDDP.dispatchEvent(new Event('click'));
-	};
+	// const showActivityFieldsDDP = ()  => {
+	// 	formFieldsDDP.reset();
+	// 	showRenderOnlyElements();
+	// 	showAllDDP.dispatchEvent(new Event('click'));
+	// };
 
 	const switchMORTables = (mor_id, raiseMorSiteEvent = true) => {
 		morInnerBody.textContent = '';
@@ -5940,12 +5962,18 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const submitRenderForm = async (renderForm, gActivityID, complexDoc = 0) => {
+		console.log('submitRenderForm');
 		formAdmin.querySelectorAll('.renderData').forEach(item => {
-			const added_input = document.createElement("input");
-			added_input.name = item.dataset['value_name'];
+			const field_name = item.dataset['value_name'];
+			let added_input = renderForm.querySelector(`input[name="${field_name}"]`);
+			if (!added_input) {
+				added_input = document.createElement("input");
+				added_input.name = field_name;
+				added_input.type = "hidden";
+				renderForm.append(added_input);
+			}
 			added_input.value = item.value;
-			added_input.type = "hidden";
-			renderForm.append(added_input);
+			// console.log(item);
 		});
 
 		document.querySelector('#complexDoc').value = complexDoc;
@@ -6296,7 +6324,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (adminEnabled) {
 			submitAdminForm(target, gActivityID);
 		} else {
-			submitRenderForm(target, submitRenderForm);
+			submitRenderForm(target, gActivityID);
 		}
 	});
 
@@ -6416,6 +6444,14 @@ window.addEventListener('DOMContentLoaded', () => {
 			iniOGPAActivity(0);
 			showActivityFields(null);
 		}
+	});
+	selGroupsDDP.addEventListener('change', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		const id = target.options[target.selectedIndex].dataset.id;
+		btnNewActivityDDP.dataset.prime_elem_id = id;
+		gPrimeElementID = id;
+		iniOGPAActivity(id);
 	});
 
 	[selActivity,selActivityDDP].forEach(selectActivity => {

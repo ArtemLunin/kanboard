@@ -1707,7 +1707,7 @@
 					<div class="params">
 						<form action="" method="POST" id="formAdminDDP" enctype="multipart/form-data">
 							<fieldset>
-								<legend></legend>
+								<legend>NCT OGPA Classification</legend>
 								<div class="param param-full renderOnly">
 									<label class="switch">
 										<input type="checkbox" id="showAllDDP">
@@ -1718,55 +1718,44 @@
 								<!-- <div class="param param-half">
 									<input type="text" name="actField31" class="mop renderData text" data-value_name="actField31" id="actField31" value="Organization" readonly>
 								</div> -->
-								<div class="param param-50">
-									<input type="text" name="actField101" class="mop renderData text" data-value_name="actField101" id="actField101" value="Group" readonly>
-									<input type="text" name="actField102" class="mop renderData" data-value_name="actField102" data-ctemplate="IP Core" id="actField102" 
-									data-ttemplate="Transport Operations" 
-									data-ddptemplate="RHSI and Service Delivery Environment" data-default="RHSI and Service Delivery Environment" readonly>
-								</div>
-								<div class="param param-50 selectActivity">
-									<label for="activity">Activity</label>
-									<div>
-										<input type="hidden" name="actField103" class="mop renderData" data-value_name="actField103" id="actField103" value="Activity" readonly>
-										<select class="mop select-btns renderData ogpa-new" name="activityDDP" id="activityDDP" data-value_name="actField104">
-											<option value="null" selected>Not selected</option>
-										</select>
-										<button type="button" class="mop action admin-view hidden" id="btnDelActivityDDP" title="Delete">-</button>
-										<button type="button" class="mop action admin-view hidden js-btnEditActivity" id="btnEditActivityDDP" data-elem_name_id="newActivityDDP"
-										data-btn_new_id="btnNewActivityDDP" title="Rename">
-											<span class="material-symbols-outlined" style="font-size: 14px;">
-											edit_square
-											</span>
-										</button>
+								<div class="param param-row-single">
+									<div class="param param-50">
+										<input type="text" name="actField101" class="mop renderData text" data-value_name="actField101" id="actField101" value="Group" readonly>
+										<div>
+											<!-- <label>Group</label> -->
+											<!-- <input type="text" name="actField102" class="mop renderData" data-value_name="actField102" data-ctemplate="IP Core" id="actField102" 
+											data-ttemplate="Transport Operations" 
+											data-ddptemplate="RHSI and Service Delivery Environment" data-default="RHSI and Service Delivery Environment" readonly> -->
+											<select class="mop select-btns renderData ogpa-new" name="groupDDP" id="groupsDDP" data-value_name="actField102">
+												<option value="DDP_ipcore">IP Core</option>
+												<option value="DDP_transport">Transport Operations</option>
+												<option value="DDP_sde">RHSI and Service Delivery Environment</option>
+											</select>
+										</div>
 									</div>
-									<input type="text" class="mop admin-view ogpa-new hidden js-newActivity" name="newActivityDDP" id="newActivityDDP" value="">
-									<button type="button" class="mop admin-view hidden js-btnNewActivity" id="btnNewActivityDDP">Add new</button>
+									<div class="param param-50 selectActivity">
+										<input type="text" name="actField105" class="mop renderData text" data-value_name="actField105" id="actField105" value="Activity" readonly>
+										<!-- <label>Activity</label> -->
+										<div>
+											<input type="hidden" name="actField103" class="mop renderData" data-value_name="actField103" id="actField103" value="Activity" readonly>
+											<select class="mop select-btns renderData ogpa-new" name="activityDDP" id="activityDDP" data-value_name="actField104">
+												<option value="null" selected>Not selected</option>
+											</select>
+											<button type="button" class="mop action admin-view hidden" id="btnDelActivityDDP" title="Delete">-</button>
+											<button type="button" class="mop action admin-view hidden js-btnEditActivity" id="btnEditActivityDDP" data-elem_name_id="newActivityDDP"
+											data-btn_new_id="btnNewActivityDDP" title="Rename">
+												<span class="material-symbols-outlined" style="font-size: 14px;">
+												edit_square
+												</span>
+											</button>
+										</div>
+										<input type="text" class="mop admin-view ogpa-new hidden js-newActivity" name="newActivityDDP" id="newActivityDDP" value="">
+										<button type="button" class="mop admin-view hidden js-btnNewActivity" id="btnNewActivityDDP">Add new</button>
+									</div>			
 								</div>
-								<!-- <div class="param param-half">
-									<input type="text" name="actField32" class="mop renderData" data-value_name="actField32" id="actField32" value="Network Management and Ops" readonly>
-								</div> -->
-								<!-- <div class="param param-50">
-									<input type="text" name="actField102" class="mop renderData" data-value_name="actField102" data-ctemplate="IP Core" id="actField102" 
-									data-ttemplate="Transport Operations" 
-									data-ddptemplate="RHSI and Service Delivery Environment" data-default="RHSI and Service Delivery Environment" readonly>
-								</div> -->
-								<!-- <div class="param param-50">
-									<label for="primeElement">Prime Element</label>
-									<div>
-										<input type="hidden" name="actField35" class="mop renderData" data-value_name="actField35" id="actField35" value="Prime Element" readonly>
-										<select class="mop select-btns renderData ogpa-new" name="primeElement" id="primeElement" data-value_name="actField36">
-											<option value="" selected></option>
-										</select>
-										<button type="button" class="mop action admin-view hidden" id="btnDelPrimeElem" title="Delete">-</button>
-										<button type="button" class="mop action admin-view hidden" id="btnEditPrimeElem" data-elem_name_id="newPrimeElement"
-										data-btn_new_id="btnNewPrimeElem" title="Rename">
-											<span class="material-symbols-outlined" style="font-size: 14px;">
-											edit_square
-											</span>
-										</button>
-									</div>
-									<input type="text" class="mop admin-view ogpa-new hidden" name="newPrimeElement" id="newPrimeElement" value="">
-									<button type="button" class="mop admin-view hidden" id="btnNewPrimeElem" data-type="new">Add new</button>
+								<!-- <div class="param param-50 selectActivity">
+									
+									
 								</div> -->
 							</fieldset>
 						</form>

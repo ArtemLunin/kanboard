@@ -1369,10 +1369,11 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 							'element' => $result['element'],
 						];
 					}
-				} elseif ($ogpa_group == '100') {
-					// only for DDP
-					return $this->addPrimeElement('DDP', $ogpa_group);
 				}
+				//  elseif ($ogpa_group == '100') {
+				// 	// only for DDP
+				// 	return $this->addPrimeElement('DDP', $ogpa_group);
+				// }
 				return $ogpa;
 			} catch (Throwable $e) {
 				$error_txt_info = $e->getMessage().', file: '.$e->getFile().', line: '.$e->getLine();
@@ -1385,6 +1386,23 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				]];
         }
     }
+
+	function setOGPADDP($ogpa_group, $groupsDDP) {
+		$current_ddps = $this->getOGPA($ogpa_group);
+		$ddpGroups = array_column($current_ddps, 'element');
+		$arr_dif_ddp = array_diff($groupsDDP, $ddpGroups);
+		if (count($arr_dif_ddp)) {
+			foreach ($groupsDDP as $ddp) {
+				$this->addPrimeElement($ddp, $ogpa_group, false);
+			}
+			return $this->getOGPA($ogpa_group);
+		}
+		return $current_ddps;
+//  elseif ($ogpa_group == '100') {
+				// 	// only for DDP
+				// 	return $this->addPrimeElement('DDP', $ogpa_group);
+				// }
+	}
 
 	function getOGPAActivity($primeElemID) {
         if ($this->pdo) {
@@ -1412,13 +1430,15 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
         }
     }
 
-	function addPrimeElement($value, $ogpa_group = 0) {
+	function addPrimeElement($value, $ogpa_group, $ogpa_get = true) {
 		$sql = "INSERT into prime_element (element,ogpa_group) VALUES (:value,:ogpa_group)";
 		$this->modSQL($sql, [
 			'value'		=> $value,
 			'ogpa_group' => $ogpa_group,
 		], true);
-		return $this->getOGPA($ogpa_group);
+		if ($ogpa_get === true) {
+			return $this->getOGPA($ogpa_group);
+		}
 	}
 
 	function modPrimeElement($value, $id, $ogpa_group = 0) {

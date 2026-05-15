@@ -87,7 +87,6 @@ foreach ($_POST as $param => $value) {
         ];
     }
 }
-$db_object->errorLog($_POST, true);
 foreach ($_POST as $param => $value) {
     if (in_array($param, $efcrFieldsArr)) {
         $ercfProcess[$param] = $value;
@@ -103,7 +102,6 @@ foreach ($_POST as $param => $value) {
     }
     if ($param === 'complexDoc') {
         $complexDoc = (int)$value;
-        $db_object->errorLog($complexDoc, true);
         continue;
     }
     if ($param === 'groupList') {
@@ -369,23 +367,26 @@ if ($complexDoc == 2) {
         foreach ($groupList as $group_prop) {
             $mor_object = new myMORUtils\MORUtils();
             $db_mor = $mor_object->getMORData('savedData', (int)$group_prop['id']);
-            $morFields = json_decode($db_mor[0]['field_json_props'], true);
-            if ($morFields) {
-                $morForReleaseFlag = $morFields['morForReleaseFlag'] ?? 0;;
-                $filename = tempnam(sys_get_temp_dir(), 'xlsx');
-                $spreadsheetObj = IOFactory::load('template/MOR_template.xlsx');
-                if ($morForReleaseFlag) {
-                    $spreadsheetObj = IOFactory::load('template/MOR_template_release.xlsx');
+            if (isset($db_mor[0]) && isset($db_mor[0]['field_json_props'])) {
+                $morFields = json_decode($db_mor[0]['field_json_props'], true);
+                if ($morFields) {
+                    $morForReleaseFlag = $morFields['morForReleaseFlag'] ?? 0;;
+                    $filename = tempnam(sys_get_temp_dir(), 'xlsx');
+                    $spreadsheetObj = IOFactory::load('template/MOR_template.xlsx');
+                    if ($morForReleaseFlag) {
+                        $spreadsheetObj = IOFactory::load('template/MOR_template_release.xlsx');
+                    }
+                    $spreadsheetObj = $mor_object->writeXLSX($morFields, $spreadsheetObj, $morForReleaseFlag);
+                    $writer = new XlsxWriter($spreadsheetObj);
+                    $writer->save($filename);
+                    $xls_attachments[] = ['tmp_name' => $filename, 'name' => $group_prop['name'] . '_MOR.xlsx'];
+                } else {
+                    $db_object->errorLog('MOR data is corrupted, group_name:' . $group_prop['name']);
                 }
-                $spreadsheetObj = $mor_object->writeXLSX($morFields, $spreadsheetObj, $morForReleaseFlag);
-                $writer = new XlsxWriter($spreadsheetObj);
-                $writer->save($filename);
-                $xls_attachments[] = ['tmp_name' => $filename, 'name' => $group_prop['name'] . '_MOR.xlsx'];
-            } else {
-                $db_object->errorLog('MOR data is corrupted, group_name:' . $group_prop['name']);
             }
         }
         if (count($xls_attachments) > 0) {
+            // $db_object->errorLog("attacments:" . print_r($xls_attachments, true));
             $filename_mor = tempnam(sys_get_temp_dir(), 'docx');
             copy('template/mor_blank.docx', $filename_mor);
             $zip = new \ZipArchive();
@@ -409,16 +410,17 @@ if ($complexDoc == 2) {
             $docx_object->embedOleAttachments($xls_attachments, 'excel-48.png', 'xlsx', $bookmarkMOR);
             $docx_object->saveToZip();
 
-            $contentTypesXml = $zip->getFromName('[Content_Types].xml');
-            if (strpos($contentTypesXml, 'Extension="bin"') === false) {
-                $ctDom = new DOMDocument();
-                $ctDom->loadXML($contentTypesXml);
-                $newNode = $ctDom->createElement('Default');
-                $newNode->setAttribute('Extension', 'bin');
-                $newNode->setAttribute('ContentType', 'application/vnd.openxmlformats-officedocument.oleObject');
-                $ctDom->documentElement->appendChild($newNode);
-                $zip->addFromString('[Content_Types].xml', $ctDom->saveXML());
-            }
+            // $contentTypesXml = $zip->getFromName('[Content_Types].xml');
+            // // $db_object->errorLog(print_r($contentTypesXml, true));
+            // if (strpos($contentTypesXml, 'Extension="bin"') === false) {
+            //     $ctDom = new DOMDocument();
+            //     $ctDom->loadXML($contentTypesXml);
+            //     $newNode = $ctDom->createElement('Default');
+            //     $newNode->setAttribute('Extension', 'bin');
+            //     $newNode->setAttribute('ContentType', 'application/vnd.openxmlformats-officedocument.oleObject');
+            //     $ctDom->documentElement->appendChild($newNode);
+            //     $zip->addFromString('[Content_Types].xml', $ctDom->saveXML());
+            // }
 
             $zip->close();
 
