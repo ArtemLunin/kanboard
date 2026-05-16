@@ -611,6 +611,9 @@ button[type="button"].import-json {
     color: white;
     margin-top: 10px;
 }
+.group-activity button[type="button"] {
+	margin-top: 0;
+}
 label.upload-mor {
 	background-color: hsl(152, 50%, 50%);
     width: 50px;

@@ -228,8 +228,13 @@ const dateToTimestamp = date_str => {
 	return 0;
 };
 
-const datetimeToUSDate = datetime_str => {
-	const dateObject = new Date(datetime_str);
+const datetimeToUSDate = (datetime_str = null) => {
+	let dateObject;
+	if (datetime_str) {
+		dateObject = new Date(datetime_str);
+	} else {
+		dateObject = new Date();
+	}
 	const options = {
 		year: 'numeric',
 		month: 'short',
@@ -2106,7 +2111,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				ddpTemplate = 1;
 				displayDDPElements(true);
 				iniDDP();
-				// iniOGPA();
 				break;
 			case 'ddp':
 				document.title = 'DDP';
@@ -2114,7 +2118,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				ddpTemplate = 1;
 				displayDDPElements(false);
 				iniDDP();
-				// iniOGPA();
 				break;
 			case 'inventory':
 				document.title = 'Inventory';
@@ -5476,9 +5479,9 @@ window.addEventListener('DOMContentLoaded', () => {
 					<option data-id="${item.id}" value="${item.element}" ${selected}>${item.element}</option>
 				`);
 			});
-			if (data.success.answer.length == 0) {
-				return false;
-			}
+			// if (data.success.answer.length == 0) {
+			// 	return false;
+			// }
 		} else {
 			activity.insertAdjacentHTML('beforeend', `
 				<option value="" selected></option>
@@ -5619,6 +5622,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.value = projectGroupName;
 			});
 		}
+		document.querySelector('#ddpRevisionDate').value = datetimeToUSDate();
 	};
 
 	const fillCTemplateFields = (targetForm) => {
@@ -5770,7 +5774,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const iniDDP = () => {
-		// showActivityFieldsDDP();
 		const body = {
 			method: 'setOGPADDP',
 			ogpa_group: getOGPANum(),

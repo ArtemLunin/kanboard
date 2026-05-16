@@ -1715,17 +1715,10 @@
 									</label>
 									Show all fields
 								</div>
-								<!-- <div class="param param-half">
-									<input type="text" name="actField31" class="mop renderData text" data-value_name="actField31" id="actField31" value="Organization" readonly>
-								</div> -->
 								<div class="param param-row-single">
 									<div class="param param-50">
 										<input type="text" name="actField101" class="mop renderData text" data-value_name="actField101" id="actField101" value="Group" readonly>
-										<div>
-											<!-- <label>Group</label> -->
-											<!-- <input type="text" name="actField102" class="mop renderData" data-value_name="actField102" data-ctemplate="IP Core" id="actField102" 
-											data-ttemplate="Transport Operations" 
-											data-ddptemplate="RHSI and Service Delivery Environment" data-default="RHSI and Service Delivery Environment" readonly> -->
+										<div class="group-activity">
 											<select class="mop select-btns renderData ogpa-new" name="groupDDP" id="groupsDDP" data-value_name="actField102">
 												<option value="DDP_ipcore">IP Core</option>
 												<option value="DDP_transport">Transport Operations</option>
@@ -1735,8 +1728,7 @@
 									</div>
 									<div class="param param-50 selectActivity">
 										<input type="text" name="actField105" class="mop renderData text" data-value_name="actField105" id="actField105" value="Activity" readonly>
-										<!-- <label>Activity</label> -->
-										<div>
+										<div class="group-activity">
 											<input type="hidden" name="actField103" class="mop renderData" data-value_name="actField103" id="actField103" value="Activity" readonly>
 											<select class="mop select-btns renderData ogpa-new" name="activityDDP" id="activityDDP" data-value_name="actField104">
 												<option value="null" selected>Not selected</option>
@@ -1753,10 +1745,6 @@
 										<button type="button" class="mop admin-view hidden js-btnNewActivity" id="btnNewActivityDDP">Add new</button>
 									</div>			
 								</div>
-								<!-- <div class="param param-50 selectActivity">
-									
-									
-								</div> -->
 							</fieldset>
 						</form>
 						<form method="post" action="ddp_render.php" id="formFieldsDDP" enctype="multipart/form-data">
@@ -1764,48 +1752,48 @@
 								<legend>Project Info</legend>
 								<div class="param param-half">
 									<label for="ddpProjectNumber">Project Number/revision</label>
-									<input type="text" class="mop" name="ddpProjectNumber" id="ddpProjectNumber" value="D250152A01">
+									<input type="text" class="mop" name="ddpProjectNumber" id="ddpProjectNumber" value="">
 									
 								</div>
 								<div class="param param-half">
 									<label for="ddpProjectName">Project Title</label>
-									<input type="text" class="mop" name="ddpProjectName" id="ddpProjectName" value="2025 dSDE MPC7E Card Installation">
+									<input type="text" class="mop" name="ddpProjectName" id="ddpProjectName" value="">
 								</div>
 								<div class="param param-half">
 									<label for="ddpProjectOracle">Oracle/ Task Code</label>
-									<input type="text" class="mop" name="ddpProjectOracle" id="ddpProjectOracle" value="303971/ 8.08">
+									<input type="text" class="mop" name="ddpProjectOracle" id="ddpProjectOracle" value="">
 								</div>
 								<div class="param param-half">
 									<label for="ddpNumber">DDP Number</label>
-									<input type="text" class="mop" name="ddpNumber" id="ddpNumber" value="PDSJ1-DDP-D250152A01-001-A">
+									<input type="text" class="mop" name="ddpNumber" id="ddpNumber" value="">
 								</div>
 								<div class="param param-half">
 									<label for="ddpSite">Site</label>
-									<input type="text" class="mop" name="ddpSite" id="ddpSite" value="541 Kenmount Rd, St. John's, NL">
+									<input type="text" class="mop" name="ddpSite" id="ddpSite" value="">
 								</div>
 								<div class="param param-half">
 									<label for="ddpCCLI">CLLI</label>
-										<input type="text" class="mop" name="ddpCCLI" id="ddpCCLI" value="STJHNFAS/ NFSJ/ S0222">
+										<input type="text" class="mop" name="ddpCCLI" id="ddpCCLI" value="">
 								</div>
 								<div class="param param-half">
 									<label for="ddpVersion">Version</label>
-									<input type="text" class="mop" name="ddpVersion" id="ddpVersion" value="1.0" size="10">
+									<input type="text" class="mop" name="ddpVersion" id="ddpVersion" value="" size="10">
 								</div>
 								<div class="param param-half">
 									<label for="ddpRevisionDate">Revision Date</label>
-									<input type="text" class="mop" name="ddpRevisionDate" id="ddpRevisionDate" value="July 18, 2025">
+									<input type="text" class="mop" name="ddpRevisionDate" id="ddpRevisionDate" value="">
 								</div>
 								<div class="param param-half">
 									<label for="ddpRequestedDate">Requested Completion Date</label>
-									<input type="text" class="mop" name="ddpRequestedDate" id="ddpRequestedDate" value="ASAP">
+									<input type="text" class="mop" name="ddpRequestedDate" id="ddpRequestedDate" value="">
 								</div>
 								<div class="param param-half">
 									<label for="ddpSpecialist">EE Specialist</label>
-									<input type="text" class="mop" name="ddpSpecialist" id="ddpSpecialist" value="Brandon StCoeur">
+									<input type="text" class="mop" name="ddpSpecialist" id="ddpSpecialist" value="">
 								</div>
 							</fieldset>
 							<fieldset id="group102" class="hidden">
-								<legend>HIGH LEVEL DIAGRAM</legend>
+								<legend>High Level Diagram (png/jpeg)</legend>
 								<div class="param param-full admin-view hidden">
 									<label class="switch">
 										<input type="checkbox">
@@ -1815,7 +1803,7 @@
 								<input type="file" class="mop renderOnly" id="diagram_hl" name="diagram_hl" accept="image/png, image/jpeg" />
 							</fieldset>
 							<fieldset id="group103" class="hidden">
-								<legend>Site Level Drawing</legend>
+								<legend>Site Level Drawing (png/jpeg)</legend>
 								<div class="param param-full admin-view hidden">
 									<label class="switch">
 										<input type="checkbox">
@@ -1825,7 +1813,7 @@
 								<input type="file" class="mop renderOnly" id="diagram_sl" name="diagram_sl" accept="image/png, image/jpeg" />
 							</fieldset>
 							<fieldset id="group104" class="hidden">
-								<legend>MATERIALS</legend>
+								<legend>Materials</legend>
 								<div class="param param-full admin-view hidden">
 									<label class="switch">
 										<input type="checkbox">
@@ -1853,13 +1841,13 @@
 								</div>
 								<div class="param-row multirows">
 									<div class="param param-20">
-										<input type="text" class="mop" name="ceil_rcpc_1" id="ceil_rcpc_1" data-name="ceilRcpc" data-id="1" value="" required>
+										<input type="text" class="mop" name="ceil_rcpc_1" id="ceil_rcpc_1" data-name="ceilRcpc" data-id="1" value="">
 									</div>
 									<div class="param param-20">
-										<input type="text" class="mop" name="ceil_vendor_1" id="ceil_vendor_1" data-name="ceilVendor" data-id="1" value="" required>
+										<input type="text" class="mop" name="ceil_vendor_1" id="ceil_vendor_1" data-name="ceilVendor" data-id="1" value="">
 									</div>          
 									<div class="param param-20">
-										<input type="text" class="mop" name="ceil_part_1" id="ceil_part_1" data-name="ceilPart" data-id="1" value="" required>
+										<input type="text" class="mop" name="ceil_part_1" id="ceil_part_1" data-name="ceilPart" data-id="1" value="">
 									</div>
 									<div class="param param-20">
 										<input type="text" class="mop" name="ceil_description_1" id="ceil_description_1" data-name="ceilDescription" data-id="1" value="">
@@ -1887,7 +1875,7 @@
 									&nbsp;
 								</div>
 								<div class="param renderOnly">
-									<label for="diagram_hw">Diagram Hardware</label>
+									<label for="diagram_hw">Diagram Hardware (png/jpeg)</label>
 									<input type="file" class="mop renderOnly" id="diagram_hw" name="diagram_hw" accept="image/png, image/jpeg" />
 									<label for="hardwareCaption">Hardware caption</label>
 									<input type="text" class="mop" name="hardwareCaption" id="hardwareCaption" value="">
@@ -1897,7 +1885,7 @@
 									<textarea class="mop" name="cableRunList" id="cableRunList" cols="30" rows="5"></textarea>
 								</div>
 								<div class="param param-full renderOnly">
-									<label for="rack_layout">Rack Layout (docx)</label>
+									<label for="rack_layout">Rack Layout (docx++)</label>
 									<input type="file" class="mop renderOnly" id="rack_layout" name="rack_layout[]" multiple accept=".docx" />
 								</div>
 								<div class="param param-full renderOnly">

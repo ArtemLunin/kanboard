@@ -39,14 +39,15 @@ foreach ($_POST as $param => $value) {
     'field_name' => 'diagram_hw',
     'width' => 600,
     'height' => 400,
-    'noFileMsg' => '']);
+    'noFileMsg' => 'N/A']);
 
 
 if ($fileNamePart1 !== "") {
     $resultFileName = $fileNamePart1;
 }
 
-$resultFileName .= ".docx";
+// $resultFileName .= ".docx";
+$resultFileName = "Pre-DDP.docx";
 $templateProcessor->saveAs($filename);
 
 $uploadedFiles = $_FILES['rack_layout'];
@@ -82,17 +83,6 @@ $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['floor_pl
 $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['edsFile']), 'word-48.png', 'docx', $edsFile);
 $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['basicMopFile']), 'word-48.png', 'docx', $basicMopFile);
 $docx_object->saveToZip();
-
-// $contentTypesXml = $zip->getFromName('[Content_Types].xml');
-// if (strpos($contentTypesXml, 'Extension="bin"') === false) {
-//     $ctDom = new DOMDocument();
-//     $ctDom->loadXML($contentTypesXml);
-//     $newNode = $ctDom->createElement('Default');
-//     $newNode->setAttribute('Extension', 'bin');
-//     $newNode->setAttribute('ContentType', 'application/vnd.openxmlformats-officedocument.oleObject');
-//     $ctDom->documentElement->appendChild($newNode);
-//     $zip->addFromString('[Content_Types].xml', $ctDom->saveXML());
-// }
 
 $zip->close();
 
