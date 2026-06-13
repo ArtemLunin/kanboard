@@ -4,9 +4,15 @@ ini_set('session.use_only_cookies',0);
 ini_set('session.use_trans_sid',1);
 session_name('kanboardSession');
 session_start();
+require 'vendor/autoload.php';
 
 require_once 'db_conf.php';
 require_once 'classProjects.php';
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
 
 mb_internal_encoding("UTF-8");
 
@@ -48,7 +54,8 @@ if ($userID === 0) {
     echo json_encode($out_res);
     exit;
 }
-
+$contentType = isset($_SERVER['CONTENT_TYPE']) ? trim($_SERVER['CONTENT_TYPE']) : '';
+if (stripos($contentType, 'application/json') === 0) {
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
 $method = $paramJSON['method'] ?? 0;
 $value = trim($paramJSON['value'] ?? '');
@@ -63,8 +70,18 @@ $user_name = $paramJSON['user_name'] ?? 0;
 $group_fields = $paramJSON['group_fields'] ?? 0;
 // $group_idx = isInt($paramJSON['group_idx'] ?? 0);
 $text_field = trim($paramJSON['text_field'] ?? '');
+} else {
+    $method = $_POST['method'];
+    $groups = [];
+    if (isset($_POST['groups']) && count($_POST['groups']) > 0) {
+        foreach ($_POST['groups'] as $group) {
+            $groups[] = json_decode($group, true);
+        }
+    }
+}
 
-if ($method !== 0)
+
+if ($method !== 0 && $method !== 'getProjectDocs')
 {
     if ($method === 'addProject' && $value && $number && $text_field) {
 		$param_error_msg['answer'] = $project_object->addProject($value, $number, $text_field);
@@ -84,14 +101,14 @@ if ($method !== 0)
         $param_error_msg['answer'] = $project_object->getProjectsActivity($id);
     } elseif ($method === 'getProjectsActivityByID' && $id) {
         $param_error_msg['answer'] = $project_object->getProjectsActivityByID($id);
-    }
-    elseif ($method === 'getProjectsActivityAll') {
+    } elseif ($method === 'getProjectsActivityAll') {
         $param_error_msg['answer'] = $project_object->getProjectsActivityAll();
-    }
-    elseif ($method === 'addGroups' && $groups && count($groups) > 0) {
+    } elseif ($method === 'addGroups' && $groups && count($groups) > 0) {
         $param_error_msg['answer'] = $project_object->addGroups($groups);
     } elseif ($method === 'getGroupsList') {
         $param_error_msg['answer'] = $project_object->getGroupsList();
+    } elseif ($method === 'getAvailGroupsList') {
+        $param_error_msg['answer'] = $project_object->getAvailGroupsList();
     } elseif($method === 'getUsersList') {
         $param_error_msg['answer'] = $project_object->getUsersList();
     } elseif($method === 'addUserToGroup' && $user_name && $group_id) {
@@ -102,6 +119,75 @@ if ($method !== 0)
         $param_error_msg['answer'] = $project_object->removeGroup($id);
     }
     $out_res = ['success' => $param_error_msg];
+} elseif ($method === 'getProjectDocs' && $groups && count($groups) > 0) {
+    $filesOut = [];
+    $project_name = $project_number = $group_name = '';
+    foreach ($groups as $group) {
+        $project_activity = $project_object->getProjectsActivityByID($group['activityId']);
+        $project_name = $project_activity['detail']['project_name'];
+        $project_number = $project_activity['detail']['project_number'];
+        $group_name = $project_activity['detail']['group_real_name'];
+
+        if (isset($project_activity['detail']['field_json_props'])) {
+            $field_json_props = json_decode($project_activity['detail']['field_json_props'], true);
+            if ($field_json_props) {
+                if ($group['activityType'] === 'MOR') {
+                    $morForReleaseFlag = $field_json_props['morForReleaseFlag'] ?? 0;
+                    $filename = tempnam(sys_get_temp_dir(), 'xlsx');
+                    $spreadsheetObj = IOFactory::load('template/MOR_template.xlsx');
+                    if ($morForReleaseFlag) {
+                        $spreadsheetObj = IOFactory::load('template/MOR_template_release.xlsx');
+                    }
+                    $spreadsheetObj = $project_object->writeXLSX($field_json_props, $spreadsheetObj, $morForReleaseFlag);
+                    $writer = new XlsxWriter($spreadsheetObj);
+                    $writer->save($filename);
+                    $filesOut[] = [
+                        'tmp_name' => $filename, 
+                        'activityType' => $group['activityType'],
+                        'group_name'    => $group_name,
+                        'file_type' => 'xlsx'
+                    ];
+                } elseif ($group['activityType'] === 'DIP') {
+                    $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/mop_template.docx');
+                    $filename = tempnam(sys_get_temp_dir(), 'docx');
+                    $templateProcessor = $project_object->writeDOCX($field_json_props, $templateProcessor, $project_object);
+                    $templateProcessor->saveAs($filename);
+                    helperUtils\DocxProcessor::removeIncludedObjFromDocx($filename);
+                    $filesOut[] = [
+                        'tmp_name' => $filename, 
+                        'activityType' => $group['activityType'], 
+                        'group_name'    => $group_name,
+                        'file_type' => 'docx'
+                    ];
+                }
+            }
+        }
+        
+    }
+    if (count($filesOut) > 0) {
+        $output_zip = tempnam(sys_get_temp_dir(), 'zip');
+        $zip = new \ZipArchive();
+        $zip->open($output_zip, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $param_error_msg['answer'] = [];
+        foreach ($filesOut as $file_out) {
+            $temp_file_name = 'temp/' . bin2hex(random_bytes(5)) . '.' . $file_out['file_type'];
+            $zip->addFile($file_out['tmp_name'], $file_out['group_name'] . '.' . $file_out['file_type']);
+            copy($file_out['tmp_name'], $temp_file_name);
+            $param_error_msg['answer'][] = $temp_file_name;
+        }
+        $zip->close();
+        header("Content-Type: application/zip;");
+        header("Content-Disposition: attachment; filename=".'project ' . $project_name . '.zip');
+        header("Expires: 0");
+        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+        header("Cache-Control: private", false);
+        $handle = fopen($output_zip, "r");
+        $contents = fread($handle, filesize($output_zip));
+        echo $contents;
+        exit;
+    }
+    $out_res = ['success' => $param_error_msg];
+    
 }
 header('Content-type: application/json');
 echo json_encode($out_res);

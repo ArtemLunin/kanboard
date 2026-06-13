@@ -103,7 +103,6 @@ catch (Exception $e) {
 	error_log('Exception: ' . $e->getMessage());
 	$param_error_msg['error'] = $e->getMessage();
 }
-
 if (isset($_SESSION['logged_user']) && $_SESSION['logged_user']) {
 	$currentUser = $_SESSION['logged_user'];
 	$rights = $db_object->getRights($_SESSION['logged_user'], 'dummypass', true);
@@ -154,7 +153,6 @@ if ($env === 'services') {
 	$call = $paramJSON['call'] ?? $_REQUEST['call'] ?? null;
 	$mode = $paramJSON['mode'] ?? $_REQUEST['mode'] ?? null;
 	$param_error_msg['answer'] = false;
-
 
 	$data_fields = [
 		'name'	=> '', 

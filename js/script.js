@@ -26,7 +26,7 @@ const groupsDDP = {
 	"null": "DDP",
 	"sde": "DDP_sde",
 	"ipcore": "DDP_ipcore",
-	"tarnsport": "DDP_transport"
+	"transport": "DDP_transport"
 };
 
 const hardCodeDesign = {
@@ -35,7 +35,7 @@ const hardCodeDesign = {
 	'Capacity Upgrade': 'js-cSDEPingTest-view',
 };
 const sectionChildren = {
-	'dip': {
+	'SDE': {
 		'Roaming FCR': 
 		[
 			'Firewall',
@@ -75,10 +75,19 @@ const documentProperties = {
 
 //for project
 const cTemplateGroups = {
-	"SDE": 0,
-	"IP Core": 1,
-	"Transport": 3,
+	'SDE': 0,
+	'IP Core': 1,
+	'Transport': 3,
 };
+const sde_ztm_name = 'sZTM',
+	ipcore_ztm_name = 'cZTM',
+	transport_ztm_name = 'tZTM';
+cTemplateGroups[sde_ztm_name] = 0;
+cTemplateGroups[ipcore_ztm_name] = 1;
+cTemplateGroups[transport_ztm_name] = 3;
+
+const fieldsMultirows = [];
+
 
 const projectActivitiesList = [];
 // let currentProjectReadyStatus = 0;
@@ -119,21 +128,24 @@ const sections = [
 	'cmop',
 	'ttemplate',
 	'tmop',
-	'template DIP',
-	'dip',
-	'template cDIP',
-	'cdip',
-	'template tDIP',
-	'tdip',
+	// 'template DIP',
+	// 'dip',
+	// 'template cDIP',
+	// 'cdip',
+	// 'template tDIP',
+	// 'tdip',
 	'capacity',
 	'cSDEPingtest',
 	'cSDEBundle',
-	'ddptemplate',
-	'ddp',
+	// 'ddptemplate',
+	// 'ddp',
 	'inventory',
 	'projects',
-	'mor',
+	// 'mor',
 	// 'documentation',
+	'sde',
+	'ipcore',
+	'transport',
 	'action',
 ];
 
@@ -508,6 +520,7 @@ window.addEventListener('DOMContentLoaded', () => {
         divCounter = document.querySelector('.counter-pb'),
 		renderMopDiv = document.querySelector('#render_mop'),
 		renderDDPDiv = document.querySelector('#render_ddp'),
+		renderMorDiv = document.querySelector('#render_mor'),
 		docTitle = document.querySelector('#docTitle'),
         showAll = document.querySelector('#showAll'),
         showAllDDP = document.querySelector('#showAllDDP'),
@@ -545,25 +558,28 @@ window.addEventListener('DOMContentLoaded', () => {
 		//mor elements
 	const morCollectPartsSelector = 'morCollectParts';
 	const formMor = document.querySelector('#formMor'),
-		morSite = formMor.querySelector('#mor_site'),
-		morSend = formMor.querySelector('#morSend'),
-		morSave = formMor.querySelector('#morSave'),
-		morReset = formMor.querySelector('#morReset'),
-		saveMor = formMor.querySelector('#saveMOR'),
-		morCA = formMor.querySelector('#mor_ca'),
+		morSite = document.querySelector('#mor_site'),
+		morSend = document.querySelector('#morSend'),
+		morSave = document.querySelector('#morSave'),
+		morSubmit = document.querySelector('#morSubmit'),
+		morReset = document.querySelector('#morReset'),
+		saveMor = document.querySelector('#saveMOR'),
+		// addMORToProject = document.querySelector('#addMORToProject'),
+		morCA = document.querySelector('#mor_ca'),
 		morCAList = document.querySelector('.mor-ca-list'),
-		mor_ProjectName = formMor.querySelector('#mor_project_name'),
-		morProjectNum = formMor.querySelector('#morProjectNum'),
-		morApprovingMgr = formMor.querySelector('#mor_approving_mgr'),
+		mor_ProjectName = document.querySelector('#mor_project_name'),
+		morProjectNum = document.querySelector('#morProjectNum'),
+		morApprovingMgr = document.querySelector('#mor_approving_mgr'),
 		// mor_project_contact = formMor.querySelector('#mor_project_contact'),
-		morTable = formMor.querySelector('#mor_table'),
+		morTable = document.querySelector('#mor_table'),
 		tbodyMorTable = morTable.querySelector('TBODY'),
-		morDateSubmitted = formMor.querySelector('#mor_date'),
-		morAddRow = formMor.querySelector('#js_mor_row_append'),
-		morDelRow = formMor.querySelector('#js_mor_row_remove'),
-		mor_requestor = formMor.querySelector('#mor_requestor'),
-		morCollectParts = formMor.querySelector(`#${morCollectPartsSelector}`),
-		selMorGroup = document.querySelector('#morGroup');
+		morDateSubmitted = document.querySelector('#mor_date'),
+		morAddRow = document.querySelector('#js_mor_row_append'),
+		morDelRow = document.querySelector('#js_mor_row_remove'),
+		mor_requestor = document.querySelector('#mor_requestor'),
+		morCollectParts = document.querySelector(`#${morCollectPartsSelector}`),
+		// selMorGroup = document.querySelector('#morGroup');
+		morGroupID = document.querySelector('#morGroupID');
 		const morInnerBody = document.querySelector('table.mor-inner>tbody'),
 		morForOthers = document.querySelector('#morForOthers'),
 		morForRelease = document.querySelector('#morForRelease'),
@@ -1857,6 +1873,43 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		return null;
 	};
+		/**
+	 * Динамически создает и отправляет форму для скачивания файла
+	 * * @param {string} actionUrl - URL обработчика на сервере (например, 'render.php')
+	 * @param {Object} params - Объект с данными формы { name: value }
+	 * @param {string} method - Метод отправки ('POST' или 'GET')
+	 */
+	function downloadFileWithDynamicForm(actionUrl, params, method = 'POST') {
+		const form = document.createElement('form');
+		form.style.display = 'none'; // Скрываем форму из видимости
+		form.method = method;
+		form.action = actionUrl;
+
+		for (const key in params) {
+			if (params.hasOwnProperty(key)) {
+				const value = params[key];
+
+				if (Array.isArray(value)) {
+					value.forEach(subValue => {
+						const input = document.createElement('input');
+						input.type = 'hidden';
+						input.name = `${key}[]`;
+						input.value = JSON.stringify(subValue);
+						form.appendChild(input);
+					});
+				} else {
+					const input = document.createElement('input');
+					input.type = 'hidden';
+					input.name = key;
+					input.value = value;
+					form.appendChild(input);
+				}
+			}
+		}
+		document.body.appendChild(form);
+		form.submit();
+		form.remove();
+	}
 
 	const toggleSignIn = (mode) => {
 		clearInputsForms();
@@ -1896,6 +1949,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.title = startDocumentTitle;
 		location.hash = showSection;
 		let idx = 0;
+		let additionalSectionProp = '';
 		showSection = showSection.replace(/\s+/g, '');
 		if (showSection !== 'documentation') {
 			// section is document.querySelectorAll('.section');
@@ -1903,6 +1957,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				item.style.display = "none";
 				if (showSection && item.classList.contains(showSection)) {
 					idx = i;
+				}
+				if (item.id === 'section-mor') {
+					additionalSectionProp = item.dataset.morGroup;
 				}
 			});
 			if (showSection === 'template' || 
@@ -1926,7 +1983,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				showSection === 'templateDDP'
 			) {
 				section[idx].append(renderDDPDiv);
-			}
+			} 
+			else if (showSection === 'mor') {
+				section[idx].append(renderMorDiv);
+			} 
 			section[idx].style.display = "block";
 		}
 
@@ -1990,7 +2050,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				iniOGPA();
 				break;
 			case 'templateDIP':
-				document.title = 'sZTM Template';
+				document.title = `${sde_ztm_name} Template`;
 				templateDip = 1;
 				displayMOPElements(true);
 				iniOGPA();
@@ -2010,14 +2070,14 @@ window.addEventListener('DOMContentLoaded', () => {
 				iniOGPA();
 				break;
 			case 'templatecDIP':
-				document.title = 'cZTM Template';
+				document.title = `${ipcore_ztm_name} Template`;
 				templateDip = 1;
 				cTemplate = 2;
 				displayMOPElements(true);
 				iniOGPA();
 				break;
 			case 'templatetDIP':
-				document.title = 'tZTM Template';
+				document.title = `${transport_ztm_name} Template`;
 				templateDip = 1;
 				tTemplate = 1;
 				displayMOPElements(true);
@@ -2050,8 +2110,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				iniOGPA();
 				break;
 			case 'cdip':
-				document.title = 'cZTM';
-				// docTitle.value = 'Design Implementation Procedure (DIP)';
+				document.title = `${ipcore_ztm_name}`;
 				docTitle.value = 'Zero Touch MOP (ZTM)';
 				templateDip = 0;
 				cTemplate = 2;
@@ -2060,8 +2119,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				iniOGPA();
 				break;
 			case 'tdip':
-				document.title = 'tZTM';
-				// docTitle.value = 'Design Implementation Procedure (DIP)';
+				document.title = `${transport_ztm_name}`;
 				docTitle.value = 'Zero Touch MOP (ZTM)';
 				templateDip = 0;
 				tTemplate = 1;
@@ -2070,7 +2128,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				iniOGPA();
 				break;
 			case 'dip':
-				document.title = 'sZTM';
+				document.title = `${sde_ztm_name}`;
 				// docTitle.value = 'Design Implementation Procedure (DIP)';
 				docTitle.value = 'Zero Touch MOP (ZTM)';
 				templateDip = 1;
@@ -2110,14 +2168,14 @@ window.addEventListener('DOMContentLoaded', () => {
 				templateDDP = 1;
 				ddpTemplate = 1;
 				displayDDPElements(true);
-				iniDDP();
+				iniDDP(addParams);
 				break;
 			case 'ddp':
 				document.title = 'DDP';
 				templateDDP = 0;
 				ddpTemplate = 1;
 				displayDDPElements(false);
-				iniDDP();
+				iniDDP(addParams);
 				break;
 			case 'inventory':
 				document.title = 'Inventory';
@@ -2128,8 +2186,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				iniProjects();
 				break;
 			case 'mor':
-				document.title = 'MOR';
-				iniMOR();
+				document.title = addParams.pageName;
+				iniMOR(addParams);
 				break;
 			default:
 				break;
@@ -2163,7 +2221,29 @@ window.addEventListener('DOMContentLoaded', () => {
 				toggleSection(target.dataset.section, 
 				{'element': (target.dataset.element === undefined) ? false : target.dataset.element, 
 				'activity': (target.dataset.activity === undefined) ? false : target.dataset.activity,
-				'visibleName': (target.dataset.visibleName === undefined) ? false : target.dataset.visibleName});
+				'visibleName': (target.dataset.visibleName === undefined) ? false : target.dataset.visibleName,
+				'groupName': (target.dataset.groupName === undefined) ? false : target.dataset.groupName,
+				'pageName': (target.dataset.pageName === undefined) ? false : target.dataset.pageName});
+			}
+		} else if (!!target.closest('.menu-item')) {
+			const parentItem = target.closest('.menu-item');
+			const submenu = parentItem.querySelector('.submenu');
+			const isOpen = parentItem.classList.contains('open');
+			document.querySelectorAll('.menu-item').forEach(item => {
+				if (item !== parentItem && item.classList.contains('open')) {
+					item.classList.remove('open');
+					const sub = item.querySelector('.submenu');
+					if (sub) {
+						sub.style.maxHeight = '0px';
+					}
+				}
+			});
+			if (isOpen) {
+				parentItem.classList.remove('open');
+				submenu.style.maxHeight = '0px';
+			} else {
+				parentItem.classList.add('open');
+				submenu.style.maxHeight = submenu.scrollHeight + 'px';
 			}
 		}
 	});
@@ -2209,14 +2289,23 @@ window.addEventListener('DOMContentLoaded', () => {
 				} else {
 					currentUser = data.success.answer.user;
 				}
-				
+				const collapsableTMenu = [],
+					collapsableCMenu = [], 
+					collapsableSMenu = [];
 				data.success.answer.rights.forEach(({pageName, sectionAttr, sectionName, accessType}) => {
 					if (pageName !== 'Documentation' && sectionName !== 'main')
 					{
-						if (pageName.toUpperCase() === 'DDP' || pageName.toUpperCase() === 'MOR') {
+						let tStatus = 0, 
+							cStatus = 0,
+							sStatus = 0;
+						if (pageName.toUpperCase() === 'TRANSPORT') {
+							tStatus = 1;
+						} else if (pageName.toUpperCase() === 'IP CORE') {
+							cStatus = 1;
+						} else if (pageName.toUpperCase() === 'SDE') {
+							sStatus = 1;
+						} else if (pageName.toUpperCase() === 'DDP') {
 							pageName = pageName.toUpperCase();
-						} else if (pageName.toUpperCase() === 'DIP')  {
-							pageName = 'sZTM';
 						} else if (pageName.toUpperCase() === 'MOP') {
 							pageName = 'MOP';
 						} else if (pageName.toUpperCase() === 'TEMPLATE') {
@@ -2225,16 +2314,6 @@ window.addEventListener('DOMContentLoaded', () => {
 							pageName = 'cTemplate';
 						} else if (pageName.toUpperCase() === 'CMOP' ) {
 							pageName = 'cMOP';
-						} else if (pageName.toUpperCase() === 'CDIP') {
-							pageName = 'cZTM';
-						} else if (pageName.toUpperCase() === 'TEMPLATE DIP') {
-							pageName = 'sZTM Template';
-						} else if (pageName.toUpperCase() === 'TEMPLATE CDIP') {
-							pageName = 'cZTM Template';
-						} else if (pageName.toUpperCase() === 'TEMPLATE TDIP') {
-							pageName = 'tZTM Template';
-						} else if (pageName.toUpperCase() === 'TDIP') {
-							pageName = 'tZTM';
 						} else if (pageName.toUpperCase() === 'TTEMPLATE') {
 							pageName = 'tTemplate';
 						} else if (pageName.toUpperCase() === 'TMOP') {
@@ -2247,16 +2326,41 @@ window.addEventListener('DOMContentLoaded', () => {
 								let temp_arr = sectionChildren[sectionName];
 								add_attrs = `data-element="${temp_arr[0]}" data-activity="${temp_arr[1]}" data-csde_type="${temp_arr[2]}"`;
 							}
-							menu.insertAdjacentHTML('beforeend', `
-							<li data-section="${sectionAttr}" data-access="${accessType}" ${add_attrs}>${pageName}</li>
-							`);
-							if (!!sectionChildren[sectionName] && typeof sectionChildren[sectionName] === 'object' && !Array.isArray(sectionChildren[sectionName])) {
+							let simpleMenuItem = fillSimpleMenuItem(sectionAttr, accessType, add_attrs, pageName);
+							
+							if (tStatus == 1) {
+								collapsableTMenu.push(fillSimpleMenuItem('templatetDIP', accessType, add_attrs, `${transport_ztm_name} Template`));
+								collapsableTMenu.push(fillSimpleMenuItem('tdip', accessType, add_attrs, `${transport_ztm_name}`));
+								collapsableTMenu.push(fillSimpleMenuItem('mor', accessType, 'data-group-name="transport" data-page-name="tMOR"', 'tMOR'));
+								collapsableTMenu.push(fillSimpleMenuItem('ddp', accessType, 'data-group-name="transport" data-page-name="tPre-DDP"', 'tPre-DDP'));
+							} else if (cStatus == 1) {
+								collapsableCMenu.push(fillSimpleMenuItem('templatecDIP', accessType, add_attrs, `${ipcore_ztm_name} Template`));
+								collapsableCMenu.push(fillSimpleMenuItem('cdip', accessType, add_attrs, `${ipcore_ztm_name}`));
+								collapsableCMenu.push(fillSimpleMenuItem('mor', accessType, 'data-group-name="ip core" data-page-name="cMOR"', 'cMOR'));
+								collapsableCMenu.push(fillSimpleMenuItem('ddp', accessType, 'data-group-name="ip core" data-page-name="cPre-DDP"', 'cPre-DDP'));
+							} else if (sStatus == 1) {
+								collapsableSMenu.push(fillSimpleMenuItem('templateDIP', accessType, add_attrs, `${sde_ztm_name} Template`));
+								collapsableSMenu.push(fillSimpleMenuItem('dip', accessType, add_attrs, `${sde_ztm_name}`));
+								collapsableSMenu.push(fillSimpleMenuItem('mor', accessType, 'data-group-name="sde" data-page-name="sMOR"', 'sMOR'));
+								collapsableSMenu.push(fillSimpleMenuItem('ddp', accessType, 'data-group-name="sde" data-page-name="sPre-DDP"', 'sPre-DDP'));
+							} else {
+								menu.insertAdjacentHTML('beforeend', simpleMenuItem);
+							}
+							if (!!sectionChildren[sectionName] && typeof sectionChildren[sectionName] === 'object' && !Array.isArray(sectionChildren[sectionName]) && sStatus == 1) {
+								let ins_pos = 2;
+								sectionAttr = 'dip';
 								for (const [key, value] of Object.entries(sectionChildren[sectionName])) {
-									menu.insertAdjacentHTML('beforeend', `<li data-section="${sectionAttr}" 
+									collapsableSMenu.splice(ins_pos, 0, `<li data-section="${sectionAttr}" 
 									data-visible-name="${key}" 
 									data-access="${accessType}" data-element="${value[0]}" data-activity="${value[1]}"
 									data-subsection="${value[2]}" class="${subMenuClass}">- ${key}</li>
 									`);
+									ins_pos++;
+									// menu.insertAdjacentHTML('beforeend', `<li data-section="${sectionAttr}" 
+									// data-visible-name="${key}" 
+									// data-access="${accessType}" data-element="${value[0]}" data-activity="${value[1]}"
+									// data-subsection="${value[2]}" class="${subMenuClass}">- ${key}</li>
+									// `);
 								}
 							}
 							if (sectionName === 'excel')
@@ -2276,9 +2380,10 @@ window.addEventListener('DOMContentLoaded', () => {
 								}
 								localStorage.setItem('showMosaicEditItems', showMosaicEditItems);
 							} else if (sectionName === 'mor') {
-								if (accessType === 'user')
-								{
+								if (accessType === 'user') {
 									uploadsMor.classList.add('d-none');
+								} else {
+									uploadsMor.classList.remove('d-none');
 								}
 							}
 						}
@@ -2288,6 +2393,35 @@ window.addEventListener('DOMContentLoaded', () => {
 				wikiLDAPAuth = data.success.answer.doscLDAP;
 				document.querySelector('#capacity-frame-link').textContent = data.success.answer.capacityHref;
 				document.querySelector('#capacityFrame').src = data.success.answer.capacityHref;
+				if (collapsableTMenu.length > 0) {
+					menu.insertAdjacentHTML('beforeend', genCollapsableMenu('Transport', collapsableTMenu));
+				}
+				if (collapsableCMenu.length > 0) {
+					menu.insertAdjacentHTML('beforeend', genCollapsableMenu('IP Core', collapsableCMenu));
+				}
+				if (collapsableSMenu.length > 0) {
+					menu.insertAdjacentHTML('beforeend', genCollapsableMenu('SDE', collapsableSMenu));
+				}
+					// let str_items = '';
+					// collapsableTMenu.forEach(item => {
+					// 	str_items += item;
+					// });
+					// menu.insertAdjacentHTML('beforeend', `
+					// 	<li class="menu-item">
+					// 		<div class="menu-header">
+					// 			<div class="menu-title-wrapper">
+					// 				<span>Transport</span>
+					// 			</div>
+					// 			<svg class="arrow-icon" viewBox="0 0 24 24">
+					// 				<path d="M7 10l5 5 5-5z"/>
+					// 			</svg>
+					// 		</div>
+					// 		<ul class="submenu">
+					// 			${str_items}
+					// 		</ul>
+					// 	</li>
+					// `);
+				// }
 			}
 			menu.insertAdjacentHTML('beforeend', `
 				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
@@ -2318,6 +2452,35 @@ window.addEventListener('DOMContentLoaded', () => {
 			} catch (e) {}
 			toggleSection(section, paramSection);
 		}
+	};
+	const fillSimpleMenuItem = (section_attr, access_type, add_attrs, page_name) => {
+		return `
+		<li data-section="${section_attr}" data-access="${access_type}" ${add_attrs}>${page_name}</li>
+		`
+	};
+	const genCollapsableItems = (arrCollapsableItems) => {
+		let str_items = '';
+		arrCollapsableItems.forEach(item => {
+			str_items += item;
+		});
+		return str_items;
+	};
+	const genCollapsableMenu = (menuName, arrCollapsableItems) => {
+		return `
+		<li class="menu-item">
+			<div class="menu-header">
+				<div class="menu-title-wrapper">
+					<span>${menuName}</span>
+				</div>
+				<svg class="arrow-icon" viewBox="0 0 24 24">
+					<path d="M7 10l5 5 5-5z"/>
+				</svg>
+			</div>
+			<ul class="submenu">
+				${genCollapsableItems(arrCollapsableItems)}
+			</ul>
+		</li>
+		`;
 	};
 
 	const toggleNoAccessRights = (selector, elem, displayProp) => {
@@ -3375,12 +3538,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		formNewProject.classList.remove('d-none');
 		activeProjects.querySelector('legend').textContent = 'Projects info';
 		toggleProjectsActivityArea('hide');
-		// projectsActivityArea.textContent = '';
-		// projectsActivityArea.classList.add('d-none');
 		projectBriefData.classList.add('d-none');
 		jsBackProjects.classList.add('d-none');
 		activityInProjects = '0';
-		// currentProjectReadyStatus = 0;
 	};
 
 	btnDevicesSelect.addEventListener('click', () => {
@@ -3505,6 +3665,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		//clear projectActivity
 		projectActivitiesList.length = 0;
 		if (projectActivity && projectActivity.dataset.activity_id !== '0' && activityInProjects !== projectActivity.dataset.activity_id) {
+			//get projectActivity
 			activityInProjects = projectActivity.dataset.activity_id;
 			const currentProject = projectActivity.closest('.project-band');
 			e.currentTarget.querySelectorAll('.project-band').forEach(project => {
@@ -3522,18 +3683,27 @@ window.addEventListener('DOMContentLoaded', () => {
 			projectBriefData.querySelector('#project-brief-name').value = currentProject.dataset.projectName;
 			projectBriefData.querySelector('#project-brief-description').value = currentProject.dataset.projectDescription;
 			projectBriefData.classList.remove('d-none');
-			sendRequest('POST', requestURLProject, body).then((data) => {
-				showProjectActivityForm(data, parseInt(projectActivity.dataset.ogpaGroup));
-			});
+			if (projectActivity.dataset.morStatus != '1') {
+				sendRequest('POST', requestURLProject, body).then((data) => {
+					showProjectActivityForm(data, parseInt(projectActivity.dataset.ogpaGroup));
+				});
+			} else {
+				sendRequest('POST', requestURLProject, body).then(async (data) => {
+					formMor.reset();
+					await iniMORTables();
+					showProjectMORForm(data, parseInt(projectActivity.dataset.ogpaGroup));
+				});
+			}
 			jsBackProjects.classList.remove('d-none');
 		} else if (projectActivity && projectActivity.dataset.activity_id == '0') {
 			const currentProject = projectActivity.closest('.project-band');
 			projectBriefData.querySelector('#project-brief-number').value = currentProject.dataset.projectNumber;
 			projectBriefData.querySelector('#project-brief-name').value = currentProject.dataset.projectName;
 			projectBriefData.querySelector('#project-brief-description').value = currentProject.dataset.projectDescription;
-			toggleProjectsActivityArea('show', renderMopDiv);
-			resetHardCodeDesign();
-			displayMOPElements(false);
+
+			// toggleProjectsActivityArea('show', renderMopDiv);
+			// resetHardCodeDesign();
+			// displayMOPElements(false);
 			projectFileNumber = 0;
 			projectDocsList.length = 0;
 			const downloadProject = target.closest('[data-download-project]');
@@ -3550,6 +3720,30 @@ window.addEventListener('DOMContentLoaded', () => {
 						}
 					}
 				});
+				if (finishedActivities == totalActivities) {
+					const itemsInProject = [];
+					for (const activity of projectActivitiesList) 
+					{
+						const currentActivityItem = currentProject.querySelector(`.project-activity[data-activity_id='${activity}']`);
+						if (currentActivityItem) {
+							let activityType = '';
+							if (currentActivityItem.dataset.morStatus == '1') {
+								activityType = 'MOR';
+								// addMORToProject.disabled = false;
+							} else {
+								activityType = 'DIP';
+							}
+							itemsInProject.push({
+								'activityId': activity,
+								'activityType': activityType,
+							});
+						}
+					}
+					getProjectDocs(itemsInProject);
+				}
+				
+				return;
+				//код if ниже - не используем, меняется логика формирования документов
 				if (finishedActivities == totalActivities) {
 					for (const activity of projectActivitiesList) 
 					{
@@ -3573,7 +3767,6 @@ window.addEventListener('DOMContentLoaded', () => {
 								};
 								cTemplate = getOGPANum();
 								projectGroupName = data.success.answer.detail.group_name;
-								console.log(projectGroupName);
 								showActivityFields(dataObject);
 								fillCTemplateFields(formAdmin);
 								fillSelectField(selPrimeElement, data.success.answer.detail.element, true);
@@ -3581,7 +3774,6 @@ window.addEventListener('DOMContentLoaded', () => {
 								formSubmit.dataset.projectDownload = '1';
 								formFields.querySelector('#projectActivityCount').value = projectActivitiesList.length;
 								formSubmit.innerText = 'Download';
-								console.log(activity);
 								await submitRenderForm(formFields, activity, 1);
 							}
 						}
@@ -3671,13 +3863,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 			sendRequest('POST', requestURLProject, body).then((data) => {
 				if (data && data.success && data.success.answer) {
-					// projectText.value = '';
-					// projectNumber.value = '';
-					// projectName.value  = '';
-					// inputProjectID.value = '0';
-					// projectSubmit.textContent = 'Create';
-					// projectGroups.textContent = '';
-					// btnProjectRemove.classList.add('d-none');
 					formNewProject.reset();
 					iniProjectsInfo();
 				}
@@ -3753,7 +3938,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	projectGroups.addEventListener('dragenter', (e) => {
 		const target = e.target;
-		// const group_elem = document.querySelector(`#${target.getAttribute('for')}`);
 		const draggable_parent = target.closest('.js-group-project');
 		if (target.nodeName === 'LABEL') {
 			const dragged_id = e.dataTransfer.getData('text/plain');
@@ -4573,9 +4757,9 @@ window.addEventListener('DOMContentLoaded', () => {
 					projectGroups.insertAdjacentHTML('beforeend', `
 						<div class="d-flex justify-content-between js-group-project group-draggable"  id="drag-gr-pr${groupsListInProjects[groupIdx].id}" draggable="true">
 						<div>
-							<input type="radio" name="select-groups-project" data-group_name="${groupsListInProjects[groupIdx].name}" data-id="${item.id}" data-group_idx="${item.group_idx}"
+							<input type="radio" name="select-groups-project" data-group_name="${groupsListInProjects[groupIdx].alias}" data-id="${item.id}" data-group_idx="${item.group_idx}"
 							data-group_id="${groupsListInProjects[groupIdx].id}" id="opt-gr-pr${groupsListInProjects[groupIdx].id}">
-							<label for="opt-gr-pr${groupsListInProjects[groupIdx].id}">${groupsListInProjects[groupIdx].name}</label>
+							<label for="opt-gr-pr${groupsListInProjects[groupIdx].id}">${groupsListInProjects[groupIdx].alias}</label>
 						</div>
 						<!--<div>
 							<button class="mop action-group js-group-up" type="button" title="Up">↑</button>
@@ -4644,6 +4828,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						project_id: activity.project_id,
 						group_id: activity.group_id,
 						ogpa_group: cTemplateGroups[activity.group_name] ?? 0,
+						mor_status: (activity.group_name.toLowerCase().includes('mor')) ? '1' : '0',
 						activity_date: activity_date,
 						activity_status: activity_status,
 						activity_ready: activity_ready,
@@ -4668,17 +4853,12 @@ window.addEventListener('DOMContentLoaded', () => {
 				projectGroupsAct[project.info.id] = groupIds;
 			});
 		}
-		// console.log(projectGroupsAct);
 		document.querySelector('#projectGroupsAct').textContent = JSON.stringify(projectGroupsAct);
 	}
 
-	function projectActivityGenerate({activity_id = 0, project_id = 0, group_id = 0, ogpa_group = 0, activity_date = '&nbsp;', activity_status, activity_ready, group_name = '', dnone = '', activity_finished = 0, group_Ids = null}) {
-		// let groupIds_out = "";
-		// if (group_Ids !== null) {
-		// 	groupIds_out = `data-groups-list="${JSON.stringify(group_Ids)}"`;
-		// }
+	function projectActivityGenerate({activity_id = 0, project_id = 0, group_id = 0, ogpa_group = 0, mor_status = 0, activity_date = '&nbsp;', activity_status, activity_ready, group_name = '', dnone = '', activity_finished = 0, group_Ids = null}) {
 		return `
-			<div class="project-activity" data-activity_id="${activity_id}" data-project_id="${project_id}" data-group_id="${group_id}" data-activity_finished="${activity_finished}" data-ogpa-group="${ogpa_group}">
+			<div class="project-activity" data-activity_id="${activity_id}" data-project_id="${project_id}" data-group_id="${group_id}" data-activity_finished="${activity_finished}" data-ogpa-group="${ogpa_group}" data-mor-status="${mor_status}">
 				<div class="project-activity-date">${activity_date}</div>
 				<div class="project-activity-graph">
 						<div class="project-activity-line ${activity_status}"></div>
@@ -4690,16 +4870,16 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 
-	function projectGroupsListGenerate(groupID, groupName, activityID) {
-		return `
-		<div class="d-flex justify-content-between js-group-project group-draggable"  id="drag-gr-pr${groupID}" draggable="true">
-			<div>
-				<input type="radio" name="select-groups-project" data-group_name="${groupName}" data-id="${activityID}" data-group_idx="${item.group_idx}"
-				data-group_id="${groupID}" id="opt-gr-pr${groupID}">
-				<label for="opt-gr-pr${groupID}">${groupName}</label>
-			</div>
-		</div>`;
-	}
+	// function projectGroupsListGenerate(groupID, groupName, activityID) {
+	// 	return `
+	// 	<div class="d-flex justify-content-between js-group-project group-draggable"  id="drag-gr-pr${groupID}" draggable="true">
+	// 		<div>
+	// 			<input type="radio" name="select-groups-project" data-group_name="${groupName}" data-id="${activityID}" data-group_idx="${item.group_idx}"
+	// 			data-group_id="${groupID}" id="opt-gr-pr${groupID}">
+	// 			<label for="opt-gr-pr${groupID}">${groupName}</label>
+	// 		</div>
+	// 	</div>`;
+	// }
 
 	function showProjectActivityForm(data, ogpaGroup = 0) {
 		formNewProject.classList.add('d-none');
@@ -4730,6 +4910,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				showActivityFields(dataObject);
 				fillSelectField(selPrimeElement, data.success.answer.detail.element, true);
 				fillSelectField(selActivity, data.success.answer.detail.activity, true);
+				fillMultirows();
 				if (data.success.answer.detail.status === 2) {
 					formSubmit.dataset.projectDownload = '1';
 					formSubmit.innerText = 'Download';
@@ -4741,6 +4922,84 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 		}
+	}
+
+	function showProjectMORForm(data, ogpaGroup = 0) {
+		formNewProject.classList.add('d-none');
+		activeProjects.querySelector('legend').textContent = 'Selected project';
+		projectGroupName = '';
+		uploadsMor.classList.add('d-none');
+		if (data && data.success && data.success.answer && data.success.answer.detail) {
+			fillMORFields(JSON.parse(data.success.answer.detail.field_json_props));
+		}
+		if (data && data.success && data.success.answer && data.success.answer.detail.status === 2) {
+			morSubmit.innerText = 'Download';
+			morSave.classList.add('d-none');
+		}
+		toggleProjectsActivityArea('show', renderMorDiv);
+	}
+	function fillMORFields(fieldProps) {
+			const simpleParams = {};
+			const arrayEntries = [];
+			let mor_flag = '0';
+			Object.entries(fieldProps).forEach(([key, value]) => {
+				if (Array.isArray(value)) {
+					arrayEntries.push([key, value]);
+				} else {
+					simpleParams[key] = value;
+					if (key === 'morForReleaseFlag') {
+						mor_flag = value;
+					}
+				}
+			});
+			switchMORTables(mor_flag);
+			const baseElems = [];
+			setTimeout(() => {
+				for (const simpleParam in simpleParams) {
+					const formElement = formMor.querySelector(`#${simpleParam}`);
+					if (formElement) {
+						formElement.value = simpleParams[simpleParam];
+						if (formElement.nodeName == 'SELECT') {
+							formElement.dataset.baseValue = simpleParams[simpleParam];
+							baseElems.push(simpleParam);
+						}
+					}
+				}
+				morSite2Sites();
+				baseElems.forEach(elementId => {
+					formMor.querySelector(`#${elementId}`).value = formMor.querySelector(`#${elementId}`).dataset.baseValue;
+				});
+			}, 0);
+			// console.log(morSite.options[morSite.selectedIndex]);
+			
+			// console.log(morSite.options[morSite.selectedIndex]);
+			
+			// console.log(document.querySelector(`#mor_site_from`).value);
+			gSiteCode = morSite.value;
+
+			const arrParts = [];
+			if (arrayEntries.length > 0) {
+				const rowCount = arrayEntries[0][1].length;
+				for (let i = 0; i < rowCount; i++) {
+					const rowObject = {};
+					arrayEntries.forEach(([key, values]) => {
+						rowObject[key] = values[i] !== undefined ? values[i] : null;
+					});
+					arrParts.push(rowObject);
+				}
+				tbodyMorTable.insertAdjacentHTML('beforeend', genRowParts(1, arrParts));
+				tbodyMorTable.dataset.trId = countRowsByClass('.js-mor-tr-dyn') + 1;
+			} else {
+				let caList = caTable.filter(ca => ca.ca.includes(morCA.value));
+				const rowObject = {};
+				rowObject['mor_oracle'] = morProjectNum.value;
+				rowObject['mor_date_required'] = datetimeToCaDate();
+				rowObject['mor_site_code'] = morSite.value;
+				arrParts.push(rowObject);
+			}
+			// console.log(morSite.options[morSite.selectedIndex]);
+			// mor_requestor.dispatchEvent(new Event('change'));
+		// }
 	}
 
 	function toggleProjectsActivityArea(commandShow, child = null) {
@@ -4760,10 +5019,23 @@ window.addEventListener('DOMContentLoaded', () => {
 		groupsListInProjects.length = 0;
 		if (data.success && data.success.answer) {
 			data.success.answer.forEach((item) => {
-				groupsListInProjects.push({
-					"id": item.id,
-					"name": item.name
-				});
+				let item_id = item.id;
+				if (item.sub_groups) {
+					item_id = 0;
+					groupsListInProjects.push({
+						"id": item_id,
+						"name": item.name,
+						"alias": item.name,
+						// "sub_groups": item.sub_groups
+					});
+					item.sub_groups.forEach(sub_group => {
+						groupsListInProjects.push({
+							"id": sub_group.id,
+							"name": sub_group.name,
+							"alias": sub_group.name,
+						});
+					});
+				}
 			});
 		}
 		fillGroupsProject(groupsListProjects);
@@ -4772,10 +5044,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	function fillGroupsProject(groupsListFilled) {
 		groupsListFilled.textContent = '';
+		const fillOption = ({id, name, alias}) => {
+			let dis_option = "";
+			let space_sub = "&nbsp;&nbsp;&nbsp;";
+			if (id == "0") {
+				dis_option = "disabled";
+				space_sub = "";
+			}
+			return `<OPTION value="${name}" data-group_id="${id}" ${dis_option}>${space_sub}${alias}</OPTION>`;
+		};
 		groupsListInProjects.forEach((item) => {
-			groupsListFilled.insertAdjacentHTML('beforeend', `
-					<OPTION value="${item.name}" data-group_id="${item.id}">${item.name}</OPTION>
-			`);
+			// groupsListFilled.insertAdjacentHTML('beforeend', `
+			// 	<OPTION value="${item.name}" data-parent_group_id="0" disabled>${item.name}</OPTION>
+			// `);
+			// item.sub_groups.forEach(sub_group => {
+			// 	groupsListFilled.insertAdjacentHTML('beforeend', `
+			// 		<OPTION value="${sub_group.name}" data-parent_group_id="${item.id}" data-group_id="${sub_group.id}">&nbsp;&nbsp;&nbsp;${sub_group.name}</OPTION>
+			// 	`);
+			// });
+			groupsListFilled.insertAdjacentHTML('beforeend', fillOption({id: item.id, name: item.name, alias: item.alias}));
 		});
 	}
 
@@ -4929,7 +5216,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	morSelector.addEventListener('change', function(e) {
+		console.log('morSelector');
 		const target = e.target;
+		console.log(target.dataset.morType);
 		if (target.dataset.morType == undefined || target.dataset.morType != target.options[target.selectedIndex].dataset.morType) {
 			target.dataset.morType = target.options[target.selectedIndex].dataset.morType;
 			switchMORTables(target.dataset.morType);
@@ -5427,7 +5716,11 @@ window.addEventListener('DOMContentLoaded', () => {
 				if (ddpTemplate == 1) {
 					const option = selGroupsDDP.querySelector(`option[value="${item.element}"]`);
 					if (option) {
+						const groupName = Object.keys(groupsDDP).find(k => groupsDDP[k] === item.element);
 						option.dataset.id = `${item.id}`;
+						if (extends_data.groupName.toLowerCase() === groupName.toLowerCase()) {
+							selGroupsDDP.value = item.element;
+						}
 					}
 				}
 			});
@@ -5494,6 +5787,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const showActivityFields = (data) => {
+		console.log('showActivityFields');
 		formFields.reset();
 		formFieldsDDP.reset();
 		projectNumberActivity.removeAttribute('readonly');
@@ -5582,9 +5876,24 @@ window.addEventListener('DOMContentLoaded', () => {
 							const fieldIn = document.querySelector(`#${field.fieidID}`);
 							if (field) {
 								fieldIn.value = field.default;
+								if (fieldIn.name == fieldIn.id + '[]') {
+									try {
+										const row_values = JSON.parse(field.default);
+										//skip first row
+										row_values.shift();
+										fieldsMultirows.push({
+											id: field.fieidID,
+											values: row_values
+										});
+									} catch (e) {
+									}
+								}
 								if (fieldIn.type != 'hidden') {
 									fieldIn.classList.add(inputSelectorClass);
 								}
+							}
+							if (fieldIn.id == 'projectType') {
+								console.log(fieldIn.id, fieldIn.value, fieldIn.dataset.ini_data);
 							}
 						});
 						if ((adminEnabled && !group.classList.contains('renderOnly')) || 
@@ -5645,6 +5954,21 @@ window.addEventListener('DOMContentLoaded', () => {
 		selectElement.insertAdjacentHTML('beforeend', `
 			<option value="${selectValue}" selected>${selectValue}</option>
 		`);
+	};
+
+	const fillMultirows = () => {
+		fieldsMultirows.forEach(row => {
+			const elem = document.querySelector(`#${row.id}`);
+			if (elem) {
+				// try {
+					// const rows_values = JSON.parse(row.value);
+					row.values.forEach(row_values => {
+						btnAreaAppend(elem, row_values);
+					});
+				// } catch (e) {
+				// }
+			}
+		});
 	};
 
 	const showChassisTags = (data) => {
@@ -5715,7 +6039,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const iniGroups = () => {
 		const body = {
-			method: 'getGroupsList',
+			method: 'getAvailGroupsList',
 		};
 		sendRequest('POST', requestURLProject, body).then(showGroupsProjectSection);
 	};
@@ -5725,16 +6049,40 @@ window.addEventListener('DOMContentLoaded', () => {
 		dataTableInventory.ajax.reload();
 	};
 
-	const iniMOR = () => {
-		morSite.textContent = '';
-		selMorGroup.textContent = '';
+	const iniMOR = (addParams) => {
 		formMor.reset();
+		iniMORTables();
+		
+		sendRequest('POST', requestURLMOR, {
+			method: 'getMORUserGroups',
+			env: 'mor',
+		}).then((data) => {
+			for (const group of data.success.answer.groups) {
+				const groupName = (addParams.groupName === undefined) ? false : addParams.groupName.toLowerCase();
+				if (groupName === group.group.toLowerCase()) {
+					// selMorGroup.insertAdjacentHTML('beforeend', `
+					// 	<OPTION value="${group.id}" data-group-id="${group.id}" selected>${group.group}</OPTION>
+					// `);
+					// selMorGroup.value = group.group;
+					morGroupID.value = group.id;
+					morGroupID.defaultValue = group.id;
+					break;
+				}
+            }
+			// resetSelect(selMorGroup);
+			// selMorGroup.dispatchEvent(new Event('change'));
+			morGroupID.dispatchEvent(new Event('change'));
+		});
+	};
+
+	async function iniMORTables() {
+		morSite.textContent = '';
 		const body = {
 			method: 'getMORData',
 			env: 'mor',
 			value: 'site'
 		};
-		sendRequest('POST', requestURLMOR, body).then((data) => {
+		await sendRequest('POST', requestURLMOR, body).then((data) => {
 			siteTable = data.success.answer.slice();
 			for (const site of siteTable) {
                 morSite.insertAdjacentHTML('beforeend', `
@@ -5744,28 +6092,15 @@ window.addEventListener('DOMContentLoaded', () => {
             morSite.value = '';
 		});
 		body.value = 'ca';
-		sendRequest('POST', requestURLMOR, body).then((data) => {
+		await sendRequest('POST', requestURLMOR, body).then((data) => {
 			caTable = data.success.answer.slice();
             morCA.value = '';
 		});
 		body.value = 'rcpc';
-		sendRequest('POST', requestURLMOR, body).then((data) => {
+		await sendRequest('POST', requestURLMOR, body).then((data) => {
 			rcpcTable = data.success.answer.slice();
 		});
-		morSelector.dispatchEvent(new Event('change'));
-		
-		sendRequest('POST', requestURLMOR, {
-			method: 'getMORUserGroups',
-			env: 'mor',
-		}).then((data) => {
-			for (const group of data.success.answer.groups) {
-                selMorGroup.insertAdjacentHTML('beforeend', `
-                    <OPTION value="${group.id}" data-group-id="${group.id}">${group.group}</OPTION>
-                `);
-            };
-			resetSelect(selMorGroup);
-		});
-	};
+	}
 
 	const resetSelect = (formSelect) => {
 		// if (formSelect.length > 1) {
@@ -5773,14 +6108,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		// }
 	};
 
-	const iniDDP = () => {
+	const iniDDP = (addParams) => {
 		const body = {
 			method: 'setOGPADDP',
 			ogpa_group: getOGPANum(),
 			value: Object.values(groupsDDP)		
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
-			showOGPA(data, '');
+			showOGPA(data, addParams);
 		});
 	};
 
@@ -5791,7 +6126,11 @@ window.addEventListener('DOMContentLoaded', () => {
 	// };
 
 	const switchMORTables = (mor_id, raiseMorSiteEvent = true) => {
-		morInnerBody.textContent = '';
+		// console.log('switchMORTables',mor_id);
+		// morInnerBody.textContent = '';
+		while (morInnerBody.firstChild) {
+			morInnerBody.removeChild(morInnerBody.firstChild);
+		}
 		switch (mor_id) {
 			case '0':
 				morInnerBody.append(morForOthers.content.cloneNode(true));
@@ -5802,9 +6141,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				morForReleaseFlag.value = '1';
 				break;
 		}
-		// if (raiseMorSiteEvent) {
-			morSite.dispatchEvent(new Event('change'));
-		// }
 	};
 
 	const getChassisTags = (chassis_id) => {
@@ -5898,7 +6234,27 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const submitAdminForm = (adminForm, activityID, projects_obj = {}) => {
+		setMultirowsParam(adminForm);
 		let fieldGroups = [];
+		formAdmin.querySelectorAll('.renderData').forEach(item => {
+			let fieldsArr = [];
+			const field_name = item.dataset['value_name'];
+			fieldsArr.push({
+				"fieidID": field_name,
+				"fieldName": field_name,
+				"default": item.value,
+			});
+			fieldGroups.push({
+				fields: fieldsArr
+			});
+		});
+		fieldGroups.push({
+			fields: [{
+				"fieidID": 'docTitle',
+				"fieldName": 'docTitle',
+				"default": 'Zero Touch MOP (ZTM)',
+			}]
+		});
 		adminForm.querySelectorAll('fieldset:not(.renderOnly)').forEach(fieldset => {
 			let fieldGroup = {};
 			fieldGroup.groupID = fieldset.id;
@@ -5922,6 +6278,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					}
 					fieldsArr.push({
 						"fieidID": fieldEl.id,
+						"fieldName": fieldEl.name,
 						"default": fieldValue,
 					});
 				}
@@ -5930,16 +6287,14 @@ window.addEventListener('DOMContentLoaded', () => {
 			fieldGroups.push(fieldGroup);
 		});
 		if (!!projects_obj['mode']) {
-			const body = {
-				method: 'changeProjectActivity',
-				id: projects_obj['project_id'],
+			// console.log(fieldGroups);
+			const body = prepareChangeProjectBody({
+				project_id: projects_obj['project_id'],
 				group_id: projects_obj['group_id'],
 				element: selPrimeElement.value,
 				activity: selActivity.value,
-				group_fields: {
-					field_json_props: fieldGroups
-				}
-			}
+				fieldGroups: fieldGroups
+			});
 			if (!!projects_obj['target_date']) {
 				body.group_fields.target_date = projects_obj['target_date'];
 				// body.group_fields.save = 1;
@@ -5964,8 +6319,21 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
+	function prepareChangeProjectBody({project_id, group_id, element = null, activity = null, fieldGroups}) {
+		const bodyObj = {
+			method: 'changeProjectActivity',
+			id: project_id,
+			group_id: group_id,
+			element: element,
+			activity: activity,
+			group_fields: {
+				field_json_props: fieldGroups
+			}
+		}
+		return bodyObj;
+	}
+
 	const submitRenderForm = async (renderForm, gActivityID, complexDoc = 0) => {
-		console.log('submitRenderForm');
 		formAdmin.querySelectorAll('.renderData').forEach(item => {
 			const field_name = item.dataset['value_name'];
 			let added_input = renderForm.querySelector(`input[name="${field_name}"]`);
@@ -5976,7 +6344,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				renderForm.append(added_input);
 			}
 			added_input.value = item.value;
-			// console.log(item);
 		});
 
 		document.querySelector('#complexDoc').value = complexDoc;
@@ -5986,7 +6353,45 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.querySelector('#projectGroupName').value = projectGroupName;
 		document.querySelector('#projectDocsList').value = JSON.stringify(projectDocsList);
 			
-		const rows_object = {}
+		// const rows_object = {}
+		// renderForm.querySelectorAll("[data-parent='self']").forEach(item => {
+		// 	const rows_arr = [];
+		// 	item.closest('fieldset').querySelectorAll('.multirows').forEach(row_inputs => {
+		// 		const one_row = {};
+		// 		row_inputs.querySelectorAll('input').forEach(ceil_input => {
+		// 			if (ceil_input.name !== '') {
+		// 				one_row[ceil_input.dataset['name']] = ceil_input.value;
+		// 			}
+		// 		});
+		// 		row_inputs.querySelectorAll('select').forEach(ceil_input => {
+		// 			one_row[ceil_input.dataset['name']] = ceil_input.value;
+		// 		});
+		// 		row_inputs.querySelectorAll('textarea').forEach(ceil_input => {
+		// 			one_row[ceil_input.dataset['name']] = ceil_input.value.split('\n').filter(function(str) { return str.trim().length > 6 ? true : false});
+		// 		});
+		// 		rows_arr.push(one_row);
+		// 	});
+		// 	const item_name = item.dataset.id;
+		// 	rows_object[item_name] = rows_arr;
+		// 	item.closest('fieldset').querySelector(`#${item_name}`).value = JSON.stringify(rows_object[item_name]);
+		// });
+		setMultirowsParam(renderForm);
+		setImpactedNCTList();
+		if (complexDoc == 1) {
+			const formData = new FormData(renderForm);
+			const data = await sendFile('POST', requestURLRender, formData);
+			if (data && data.success && data.success.answer) {
+				projectFileNumber = parseInt(data.success.answer.projectFileNumber);
+				projectDocsList.push(data.success.answer.storedFile);
+			}
+			return data;
+		} else {
+			renderForm.submit();
+		}
+		formSubmit.classList.remove('edit');
+	};
+	const setMultirowsParam = (renderForm) => {
+		const rows_object = {};
 		renderForm.querySelectorAll("[data-parent='self']").forEach(item => {
 			const rows_arr = [];
 			item.closest('fieldset').querySelectorAll('.multirows').forEach(row_inputs => {
@@ -6008,19 +6413,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			rows_object[item_name] = rows_arr;
 			item.closest('fieldset').querySelector(`#${item_name}`).value = JSON.stringify(rows_object[item_name]);
 		});
-		setImpactedNCTList();
-		if (complexDoc == 1) {
-			const formData = new FormData(renderForm);
-			const data = await sendFile('POST', requestURLRender, formData);
-			if (data && data.success && data.success.answer) {
-				projectFileNumber = parseInt(data.success.answer.projectFileNumber);
-				projectDocsList.push(data.success.answer.storedFile);
-			}
-			return data;
-		} else {
-			renderForm.submit();
-		}
-		formSubmit.classList.remove('edit');
 	};
 
 	const checkInputsData = (inputsSelector, setIni = true) => {
@@ -6155,26 +6547,30 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	formFields.addEventListener('reset', (e) => {
-		const target = e.target;
-		target.querySelectorAll('fieldset').forEach(fieldset => {
-			removeChildElementFromCollection(fieldset, '.multirows[data-clone="1"]');
-			fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
-				ceil.value = 1;
-				fieldset.querySelector(`#${ceil.dataset.id}`).value = "";
-			})
-		});
-		formSubmit.classList.remove('edit');
-		showAll.checked = false;
-		if (projectsMode == 1 && resetProject) {
-			submitAdminForm(target, gActivityID, {
-				'mode': 1,
-				'reset': 1,
-				'project_id': activityProjectID,
-				'group_id': activityGroupID
+		// setTimeout(() => {
+			console.log('formFields reset');
+			const target = e.target;
+			target.querySelectorAll('fieldset').forEach(fieldset => {
+				removeChildElementFromCollection(fieldset, '.multirows[data-clone="1"]');
+				fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
+					ceil.value = 1;
+					fieldset.querySelector(`#${ceil.dataset.id}`).value = "";
+				})
 			});
-			formSave.classList.remove('d-none');
-		}
-		resetProject = false;
+			fieldsMultirows.length = 0;
+			formSubmit.classList.remove('edit');
+			showAll.checked = false;
+			if (projectsMode == 1 && resetProject) {
+				submitAdminForm(target, gActivityID, {
+					'mode': 1,
+					'reset': 1,
+					'project_id': activityProjectID,
+					'group_id': activityGroupID
+				});
+				formSave.classList.remove('d-none');
+			}
+			resetProject = false;
+		// }, 0);
 	});
 	formFieldsDDP.addEventListener('reset', (e) => {
 		const target = e.target;
@@ -6203,33 +6599,27 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	morReset.addEventListener('click', (e) => {
-		e.preventDefault();
-		resetMORData(selMorGroup.value);
+		console.log('button reset');
 		formMor.reset();
+		if (projectsMode == 1) {
+			const body = prepareChangeProjectBody({
+				project_id: activityProjectID,
+				group_id: activityGroupID,
+				element: '',
+				activity: '',
+				fieldGroups: []
+			});
+			sendRequest('POST', requestURLProject, body).then((data) => {
+			});
+			morSubmit.innerText = 'Create';
+			morSave.classList.remove('d-none');
+		}
 	});
 
 	formMor.addEventListener('reset', (e) => {
 		setTimeout(() => {
-			morSite.value = '';
-			morCA.value = '';
-			gProjectNumber = 0;
-			gSiteCode = 0;
-			saveMor.disabled = true;
-			// resetSelect(selMorGroup);
-			morForReleaseFlag.value = '0';
-			morDelRow.dataset.trId = '0';
-			morSelector.dispatchEvent(new Event('change'));
-			morDateSubmitted.value = datetimeToCaDate();
-			if (tbodyMorTable) {
-				tbodyMorTable.dataset.trId = 0;
-				tbodyMorTable.querySelectorAll(`.js-mor-tr-dyn`).forEach(element => {
-					element.remove();
-				});
-			}
-			morCollectParts.value = '0';
+			resetMORForm();
 		}, 0);
-	});
-	formMor.addEventListener('resetSubmit', (e) => {
 	});
 
 	morSend.addEventListener('click', (e) => {
@@ -6242,10 +6632,33 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 	morSave.addEventListener('click', async (e) => {
-		if (formMor.reportValidity()) {
-			saveMor.disabled = false;
+		const workForm = e.target.closest('form');
+		if (workForm && workForm.reportValidity()) {
+			saveMORData(workForm, null);
+		}
+	});
+	morSubmit.addEventListener('click', async (e) => {
+		e.preventDefault();
+		const workForm = e.target.closest('form');
+		if (workForm && workForm.reportValidity()) {
+			if (e.target.innerText == 'Create') {
+				saveMORData(workForm, e.target);
+			} else {
+				formMor.requestSubmit();				
+			}
+		}
+	});
+	function getProjectDocs(projectActivities) {
+		const body = {
+			method: 'getProjectDocs',
+			groups: projectActivities,
+		}
+		downloadFileWithDynamicForm(requestURLProject, body, 'POST');
+	}
+	function saveMORData(formFilled, createBtn = null) {
+		if (formFilled.reportValidity()) {
 			try {
-				const formData = new FormData(formMor);
+				const formData = new FormData(formFilled);
 				const data = {};
 
 				for (let [key, value] of formData.entries()) {
@@ -6259,21 +6672,39 @@ window.addEventListener('DOMContentLoaded', () => {
 						data[key] = value;
 					}
 				}
-
 				const fieldGroups = JSON.stringify(data);
-				sendRequest('POST', requestURLMOR, {
-					method: 'saveMORData',
-					value: fieldGroups,
-					id: selMorGroup.value,
-					env: 'mor',
-				}).then((data) => {
-				});
+				if (projectsMode == 1) {
+					const body = prepareChangeProjectBody({
+						project_id: activityProjectID,
+						group_id: activityGroupID,
+						element: '',
+						activity: '',
+						fieldGroups: data
+					});
+					if (createBtn == null) {
+						body.group_fields.target_date = datetimeToCaDate();
+					}
+					sendRequest('POST', requestURLProject, body).then((data) => {
+						if (createBtn !== null) {
+							createBtn.innerText = 'Download';
+							morSave.classList.add('d-none');
+						}
+					});	
+				} else {
+					sendRequest('POST', requestURLMOR, {
+						method: 'saveMORData',
+						value: fieldGroups,
+						id: morGroupID.value,
+						env: 'mor',
+					}).then((data) => {
+					});
+				}
+				
 			} catch (e) {
 				console.error(e);
-				selMorGroup.focus();
 			}
 		}
-	});
+	}
 	function resetMORData(group_id) {
 		sendRequest('POST', requestURLMOR, {
 			method: 'resetMORData',
@@ -6281,6 +6712,26 @@ window.addEventListener('DOMContentLoaded', () => {
 			env: 'mor',
 		}).then((data) => {
 		});
+	}
+	function resetMORForm() {
+		morCA.value = '';
+		morSite.value = '';
+		gProjectNumber = 0;
+		gSiteCode = 0;
+		saveMor.disabled = true;
+		// addMORToProject.disabled = true;
+		morForReleaseFlag.value = '0';
+		morDelRow.dataset.trId = '0';
+		// morSelector.dispatchEvent(new Event('change'));
+		morDateSubmitted.value = datetimeToCaDate();
+		if (tbodyMorTable) {
+			tbodyMorTable.dataset.trId = 0;
+			tbodyMorTable.querySelectorAll(`.js-mor-tr-dyn`).forEach(element => {
+				element.remove();
+			});
+		}
+		morCollectParts.value = '0';
+		// console.log("resetMORForm", morSite.options[morSite.selectedIndex]);
 	}
 
 	formFields.addEventListener('submit', (e) => {
@@ -6298,8 +6749,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			submitRenderForm(target, gActivityID);
 		}
 	});
-
 	formFields.addEventListener('focusout', (e) => {
+		console.log('formFields focusout');
 		e.preventDefault();
 		const target = e.target;
 		if (target.classList.contains(inputSelectorClass)) {
@@ -6313,7 +6764,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 	});
-
 	formFields.addEventListener('click', (e) => {
 		const target = e.target;
 		if (target.type === "checkbox" && target.dataset.ini_data !== target.checked) {
@@ -6514,7 +6964,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		element.addEventListener('change', comboSelectChange); 
 	});
 
-	selMorGroup.addEventListener('change', (e) => {
+	// selMorGroup.addEventListener('change', (e) => {
+	morGroupID.addEventListener('change', (e) => {
 		const target = e.target;
 		const group_id = target.value;
 		const body = {
@@ -6526,50 +6977,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		formMor.reset();
 		sendRequest('POST', requestURLMOR, body).then((data) => {
 			if (data && data.success && data.success.answer && data.success.answer[0] && data.success.answer[0].field_json_props) {
-				const simpleParams = {};
-				const arrayEntries = [];
-				let mor_flag = '0';
-				const fieldProps = JSON.parse(data.success.answer[0].field_json_props);
-				Object.entries(fieldProps).forEach(([key, value]) => {
-					if (Array.isArray(value)) {
-						arrayEntries.push([key, value]);
-					} else {
-						simpleParams[key] = value;
-						if (key === 'morForReleaseFlag') {
-							mor_flag = value;
-						}
-					}
-				});
-				switchMORTables(mor_flag);
-				for (const simpleParam in simpleParams) {
-					const formElement = document.querySelector(`#${simpleParam}`);
-					if (formElement) {
-						formElement.value = simpleParams[simpleParam];
-					}
-				}
-				gSiteCode = morSite.value;
-
-				const arrParts = [];
-				if (arrayEntries.length > 0) {
-					const rowCount = arrayEntries[0][1].length;
-					for (let i = 0; i < rowCount; i++) {
-						const rowObject = {};
-						arrayEntries.forEach(([key, values]) => {
-							rowObject[key] = values[i] !== undefined ? values[i] : null;
-						});
-						arrParts.push(rowObject);
-					}
-					tbodyMorTable.insertAdjacentHTML('beforeend', genRowParts(1, arrParts));
-					tbodyMorTable.dataset.trId = countRowsByClass('.js-mor-tr-dyn') + 1;
-				} else {
-					let caList = caTable.filter(ca => ca.ca.includes(morCA.value));
-					const rowObject = {};
-					rowObject['mor_oracle'] = morProjectNum.value;
-					rowObject['mor_date_required'] = datetimeToCaDate();
-					rowObject['mor_site_code'] = morSite.value;
-					arrParts.push(rowObject);
-				}
-				mor_requestor.dispatchEvent(new Event('change'));
+				fillMORFields(JSON.parse(data.success.answer[0].field_json_props));
 			}
 		});	
 	});
@@ -6608,7 +7016,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	});
 
-	const btnAreaAppend = (target) => {
+	const btnAreaAppend = (target, fieldsValues = null) => {
 		const fieldset = target.closest('fieldset');
 		const row = fieldset.querySelector("[data-parent='self']");
 		let row_prime;
@@ -6626,8 +7034,11 @@ window.addEventListener('DOMContentLoaded', () => {
 			item.name = `${item.dataset.name}_${row.value}`;
 			item.id = item.name;
 			if (!copyArea) {
-				item.value = '';
-				item.dataset.ini_data = '';
+				// fieldsValues
+				const field_val = fieldsValues[item.dataset.name] !== undefined ? fieldsValues[item.dataset.name] : ''
+				item.value = field_val;
+				item.dataset.ini_data = field_val;
+				console.log('btnAreaAppend ' + item.id);
 			}
 		});
 		new_row.querySelectorAll('textarea').forEach(item => {
@@ -6707,9 +7118,10 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function genRowParts(trId, arrParts = []) {
+		// console.log('genRowParts');
 		const isEmpty = !Array.isArray(arrParts) || arrParts.length === 0;
 		const items = isEmpty ? [{}] : arrParts;
-
+		
 		return items.map((item, index) => {
 			// Updated ID calculation: simple addition with index
 			const currentTrId = trId + index;
@@ -6765,6 +7177,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 	
 	mor_requestor.addEventListener('change', (e) => {
+		console.log('mor_requestor', morSite.value);
 		const fillMorContact = (element, value) => {
 			if (element.value.trim() == '') {
 				element.value = value;
@@ -6781,32 +7194,40 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 	morSite.addEventListener('change', (e) => {
-		const target = e.target;
+		morSite2Sites();
+	});
+
+	function morSite2Sites() {
+		const target = morSite;
 		try {
-			const id = (target.options[target.selectedIndex] !== undefined) ? parseInt(target.options[target.selectedIndex].dataset.id, 10) : siteTable[0].id;
-			const siteIdx = siteTable.findIndex(site => parseInt(site.id, 10) === id);
-			document.querySelector('#mor_region').value = siteTable[siteIdx].region;
-			switch (morForReleaseFlag.value) {
-				case '1':
-					formMor.querySelector('#mor_site_from').innerHTML = target.innerHTML;
-					formMor.querySelector('#mor_site_from').value = '';
-					formMor.querySelector('#mor_site_to').innerHTML = target.innerHTML;
-					formMor.querySelector('#mor_site_to').value = '';
-					break;
-				case '0':
-					document.querySelector('#mor_site_address').value = siteTable[siteIdx].address;
-					document.querySelector('#mor_site_address2').value = siteTable[siteIdx].address;
-					document.querySelector('#mor_city').value = siteTable[siteIdx].site;
-					document.querySelector('#mor_province').value = siteTable[siteIdx].province;
-					document.querySelector('#mor_country').value = siteTable[siteIdx].country;
-					break;
+			// console.log("morSite2Sites", target.value);
+			// const id = (target.options[target.selectedIndex] !== undefined) ? parseInt(target.options[target.selectedIndex].dataset.id, 10) : siteTable[0].id;
+			if (target.options[target.selectedIndex] !== undefined) {
+				const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
+				const siteIdx = siteTable.findIndex(site => parseInt(site.id, 10) === id);
+				document.querySelector('#mor_region').value = siteTable[siteIdx].region;
+				switch (morForReleaseFlag.value) {
+					case '1':
+						document.querySelector('#mor_site_from').innerHTML = target.innerHTML;
+						document.querySelector('#mor_site_from').value = '';
+						document.querySelector('#mor_site_to').innerHTML = target.innerHTML;
+						document.querySelector('#mor_site_to').value = '';
+						break;
+					case '0':
+						document.querySelector('#mor_site_address').value = siteTable[siteIdx].address;
+						document.querySelector('#mor_site_address2').value = siteTable[siteIdx].address;
+						document.querySelector('#mor_city').value = siteTable[siteIdx].site;
+						document.querySelector('#mor_province').value = siteTable[siteIdx].province;
+						document.querySelector('#mor_country').value = siteTable[siteIdx].country;
+						break;
+				}
+				// mor_requestor.dispatchEvent(new Event('change'));
 			}
-			mor_requestor.dispatchEvent(new Event('change'));
 		} catch (e) {
-			// console.error(e);
+			console.error(e);
 		}
 		gSiteCode = target.value;
-	});
+	}
 
 	morAddRow.addEventListener('click', (e) => {
 		if (gSiteCode != 0) {

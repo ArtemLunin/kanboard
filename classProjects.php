@@ -36,6 +36,14 @@ class ProjectUtils extends \helperUtils\helperUtils {
             "id", "activity_date", "project_id", "activity_text"
         ]
     ];
+    private $subGroups = [
+        "SDE"       => ["sZTM","sMOR","sPre-DDP"],
+        "IP Core"   => ["cZTM","cMOR","cPre-DDP"],
+        "Transport" => ["tZTM","tMOR","tPre-DDP"],
+    ];
+    // private $baseGroups = ["SDE","IP Core","Transport"
+
+    // ];
     private $userID = 0;
     private $userName = '';
     private $root_access = false;
@@ -172,8 +180,11 @@ class ProjectUtils extends \helperUtils\helperUtils {
             foreach ($groups_list as $group) {
                 $fields_obj = [
                     "name" => $group,
+                    "users" => '[]',
                 ];
-                $this->db_object_project->addObjectToTable($this->tGroups["tableName"], $fields_obj);
+                if ($this->db_object_project->addObjectToTable($this->tGroups["tableName"], $fields_obj) == null) {
+                    return false;
+                }
             }
         }
         return $this->getGroupsList();
@@ -201,14 +212,16 @@ class ProjectUtils extends \helperUtils\helperUtils {
             "detail" => []
         ];
         $project_info = [];
-        // if (!isset($projectID)) {
-        //     return $activiry_res;
+        $filters = [];
+        // if ($projectID === 0) {
+        //     $project_info = $this->getProjectsList();
+        // } else {
+        //     $project_info = $this->getProjectsList(["id" => $projectID]);
         // }
-        if ($projectID === 0) {
-            $project_info = $this->getProjectsList();
-        } else {
-            $project_info = $this->getProjectsList(["id" => $projectID]);
+        if ($projectID !== 0) {
+            $filters["id"] = $projectID;
         }
+        $project_info = $this->getProjectsList($filters);
         if ($project_info && count($project_info) > 0) {
             $project_activities = $this->db_object_project->selectObjectFromTable($this->tProjectsActivity["tableName"], ["project_id" => $project_info[0]['id']], $this->tProjectsActivity["fields"], ["group_idx"]);
             $activiry_res["info"] = $project_info[0];
@@ -222,8 +235,12 @@ class ProjectUtils extends \helperUtils\helperUtils {
         $activity_res["detail"] = $project_activities[0] ?? [];
         if (count($activity_res["detail"]) > 0) {
             $activity_res["detail"]["group_name"] = $this->getGroupName($activity_res["detail"]["group_id"]);
+            $activity_res["detail"]["field_json_props"] = ($activity_res["detail"]["field_json_props"] != "") ? $activity_res["detail"]["field_json_props"] : "[]";
+            $projectGroupName = $this->getProjectGroupName($activityID);
+            $activity_res["detail"]["project_name"] = $projectGroupName["project_name"];
+            $activity_res["detail"]["project_number"] = $projectGroupName["project_number"];
+            $activity_res["detail"]["group_real_name"] = $projectGroupName["group_real_name"];
         }
-
         return $activity_res;
     }
     function getProjectsActivityAll() {
@@ -236,6 +253,13 @@ class ProjectUtils extends \helperUtils\helperUtils {
                 $detail = [];
                 $project_activities = $this->db_object_project->getSQL($sql, ["param1" => $p_info['id']]);
                 foreach ($project_activities as $p_detail) {
+                    if ($p_detail['group_name'] == 'IP Core') {
+                        $p_detail['group_name'] = 'cZTM';
+                    } elseif ($p_detail['group_name'] == 'Transport') {
+                        $p_detail['group_name'] = 'tZTM';
+                    } elseif ($p_detail['group_name'] == 'SDE') {
+                        $p_detail['group_name'] = 'sZTM';
+                    }
                     $detail[] = $p_detail;
                 }
                 $activiry_res[] = [
@@ -247,7 +271,53 @@ class ProjectUtils extends \helperUtils\helperUtils {
         return $activiry_res;
     }
     function getGroupsList($filters = []) {
-        return $this->db_object_project->selectObjectFromTable($this->tGroups["tableName"], $filters, $this->tGroups["fields"]);
+        $groupsList = $this->db_object_project->selectObjectFromTable($this->tGroups["tableName"], $filters, $this->tGroups["fields"]);
+        if (count($filters) == 0) {
+            $groupsNeedAdd = array_diff(array_merge(...array_values($this->subGroups)), array_column($groupsList, 'name'));
+            if (count($groupsNeedAdd) > 0) {
+                return $this->addGroups($groupsNeedAdd);
+            }
+        }
+        return $groupsList;
+    }
+    function getAvailGroupsList($filters = []) {
+        $allGroups = $this->db_object_project->selectObjectFromTable($this->tGroups["tableName"], $filters, $this->tGroups["fields"]);
+        $availGroups = [];
+        $sub_groups = [];
+        $baseGroups = array_keys($this->subGroups);
+        foreach ($allGroups as $projectGroup) {
+            if (!in_array($projectGroup["name"], $baseGroups)) {
+                foreach ($this->subGroups as $key => $values) {
+                    if (in_array($projectGroup["name"], $values)) {
+                        $sub_groups[$key][] = [
+                            "id" => $projectGroup["id"],
+                            "name" => $projectGroup["name"]
+                            ];
+                        break;
+                    }
+                }
+                continue;
+            }
+            if (isset($projectGroup["users"]) && ($usersGroup = json_decode($projectGroup["users"]))) {
+                foreach ($usersGroup as $userGroup) {
+                    if ($userGroup === $this->userName || $this->getRootAccess()) {
+                        $availGroups[] = [
+                            "id"    => $projectGroup["id"],
+                            "name"  => $projectGroup["name"],
+                            "alias" => $this->subGroups[$projectGroup["name"]][0],
+                            "users" => $this->userName
+                        ];
+                        break;
+                    }
+                }
+            }
+        }
+        foreach ($availGroups as $key => $availGroup) {
+            if (isset($sub_groups[$availGroups[$key]["name"]])) {
+                $availGroups[$key]["sub_groups"] = $sub_groups[$availGroups[$key]["name"]];
+            }
+        }
+        return $availGroups;
     }
     function getUsersList($filters = []) {
         if ($this->getRootAccess()) {
@@ -318,10 +388,30 @@ class ProjectUtils extends \helperUtils\helperUtils {
         return $this->db_object_project->selectFieldFromTable($this->tProjectsActivity["tableName"], ["id" => $activityID], "status");
     }
     private function getGroupName($groupID) {
-        return $this->db_object_project->selectFieldFromTable($this->tGroups["tableName"], ["id" => $groupID], "name");
+        $group_name = $this->db_object_project->selectFieldFromTable($this->tGroups["tableName"], ["id" => $groupID], "name");
+        foreach ($this->subGroups as $key => $values) {
+            if (array_search($group_name, $values, true) !== false) {
+                $group_name = $key;
+                break;
+            }
+        }
+        return $group_name;
     }
     private function getProjectName($projectID) {
         return $this->db_object_project->selectFieldFromTable($this->tProjects["tableName"], ["id" => $projectID], "name");
+    }
+    function getProjectGroupName($activityID) {
+        $project_names = [];
+        $sql = "SELECT `projects`.`name` AS p_name, `projects`.`number` AS p_number, `groups`.`name` AS g_name FROM `projects`,`groups`,`projects_activity` WHERE `projects_activity`.`id`=:param1 AND projects_activity.`group_id`=`groups`.`id` AND `projects_activity`.`project_id`=`projects`.`id`";
+        if ($table_res = $this->db_object_project->getSQL($sql, ['param1' => $activityID]));
+        {
+            $project_names = [
+                'project_name'  => $table_res[0]['p_name'],
+                'project_number'  => $table_res[0]['p_number'],
+                'group_real_name'  => $table_res[0]['g_name'],
+            ];
+        }
+        return $project_names;
     }
     function changeProjectActivity($projectID, $groupID, $group_fields, $element, $activity) {
         if (isset($group_fields['group_idx']) && $this->userCanEditProject($projectID)) {
@@ -366,6 +456,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
             $start_date = date('Y-m-d H:i:s', $currentTimestamp);
             $last_activity_date = date('Y-m-d H:i:s', $currentTimestamp);
             $end_date = date('Y-m-d H:i:s', $currentTimestamp);
+            $count_field_props = count($group_fields['field_json_props']);
             $status = 2;
             if (isset($group_fields['target_date'])) {
                 $start_date = $group_fields['target_date'];
@@ -373,7 +464,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
                 $status = 1;
             }
             if ($table_res = $this->db_object_project->getSQL($sql, ["param1" => $projectID, "param2" => $groupID])) {
-                if ($table_res[0]['status'] == 0 || $table_res[0]['status'] == 1) {
+                if (($table_res[0]['status'] == 0 || $table_res[0]['status'] == 1) && $count_field_props !== 0) {
                     $sql_params = [
                         'param1' => json_encode($group_fields['field_json_props']),
                         'param2' => $start_date,
@@ -385,14 +476,14 @@ class ProjectUtils extends \helperUtils\helperUtils {
                     ];
                     $sql_upd = "UPDATE `" .$this->tProjectsActivity["tableName"]. "` SET `field_json_props`=:param1,`element`=:param5,`activity`=:param6,`start_date`=:param2,`last_activity_date`=:param3,`status`=:param7 WHERE `id`=:param4";
                     $this->db_object_project->modSQL($sql_upd , $sql_params, false);
-                } elseif ($table_res[0]['status'] == 2) {
+                } elseif ($table_res[0]['status'] == 2 && $count_field_props == 0) {
                     $start_date = $table_res[0]['start_date'];
-                    if (count($group_fields['field_json_props']) == 0) {
+                    // if ($count_field_props == 0) {
                         $start_date = null;
                         $last_activity_date = null;
                         $end_date = null;
                         $status = 0;
-                    }
+                    // }
                     $sql_params = [
                         'param1' => '',
                         'param2' => $start_date,

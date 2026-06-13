@@ -78,42 +78,42 @@ class databaseUtils {
 		'sectionAttr'	=> 'tmop',
 		'accessType'	=> 'admin',
 	],
-	[
-		'pageName' => 'Template DIP',
-		'sectionName' => 'templateDIP',
-		'sectionAttr'	=> 'templateDIP',
-		'accessType'	=> 'admin',
-	],
-	[
-		'pageName' => 'DIP',
-		'sectionName' => 'dip',
-		'sectionAttr'	=> 'dip',
-		'accessType'	=> 'admin',
-	],
-	[
-		'pageName' => 'Template cDIP',
-		'sectionName' => 'templatecDIP',
-		'sectionAttr'	=> 'templatecDIP',
-		'accessType'	=> 'admin',
-	],
-	[
-		'pageName' => 'cDIP',
-		'sectionName' => 'cdip',
-		'sectionAttr'	=> 'cdip',
-		'accessType'	=> 'admin',
-	],
-	[
-		'pageName' => 'Template tDIP',
-		'sectionName' => 'templatetDIP',
-		'sectionAttr'	=> 'templatetDIP',
-		'accessType'	=> 'admin',
-	],
-	[
-		'pageName' => 'tDIP',
-		'sectionName' => 'tdip',
-		'sectionAttr'	=> 'tdip',
-		'accessType'	=> 'admin',
-	],
+	// [
+	// 	'pageName' => 'Template DIP',
+	// 	'sectionName' => 'templateDIP',
+	// 	'sectionAttr'	=> 'templateDIP',
+	// 	'accessType'	=> 'admin',
+	// ],
+	// [
+	// 	'pageName' => 'DIP',
+	// 	'sectionName' => 'dip',
+	// 	'sectionAttr'	=> 'dip',
+	// 	'accessType'	=> 'admin',
+	// ],
+	// [
+	// 	'pageName' => 'Template cDIP',
+	// 	'sectionName' => 'templatecDIP',
+	// 	'sectionAttr'	=> 'templatecDIP',
+	// 	'accessType'	=> 'admin',
+	// ],
+	// [
+	// 	'pageName' => 'cDIP',
+	// 	'sectionName' => 'cdip',
+	// 	'sectionAttr'	=> 'cdip',
+	// 	'accessType'	=> 'admin',
+	// ],
+	// [
+	// 	'pageName' => 'Template tDIP',
+	// 	'sectionName' => 'templatetDIP',
+	// 	'sectionAttr'	=> 'templatetDIP',
+	// 	'accessType'	=> 'admin',
+	// ],
+	// [
+	// 	'pageName' => 'tDIP',
+	// 	'sectionName' => 'tdip',
+	// 	'sectionAttr'	=> 'tdip',
+	// 	'accessType'	=> 'admin',
+	// ],
 	[
 		'pageName' => 'Capacity',
 		'sectionName' => 'capacity',
@@ -132,18 +132,18 @@ class databaseUtils {
 		'sectionAttr'	=> 'cSDEBundle',
 		'accessType'	=> 'admin',
 	],
-		[
-		'pageName' => 'Template DDP',
-		'sectionName' => 'templateDDP',
-		'sectionAttr'	=> 'templateDDP',
-		'accessType'	=> 'admin',
-	],
-	[
-		'pageName' => 'DDP',
-		'sectionName' => 'ddp',
-		'sectionAttr'	=> 'ddp',
-		'accessType'	=> 'admin',
-	],
+	// 	[
+	// 	'pageName' => 'Template Pre-DDP',
+	// 	'sectionName' => 'templateDDP',
+	// 	'sectionAttr'	=> 'templateDDP',
+	// 	'accessType'	=> 'admin',
+	// ],
+	// [
+	// 	'pageName' => 'Pre-DDP',
+	// 	'sectionName' => 'ddp',
+	// 	'sectionAttr'	=> 'ddp',
+	// 	'accessType'	=> 'admin',
+	// ],
 	[
 		'pageName' => 'Inventory',
 		'sectionName' => 'inventory',
@@ -156,10 +156,28 @@ class databaseUtils {
 		'sectionAttr'	=> 'projects',
 		'accessType'	=> 'admin',
 	],
+	// [
+	// 	'pageName' => 'MOR',
+	// 	'sectionName' => 'mor',
+	// 	'sectionAttr'	=> 'mor',
+	// 	'accessType'	=> 'admin',
+	// ],
 	[
-		'pageName' => 'MOR',
-		'sectionName' => 'mor',
-		'sectionAttr'	=> 'mor',
+		'pageName' => 'Transport',
+		'sectionName' => 'Transport',
+		'sectionAttr'	=> 'Transport',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'IP Core',
+		'sectionName' => 'IP Core',
+		'sectionAttr'	=> 'IP Core',
+		'accessType'	=> 'admin',
+	],
+	[
+		'pageName' => 'SDE',
+		'sectionName' => 'SDE',
+		'sectionAttr'	=> 'SDE',
 		'accessType'	=> 'admin',
 	],
 	[
@@ -1398,10 +1416,6 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 			return $this->getOGPA($ogpa_group);
 		}
 		return $current_ddps;
-//  elseif ($ogpa_group == '100') {
-				// 	// only for DDP
-				// 	return $this->addPrimeElement('DDP', $ogpa_group);
-				// }
 	}
 
 	function getOGPAActivity($primeElemID) {
@@ -1546,8 +1560,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 		$values = rtrim($values, ",") . ")";
 
 		$sql = "INSERT IGNORE INTO `" . $table_name. "` ". $fields . " VALUES ". $values; 
-		
-		return $this->insSQL($sql, $values_arr, true);
+		return $this->insSQL($sql, $values_arr);
 	}
 
 	function createFilterDB($table_name, $filters, $split_str) {

@@ -386,7 +386,6 @@ if ($complexDoc == 2) {
             }
         }
         if (count($xls_attachments) > 0) {
-            // $db_object->errorLog("attacments:" . print_r($xls_attachments, true));
             $filename_mor = tempnam(sys_get_temp_dir(), 'docx');
             copy('template/mor_blank.docx', $filename_mor);
             $zip = new \ZipArchive();

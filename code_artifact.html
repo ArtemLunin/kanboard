@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Раскрывающееся меню — Темная тема</title>
+    <style>
+        /* Базовые стили для премиального темного интерфейса */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #0f1015;
+            color: #e2e8f0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Макет страницы: боковое меню + область содержимого */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Стиль бокового меню (Sidebar) */
+        .sidebar {
+            width: 280px;
+            background-color: #161822;
+            border-right: 1px solid #242938;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 20px 24px;
+            border-bottom: 1px solid #242938;
+            margin-bottom: 15px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Контейнер для списков меню */
+        .menu-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 12px;
+        }
+
+        /* Сброс стандартных стилей списков */
+        ul.nav-menu {
+            list-style: none;
+            width: 100%;
+        }
+
+        /* Главный пункт списка */
+        li.menu-item {
+            margin-bottom: 4px;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: background-color 0.2s ease;
+        }
+
+        /* Заголовок родительского пункта меню */
+        .menu-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            user-select: none;
+            border-radius: 8px;
+            transition: all 0.25s ease;
+        }
+
+        .menu-header:hover {
+            background-color: #1e2235;
+            color: #ffffff;
+        }
+
+        /* Стили для иконки слева и текста */
+        .menu-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Значок раскрытия/сворачивания (expand/collapse menu arrow) */
+        .arrow-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Вложенное меню (Submenu) */
+        ul.submenu {
+            list-style: none;
+            max-height: 0; /* Изначально скрыто */
+            overflow: hidden; /* Обрезает содержимое при анимации */
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+            opacity: 0;
+            background-color: #11131b;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* Пункты вложенного меню */
+        ul.submenu li a {
+            display: block;
+            padding: 10px 16px 10px 44px; /* Сдвигаем вправо относительно родителя */
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            border-left: 2px solid transparent;
+        }
+
+        ul.submenu li a:hover {
+            color: #38bdf8;
+            background-color: #161822;
+            border-left-color: #38bdf8;
+            padding-left: 48px; /* Небольшой интерактивный сдвиг при наведении */
+        }
+
+        /* Активное (выбранное подменю) */
+        ul.submenu li.active-item a {
+            color: #38bdf8;
+            background-color: #171c2a;
+            border-left-color: #38bdf8;
+            font-weight: 600;
+        }
+
+        /* Состояние раскрытого меню */
+        li.menu-item.open > .menu-header {
+            color: #ffffff;
+            background-color: #1e2235;
+        }
+
+        /* Поворот стрелки при раскрытии */
+        li.menu-item.open .arrow-icon {
+            transform: rotate(180deg); /* Поворачиваем стрелку вверх (collapse state) */
+        }
+
+        li.menu-item.open ul.submenu {
+            opacity: 1;
+            padding: 4px 0;
+        }
+
+        /* Область основного контента (Справа) */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .welcome-card {
+            background-color: #161822;
+            border: 1px solid #242938;
+            padding: 40px;
+            border-radius: 16px;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .welcome-card h1 {
+            color: #ffffff;
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+        }
+
+        .welcome-card p {
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .badge {
+            display: inline-block;
+            background-color: #1e293b;
+            color: #38bdf8;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        /* Адаптивный дизайн */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 50vh;
+            }
+            .main-content {
+                padding: 20px;
+                height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Боковая панель навигации -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>
+                    <!-- Иконка логотипа (SVG) -->
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    DDP Консоль
+                </h2>
+            </div>
+
+            <div class="menu-container">
+                <ul class="nav-menu">
+                    
+                    <!-- РАЗДЕЛ 1: Страница 1 -->
+                    <li class="menu-item">
+                        <div class="menu-header">
+                            <div class="menu-title-wrapper">
+                                <!-- Иконка раздела (SVG) -->
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                <span>Документы</span>
+                            </div>
+                            <!-- Стрелка Expand / Collapse -->
+                            <svg class="arrow-icon" viewBox="0 0 24 24">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </div>
+                        <ul class="submenu">
+                            <li><a href="#" data-info="Спецификация DDP">Шаблон DDP-001</a></li>
+                            <li><a href="#" data-info="Опросный лист DIP">Опросный лист DIP</a></li>
+                            <li><a href="#" data-info="Сетевая схема">Схема сети Rack Layout</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- РАЗДЕЛ 2: Страница 2 -->
+                    <li class="menu-item">
+                        <div class="menu-header">
+                            <div class="menu-title-wrapper">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                                <span>Элементы ввода</span>
+                            </div>
+                            <svg class="arrow-icon" viewBox="0 0 24 24">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </div>
+                        <ul class="submenu">
+                            <li><a href="#" data-info="Форма добавления оборудования">Добавить железку</a></li>
+                            <li><a href="#" data-info="Интеграция OLE объектов">Вложения OLE (xlsx/docx)</a></li>
+                        </ul>
+                    </li>
+
+                    <!-- РАЗДЕЛ 3: Страница 3 (Изначально пустой пример или настройки) -->
+                    <li class="menu-item">
+                        <div class="menu-header">
+                            <div class="menu-title-wrapper">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                <span>Система</span>
+                            </div>
+                            <svg class="arrow-icon" viewBox="0 0 24 24">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
+                        </div>
+                        <ul class="submenu">
+                            <li><a href="#" data-info="Параметры окружения PHP/JS">Конфигурация</a></li>
+                            <li><a href="#" data-info="Права доступа пользователей">Права доступа</a></li>
+                        </ul>
+                    </li>
+
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Демонстрационная рабочая область (справа) -->
+        <main class="main-content">
+            <div class="welcome-card">
+                <div class="badge" id="current-badge">Главный раздел</div>
+                <h1 id="view-title">Добро пожаловать</h1>
+                <p id="view-desc">Выберите любой пункт меню в левой панели для отображения информации. Динамические подменю анимируются плавно благодаря математическому расчету высоты элементов скриптом.</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Находим все заголовки родительских меню
+            const menuHeaders = document.querySelectorAll('.menu-header');
+            
+            menuHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const parentItem = header.parentElement;
+                    const submenu = parentItem.querySelector('.submenu');
+                    
+                    // Проверяем, открыт ли текущий элемент
+                    const isOpen = parentItem.classList.contains('open');
+                    
+                    // Закрываем другие открытые пункты меню для эффекта аккордеона (опционально)
+                    document.querySelectorAll('.menu-item').forEach(item => {
+                        if (item !== parentItem && item.classList.contains('open')) {
+                            item.classList.remove('open');
+                            const sub = item.querySelector('.submenu');
+                            if (sub) {
+                                sub.style.maxHeight = '0px'; // Плавное закрытие
+                            }
+                        }
+                    });
+
+                    // Переключаем класс открытого меню
+                    if (isOpen) {
+                        parentItem.classList.remove('open');
+                        submenu.style.maxHeight = '0px'; // Сворачиваем (Collapse)
+                    } else {
+                        parentItem.classList.add('open');
+                        // Рассчитываем реальную высоту контента для плавности (scrollHeight)
+                        submenu.style.maxHeight = submenu.scrollHeight + 'px'; // Разворачиваем (Expand)
+                    }
+                });
+            });
+
+            // 2. Логика выбора элементов подменю для интерактивности демонстрации
+            const submenuLinks = document.querySelectorAll('.submenu a');
+            const viewTitle = document.getElementById('view-title');
+            const viewDesc = document.getElementById('view-desc');
+            const currentBadge = document.getElementById('current-badge');
+
+            submenuLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Убираем активные классы со всех ссылок подменю
+                    document.querySelectorAll('.submenu li').forEach(li => {
+                        li.classList.remove('active-item');
+                    });
+
+                    // Делаем текущий пункт активным
+                    link.parentElement.classList.add('active-item');
+
+                    // Обновляем правый контент
+                    const infoText = link.getAttribute('data-info');
+                    const parentCategory = link.closest('.menu-item').querySelector('.menu-header span').textContent;
+                    
+                    currentBadge.textContent = parentCategory;
+                    viewTitle.textContent = link.textContent;
+                    viewDesc.textContent = `Вы выбрали раздел "${link.textContent}". В реальной системе здесь будет отображаться форма "${infoText}" или интерфейс управления.`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
