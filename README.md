@@ -1,4 +1,6 @@
 # kanboard
+## 2026-06-14
+Added table projects_files
 
 ## 2025-11-02
 Added tables for Project Management

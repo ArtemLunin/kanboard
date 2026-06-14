@@ -36,14 +36,19 @@ class ProjectUtils extends \helperUtils\helperUtils {
             "id", "activity_date", "project_id", "activity_text"
         ]
     ];
+    private $tProjectsFiles = [
+        "tableName" => "projects_files",
+        "fields" => [
+            "id", "activity_id", "activity_target", "file_name"
+        ]
+    ];
     private $subGroups = [
         "SDE"       => ["sZTM","sMOR","sPre-DDP"],
         "IP Core"   => ["cZTM","cMOR","cPre-DDP"],
         "Transport" => ["tZTM","tMOR","tPre-DDP"],
     ];
-    // private $baseGroups = ["SDE","IP Core","Transport"
-
-    // ];
+    private const PATHPROJECTFILES = 'pfiles';
+	private const DIAGRAMITEMNAME = 'diagram';
     private $userID = 0;
     private $userName = '';
     private $root_access = false;
@@ -166,6 +171,50 @@ class ProjectUtils extends \helperUtils\helperUtils {
             $this->db_object_project->removeObjectFromTableFilter($this->tProjectsActivity["tableName"], ["project_id" => $projectID, "group_id" => $groupID]);
             $this->logProject($projectID, 'group `' . $this->getGroupName($groupID) . '` was removed from project `' . $this->getProjectName($projectID) . '` by user `' . $this->userName . '`');
             return $this->getProjectsActivity($projectID);
+        }
+        return false;
+    }
+    private function removeFileFromProjectActivity($activityID) {
+        if (($files_list = $this->getFilesListFromProjectActivity($activityID)) && count($files_list) > 0) {
+            if ($this->db_object_project->removeObjectFromTableFilter($this->tProjectsFiles["tableName"], ["activity_id" => $activityID])) {
+                foreach ($files_list as $key => $file_) {
+                    try {
+                        unlink(self::PATHPROJECTFILES . '/' . $file_['name']);
+                    } catch  (\Throwable $e) {
+                        $this->errorLog($e->getMessage());
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    private function getFilesListFromProjectActivity($activityID) {
+        $files_list = [];
+        $table_res = $this->db_object_project->selectObjectFromTable($this->tProjectsFiles["tableName"], ["activity_id" => $activityID]);
+        if ($table_res && count($table_res) > 0) {
+            foreach ($table_res as $table_row) {
+                $files_list[] = [
+                    'tag'   => $table_row['activity_target'],
+                    'name'   => $table_row['file_name']
+                ];
+            }
+        }
+        return $files_list;
+    }
+    function addFileToProjectActivity($projectID, $activityID, $fileName, $target) {
+        if ($this->userCanEditProject($projectID)) {
+            $this->removeFileFromProjectActivity($activityID);
+            $uploadedFileName = bin2hex(random_bytes(5));
+            $fields_obj = [
+                "activity_id" => $activityID,
+                "activity_target" => $target,
+                "file_name" => $uploadedFileName,
+            ];
+            if ($this->db_object_project->addObjectToTable($this->tProjectsFiles["tableName"], $fields_obj) != false){
+                copy($fileName, self::PATHPROJECTFILES . '/' .  $uploadedFileName);
+                return true;
+            }
         }
         return false;
     }
@@ -502,6 +551,44 @@ class ProjectUtils extends \helperUtils\helperUtils {
         }
         return false;
     }
+    private function changeProjectActivityByID($activityID, $field_json_props) {
+        $sql_upd = "/*CHANGE_ACTIVITY By ID*/UPDATE `" . $this->tProjectsActivity["tableName"] . "` SET `field_json_props`=:param1 WHERE `id`=:param5";
+        $sql_params = [
+            'param1' => $field_json_props,
+            'param5' => $activityID,
+        ];
+        $this->db_object_project->modSQL($sql_upd , $sql_params, false);
+        return $this->getProjectsActivityByID($activityID);
+    }
+    // function uploadFileForProject($activityID, $file_upload) {
+    //     $projectActivity = $this->getProjectsActivityByID($activityID);
+    //     $field_props = json_decode($projectActivity['detail']['field_json_props'], true);
+    //     $path_to_pfiles = self::PATHPROJECTFILES . '/';
+    //     if ($field_props) {
+    //         $exist_file = '';
+    //         foreach ($this->yieldInnerValuesWithKeys($field_props) as $fieldName => $value) {
+    //             file_put_contents('temp/array.txt', $projectActivity['detail']['field_json_props']);
+    //             if ($fieldName === self::DIAGRAMITEMNAME) {
+    //                 $exist_file = $value['default'];
+    //                 break;
+    //             }
+    //         }
+    //         if ($exist_file !== '') {
+    //             unlink($path_to_pfiles . $exist_file);
+    //         }
+    //         $uploadedFileName = bin2hex(random_bytes(5));
+    //         copy($file_upload, $path_to_pfiles . $uploadedFileName);
+    //         array_push($field_props, [
+    //             'fields'    => [[
+    //                 'fieidID' => 'diagram',
+    //                 'fieldName' => 'diagram',
+    //                 'default' => $uploadedFileName,
+    //             ]]
+    //         ]);
+    //         $field_json_props = json_encode($field_props);
+    //         return $this->changeProjectActivityByID($activityID, $field_json_props);
+    //     }
+    // }
 }
 
 

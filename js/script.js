@@ -5787,7 +5787,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const showActivityFields = (data) => {
-		console.log('showActivityFields');
 		formFields.reset();
 		formFieldsDDP.reset();
 		projectNumberActivity.removeAttribute('readonly');
@@ -5891,9 +5890,6 @@ window.addEventListener('DOMContentLoaded', () => {
 								if (fieldIn.type != 'hidden') {
 									fieldIn.classList.add(inputSelectorClass);
 								}
-							}
-							if (fieldIn.id == 'projectType') {
-								console.log(fieldIn.id, fieldIn.value, fieldIn.dataset.ini_data);
 							}
 						});
 						if ((adminEnabled && !group.classList.contains('renderOnly')) || 
@@ -6287,7 +6283,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			fieldGroups.push(fieldGroup);
 		});
 		if (!!projects_obj['mode']) {
-			// console.log(fieldGroups);
 			const body = prepareChangeProjectBody({
 				project_id: projects_obj['project_id'],
 				group_id: projects_obj['group_id'],
@@ -6305,6 +6300,21 @@ window.addEventListener('DOMContentLoaded', () => {
 				body.activity = '';
 			}
 			sendRequest('POST', requestURLProject, body).then((data) => {
+				if (data && data.success && data.success.answer && data.success.answer.detail) {
+					const projectActId = data.success.answer.detail.id;
+					const fileInput = document.querySelector('#diagram');
+					if (projectActId && fileInput && fileInput.files.length > 0) {
+						const formData = new FormData();
+						formData.append('diagram', fileInput.files[0]);
+                 		formData.append('id', data.success.answer.detail.project_id);
+                 		formData.append('activity_id', projectActId);
+                 		formData.append('method', 'addFileToActivity');
+                 		formData.append('target', 'diagram');
+						sendFile('POST', requestURLProject, formData);
+						// .then((data) => {
+						// });
+					}
+				}
 				iniProjectsInfo();
 			});	
 		} else {
@@ -6548,7 +6558,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	formFields.addEventListener('reset', (e) => {
 		// setTimeout(() => {
-			console.log('formFields reset');
 			const target = e.target;
 			target.querySelectorAll('fieldset').forEach(fieldset => {
 				removeChildElementFromCollection(fieldset, '.multirows[data-clone="1"]');
@@ -6750,7 +6759,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 	formFields.addEventListener('focusout', (e) => {
-		console.log('formFields focusout');
 		e.preventDefault();
 		const target = e.target;
 		if (target.classList.contains(inputSelectorClass)) {

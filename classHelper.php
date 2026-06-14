@@ -119,6 +119,14 @@ class helperUtils {
 		}
 		return true;
 	}
+    function errorLogObj($log_object, $debug_mode = 1)
+	{
+		if ($debug_mode === 1)
+		{
+			error_log(date("Y-m-d H:i:s") . " ". print_r($log_object, true));
+		}
+		return true;
+	}
 	function writeErrorMessage($errorObject) {
 
 		$error_txt_info = $errorObject->getMessage().', file: '.$errorObject->getFile().', line: '.$errorObject->getLine();
@@ -261,12 +269,22 @@ class helperUtils {
         return $spreadsheet;
     }
     static function yieldInnerValues(array $items): \Generator {
-            foreach ($items as $item) {
-                foreach ($item["fields"] as $value) {
-                    yield $value;
+        foreach ($items as $item) {
+            foreach ($item["fields"] as $value) {
+                yield $value;
+            }
+        }
+    }
+    function yieldInnerValuesWithKeys(array $items): \Generator {
+        foreach ($items as $item) {
+            if (is_array($item) && isset($item['fields']) && is_array($item['fields'])) {
+                foreach ($item["fields"] as $index => $value) {
+                    $key = $value['fieldName'] ?? $index;
+                    yield $key => $value;
                 }
             }
         }
+    } 
     function writeDOCX($requestArr, $templateProcessor, $db_object) {
         $nodes_list = [];
         $efcrFieldsArr = [];

@@ -1651,7 +1651,6 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 	}
 	function selectObjectFromTable($table_name, $filters, $selected_fields = [], $order_by = []) {
 		$filter = "";
-		// $values_arr = [];
 		$select_fields = "";
 		$filtered_arr = [];
 		if (count($filters) < 1) {

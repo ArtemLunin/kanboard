@@ -25,6 +25,7 @@ set_error_handler('exceptions_error_handler');
 $out_res = [];
 $param_error_msg['answer'] = false;
 $userID = 0;
+$availImgTypes = ['image/png','image/jpeg'];
 
 function isInt($val) {
     return filter_var($val, FILTER_VALIDATE_INT, ["flags" => FILTER_NULL_ON_FAILURE, "options" => ["min_range" => 1]]) ?? 0;
@@ -70,8 +71,11 @@ $user_name = $paramJSON['user_name'] ?? 0;
 $group_fields = $paramJSON['group_fields'] ?? 0;
 // $group_idx = isInt($paramJSON['group_idx'] ?? 0);
 $text_field = trim($paramJSON['text_field'] ?? '');
-} else {
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = $_POST['method'];
+    $id = isInt($_POST['id'] ?? 0);
+    $activity_id = isInt($_POST['activity_id'] ?? 0);
+    $target = $_POST['target'] ?? '';
     $groups = [];
     if (isset($_POST['groups']) && count($_POST['groups']) > 0) {
         foreach ($_POST['groups'] as $group) {
@@ -117,6 +121,8 @@ if ($method !== 0 && $method !== 'getProjectDocs')
         $param_error_msg['answer'] = $project_object->removeUserFromGroup($user_name, $group_id);
     } elseif ($method === 'removeGroup' && $id) {
         $param_error_msg['answer'] = $project_object->removeGroup($id);
+    } elseif ($method === 'addFileToActivity' && $id && $activity_id && ($file_upload = $_FILES['diagram']['tmp_name']) != '' && is_uploaded_file($file_upload) && (in_array($_FILES['diagram']['type'], $availImgTypes))) {
+        $param_error_msg['answer'] = $project_object->addFileToProjectActivity($id, $activity_id, $file_upload, $target);
     }
     $out_res = ['success' => $param_error_msg];
 } elseif ($method === 'getProjectDocs' && $groups && count($groups) > 0) {
