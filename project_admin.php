@@ -97,9 +97,11 @@ if ($method !== 0 && $method !== 'getProjectDocs')
         $param_error_msg['answer'] = $project_object->getProjectsList();
     } elseif ($method === 'addGroupToProject' && $id && ($group_id || $group_ids)) {
         $param_error_msg['answer'] = $project_object->addGroupToProject($id, $group_id ? $group_id : $group_ids);
-    } elseif ($method === 'removeGroupFromProject' && $id) {
-        $param_error_msg['answer'] = $project_object->removeGroupFromProject($id);
-    } elseif ($method === 'changeProjectActivity' && $id && $group_id && $group_fields) {
+    } 
+    // elseif ($method === 'removeGroupFromProject' && $id) {
+    //     $param_error_msg['answer'] = $project_object->removeGroupFromProject($id);
+    // } 
+    elseif ($method === 'changeProjectActivity' && $id && $group_id && $group_fields) {
         $param_error_msg['answer'] = $project_object->changeProjectActivity($id, $group_id, $group_fields, $element, $activity);
     } elseif ($method === 'getProjectsActivity') {
         $param_error_msg['answer'] = $project_object->getProjectsActivity($id);
@@ -156,7 +158,7 @@ if ($method !== 0 && $method !== 'getProjectDocs')
                 } elseif ($group['activityType'] === 'DIP') {
                     $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/mop_template.docx');
                     $filename = tempnam(sys_get_temp_dir(), 'docx');
-                    $templateProcessor = $project_object->writeDOCX($field_json_props, $templateProcessor, $project_object);
+                    $templateProcessor = $project_object->writeDOCX($field_json_props, $project_activity["detail"]["files"], $templateProcessor, $project_object);
                     $templateProcessor->saveAs($filename);
                     helperUtils\DocxProcessor::removeIncludedObjFromDocx($filename);
                     $filesOut[] = [
@@ -171,24 +173,34 @@ if ($method !== 0 && $method !== 'getProjectDocs')
         
     }
     if (count($filesOut) > 0) {
-        $output_zip = tempnam(sys_get_temp_dir(), 'zip');
-        $zip = new \ZipArchive();
-        $zip->open($output_zip, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-        $param_error_msg['answer'] = [];
-        foreach ($filesOut as $file_out) {
-            $temp_file_name = 'temp/' . bin2hex(random_bytes(5)) . '.' . $file_out['file_type'];
-            $zip->addFile($file_out['tmp_name'], $file_out['group_name'] . '.' . $file_out['file_type']);
-            copy($file_out['tmp_name'], $temp_file_name);
-            $param_error_msg['answer'][] = $temp_file_name;
+        if (count($filesOut) == 1) {
+            $contentType = "Content-Type: application/vnd.ms-word; charset=utf-8";
+            $fileExt = ".docx";
+            $handle = fopen($filesOut[0]['tmp_name'], "r");
+            $contents = fread($handle, filesize($filesOut[0]['tmp_name']));
+        } else {
+            $contentType = "Content-Type: application/zip;";
+            $fileExt = ".zip";
+            $output_zip = tempnam(sys_get_temp_dir(), 'zip');
+            $zip = new \ZipArchive();
+            $zip->open($output_zip, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+            $param_error_msg['answer'] = [];
+            foreach ($filesOut as $file_out) {
+                $temp_file_name = 'temp/' . bin2hex(random_bytes(5)) . '.' . $file_out['file_type'];
+                $zip->addFile($file_out['tmp_name'], $file_out['group_name'] . '.' . $file_out['file_type']);
+                copy($file_out['tmp_name'], $temp_file_name);
+                $param_error_msg['answer'][] = $temp_file_name;
+            }
+            $zip->close();
+            $handle = fopen($output_zip, "r");
+            $contents = fread($handle, filesize($output_zip));
         }
-        $zip->close();
-        header("Content-Type: application/zip;");
-        header("Content-Disposition: attachment; filename=".'project ' . $project_name . '.zip');
+        header($contentType);
+        header("Content-Disposition: attachment; filename=" . "project " . $project_name . $fileExt);
         header("Expires: 0");
         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
         header("Cache-Control: private", false);
-        $handle = fopen($output_zip, "r");
-        $contents = fread($handle, filesize($output_zip));
+        
         echo $contents;
         exit;
     }

@@ -1387,6 +1387,7 @@
 									</label>
 								</div>
 								<input type="file" class="mop renderOnly" id="diagram" name="diagram" accept="image/png, image/jpeg" />
+								<span class="mop bg-success js-project-files" data-file-id="diagram"></span>
 							</fieldset>
 							<fieldset id="group2" class="hidden">
 								<legend>Impact Classification</legend>
@@ -1943,8 +1944,8 @@
 								<button class="mop" type="submit" id="ddpFormSubmit">Render</button>
 								<button class="mop d-none" type="button" id="ddpFormSave">Save</button>
 								<button class="mop" type="reset" id="ddpFormReset">Reset</button>
-								<div id="calendarWrapper" style="display:none;">
-									<div id="calendar"></div>
+								<div id="ddpCalendarWrapper" style="display:none;">
+									<div id="ddpCalendar"></div>
 								</div>
 							</div>
 						</form>
@@ -2160,19 +2161,13 @@
 							<label for="project-brief-number">Project Number</label>
 							<input type="text" id="project-brief-number" name="project-brief-number" class="mop " placeholder="Project Number" readOnly="true">
 						</div>
-						<!-- <div class="project-brief-label">Project Number</div> -->
-						<!-- <div class="project-brief-input border border-dark p-1" id="project-brief-number"></div> -->
 						<div class="param param-50">
 							<label for="project-brief-name">Project Name</label>
 							<input type="text" id="project-brief-name" name="project-brief-name" class="mop " placeholder="Project Name" readOnly="true">
 						</div>
-						<!-- <div class="project-brief-label">Project Name</div>
-						<div class="project-brief-input border border-dark p-1" id="project-brief-name"></div> -->
 						<div class="param param-100">
 							<label for="project-brief-description">Project Info</label>
 							<textarea class="mop" name="project-brief-description" id="project-brief-description" cols="30" rows="7"></textarea>
-							<!-- <div class="project-brief-label">Project Info</div>
-							<div class="project-brief-input border border-dark p-1" id="project-brief-description"></div> -->
 						</div>
 					</div>
 				</div>

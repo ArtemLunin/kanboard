@@ -3,6 +3,7 @@ dima/
 temp/
 kanboard_upd/
 templates/
+pfiles/
 unused/
 wiki/
 others/
@@ -46,4 +47,4 @@ test_pdf.php
 template/test_template.docx
 template/ddp_template_orig.docx
 template/mor_blank (копия).docx
-pfiles/27f1206962
+

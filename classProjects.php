@@ -48,7 +48,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
         "Transport" => ["tZTM","tMOR","tPre-DDP"],
     ];
     private const PATHPROJECTFILES = 'pfiles';
-	private const DIAGRAMITEMNAME = 'diagram';
+	// private const DIAGRAMITEMNAME = 'diagram';
     private $userID = 0;
     private $userName = '';
     private $root_access = false;
@@ -60,6 +60,9 @@ class ProjectUtils extends \helperUtils\helperUtils {
     }
     function setRootAccess($value) {
         $this->root_access = (bool) $value;
+    }
+    function getProjectFilesPath() {
+        return self::PATHPROJECTFILES;
     }
     function getOwnerProjectID($projectID) {
         return $this->db_object_project->getOwnerProjectID($projectID);
@@ -106,7 +109,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
     }
     function removeProject($projectID) {
         if ($this->userCanEditProject($projectID)) {
-            if ($this->db_object_project->selectObjectFromTable($this->tProjectsActivity["tableName"], ["status" => 2], $this->tProjectsActivity["fields"], [])) {
+            if ($this->db_object_project->selectObjectFromTable($this->tProjectsActivity["tableName"], ["status" => 2, "project_id" => $projectID], $this->tProjectsActivity["fields"], [])) {
                 return false;
             }
             if ($this->db_object_project->removeObjectFromTableFilter($this->tProjectsActivity["tableName"], ["project_id" => $projectID])) {
@@ -166,20 +169,28 @@ class ProjectUtils extends \helperUtils\helperUtils {
         return false;
     }
 
-    function removeGroupFromProjectByGroup($projectID, $groupID) {
-        if ($this->userCanEditProject($projectID)) {
-            $this->db_object_project->removeObjectFromTableFilter($this->tProjectsActivity["tableName"], ["project_id" => $projectID, "group_id" => $groupID]);
+    private function removeGroupFromProjectByGroup($projectID, $groupID) {
+        $project_activities = $this->getProjectsActivity($projectID);
+        if ($project_activities) {
+            foreach ($project_activities as $activity_) {
+                $this->removeActivityFromProjectByID($activity_['id']);
+            }
             $this->logProject($projectID, 'group `' . $this->getGroupName($groupID) . '` was removed from project `' . $this->getProjectName($projectID) . '` by user `' . $this->userName . '`');
             return $this->getProjectsActivity($projectID);
         }
+        // $this->db_object_project->removeObjectFromTableFilter($this->tProjectsActivity["tableName"], ["project_id" => $projectID, "group_id" => $groupID]);
         return false;
+    }
+    private function removeActivityFromProjectByID($activityID) {
+        $this->removeFileFromProjectActivity($activityID);
+        return $this->db_object_project->removeObjectFromTableFilter($this->tProjectsActivity["tableName"], ["id" => $activityID]);
     }
     private function removeFileFromProjectActivity($activityID) {
         if (($files_list = $this->getFilesListFromProjectActivity($activityID)) && count($files_list) > 0) {
             if ($this->db_object_project->removeObjectFromTableFilter($this->tProjectsFiles["tableName"], ["activity_id" => $activityID])) {
                 foreach ($files_list as $key => $file_) {
                     try {
-                        unlink(self::PATHPROJECTFILES . '/' . $file_['name']);
+                        unlink($this->getProjectFilesPath() . '/' . $file_['name']);
                     } catch  (\Throwable $e) {
                         $this->errorLog($e->getMessage());
                     }
@@ -195,7 +206,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
         if ($table_res && count($table_res) > 0) {
             foreach ($table_res as $table_row) {
                 $files_list[] = [
-                    'tag'   => $table_row['activity_target'],
+                    'target'   => $table_row['activity_target'],
                     'name'   => $table_row['file_name']
                 ];
             }
@@ -212,13 +223,12 @@ class ProjectUtils extends \helperUtils\helperUtils {
                 "file_name" => $uploadedFileName,
             ];
             if ($this->db_object_project->addObjectToTable($this->tProjectsFiles["tableName"], $fields_obj) != false){
-                copy($fileName, self::PATHPROJECTFILES . '/' .  $uploadedFileName);
+                copy($fileName, $this->getProjectFilesPath() . '/' .  $uploadedFileName);
                 return true;
             }
         }
         return false;
     }
-
     function getUserID($userName) {
         $this->userID = $this->db_object_project->getUserID($userName);
         $this->userName = $userName;
@@ -289,6 +299,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
             $activity_res["detail"]["project_name"] = $projectGroupName["project_name"];
             $activity_res["detail"]["project_number"] = $projectGroupName["project_number"];
             $activity_res["detail"]["group_real_name"] = $projectGroupName["group_real_name"];
+            $activity_res["detail"]["files"] = $this->getFilesListFromProjectActivity($activityID);
         }
         return $activity_res;
     }
@@ -508,58 +519,62 @@ class ProjectUtils extends \helperUtils\helperUtils {
             $count_field_props = count($group_fields['field_json_props']);
             $status = 2;
             if (isset($group_fields['target_date'])) {
-                $start_date = $group_fields['target_date'];
+                // $start_date = $group_fields['target_date'];
                 $last_activity_date = $group_fields['target_date'];
                 $status = 1;
             }
             if ($table_res = $this->db_object_project->getSQL($sql, ["param1" => $projectID, "param2" => $groupID])) {
+                $activityID = $table_res[0]['id'];
+                if ($table_res[0]['status'] == 1) {
+                    $start_date = $table_res[0]['start_date'];
+                }
                 if (($table_res[0]['status'] == 0 || $table_res[0]['status'] == 1) && $count_field_props !== 0) {
                     $sql_params = [
                         'param1' => json_encode($group_fields['field_json_props']),
                         'param2' => $start_date,
                         'param3' => $last_activity_date,
-                        'param4' => $table_res[0]['id'],
+                        'param4' => $activityID,
                         'param5' => $element,
                         'param6' => $activity,
                         'param7' => $status
                     ];
                     $sql_upd = "UPDATE `" .$this->tProjectsActivity["tableName"]. "` SET `field_json_props`=:param1,`element`=:param5,`activity`=:param6,`start_date`=:param2,`last_activity_date`=:param3,`status`=:param7 WHERE `id`=:param4";
                     $this->db_object_project->modSQL($sql_upd , $sql_params, false);
-                } elseif ($table_res[0]['status'] == 2 && $count_field_props == 0) {
+                } elseif ($count_field_props == 0) {
+                    // ($table_res[0]['status'] == 0 || $table_res[0]['status'] == 1) &&
                     $start_date = $table_res[0]['start_date'];
-                    // if ($count_field_props == 0) {
-                        $start_date = null;
-                        $last_activity_date = null;
-                        $end_date = null;
-                        $status = 0;
-                    // }
+                    $start_date = null;
+                    $last_activity_date = null;
+                    $end_date = null;
+                    $status = 0;
                     $sql_params = [
                         'param1' => '',
                         'param2' => $start_date,
                         'param3' => $last_activity_date,
                         'param4' => $status,
-                        'param5' => $table_res[0]['id'],
+                        'param5' => $activityID,
                         'param6' => '',
                         'param7' => ''
                     ];
                     $sql_upd = "UPDATE `" .$this->tProjectsActivity["tableName"]. "` SET `field_json_props`=:param1,`start_date`=:param2,`element`=:param7,`activity`=:param6,`last_activity_date`=:param3,`status`=:param4 WHERE `id`=:param5";
                     $this->db_object_project->modSQL($sql_upd , $sql_params, false);
+                    $this->removeFileFromProjectActivity($activityID);                 
                     $this->logProject($projectID, 'Group `' . $this->getGroupName($groupID) . '` was cleared in project `' . $this->getProjectName($projectID) . '` by user `' . $this->userName . '`');
                 }
-                return $this->getProjectsActivityByID($table_res[0]['id']);
+                return $this->getProjectsActivityByID($activityID);
             }
         }
         return false;
     }
-    private function changeProjectActivityByID($activityID, $field_json_props) {
-        $sql_upd = "/*CHANGE_ACTIVITY By ID*/UPDATE `" . $this->tProjectsActivity["tableName"] . "` SET `field_json_props`=:param1 WHERE `id`=:param5";
-        $sql_params = [
-            'param1' => $field_json_props,
-            'param5' => $activityID,
-        ];
-        $this->db_object_project->modSQL($sql_upd , $sql_params, false);
-        return $this->getProjectsActivityByID($activityID);
-    }
+    // private function changeProjectActivityByID($activityID, $field_json_props) {
+    //     $sql_upd = "/*CHANGE_ACTIVITY By ID*/UPDATE `" . $this->tProjectsActivity["tableName"] . "` SET `field_json_props`=:param1 WHERE `id`=:param5";
+    //     $sql_params = [
+    //         'param1' => $field_json_props,
+    //         'param5' => $activityID,
+    //     ];
+    //     $this->db_object_project->modSQL($sql_upd , $sql_params, false);
+    //     return $this->getProjectsActivityByID($activityID);
+    // }
     // function uploadFileForProject($activityID, $file_upload) {
     //     $projectActivity = $this->getProjectsActivityByID($activityID);
     //     $field_props = json_decode($projectActivity['detail']['field_json_props'], true);

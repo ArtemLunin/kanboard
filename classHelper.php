@@ -285,7 +285,7 @@ class helperUtils {
             }
         }
     } 
-    function writeDOCX($requestArr, $templateProcessor, $db_object) {
+    function writeDOCX($requestArr, $files_arr, $templateProcessor, $db_object) {
         $nodes_list = [];
         $efcrFieldsArr = [];
         $efcrFile = file('template/eFCR.txt');
@@ -409,6 +409,23 @@ class helperUtils {
             $templateProcessor->cloneBlock('testPingNewInterfaces', 1, true, true);
 
             $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, genCMDBlock(array_merge($pingtest_dgw, $pingtest_cgw), 'implementationCommandList'));
+        }
+
+        if (count($files_arr) > 0) {
+            foreach ($files_arr as $file_) {
+                 $db_object->errorLogObj($file_);
+                try {
+                    $templateProcessor->setImageValue($file_['target'], array(
+                        'path' => $db_object->getProjectFilesPath() . '/' . $file_['name'],
+                        'width' => 400, 'height' => 200,
+                    ));
+                }
+                catch (Throwable $e) {
+                    $templateProcessor->setValue($file_['target'], '');
+                } 
+            }
+        } else {
+            $templateProcessor->setValue('diagram', '');
         }
 
         $templateProcessor->setValue('FCR_addedText', htmlentities('', ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));

@@ -85,6 +85,8 @@ const sde_ztm_name = 'sZTM',
 cTemplateGroups[sde_ztm_name] = 0;
 cTemplateGroups[ipcore_ztm_name] = 1;
 cTemplateGroups[transport_ztm_name] = 3;
+// cTemplateGroups['sPre-DDP'] = ogpaDDP;
+
 
 const fieldsMultirows = [];
 
@@ -137,8 +139,6 @@ const sections = [
 	'capacity',
 	'cSDEPingtest',
 	'cSDEBundle',
-	// 'ddptemplate',
-	// 'ddp',
 	'inventory',
 	'projects',
 	// 'mor',
@@ -393,6 +393,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		const dateInput = document.querySelector('#dateInput');
 		const $wrapper = $('#calendarWrapper');
   		const $calendar = $('#calendar');
+		const $ddpWrapper = $('#ddpCalendarWrapper');
+  		const $ddpCalendar = $('#ddpCalendar');
 	const formsAuth = document.querySelectorAll('.form-auth');
 	// main elements
 	const ticketsContainer = document.querySelector('.tickets-container'),
@@ -495,7 +497,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	const formReset = document.querySelector('#formReset'),
         formSubmit = document.querySelector('#formSubmit'),
         ddpFormSubmit = document.querySelector('#ddpFormSubmit'),
+        ddpFormReset = document.querySelector('#ddpFormReset'),
         formSave = document.querySelector('#formSave'),
+        ddpFormSave = document.querySelector('#ddpFormSave'),
         formAdmin = document.querySelector('#formAdmin'),
         formAdminDDP = document.querySelector('#formAdminDDP'),
         formFields = document.querySelector('#formFields'),
@@ -521,6 +525,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		renderMopDiv = document.querySelector('#render_mop'),
 		renderDDPDiv = document.querySelector('#render_ddp'),
 		renderMorDiv = document.querySelector('#render_mor'),
+		ddpProjectNumber = document.querySelector('#ddpProjectNumber'),
+		ddpProjectName = document.querySelector('#ddpProjectName'),
 		docTitle = document.querySelector('#docTitle'),
         showAll = document.querySelector('#showAll'),
         showAllDDP = document.querySelector('#showAllDDP'),
@@ -1997,6 +2003,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		ddpTemplate = 0;
 		projectsMode = 0;
 		formSave.classList.add('d-none');
+		ddpFormSave.classList.add('d-none');
 
 		switch (showSection) {
 			case 'main':
@@ -2175,6 +2182,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				templateDDP = 0;
 				ddpTemplate = 1;
 				displayDDPElements(false);
+				console.log(addParams);
 				iniDDP(addParams);
 				break;
 			case 'inventory':
@@ -3683,15 +3691,21 @@ window.addEventListener('DOMContentLoaded', () => {
 			projectBriefData.querySelector('#project-brief-name').value = currentProject.dataset.projectName;
 			projectBriefData.querySelector('#project-brief-description').value = currentProject.dataset.projectDescription;
 			projectBriefData.classList.remove('d-none');
-			if (projectActivity.dataset.morStatus != '1') {
-				sendRequest('POST', requestURLProject, body).then((data) => {
-					showProjectActivityForm(data, parseInt(projectActivity.dataset.ogpaGroup));
-				});
-			} else {
+			ddpTemplate = 0;
+			if (projectActivity.dataset.morStatus == '1') {
 				sendRequest('POST', requestURLProject, body).then(async (data) => {
 					formMor.reset();
 					await iniMORTables();
 					showProjectMORForm(data, parseInt(projectActivity.dataset.ogpaGroup));
+				});
+			} else if (projectActivity.dataset.ddpStatus == '1') {
+				sendRequest('POST', requestURLProject, body).then((data) => {
+					ddpTemplate = 1;
+					showProjectDDPForm(data, parseInt(projectActivity.dataset.ogpaGroup));
+				});
+			} else {
+				sendRequest('POST', requestURLProject, body).then((data) => {
+					showProjectActivityForm(data, parseInt(projectActivity.dataset.ogpaGroup));
 				});
 			}
 			jsBackProjects.classList.remove('d-none');
@@ -4829,6 +4843,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						group_id: activity.group_id,
 						ogpa_group: cTemplateGroups[activity.group_name] ?? 0,
 						mor_status: (activity.group_name.toLowerCase().includes('mor')) ? '1' : '0',
+						ddp_status: (activity.group_name.toLowerCase().includes('ddp')) ? '1' : '0',
 						activity_date: activity_date,
 						activity_status: activity_status,
 						activity_ready: activity_ready,
@@ -4856,9 +4871,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.querySelector('#projectGroupsAct').textContent = JSON.stringify(projectGroupsAct);
 	}
 
-	function projectActivityGenerate({activity_id = 0, project_id = 0, group_id = 0, ogpa_group = 0, mor_status = 0, activity_date = '&nbsp;', activity_status, activity_ready, group_name = '', dnone = '', activity_finished = 0, group_Ids = null}) {
+	function projectActivityGenerate({activity_id = 0, project_id = 0, group_id = 0, ogpa_group = 0, mor_status = 0, ddp_status = 0, activity_date = '&nbsp;', activity_status, activity_ready, group_name = '', dnone = '', activity_finished = 0, group_Ids = null}) {
 		return `
-			<div class="project-activity" data-activity_id="${activity_id}" data-project_id="${project_id}" data-group_id="${group_id}" data-activity_finished="${activity_finished}" data-ogpa-group="${ogpa_group}" data-mor-status="${mor_status}">
+			<div class="project-activity" data-activity_id="${activity_id}" data-project_id="${project_id}" data-group_id="${group_id}" data-activity_finished="${activity_finished}" data-ogpa-group="${ogpa_group}" data-mor-status="${mor_status}" data-ddp-status="${ddp_status}">
 				<div class="project-activity-date">${activity_date}</div>
 				<div class="project-activity-graph">
 						<div class="project-activity-line ${activity_status}"></div>
@@ -4885,9 +4900,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		formNewProject.classList.add('d-none');
 		activeProjects.querySelector('legend').textContent = 'Selected project';
 		projectGroupName = '';
+		document.querySelector('#activityID').value = data.success.answer.detail.id;
 		resetHardCodeDesign();
 		displayMOPElements(false);
-		toggleProjectsActivityArea('show', renderMopDiv);
 		if (data.success && data.success.answer) {
 			let fieldProps = [];
 			try {
@@ -4910,6 +4925,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				showActivityFields(dataObject);
 				fillSelectField(selPrimeElement, data.success.answer.detail.element, true);
 				fillSelectField(selActivity, data.success.answer.detail.activity, true);
+				fillUploadedFiles(data.success.answer.detail.files);
 				fillMultirows();
 				if (data.success.answer.detail.status === 2) {
 					formSubmit.dataset.projectDownload = '1';
@@ -4922,6 +4938,51 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 		}
+		toggleProjectsActivityArea('show', renderMopDiv);
+	}
+
+	function showProjectDDPForm(data, ogpaGroup = 0) {
+		formNewProject.classList.add('d-none');
+		activeProjects.querySelector('legend').textContent = 'Selected project';
+		projectGroupName = '';
+		displayDDPElements(false);
+		if (data.success && data.success.answer) {
+			let fieldProps = [];
+			try {
+				fieldProps = JSON.parse(data.success.answer.detail.field_json_props);
+			} catch (e) {
+			}
+			projectGroupName = data.success.answer.detail.group_name;
+			if (fieldProps.length == 0) {
+				ddpFormSubmit.innerText = 'Create';
+				ddpFormSubmit.dataset.projectDownload = '0';
+				ddpFormSave.classList.remove('d-none');
+				iniDDP({
+					"groupName": "sde",
+					"pageName": "sPre-DDP"
+				});
+			} else {
+				const dataObject = {
+					success: {
+						answer: fieldProps
+					}
+				};
+				showActivityFields(dataObject);
+				fillSelectField(selGroupsDDP, data.success.answer.detail.element, true);
+				fillSelectField(selActivityDDP, data.success.answer.detail.activity, true);
+				fillMultirows();
+				if (data.success.answer.detail.status === 2) {
+					ddpFormSubmit.dataset.projectDownload = '1';
+					ddpFormSubmit.innerText = 'Download';
+					ddpFormSave.classList.add('d-none');
+				} else {
+					ddpFormSubmit.dataset.projectDownload = '0';
+					ddpFormSubmit.innerText = 'Create';
+					ddpFormSave.classList.remove('d-none');
+				}
+			}
+		}
+		toggleProjectsActivityArea('show', renderDDPDiv);
 	}
 
 	function showProjectMORForm(data, ogpaGroup = 0) {
@@ -5003,6 +5064,16 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function toggleProjectsActivityArea(commandShow, child = null) {
+		const currentChild = projectsActivityArea.firstElementChild;
+		if (currentChild) {
+			if (currentChild.id == 'render_ddp') {
+				document.querySelector('.section.templateDDP').append(currentChild);
+			} else if (currentChild.id == 'render_mop') {
+				document.querySelector('.section.template').append(currentChild);
+			} else if (currentChild.id == 'render_mor') {
+				document.querySelector('.section.mor').append(currentChild);
+			}
+		}
 		projectsActivityArea.textContent = '';
 		if (commandShow == 'show') {
 			projectsActivityArea.classList.remove('d-none');
@@ -5787,8 +5858,16 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const showActivityFields = (data) => {
+		let projectNumberElem = projectNumberActivity;
+		let projectNameElem = projectNameActivity;
+		if (ddpTemplate == 1) {	
+			projectNumberElem = ddpProjectNumber;
+			projectNameElem = ddpProjectName;
+		}
 		formFields.reset();
 		formFieldsDDP.reset();
+		setProjectProps(projectNumberElem, null, false);
+		setProjectProps(projectNameElem, null, false);
 		projectNumberActivity.removeAttribute('readonly');
 		projectNameActivity.removeAttribute('readonly');
 		document.querySelectorAll('fieldset.hidden').forEach(item => {
@@ -5919,15 +5998,30 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 		checkInputsData(`.${inputSelectorClass}`);
 		if (projectsMode == 1) {
-			projectNumberActivity.value = projectBriefData.querySelector('#project-brief-number').value;
-			projectNameActivity.value = projectBriefData.querySelector('#project-brief-name').value;
-			projectNumberActivity.setAttribute('readonly', '');
-			projectNameActivity.setAttribute('readonly', '');
+			setProjectProps(projectNumberElem, projectBriefData.querySelector('#project-brief-number').value);
+			setProjectProps(projectNameElem, projectBriefData.querySelector('#project-brief-name').value);
+			// projectNumberActivity.value = projectBriefData.querySelector('#project-brief-number').value;
+			// projectNameActivity.value = projectBriefData.querySelector('#project-brief-name').value;
+			// projectNumberActivity.setAttribute('readonly', '');
+			// projectNameActivity.setAttribute('readonly', '');
 			formAdmin.querySelectorAll('[data-ctemplate]').forEach( item => {
 				item.value = projectGroupName;
 			});
 		}
 		document.querySelector('#ddpRevisionDate').value = datetimeToUSDate();
+	};
+	/**
+	 * * @param {DOM} item - DOM-element
+	 * @param {string} value - Initial value
+	 * @param {boolean} readonly - set field to RO
+	 */
+	const setProjectProps = (item, value, readonly = true) => {
+		if (readonly) {
+			item.value = value;
+			item.setAttribute('readonly', '');
+		} else {
+			item.removeAttribute('readonly');
+		}
 	};
 
 	const fillCTemplateFields = (targetForm) => {
@@ -5952,17 +6046,31 @@ window.addEventListener('DOMContentLoaded', () => {
 		`);
 	};
 
+	const fillUploadedFiles = (filesArr) => {
+		filesArr.forEach(file_ => {
+			const file_input = document.querySelector(`#${file_.target}`);
+			if (file_input) {
+				const file_span = file_input.closest('fieldset').querySelector(`[data-file-id='${file_.target}']`);
+				if (file_span) {
+					file_span.textContent = 'File uploaded';
+				}
+			}
+		});
+	};
+
+	const resetUploadedFiles = () => {
+		document.querySelectorAll('.js-project-files').forEach(file_span => {
+			file_span.textContent = '';
+		});
+	};
+
 	const fillMultirows = () => {
 		fieldsMultirows.forEach(row => {
 			const elem = document.querySelector(`#${row.id}`);
 			if (elem) {
-				// try {
-					// const rows_values = JSON.parse(row.value);
-					row.values.forEach(row_values => {
-						btnAreaAppend(elem, row_values);
-					});
-				// } catch (e) {
-				// }
+				row.values.forEach(row_values => {
+					btnAreaAppend(elem, row_values);
+				});
 			}
 		});
 	};
@@ -6552,20 +6660,23 @@ window.addEventListener('DOMContentLoaded', () => {
 		const target = e.target;
 	});
 
-	formReset.addEventListener('click', (e) => {
-		resetProject = true;
+	[formReset, ddpFormReset].forEach(element => {
+		element.addEventListener('click', (e) => {
+			resetProject = true;
+	}	);
 	});
 
 	formFields.addEventListener('reset', (e) => {
 		// setTimeout(() => {
 			const target = e.target;
-			target.querySelectorAll('fieldset').forEach(fieldset => {
-				removeChildElementFromCollection(fieldset, '.multirows[data-clone="1"]');
-				fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
-					ceil.value = 1;
-					fieldset.querySelector(`#${ceil.dataset.id}`).value = "";
-				})
-			});
+			resetMultirows(target);
+			// target.querySelectorAll('fieldset').forEach(fieldset => {
+			// 	removeChildElementFromCollection(fieldset, '.multirows[data-clone="1"]');
+			// 	fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
+			// 		ceil.value = 1;
+			// 		fieldset.querySelector(`#${ceil.dataset.id}`).value = "";
+			// 	})
+			// });
 			fieldsMultirows.length = 0;
 			formSubmit.classList.remove('edit');
 			showAll.checked = false;
@@ -6580,15 +6691,27 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 			resetProject = false;
 		// }, 0);
+		resetUploadedFiles();
 	});
 	formFieldsDDP.addEventListener('reset', (e) => {
 		const target = e.target;
 		resetMultirows(target);
+		fieldsMultirows.length = 0;
+		formSubmit.classList.remove('edit');
 		showAllDDP.checked = false;
+		if (projectsMode == 1 && resetProject) {
+			submitAdminForm(target, gActivityID, {
+				'mode': 1,
+				'reset': 1,
+				'project_id': activityProjectID,
+				'group_id': activityGroupID
+			});
+			ddpFormSave.classList.remove('d-none');
+		}
+		resetProject = false;
 	});
 
-	const resetMultirows = (formElement) => 
-	{
+	const resetMultirows = (formElement) => {
 		formElement.querySelectorAll('fieldset').forEach(fieldset => {
 			removeChildElementFromCollection(fieldset, '.multirows[data-clone="1"]');
 			fieldset.querySelectorAll("[data-parent='self']").forEach(ceil => {
@@ -6657,6 +6780,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 	});
+	/**
+	 * * @param {object} projectActivities - The data key to find.
+	*/
 	function getProjectDocs(projectActivities) {
 		const body = {
 			method: 'getProjectDocs',
@@ -6664,6 +6790,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		downloadFileWithDynamicForm(requestURLProject, body, 'POST');
 	}
+	// function getProjectActivity() {
+		
+	// }
 	function saveMORData(formFilled, createBtn = null) {
 		if (formFilled.reportValidity()) {
 			try {
@@ -6754,10 +6883,31 @@ window.addEventListener('DOMContentLoaded', () => {
 				'project_id': activityProjectID,
 				'group_id': activityGroupID
 			});
+		} else if (projectsMode == 1 && formSubmit.dataset.projectDownload === '1') {
+			getProjectDocs([{
+				'activityId': document.querySelector('#activityID').value,
+				'activityType': 'DIP',
+			}]);		
 		} else {
 			submitRenderForm(target, gActivityID);
 		}
 	});
+	formFieldsDDP.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const target = e.target;
+		if (adminEnabled) {
+			submitAdminForm(target, gActivityID);
+		} else if (projectsMode == 1 && ddpFormSubmit.dataset.projectDownload === '0') {
+			submitAdminForm(target, gActivityID, {
+				'mode': 1,
+				'project_id': activityProjectID,
+				'group_id': activityGroupID
+			});
+		} else {
+			submitRenderForm(target, gActivityID);
+		}
+	});
+
 	formFields.addEventListener('focusout', (e) => {
 		e.preventDefault();
 		const target = e.target;
@@ -6776,16 +6926,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		const target = e.target;
 		if (target.type === "checkbox" && target.dataset.ini_data !== target.checked) {
 			formSubmit.classList.add('edit');
-		}
-	});
-
-	formFieldsDDP.addEventListener('submit', (e) => {
-		e.preventDefault();
-		const target = e.target;
-		if (adminEnabled) {
-			submitAdminForm(target, gActivityID);
-		} else {
-			submitRenderForm(target, gActivityID);
 		}
 	});
 
@@ -7042,11 +7182,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			item.name = `${item.dataset.name}_${row.value}`;
 			item.id = item.name;
 			if (!copyArea) {
-				// fieldsValues
-				const field_val = fieldsValues[item.dataset.name] !== undefined ? fieldsValues[item.dataset.name] : ''
+				const field_val = (fieldsValues !== null && fieldsValues[item.dataset.name] !== undefined) ? fieldsValues[item.dataset.name] : ''
 				item.value = field_val;
 				item.dataset.ini_data = field_val;
-				console.log('btnAreaAppend ' + item.id);
 			}
 		});
 		new_row.querySelectorAll('textarea').forEach(item => {
@@ -7105,19 +7243,32 @@ window.addEventListener('DOMContentLoaded', () => {
 		title: 'Target Date'
 		// autoclose: true
 	});
+	$ddpCalendar.datepicker({
+		format: 'yyyy-mm-dd',
+		todayHighlight: true,
+		title: 'Target Date'
+	});
 
 	$('#formSave').on('click', function () {
 		$wrapper.toggle();
 	});
+	$('#ddpFormSave').on('click', function () {
+		$ddpWrapper.toggle();
+	});
 
 	$calendar.on('changeDate', function (e) {
 		const date = e.format('yyyy-mm-dd');
-		onDateSelected(date);
+		onDateSelected(date, formFields);
 		$wrapper.hide();
 	});
+	$ddpCalendar.on('changeDate', function (e) {
+		const date = e.format('yyyy-mm-dd');
+		onDateSelected(date, formFieldsDDP);
+		$ddpWrapper.hide();
+	});
 
-	function onDateSelected(date) {
-		submitAdminForm(formFields, gActivityID, {
+	function onDateSelected(date, formFields_) {
+		submitAdminForm(formFields_, gActivityID, {
 			'mode': 1,
 			'target_date': date,
 			'project_id': activityProjectID,
