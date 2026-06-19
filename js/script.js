@@ -29,6 +29,9 @@ const groupsDDP = {
 	"transport": "DDP_transport"
 };
 
+const filesDDP = ["diagram_hl", "diagram_sl", "diagram_hw", "floor_plan"];
+const filesDIP = ["diagram"];
+
 const hardCodeDesign = {
 	'Add/Change/Remove Roaming': 'js-eFCR-view',
 	'Add/Change/Remove': 'js-eFCR2-view',
@@ -504,6 +507,9 @@ window.addEventListener('DOMContentLoaded', () => {
         formAdminDDP = document.querySelector('#formAdminDDP'),
         formFields = document.querySelector('#formFields'),
         formFieldsDDP = document.querySelector('#formFieldsDDP'),
+        ddpGroupID = document.querySelector('#ddpGroupID'),
+        ddpProjectID = document.querySelector('#ddpProjectID'),
+        ddpProjectDate = document.querySelector('#ddpProjectDate'),
         adminViewElems = document.querySelectorAll('.admin-view'),
         btnNewPrimeElem = document.querySelector('#btnNewPrimeElem'),
         btnEditPrimeElem = document.querySelector('#btnEditPrimeElem'),
@@ -1887,7 +1893,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	 */
 	function downloadFileWithDynamicForm(actionUrl, params, method = 'POST') {
 		const form = document.createElement('form');
-		form.style.display = 'none'; // Скрываем форму из видимости
+		form.style.display = 'none';
 		form.method = method;
 		form.action = actionUrl;
 
@@ -1954,6 +1960,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (showSection == '') return;
 		document.title = startDocumentTitle;
 		location.hash = showSection;
+		// console.log(addParams.pageName);
+		if (!!addParams.pageName) {
+			location.hash = addParams.pageName;
+		}
 		let idx = 0;
 		let additionalSectionProp = '';
 		showSection = showSection.replace(/\s+/g, '');
@@ -2182,7 +2192,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				templateDDP = 0;
 				ddpTemplate = 1;
 				displayDDPElements(false);
-				console.log(addParams);
 				iniDDP(addParams);
 				break;
 			case 'inventory':
@@ -2449,7 +2458,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			/* else if (currentHash === 'documentation' && !!rights[currentHash]) {
 				section = 'documentation';
 			} */
+
 			selectMenuItem(menu, section);
+			// selectMenuItem(target.parentNode, target.dataset.section, (!!target.dataset.subsection) ? target.dataset.subsection : false);
 			let paramSection = {};
 			try {
 				let sectionItem = document.querySelector(`li[data-section="${section}"]`);
@@ -3519,7 +3530,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				keyboard: true
 		  });
 		} else {
-			// console.log(data);
 		}
 	};
 
@@ -3744,6 +3754,8 @@ window.addEventListener('DOMContentLoaded', () => {
 							if (currentActivityItem.dataset.morStatus == '1') {
 								activityType = 'MOR';
 								// addMORToProject.disabled = false;
+							} else if (currentActivityItem.dataset.ddpStatus == '1') {
+								activityType = 'DDP';
 							} else {
 								activityType = 'DIP';
 							}
@@ -4945,6 +4957,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		formNewProject.classList.add('d-none');
 		activeProjects.querySelector('legend').textContent = 'Selected project';
 		projectGroupName = '';
+		document.querySelector('#activityID').value = data.success.answer.detail.id;
 		displayDDPElements(false);
 		if (data.success && data.success.answer) {
 			let fieldProps = [];
@@ -4970,6 +4983,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				showActivityFields(dataObject);
 				fillSelectField(selGroupsDDP, data.success.answer.detail.element, true);
 				fillSelectField(selActivityDDP, data.success.answer.detail.activity, true);
+				fillUploadedFiles(data.success.answer.detail.files);
 				fillMultirows();
 				if (data.success.answer.detail.status === 2) {
 					ddpFormSubmit.dataset.projectDownload = '1';
@@ -5031,11 +5045,6 @@ window.addEventListener('DOMContentLoaded', () => {
 					formMor.querySelector(`#${elementId}`).value = formMor.querySelector(`#${elementId}`).dataset.baseValue;
 				});
 			}, 0);
-			// console.log(morSite.options[morSite.selectedIndex]);
-			
-			// console.log(morSite.options[morSite.selectedIndex]);
-			
-			// console.log(document.querySelector(`#mor_site_from`).value);
 			gSiteCode = morSite.value;
 
 			const arrParts = [];
@@ -5058,8 +5067,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				rowObject['mor_site_code'] = morSite.value;
 				arrParts.push(rowObject);
 			}
-			// console.log(morSite.options[morSite.selectedIndex]);
-			// mor_requestor.dispatchEvent(new Event('change'));
 		// }
 	}
 
@@ -5289,7 +5296,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	morSelector.addEventListener('change', function(e) {
 		console.log('morSelector');
 		const target = e.target;
-		console.log(target.dataset.morType);
 		if (target.dataset.morType == undefined || target.dataset.morType != target.options[target.selectedIndex].dataset.morType) {
 			target.dataset.morType = target.options[target.selectedIndex].dataset.morType;
 			switchMORTables(target.dataset.morType);
@@ -5616,11 +5622,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		formData.append('method', 'loadMORCA');
 		formData.append('env', 'mor');
 		sendFile('POST', requestURLMOR, formData).then((data) => {
+			let morType = '';
 			[loadExcelCA,loadExcelRCPC,loadExcelSite].forEach(file_elem => {
 				file_elem.disabled = false;
+				morType = file_elem.dataset.morType;
 				if (data.success && data.success.answer) {
 					document.querySelector('.mor-uploads-status').textContent = `${data.success.table} ${data.success.answer}`; 
-					if (data.success.answer == 'loaded') {
+					if (data.success.answer.toLowerCase().includes('loaded')) {
 						document.querySelector('.mor-uploads-status').classList.add('bg-success');
 						document.querySelector('.mor-uploads-status').classList.remove('bg-warning');
 					} else {
@@ -5630,6 +5638,9 @@ window.addEventListener('DOMContentLoaded', () => {
 					}
 				}
 			});
+			if (formData.get('morType') == 'rcpc') {
+				getMORData('rcpc');
+			}
 			e.target.reset();
 		});
 		formMor.reset();
@@ -6153,9 +6164,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		dataTableInventory.ajax.reload();
 	};
 
-	const iniMOR = (addParams) => {
+	const iniMOR = async (addParams) => {
 		formMor.reset();
-		iniMORTables();
+		await iniMORTables();
 		
 		sendRequest('POST', requestURLMOR, {
 			method: 'getMORUserGroups',
@@ -6200,9 +6211,22 @@ window.addEventListener('DOMContentLoaded', () => {
 			caTable = data.success.answer.slice();
             morCA.value = '';
 		});
-		body.value = 'rcpc';
+		// body.value = 'rcpc';
+		// await sendRequest('POST', requestURLMOR, body).then((data) => {
+		// 	rcpcTable = data.success.answer.slice();
+		// });
+		await getMORData('rcpc');
+	}
+	async function getMORData(table_type) {
+		const body = {
+			method: 'getMORData',
+			env: 'mor',
+			value: table_type
+		};
 		await sendRequest('POST', requestURLMOR, body).then((data) => {
-			rcpcTable = data.success.answer.slice();
+			if(table_type == 'rcpc') {
+				rcpcTable = data.success.answer.slice();
+			}
 		});
 	}
 
@@ -6230,8 +6254,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	// };
 
 	const switchMORTables = (mor_id, raiseMorSiteEvent = true) => {
-		// console.log('switchMORTables',mor_id);
-		// morInnerBody.textContent = '';
 		while (morInnerBody.firstChild) {
 			morInnerBody.removeChild(morInnerBody.firstChild);
 		}
@@ -6410,18 +6432,25 @@ window.addEventListener('DOMContentLoaded', () => {
 			sendRequest('POST', requestURLProject, body).then((data) => {
 				if (data && data.success && data.success.answer && data.success.answer.detail) {
 					const projectActId = data.success.answer.detail.id;
-					const fileInput = document.querySelector('#diagram');
-					if (projectActId && fileInput && fileInput.files.length > 0) {
-						const formData = new FormData();
-						formData.append('diagram', fileInput.files[0]);
-                 		formData.append('id', data.success.answer.detail.project_id);
-                 		formData.append('activity_id', projectActId);
-                 		formData.append('method', 'addFileToActivity');
-                 		formData.append('target', 'diagram');
-						sendFile('POST', requestURLProject, formData);
-						// .then((data) => {
-						// });
+					let files_upload_list = [];
+					if (ddpTemplate == 1) {
+						files_upload_list = [...filesDDP];
+					} else {
+						files_upload_list = [...filesDIP];
 					}
+					files_upload_list.forEach(element => {
+						const fileInput = document.querySelector(`#${element}`);
+						if (projectActId && fileInput && fileInput.files.length > 0) {
+							const formData = new FormData();
+							formData.append(element, fileInput.files[0]);
+							formData.append('id', data.success.answer.detail.project_id);
+							formData.append('activity_id', projectActId);
+							formData.append('method', 'addFileToActivity');
+							formData.append('target', element);
+							sendFile('POST', requestURLProject, formData);
+						}
+					});
+
 				}
 				iniProjectsInfo();
 			});	
@@ -6731,7 +6760,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	morReset.addEventListener('click', (e) => {
-		console.log('button reset');
 		formMor.reset();
 		if (projectsMode == 1) {
 			const body = prepareChangeProjectBody({
@@ -6774,9 +6802,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		const workForm = e.target.closest('form');
 		if (workForm && workForm.reportValidity()) {
 			if (e.target.innerText == 'Create') {
-				saveMORData(workForm, e.target);
-			} else {
+				// saveMORData(workForm, e.target);
 				formMor.requestSubmit();				
+			} else {
 			}
 		}
 	});
@@ -6790,9 +6818,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		downloadFileWithDynamicForm(requestURLProject, body, 'POST');
 	}
-	// function getProjectActivity() {
-		
-	// }
 	function saveMORData(formFilled, createBtn = null) {
 		if (formFilled.reportValidity()) {
 			try {
@@ -6869,7 +6894,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 		}
 		morCollectParts.value = '0';
-		// console.log("resetMORForm", morSite.options[morSite.selectedIndex]);
 	}
 
 	formFields.addEventListener('submit', (e) => {
@@ -6903,6 +6927,11 @@ window.addEventListener('DOMContentLoaded', () => {
 				'project_id': activityProjectID,
 				'group_id': activityGroupID
 			});
+		} else if (projectsMode == 1 && ddpFormSubmit.dataset.projectDownload === '1') {
+			getProjectDocs([{
+				'activityId': document.querySelector('#activityID').value,
+				'activityType': 'DDP',
+			}]);
 		} else {
 			submitRenderForm(target, gActivityID);
 		}
@@ -7268,16 +7297,22 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	function onDateSelected(date, formFields_) {
-		submitAdminForm(formFields_, gActivityID, {
-			'mode': 1,
-			'target_date': date,
-			'project_id': activityProjectID,
-			'group_id': activityGroupID
-		});
+		// if (formFields_.id == 'formFieldsDDP') {
+		// 	ddpGroupID.value = activityGroupID;
+		// 	ddpProjectID.value = activityProjectID;
+		// 	ddpProjectDate.value = date;
+		// 	submitRenderForm(target, gActivityID);
+		// } else {
+			submitAdminForm(formFields_, gActivityID, {
+				'mode': 1,
+				'target_date': date,
+				'project_id': activityProjectID,
+				'group_id': activityGroupID
+			});
+		// }
 	}
 
 	function genRowParts(trId, arrParts = []) {
-		// console.log('genRowParts');
 		const isEmpty = !Array.isArray(arrParts) || arrParts.length === 0;
 		const items = isEmpty ? [{}] : arrParts;
 		
@@ -7336,7 +7371,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 	
 	mor_requestor.addEventListener('change', (e) => {
-		console.log('mor_requestor', morSite.value);
 		const fillMorContact = (element, value) => {
 			if (element.value.trim() == '') {
 				element.value = value;
@@ -7359,8 +7393,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	function morSite2Sites() {
 		const target = morSite;
 		try {
-			// console.log("morSite2Sites", target.value);
-			// const id = (target.options[target.selectedIndex] !== undefined) ? parseInt(target.options[target.selectedIndex].dataset.id, 10) : siteTable[0].id;
 			if (target.options[target.selectedIndex] !== undefined) {
 				const id = parseInt(target.options[target.selectedIndex].dataset.id, 10);
 				const siteIdx = siteTable.findIndex(site => parseInt(site.id, 10) === id);
@@ -7442,6 +7474,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				// gProjectNumber = target.value.trim();
 				morProjectNum.value = target.value.trim();
 			} else {
+				morPartList.textContent = '';
 				morPartList.classList.add('d-none'); 
 			}
 		}

@@ -1615,6 +1615,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
     }
 	function runInsertBulk($tableName, $tableFields, $rows, $refreshTable = true) {
 		$chunkSize = 100;
+		$sql ="";
 		$chunks = array_chunk($rows, $chunkSize);
 		try {
 			$this->pdo->beginTransaction();
@@ -1641,7 +1642,7 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 				$stmt->execute($params);
 			}
 			$this->pdo->commit();
-			return 'loaded';
+			return 'loaded ' . count($rows) . ' rows';
 		} catch (\PDOException $e) 
 		{
 			$this->setSQLError($e, 'SQL error. "' . $sql);

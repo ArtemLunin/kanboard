@@ -149,7 +149,7 @@ class helperUtils {
 		return implode(',', $backquoted_fields);
 	}
 
-	function isInt($val) {
+	function isInt(string $val) {
 		return filter_var($val, FILTER_VALIDATE_INT, ["flags" => FILTER_NULL_ON_FAILURE, "options" => ["min_range" => 1]]) ?? 0;
 	}
 
@@ -191,6 +191,38 @@ class helperUtils {
 		}
 	}
 
+    static function addImageToProjectFile($extTemplateProcessor, $fieldImage) {
+		// if (is_uploaded_file($fieldImage['file_name'])) {
+			try {
+				$maxWidth = 600; 
+				$maxHeight = 700;
+				$size = getimagesize($fieldImage['path']);
+				
+				$sourceWidth = $size[0];
+				$sourceHeight = $size[1];
+				$ratioW = $maxWidth / $sourceWidth;
+				$ratioH = $maxHeight / $sourceHeight;
+				$scale = min($ratioW, $ratioH);
+				if ($scale > 1) {
+					$scale = 1;
+				}
+				$targetWidth = (int)round($sourceWidth * $scale); 
+				$targetHeight = (int)round($sourceHeight * $scale);
+				$extTemplateProcessor->setImageValue($fieldImage['target'], [
+					'path' => $fieldImage['path'],
+					'width' => $targetWidth, 
+					'height' => $targetHeight,
+					'ratio'  => true
+				]);
+			}
+			catch (Exception $e) {
+				$extTemplateProcessor->setValue($fieldImage['target'], $fieldImage['noFileMsg']);
+			}
+		// } else {
+		// 	$extTemplateProcessor->setValue($fieldImage['field_name'], $fieldImage['noFileMsg']);
+		// }
+	}
+
 	static function setSimpleValueToDoc($extTemplateProcessor, $param, $value) {
 		$extTemplateProcessor->setValue($param, htmlentities($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
 	}
@@ -200,6 +232,8 @@ class helperUtils {
 				$values[$val_idx][$par_name] = htmlentities($par_value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8");
 			}
 		}
+        // error_log(date("Y-m-d H:i:s") . " ". print_r($param, true));
+        // error_log(date("Y-m-d H:i:s") . " ". print_r($values, true));
 		$extTemplateProcessor->cloneRowAndSetValues($param, $values);
 	}
     static function getLinesFromTextArea($taText) {
@@ -285,7 +319,7 @@ class helperUtils {
             }
         }
     } 
-    function writeDOCX($requestArr, $files_arr, $templateProcessor, $db_object) {
+    function writeDOCX($requestArr, $files_arr, $templateProcessor, $db_object, $activityType = '') {
         $nodes_list = [];
         $efcrFieldsArr = [];
         $efcrFile = file('template/eFCR.txt');
@@ -375,6 +409,8 @@ class helperUtils {
                     $pingtest_cgw_ver = $arr_dgw_cgw['cgw_verification'];
                     $nodes_list = $arr_dgw_cgw['nodes_list'];
                 } else {
+                    // $this->errorLog($param);
+                    // $this->errorLogObj($values);
                     self::setArrayValuesToDoc($templateProcessor, $param, $values);
                 }
             } elseif (!isset($arrayBlocks[$param])) {
@@ -410,23 +446,36 @@ class helperUtils {
 
             $templateProcessor->cloneBlock('implementationCheckList', 0, true, false, genCMDBlock(array_merge($pingtest_dgw, $pingtest_cgw), 'implementationCommandList'));
         }
-
         if (count($files_arr) > 0) {
             foreach ($files_arr as $file_) {
-                 $db_object->errorLogObj($file_);
-                try {
-                    $templateProcessor->setImageValue($file_['target'], array(
-                        'path' => $db_object->getProjectFilesPath() . '/' . $file_['name'],
-                        'width' => 400, 'height' => 200,
-                    ));
+                if ($activityType == '') { //images for DIP
+                    try {
+                        $templateProcessor->setImageValue($file_['target'], array(
+                            'path' => $db_object->getProjectFilesPath() . '/' . $file_['name'],
+                            'width' => 400, 'height' => 200,
+                        ));
+                    }
+                    catch (\Throwable $e) {
+                        $templateProcessor->setValue($file_['target'], '');
+                    } 
+                } elseif ($activityType == 'DDP') {
+                    // try {
+                        \helperUtils\helperUtils::addImageToProjectFile($templateProcessor, [
+                            'target' => $file_['target'],
+                            'path' => $db_object->getProjectFilesPath() . '/' . $file_['name'],
+                            'width' => 600,
+                            'height' => 200,
+                            'noFileMsg' => 'N/A']);
+                    // } catch (Throwable $e) {
+                    //     $templateProcessor->setValue($file_['target'], '');
+                    // } 
                 }
-                catch (Throwable $e) {
-                    $templateProcessor->setValue($file_['target'], '');
-                } 
-            }
-        } else {
-            $templateProcessor->setValue('diagram', '');
+            } 
+            $templateProcessor->setValue($file_['target'], '');
+            // else {
+        // }
         }
+        $templateProcessor->setValue('diagram', '');
 
         $templateProcessor->setValue('FCR_addedText', htmlentities('', ENT_QUOTES | ENT_SUBSTITUTE | ENT_XML1, "UTF-8"));
         $templateProcessor->cloneBlock('testPingNewInterfaces', 0, true, true);

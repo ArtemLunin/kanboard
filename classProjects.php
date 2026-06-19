@@ -170,10 +170,12 @@ class ProjectUtils extends \helperUtils\helperUtils {
     }
 
     private function removeGroupFromProjectByGroup($projectID, $groupID) {
-        $project_activities = $this->getProjectsActivity($projectID);
-        if ($project_activities) {
-            foreach ($project_activities as $activity_) {
-                $this->removeActivityFromProjectByID($activity_['id']);
+        $project_activities = $this->getProjectsActivity($projectID, $groupID);
+        if ($project_activities['detail']) {
+            foreach ($project_activities['detail'] as $activity_) {
+                if ($activity_['status'] == '0') {
+                    $this->removeActivityFromProjectByID($activity_['id']);
+                }
             }
             $this->logProject($projectID, 'group `' . $this->getGroupName($groupID) . '` was removed from project `' . $this->getProjectName($projectID) . '` by user `' . $this->userName . '`');
             return $this->getProjectsActivity($projectID);
@@ -185,8 +187,8 @@ class ProjectUtils extends \helperUtils\helperUtils {
         $this->removeFileFromProjectActivity($activityID);
         return $this->db_object_project->removeObjectFromTableFilter($this->tProjectsActivity["tableName"], ["id" => $activityID]);
     }
-    private function removeFileFromProjectActivity($activityID) {
-        if (($files_list = $this->getFilesListFromProjectActivity($activityID)) && count($files_list) > 0) {
+    private function removeFileFromProjectActivity($activityID, $activityTarget = '') {
+        if (($files_list = $this->getFilesListFromProjectActivity($activityID, $activityTarget)) && count($files_list) > 0) {
             if ($this->db_object_project->removeObjectFromTableFilter($this->tProjectsFiles["tableName"], ["activity_id" => $activityID])) {
                 foreach ($files_list as $key => $file_) {
                     try {
@@ -200,9 +202,17 @@ class ProjectUtils extends \helperUtils\helperUtils {
         }
         return false;
     }
-    private function getFilesListFromProjectActivity($activityID) {
+    private function getFilesListFromProjectActivity($activityID, $activityTarget = '') {
         $files_list = [];
-        $table_res = $this->db_object_project->selectObjectFromTable($this->tProjectsFiles["tableName"], ["activity_id" => $activityID]);
+        $filters_arr = [];
+        // $temp_arr = [];
+        $filters_arr["activity_id"] = $activityID;
+        // $filters_arr[] = ["activity_id" => $activityID];
+        if ($activityTarget != '') {
+            // $filters_arr[] = ["activity_target" => $activityTarget];
+            $filters_arr["activity_target"] = $activityTarget;
+        }
+        $table_res = $this->db_object_project->selectObjectFromTable($this->tProjectsFiles["tableName"], $filters_arr);
         if ($table_res && count($table_res) > 0) {
             foreach ($table_res as $table_row) {
                 $files_list[] = [
@@ -213,13 +223,13 @@ class ProjectUtils extends \helperUtils\helperUtils {
         }
         return $files_list;
     }
-    function addFileToProjectActivity($projectID, $activityID, $fileName, $target) {
+    function addFileToProjectActivity($projectID, $activityID, $fileName, $activityTarget) {
         if ($this->userCanEditProject($projectID)) {
-            $this->removeFileFromProjectActivity($activityID);
+            $this->removeFileFromProjectActivity($activityID, $activityTarget);
             $uploadedFileName = bin2hex(random_bytes(5));
             $fields_obj = [
                 "activity_id" => $activityID,
-                "activity_target" => $target,
+                "activity_target" => $activityTarget,
                 "file_name" => $uploadedFileName,
             ];
             if ($this->db_object_project->addObjectToTable($this->tProjectsFiles["tableName"], $fields_obj) != false){
@@ -265,13 +275,14 @@ class ProjectUtils extends \helperUtils\helperUtils {
         $sql = "SELECT " . $selected_fields ." FROM " . $this->tProjects["tableName"]. " AS t1," . $this->tUsers["tableName"] . " AS t2 WHERE " . $filtered_arr['filter'] . " AND t1.`user_id`=t2.`id`";
         return $this->db_object_project->getSQL($sql, $filtered_arr['params']);
     }
-    function getProjectsActivity($projectID = 0) {
+    function getProjectsActivity($projectID = 0, $groupID = 0) {
         $activiry_res = [
             "info" => [],
             "detail" => []
         ];
         $project_info = [];
         $filters = [];
+        $filters_activity = [];
         // if ($projectID === 0) {
         //     $project_info = $this->getProjectsList();
         // } else {
@@ -282,7 +293,11 @@ class ProjectUtils extends \helperUtils\helperUtils {
         }
         $project_info = $this->getProjectsList($filters);
         if ($project_info && count($project_info) > 0) {
-            $project_activities = $this->db_object_project->selectObjectFromTable($this->tProjectsActivity["tableName"], ["project_id" => $project_info[0]['id']], $this->tProjectsActivity["fields"], ["group_idx"]);
+            $filters_activity["project_id"] = $project_info[0]['id'];
+            if ($groupID !== 0) {
+                $filters_activity["group_id"] = $groupID;
+            }
+            $project_activities = $this->db_object_project->selectObjectFromTable($this->tProjectsActivity["tableName"], $filters_activity, $this->tProjectsActivity["fields"], ["group_idx"]);
             $activiry_res["info"] = $project_info[0];
             $activiry_res["detail"] = $project_activities;
         }

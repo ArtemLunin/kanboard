@@ -25,7 +25,8 @@ set_error_handler('exceptions_error_handler');
 $out_res = [];
 $param_error_msg['answer'] = false;
 $userID = 0;
-$availImgTypes = ['image/png','image/jpeg'];
+// $availImgTypes = ['image/png','image/jpeg'];
+$availImgTypes = ['png','jpeg', 'jpg', 'docx'];
 
 function isInt($val) {
     return filter_var($val, FILTER_VALIDATE_INT, ["flags" => FILTER_NULL_ON_FAILURE, "options" => ["min_range" => 1]]) ?? 0;
@@ -55,6 +56,9 @@ if ($userID === 0) {
     echo json_encode($out_res);
     exit;
 }
+$value = '';
+$number = '';
+$text_field  = '';
 $contentType = isset($_SERVER['CONTENT_TYPE']) ? trim($_SERVER['CONTENT_TYPE']) : '';
 if (stripos($contentType, 'application/json') === 0) {
 $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
@@ -82,6 +86,14 @@ $text_field = trim($paramJSON['text_field'] ?? '');
             $groups[] = json_decode($group, true);
         }
     }
+}
+
+$fileUploadedName = '';
+$fileUploadedType = '';
+if (isset($_FILES) && count($_FILES) > 0) {
+    $keys = array_keys($_FILES);
+    $fileUploadedName = $_FILES[$keys[0]]['tmp_name'];
+    $fileUploadedType = strtolower(pathinfo($_FILES[$keys[0]]['name'], PATHINFO_EXTENSION));
 }
 
 
@@ -123,7 +135,7 @@ if ($method !== 0 && $method !== 'getProjectDocs')
         $param_error_msg['answer'] = $project_object->removeUserFromGroup($user_name, $group_id);
     } elseif ($method === 'removeGroup' && $id) {
         $param_error_msg['answer'] = $project_object->removeGroup($id);
-    } elseif ($method === 'addFileToActivity' && $id && $activity_id && ($file_upload = $_FILES['diagram']['tmp_name']) != '' && is_uploaded_file($file_upload) && (in_array($_FILES['diagram']['type'], $availImgTypes))) {
+    } elseif ($method === 'addFileToActivity' && $id && $activity_id && ($file_upload = $fileUploadedName) != '' && is_uploaded_file($file_upload) && (in_array($fileUploadedType, $availImgTypes))) {
         $param_error_msg['answer'] = $project_object->addFileToProjectActivity($id, $activity_id, $file_upload, $target);
     }
     $out_res = ['success' => $param_error_msg];
@@ -161,6 +173,18 @@ if ($method !== 0 && $method !== 'getProjectDocs')
                     $templateProcessor = $project_object->writeDOCX($field_json_props, $project_activity["detail"]["files"], $templateProcessor, $project_object);
                     $templateProcessor->saveAs($filename);
                     helperUtils\DocxProcessor::removeIncludedObjFromDocx($filename);
+                    $filesOut[] = [
+                        'tmp_name' => $filename, 
+                        'activityType' => $group['activityType'], 
+                        'group_name'    => $group_name,
+                        'file_type' => 'docx'
+                    ];
+                } elseif ($group['activityType'] === 'DDP') {
+                    $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/ddp_template.docx');
+                    $filename = tempnam(sys_get_temp_dir(), 'docx');
+                    $templateProcessor = $project_object->writeDOCX($field_json_props, $project_activity["detail"]["files"], $templateProcessor, $project_object, $group['activityType']);
+                    $templateProcessor->saveAs($filename);
+                    // helperUtils\DocxProcessor::removeIncludedObjFromDocx($filename);
                     $filesOut[] = [
                         'tmp_name' => $filename, 
                         'activityType' => $group['activityType'], 

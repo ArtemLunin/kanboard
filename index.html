@@ -1770,6 +1770,9 @@
 							</fieldset>
 						</form>
 						<form method="post" action="ddp_render.php" id="formFieldsDDP" enctype="multipart/form-data">
+							<input type="hidden" name="ddpGroupID" id="ddpGroupID" value="0">
+							<input type="hidden" name="ddpProjectID" id="ddpProjectID" value="0">
+							<input type="hidden" name="ddpProjectDate" id="ddpProjectDate" value="0">
 							<fieldset id="group101" class="">
 								<legend>Project Info</legend>
 								<div class="param param-half">
@@ -1823,6 +1826,7 @@
 									</label>
 								</div>
 								<input type="file" class="mop renderOnly" id="diagram_hl" name="diagram_hl" accept="image/png, image/jpeg" />
+								<span class="mop bg-success js-project-files" data-file-id="diagram_hl"></span>
 							</fieldset>
 							<fieldset id="group103" class="hidden">
 								<legend>Site Level Drawing (png/jpeg)</legend>
@@ -1833,6 +1837,7 @@
 									</label>
 								</div>
 								<input type="file" class="mop renderOnly" id="diagram_sl" name="diagram_sl" accept="image/png, image/jpeg" />
+								<span class="mop bg-success js-project-files" data-file-id="diagram_sl"></span>
 							</fieldset>
 							<fieldset id="group104" class="hidden">
 								<legend>Materials</legend>
@@ -1899,6 +1904,7 @@
 								<div class="param renderOnly">
 									<label for="diagram_hw">Diagram Hardware (png/jpeg)</label>
 									<input type="file" class="mop renderOnly" id="diagram_hw" name="diagram_hw" accept="image/png, image/jpeg" />
+									<span class="mop bg-success js-project-files" data-file-id="diagram_hw"></span>
 									<label for="hardwareCaption">Hardware caption</label>
 									<input type="text" class="mop" name="hardwareCaption" id="hardwareCaption" value="">
 								</div>
@@ -1912,7 +1918,8 @@
 								</div>
 								<div class="param param-full renderOnly">
 									<label for="floor_plan">Floor Plan (docx)</label>
-									<input type="file" class="mop renderOnly" id="floor_plan" name="floor_plan[]" accept=".docx" />
+									<input type="file" class="mop renderOnly" id="floor_plan" name="floor_plan" accept=".docx" />
+									<span class="mop bg-success js-project-files" data-file-id="floor_plan"></span>
 								</div>
 								<div class="param param-full">
 									<label for="powerReq">Power Requirements</label>
