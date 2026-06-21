@@ -29,6 +29,74 @@ const groupsDDP = {
 	"transport": "DDP_transport"
 };
 
+/** 
+* @typedef {Object} subGroups
+* @property {string} 'tPre-DDP' - group
+* @property {string} 'sPre-DDP' - group
+* @property {string} 'cPre-DDP' - group
+*/
+const subGroups = {
+	"tPre-DDP": {
+		"section": "ddp",
+		"groupName": "transport"
+	},
+	"sPre-DDP": {
+		"section": "ddp",
+		"groupName": "sde"
+	},
+	"cPre-DDP": {
+		"section": "ddp",
+		"groupName": "ipcore"
+	},
+	"templateDDP": {
+		"section": "templateDDP",
+		"groupName": "transport",
+		"pageName": "tPre-DDP Template",
+	},
+	"tMOR": {
+		"section": "mor",
+		"groupName": "transport"
+	},
+	"sMOR": {
+		"section": "mor",
+		"groupName": "sde"
+	},
+	"cMOR": {
+		"section": "mor",
+		"groupName": "ipcore"
+	},
+	"tdip": {
+		"section": "tdip",
+		"groupName": "transport",
+		"pageName": "tZTM",
+	},
+	"dip": {
+		"section": "dip",
+		"groupName": "sde",
+		"pageName": "sZTM",
+	},
+	"cdip": {
+		"section": "cdip",
+		"groupName": "ipcore",
+		"pageName": "cZTM",
+	},
+	"templatetDIP": {
+		"section": "templatetDIP",
+		"groupName": "transport",
+		"pageName": "tZTM Template",
+	},
+	"templatecDIP": {
+		"section": "templatecDIP",
+		"groupName": "ipcore",
+		"pageName": "cZTM Template",
+	},
+	"templateDIP": {
+		"section": "templateDIP",
+		"groupName": "sde",
+		"pageName": "sZTM Template",
+	},
+}
+
 const filesDDP = ["diagram_hl", "diagram_sl", "diagram_hw", "floor_plan"];
 const filesDIP = ["diagram"];
 
@@ -1885,9 +1953,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		return null;
 	};
-		/**
+	/**
 	 * Динамически создает и отправляет форму для скачивания файла
-	 * * @param {string} actionUrl - URL обработчика на сервере (например, 'render.php')
+	 * @param {string} actionUrl - URL обработчика на сервере (например, 'render.php')
 	 * @param {Object} params - Объект с данными формы { name: value }
 	 * @param {string} method - Метод отправки ('POST' или 'GET')
 	 */
@@ -1958,9 +2026,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	const toggleSection = (showSection, addParams = {}) => {
 		if (showSection == '') return;
+		// console.log(showSection);
+		// console.log(addParams);
 		document.title = startDocumentTitle;
 		location.hash = showSection;
-		// console.log(addParams.pageName);
 		if (!!addParams.pageName) {
 			location.hash = addParams.pageName;
 		}
@@ -2014,7 +2083,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		projectsMode = 0;
 		formSave.classList.add('d-none');
 		ddpFormSave.classList.add('d-none');
-
+		console.log(showSection);
 		switch (showSection) {
 			case 'main':
 				if (!section[idx].dataset['showned']) {
@@ -2068,6 +2137,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				break;
 			case 'templateDIP':
 				document.title = `${sde_ztm_name} Template`;
+				location.hash = showSection;
 				templateDip = 1;
 				displayMOPElements(true);
 				iniOGPA();
@@ -2088,6 +2158,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				break;
 			case 'templatecDIP':
 				document.title = `${ipcore_ztm_name} Template`;
+				location.hash = showSection;
 				templateDip = 1;
 				cTemplate = 2;
 				displayMOPElements(true);
@@ -2095,6 +2166,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				break;
 			case 'templatetDIP':
 				document.title = `${transport_ztm_name} Template`;
+				location.hash = showSection;
 				templateDip = 1;
 				tTemplate = 1;
 				displayMOPElements(true);
@@ -2140,12 +2212,12 @@ window.addEventListener('DOMContentLoaded', () => {
 				docTitle.value = 'Zero Touch MOP (ZTM)';
 				templateDip = 0;
 				tTemplate = 1;
-				// gCounterMode = "mopCounter";
 				displayMOPElements(false);
 				iniOGPA();
 				break;
 			case 'dip':
 				document.title = `${sde_ztm_name}`;
+				location.hash = showSection;
 				// docTitle.value = 'Design Implementation Procedure (DIP)';
 				docTitle.value = 'Zero Touch MOP (ZTM)';
 				templateDip = 1;
@@ -2182,6 +2254,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				break;
 			case 'templateDDP':
 				document.title = 'Template DDP';
+				location.hash = showSection;
 				templateDDP = 1;
 				ddpTemplate = 1;
 				displayDDPElements(true);
@@ -2203,11 +2276,14 @@ window.addEventListener('DOMContentLoaded', () => {
 				iniProjects();
 				break;
 			case 'mor':
-				document.title = addParams.pageName;
+				// document.title = addParams.pageName;
 				iniMOR(addParams);
 				break;
 			default:
 				break;
+		}
+		if (!!addParams.pageName) {
+			document.title = addParams.pageName;
 		}
 	};
 
@@ -2299,6 +2375,8 @@ window.addEventListener('DOMContentLoaded', () => {
 		let subMenuClass_ = '';
 		if (data) {
 			menu.textContent = '';
+			let tStatus = 0, cStatus = 0, sStatus = 0;
+			let tMenu = 0, cMenu = 0, sMenu = 0;
 			if (!!data.success) {
 				if (data.success.answer.user === 'defaultUser') {
 					currentHash = '';
@@ -2312,9 +2390,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				data.success.answer.rights.forEach(({pageName, sectionAttr, sectionName, accessType}) => {
 					if (pageName !== 'Documentation' && sectionName !== 'main')
 					{
-						let tStatus = 0, 
-							cStatus = 0,
-							sStatus = 0;
 						if (pageName.toUpperCase() === 'TRANSPORT') {
 							tStatus = 1;
 						} else if (pageName.toUpperCase() === 'IP CORE') {
@@ -2349,17 +2424,24 @@ window.addEventListener('DOMContentLoaded', () => {
 								collapsableTMenu.push(fillSimpleMenuItem('templatetDIP', accessType, add_attrs, `${transport_ztm_name} Template`));
 								collapsableTMenu.push(fillSimpleMenuItem('tdip', accessType, add_attrs, `${transport_ztm_name}`));
 								collapsableTMenu.push(fillSimpleMenuItem('mor', accessType, 'data-group-name="transport" data-page-name="tMOR"', 'tMOR'));
+								collapsableTMenu.push(fillSimpleMenuItem('templateDDP', accessType, 'data-group-name="transport" data-page-name="tPre-DDP Template"', 'tPre-DDP Template'));
 								collapsableTMenu.push(fillSimpleMenuItem('ddp', accessType, 'data-group-name="transport" data-page-name="tPre-DDP"', 'tPre-DDP'));
+								tStatus = 0;
+								tMenu = 1;
 							} else if (cStatus == 1) {
 								collapsableCMenu.push(fillSimpleMenuItem('templatecDIP', accessType, add_attrs, `${ipcore_ztm_name} Template`));
 								collapsableCMenu.push(fillSimpleMenuItem('cdip', accessType, add_attrs, `${ipcore_ztm_name}`));
-								collapsableCMenu.push(fillSimpleMenuItem('mor', accessType, 'data-group-name="ip core" data-page-name="cMOR"', 'cMOR'));
-								collapsableCMenu.push(fillSimpleMenuItem('ddp', accessType, 'data-group-name="ip core" data-page-name="cPre-DDP"', 'cPre-DDP'));
+								collapsableCMenu.push(fillSimpleMenuItem('mor', accessType, 'data-group-name="ipcore" data-page-name="cMOR"', 'cMOR'));
+								collapsableCMenu.push(fillSimpleMenuItem('ddp', accessType, 'data-group-name="ipcore" data-page-name="cPre-DDP"', 'cPre-DDP'));
+								cStatus = 0;
+								cMenu = 1;
 							} else if (sStatus == 1) {
 								collapsableSMenu.push(fillSimpleMenuItem('templateDIP', accessType, add_attrs, `${sde_ztm_name} Template`));
 								collapsableSMenu.push(fillSimpleMenuItem('dip', accessType, add_attrs, `${sde_ztm_name}`));
 								collapsableSMenu.push(fillSimpleMenuItem('mor', accessType, 'data-group-name="sde" data-page-name="sMOR"', 'sMOR'));
 								collapsableSMenu.push(fillSimpleMenuItem('ddp', accessType, 'data-group-name="sde" data-page-name="sPre-DDP"', 'sPre-DDP'));
+								sStatus = 0;
+								sMenu = 1;
 							} else {
 								menu.insertAdjacentHTML('beforeend', simpleMenuItem);
 							}
@@ -2373,11 +2455,6 @@ window.addEventListener('DOMContentLoaded', () => {
 									data-subsection="${value[2]}" class="${subMenuClass}">- ${key}</li>
 									`);
 									ins_pos++;
-									// menu.insertAdjacentHTML('beforeend', `<li data-section="${sectionAttr}" 
-									// data-visible-name="${key}" 
-									// data-access="${accessType}" data-element="${value[0]}" data-activity="${value[1]}"
-									// data-subsection="${value[2]}" class="${subMenuClass}">- ${key}</li>
-									// `);
 								}
 							}
 							if (sectionName === 'excel')
@@ -2419,26 +2496,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				if (collapsableSMenu.length > 0) {
 					menu.insertAdjacentHTML('beforeend', genCollapsableMenu('SDE', collapsableSMenu));
 				}
-					// let str_items = '';
-					// collapsableTMenu.forEach(item => {
-					// 	str_items += item;
-					// });
-					// menu.insertAdjacentHTML('beforeend', `
-					// 	<li class="menu-item">
-					// 		<div class="menu-header">
-					// 			<div class="menu-title-wrapper">
-					// 				<span>Transport</span>
-					// 			</div>
-					// 			<svg class="arrow-icon" viewBox="0 0 24 24">
-					// 				<path d="M7 10l5 5 5-5z"/>
-					// 			</svg>
-					// 		</div>
-					// 		<ul class="submenu">
-					// 			${str_items}
-					// 		</ul>
-					// 	</li>
-					// `);
-				// }
 			}
 			menu.insertAdjacentHTML('beforeend', `
 				<li data-section="${loginAction}">${capitalize(loginAction)}</li>
@@ -2448,17 +2505,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (!!rights[currentHash]) {
 				section = currentHash;
 			}
-			// if (currentHash === 'automator' && !!rights[currentHash]) {
-			// 	section = 'automator';
-			// } else if (currentHash === 'services' && !!rights[currentHash]) {
-			// 	section = 'services';
-			// } else if (currentHash === 'status' && !!rights[currentHash]) {
-			// 	section = 'status';
-			// }
 			/* else if (currentHash === 'documentation' && !!rights[currentHash]) {
 				section = 'documentation';
 			} */
-
 			selectMenuItem(menu, section);
 			// selectMenuItem(target.parentNode, target.dataset.section, (!!target.dataset.subsection) ? target.dataset.subsection : false);
 			let paramSection = {};
@@ -2469,9 +2518,38 @@ window.addEventListener('DOMContentLoaded', () => {
 					paramSection.activity = sectionItem.dataset.activity;
 				}
 			} catch (e) {}
+			// console.log(section);
+			if ((tMenu == 1 && (currentHash == 'tPre-DDP' || currentHash == 'templateDDP' ||currentHash == 'tMOR'|| currentHash == 'tdip' || currentHash == 'templatetDIP')) || 
+				(cMenu == 1 && (currentHash == 'cPre-DDP' || currentHash == 'cMOR' || currentHash == 'cdip' || currentHash == 'templatecDIP'))||
+				(sMenu == 1 && (currentHash == 'sPre-DDP' || currentHash == 'sMOR' || currentHash == 'dip' || currentHash == 'templateDIP'))) {
+				const tempParams = fillParamsForMenu(currentHash);
+				section = tempParams.section;
+				paramSection.groupName = tempParams.groupName;
+				paramSection.pageName = tempParams.pageName;
+				// console.log(tempParams);
+			}
 			toggleSection(section, paramSection);
 		}
 	};
+	/**
+	 * * @param {string} cHash - currentHash
+	 * @returns {{section: string, groupName: string, pageName: string}} - object
+	 */
+	const fillParamsForMenu = (cHash) => {
+		// console.log(subGroups[cHash].section);
+		return {
+			section: subGroups[cHash].section,
+			groupName: subGroups[cHash].groupName,
+			pageName: (subGroups[cHash].pageName !== undefined) ? subGroups[cHash].pageName: cHash,
+		};
+	};
+	/**
+	 * * @param {string} section_attr - section name
+	 * * @param {string} access_type
+	 * * @param {string} add_attrs - additional attributes
+	 * * @param {string} page_name - additional attributes
+	 * @returns {string} li element
+	 */
 	const fillSimpleMenuItem = (section_attr, access_type, add_attrs, page_name) => {
 		return `
 		<li data-section="${section_attr}" data-access="${access_type}" ${add_attrs}>${page_name}</li>
@@ -4954,6 +5032,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function showProjectDDPForm(data, ogpaGroup = 0) {
+		console.log(data);
 		formNewProject.classList.add('d-none');
 		activeProjects.querySelector('legend').textContent = 'Selected project';
 		projectGroupName = '';
@@ -4971,8 +5050,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				ddpFormSubmit.dataset.projectDownload = '0';
 				ddpFormSave.classList.remove('d-none');
 				iniDDP({
-					"groupName": "sde",
-					"pageName": "sPre-DDP"
+					"groupName": projectGroupName.toLowerCase().replaceAll(' ', ''),
+					"pageName": data.success.answer.detail.group_real_name.toLowerCase()
 				});
 			} else {
 				const dataObject = {
@@ -5785,6 +5864,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const showOGPA = (data, extends_data) => {
+		console.log(data, extends_data);
 		selPrimeElement.textContent = '';
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(item => {
@@ -6106,6 +6186,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 	const iniOGPAActivity = (primeElemID, extends_data = '') => {
+		console.log(primeElemID);
 		const body = {
 			method: 'getOGPAActivity',
 			value: primeElemID
@@ -6167,14 +6248,14 @@ window.addEventListener('DOMContentLoaded', () => {
 	const iniMOR = async (addParams) => {
 		formMor.reset();
 		await iniMORTables();
-		
 		sendRequest('POST', requestURLMOR, {
 			method: 'getMORUserGroups',
 			env: 'mor',
 		}).then((data) => {
 			for (const group of data.success.answer.groups) {
 				const groupName = (addParams.groupName === undefined) ? false : addParams.groupName.toLowerCase();
-				if (groupName === group.group.toLowerCase()) {
+				console.log(groupName);
+				if (groupName === group.group.toLowerCase().replaceAll(' ', '')) {
 					// selMorGroup.insertAdjacentHTML('beforeend', `
 					// 	<OPTION value="${group.id}" data-group-id="${group.id}" selected>${group.group}</OPTION>
 					// `);
@@ -6243,6 +6324,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			value: Object.values(groupsDDP)		
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
+			// console.log(data);
 			showOGPA(data, addParams);
 		});
 	};
