@@ -48,10 +48,20 @@ const subGroups = {
 		"section": "ddp",
 		"groupName": "ipcore"
 	},
-	"templateDDP": {
-		"section": "templateDDP",
+	"templatetDDP": {
+		"section": "templatetDDP",
 		"groupName": "transport",
 		"pageName": "tPre-DDP Template",
+	},
+	"templatecDDP": {
+		"section": "templatecDDP",
+		"groupName": "ipcore",
+		"pageName": "cPre-DDP Template",
+	},
+	"templatesDDP": {
+		"section": "templatesDDP",
+		"groupName": "sde",
+		"pageName": "sPre-DDP Template",
 	},
 	"tMOR": {
 		"section": "mor",
@@ -2025,9 +2035,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const toggleSection = (showSection, addParams = {}) => {
-		if (showSection == '') return;
-		// console.log(showSection);
-		// console.log(addParams);
+		if (showSection == '' || showSection == undefined) return;
 		document.title = startDocumentTitle;
 		location.hash = showSection;
 		if (!!addParams.pageName) {
@@ -2065,7 +2073,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				) {
 				section[idx].append(renderMopDiv);
 			} else if (showSection === 'ddp' || 
-				showSection === 'templateDDP'
+				showSection === 'templateDDP' || 
+				showSection === 'templatetDDP'|| 
+				showSection === 'templatecDDP'|| 
+				showSection === 'templatesDDP'
 			) {
 				section[idx].append(renderDDPDiv);
 			} 
@@ -2083,7 +2094,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		projectsMode = 0;
 		formSave.classList.add('d-none');
 		ddpFormSave.classList.add('d-none');
-		console.log(showSection);
+		// console.log(showSection);
 		switch (showSection) {
 			case 'main':
 				if (!section[idx].dataset['showned']) {
@@ -2252,7 +2263,23 @@ window.addEventListener('DOMContentLoaded', () => {
 					iniOGPA(addParams);
 				}
 				break;
-			case 'templateDDP':
+			case 'templatetDDP':
+				document.title = 'Template DDP';
+				location.hash = showSection;
+				templateDDP = 1;
+				ddpTemplate = 1;
+				displayDDPElements(true);
+				iniDDP(addParams);
+				break;
+			case 'templatecDDP':
+				document.title = 'Template DDP';
+				location.hash = showSection;
+				templateDDP = 1;
+				ddpTemplate = 1;
+				displayDDPElements(true);
+				iniDDP(addParams);
+				break;
+			case 'templatesDDP':
 				document.title = 'Template DDP';
 				location.hash = showSection;
 				templateDDP = 1;
@@ -2424,7 +2451,7 @@ window.addEventListener('DOMContentLoaded', () => {
 								collapsableTMenu.push(fillSimpleMenuItem('templatetDIP', accessType, add_attrs, `${transport_ztm_name} Template`));
 								collapsableTMenu.push(fillSimpleMenuItem('tdip', accessType, add_attrs, `${transport_ztm_name}`));
 								collapsableTMenu.push(fillSimpleMenuItem('mor', accessType, 'data-group-name="transport" data-page-name="tMOR"', 'tMOR'));
-								collapsableTMenu.push(fillSimpleMenuItem('templateDDP', accessType, 'data-group-name="transport" data-page-name="tPre-DDP Template"', 'tPre-DDP Template'));
+								collapsableTMenu.push(fillSimpleMenuItem('templatetDDP', accessType, 'data-group-name="transport" data-page-name="tPre-DDP Template"', 'tPre-DDP Template'));
 								collapsableTMenu.push(fillSimpleMenuItem('ddp', accessType, 'data-group-name="transport" data-page-name="tPre-DDP"', 'tPre-DDP'));
 								tStatus = 0;
 								tMenu = 1;
@@ -2432,6 +2459,7 @@ window.addEventListener('DOMContentLoaded', () => {
 								collapsableCMenu.push(fillSimpleMenuItem('templatecDIP', accessType, add_attrs, `${ipcore_ztm_name} Template`));
 								collapsableCMenu.push(fillSimpleMenuItem('cdip', accessType, add_attrs, `${ipcore_ztm_name}`));
 								collapsableCMenu.push(fillSimpleMenuItem('mor', accessType, 'data-group-name="ipcore" data-page-name="cMOR"', 'cMOR'));
+								collapsableCMenu.push(fillSimpleMenuItem('templatecDDP', accessType, 'data-group-name="ipcore" data-page-name="cPre-DDP Template"', 'cPre-DDP Template'));
 								collapsableCMenu.push(fillSimpleMenuItem('ddp', accessType, 'data-group-name="ipcore" data-page-name="cPre-DDP"', 'cPre-DDP'));
 								cStatus = 0;
 								cMenu = 1;
@@ -2439,6 +2467,7 @@ window.addEventListener('DOMContentLoaded', () => {
 								collapsableSMenu.push(fillSimpleMenuItem('templateDIP', accessType, add_attrs, `${sde_ztm_name} Template`));
 								collapsableSMenu.push(fillSimpleMenuItem('dip', accessType, add_attrs, `${sde_ztm_name}`));
 								collapsableSMenu.push(fillSimpleMenuItem('mor', accessType, 'data-group-name="sde" data-page-name="sMOR"', 'sMOR'));
+								collapsableSMenu.push(fillSimpleMenuItem('templatesDDP', accessType, 'data-group-name="sde" data-page-name="sPre-DDP Template"', 'sPre-DDP Template'));
 								collapsableSMenu.push(fillSimpleMenuItem('ddp', accessType, 'data-group-name="sde" data-page-name="sPre-DDP"', 'sPre-DDP'));
 								sStatus = 0;
 								sMenu = 1;
@@ -2519,9 +2548,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 			} catch (e) {}
 			// console.log(section);
-			if ((tMenu == 1 && (currentHash == 'tPre-DDP' || currentHash == 'templateDDP' ||currentHash == 'tMOR'|| currentHash == 'tdip' || currentHash == 'templatetDIP')) || 
-				(cMenu == 1 && (currentHash == 'cPre-DDP' || currentHash == 'cMOR' || currentHash == 'cdip' || currentHash == 'templatecDIP'))||
-				(sMenu == 1 && (currentHash == 'sPre-DDP' || currentHash == 'sMOR' || currentHash == 'dip' || currentHash == 'templateDIP'))) {
+			if ((tMenu == 1 && (currentHash == 'tPre-DDP' || currentHash == 'templatetDDP' ||currentHash == 'tMOR'|| currentHash == 'tdip' || currentHash == 'templatetDIP')) || 
+				(cMenu == 1 && (currentHash == 'cPre-DDP' || currentHash == 'templatecDDP' || currentHash == 'cMOR' || currentHash == 'cdip' || currentHash == 'templatecDIP'))||
+				(sMenu == 1 && (currentHash == 'sPre-DDP' || currentHash == 'templatesDDP'  || currentHash == 'sMOR' || currentHash == 'dip' || currentHash == 'templateDIP'))) {
 				const tempParams = fillParamsForMenu(currentHash);
 				section = tempParams.section;
 				paramSection.groupName = tempParams.groupName;
@@ -5087,8 +5116,11 @@ window.addEventListener('DOMContentLoaded', () => {
 			fillMORFields(JSON.parse(data.success.answer.detail.field_json_props));
 		}
 		if (data && data.success && data.success.answer && data.success.answer.detail.status === 2) {
+			morSubmit.dataset.projectDownload = '1';			
 			morSubmit.innerText = 'Download';
 			morSave.classList.add('d-none');
+		} else {
+			morSubmit.dataset.projectDownload = '0';
 		}
 		toggleProjectsActivityArea('show', renderMorDiv);
 	}
@@ -5864,7 +5896,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const showOGPA = (data, extends_data) => {
-		console.log(data, extends_data);
+		// console.log(data, extends_data);
 		selPrimeElement.textContent = '';
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(item => {
@@ -6186,7 +6218,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 	const iniOGPAActivity = (primeElemID, extends_data = '') => {
-		console.log(primeElemID);
+		// console.log(primeElemID);
 		const body = {
 			method: 'getOGPAActivity',
 			value: primeElemID
@@ -6254,7 +6286,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}).then((data) => {
 			for (const group of data.success.answer.groups) {
 				const groupName = (addParams.groupName === undefined) ? false : addParams.groupName.toLowerCase();
-				console.log(groupName);
 				if (groupName === group.group.toLowerCase().replaceAll(' ', '')) {
 					// selMorGroup.insertAdjacentHTML('beforeend', `
 					// 	<OPTION value="${group.id}" data-group-id="${group.id}" selected>${group.group}</OPTION>
@@ -6875,6 +6906,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 	morSave.addEventListener('click', async (e) => {
 		const workForm = e.target.closest('form');
+		morSubmit.dataset.projectDownload = 0;
 		if (workForm && workForm.reportValidity()) {
 			saveMORData(workForm, null);
 		}
@@ -6882,7 +6914,14 @@ window.addEventListener('DOMContentLoaded', () => {
 	morSubmit.addEventListener('click', async (e) => {
 		e.preventDefault();
 		const workForm = e.target.closest('form');
-		if (workForm && workForm.reportValidity()) {
+		if (e.target.innerText == 'Create' && projectsMode == 1 && morSubmit.dataset.projectDownload === '0') {
+			console.log('project');
+			saveMORData(workForm, e.target);
+			return;
+		} else if (projectsMode == 1 && morSubmit.dataset.projectDownload === '1') {
+			formMor.requestSubmit();
+		}
+		else if (workForm && workForm.reportValidity()) {
 			if (e.target.innerText == 'Create') {
 				// saveMORData(workForm, e.target);
 				formMor.requestSubmit();				
@@ -6932,6 +6971,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					sendRequest('POST', requestURLProject, body).then((data) => {
 						if (createBtn !== null) {
 							createBtn.innerText = 'Download';
+							createBtn.dataset.projectDownload = 1;
 							morSave.classList.add('d-none');
 						}
 					});	
@@ -6964,6 +7004,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		gProjectNumber = 0;
 		gSiteCode = 0;
 		saveMor.disabled = true;
+		morSubmit.dataset.projectDownload = 0;
 		// addMORToProject.disabled = true;
 		morForReleaseFlag.value = '0';
 		morDelRow.dataset.trId = '0';
@@ -7534,24 +7575,61 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (morTRDyn) {
 			const morPartList = morTRDyn.querySelector('.mor-part-list');
 			if (target.classList.contains('js_vendor_part') && target.value.trim() != '') {
-				morPartList.textContent = '';
-				let partList = rcpcTable.filter(rcpc => rcpc.supplier_part.includes(target.value.trim().toUpperCase()));
+				// morPartList.textContent = '';
+				// let partList = rcpcTable.filter(rcpc => rcpc.supplier_part.includes(target.value.trim().toUpperCase()));
+				// console.log('Total rcpc: ' + rcpcTable.length);
+				// console.log('Match: ' + partList.length);
+				// let li_count = 0;
+				// partList.forEach(item => {
+				// 	const li = document.createElement('li');
+				// 	li.textContent = item.supplier_part;
+				// 	li.dataset.id = item.id;
+				// 	li.addEventListener('click', (e) => {
+				// 		target.value = e.target.textContent;
+				// 		const id = parseInt(e.target.dataset.id, 10);
+				// 		const rcpcIdx = rcpcTable.findIndex(rcpc => parseInt(rcpc.id, 10) === id);
+				// 		morTRDyn.querySelector('.js-mor-rcpc').value = rcpcTable[rcpcIdx].rcpc;
+				// 		morTRDyn.querySelector('.js-mor-vendor-name').value = rcpcTable[rcpcIdx].supplier;
+				// 		morTRDyn.querySelector('.js-mor-part-descr').value = rcpcTable[rcpcIdx].descr;		
+				// 		morPartList.classList.add('d-none'); 
+				// 	});
+				// 	morPartList.append(li);
+				// });
+				// morPartList.classList.remove('d-none');
+				// console.log('Showned: ' + morPartList.childNodes.length);
+				// Навешиваем событие клика ОДИН раз на сам список (делегирование)
+				morPartList.addEventListener('click', (e) => {
+					const li = e.target.closest('li');
+					if (!li) return;
+					target.value = li.textContent;
+					const id = Number(li.dataset.id);
+					const selectedItem = rcpcTable.find(rcpc => Number(rcpc.id) === id);
+					if (selectedItem) {
+						morTRDyn.querySelector('.js-mor-rcpc').value = selectedItem.rcpc;
+						morTRDyn.querySelector('.js-mor-vendor-name').value = selectedItem.supplier;
+						morTRDyn.querySelector('.js-mor-part-descr').value = selectedItem.descr;      
+					}
+					morPartList.classList.add('d-none'); 
+				});
+				const query = target.value.trim().toUpperCase();
+				const partList = rcpcTable.filter(rcpc => rcpc.supplier_part.includes(query));
+				console.log('Total rcpc: ' + rcpcTable.length);
+				console.log('Match: ' + partList.length);
+				const fragment = document.createDocumentFragment();
 				partList.forEach(item => {
 					const li = document.createElement('li');
 					li.textContent = item.supplier_part;
 					li.dataset.id = item.id;
-					li.addEventListener('click', (e) => {
-						target.value = e.target.textContent;
-						const id = parseInt(e.target.dataset.id, 10);
-						const rcpcIdx = rcpcTable.findIndex(rcpc => parseInt(rcpc.id, 10) === id);
-						morTRDyn.querySelector('.js-mor-rcpc').value = rcpcTable[rcpcIdx].rcpc;
-						morTRDyn.querySelector('.js-mor-vendor-name').value = rcpcTable[rcpcIdx].supplier;
-						morTRDyn.querySelector('.js-mor-part-descr').value = rcpcTable[rcpcIdx].descr;		
-						morPartList.classList.add('d-none'); 
-					});
-					morPartList.append(li);
+					fragment.append(li);
 				});
-				morPartList.classList.remove('d-none');
+				morPartList.textContent = '';
+				morPartList.append(fragment);
+				if (partList.length > 0) {
+					morPartList.classList.remove('d-none');
+				} else {
+					morPartList.classList.add('d-none');
+				}
+				console.log('Shown: ' + morPartList.childNodes.length);
 			} else if (target.classList.contains('js-mor-oracle') && target.value.trim() != '') {
 				// gProjectNumber = target.value.trim();
 				morProjectNum.value = target.value.trim();
