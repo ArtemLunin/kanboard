@@ -165,7 +165,7 @@ h3 {
 	height: 30px;
   	overflow-y: hidden;
 	&.showned {
-		height: 90px;
+		height: 120px;
 		overflow: auto;
 	}
 }
@@ -617,7 +617,10 @@ button[type="button"].import-json {
 }
 label.upload-mor {
 	background-color: hsl(152, 50%, 50%);
-    width: 50px;
+    width: 70px;
+}
+a.upload-mor {
+    width: 70px;
 }
 button:active {
     -webkit-box-shadow: inset 1px 1px 10px #333;

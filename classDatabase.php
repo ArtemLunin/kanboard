@@ -7,12 +7,15 @@ require_once 'classHelper.php';
 class databaseUtils {
 	private $unauthorized = true;
 	private $root_access = false;
+	/** @var \PDO|null */
 	private $pdo = null;
 	private $tableAccessError = false;
 	private $platforms = [];
 	private $sql_ins_hash = '';
 	private $sql_upd_hash = '';
+	/** @var \PDOStatement|null */
 	private $row_ins = null;
+	/** @var \PDOStatement|null */
 	private $row_upd = null;
 	private const LOGFILE = 'import_log.txt';
 	private const PATHLOGFILE = 'temp'; 
@@ -156,12 +159,12 @@ class databaseUtils {
 		'sectionAttr'	=> 'projects',
 		'accessType'	=> 'admin',
 	],
-	// [
-	// 	'pageName' => 'MOR',
-	// 	'sectionName' => 'mor',
-	// 	'sectionAttr'	=> 'mor',
-	// 	'accessType'	=> 'admin',
-	// ],
+	[
+		'pageName' => 'MOR',
+		'sectionName' => 'mor',
+		'sectionAttr'	=> 'mor',
+		'accessType'	=> 'admin',
+	],
 	[
 		'pageName' => 'Transport',
 		'sectionName' => 'Transport',
@@ -1706,6 +1709,10 @@ class databaseUtilsMOP extends \helperUtils\helperUtils {
 
 		$sql = "DELETE from `" . $table_name. "` ". "WHERE " . $filtered_arr['filter'];
 		return $this->modSQL($sql, $filtered_arr['params'], false);
+	}
+	function clearTable($table_name) {
+		$sql = "DELETE from `" . $table_name. "`" . " WHERE id>0";
+		return $this->modSQL($sql, [], false);
 	}
 
 	function getUserID($userName) {

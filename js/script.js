@@ -222,7 +222,7 @@ const sections = [
 	'cSDEBundle',
 	'inventory',
 	'projects',
-	// 'mor',
+	'mor',
 	// 'documentation',
 	'sde',
 	'ipcore',
@@ -679,6 +679,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		const loadExcelCA = document.querySelector('#loadExcelCA'),
 		loadExcelRCPC = document.querySelector('#loadExcelRCPC'),
 		loadExcelSite = document.querySelector('#loadExcelSite');
+		const clearCA = document.querySelector('#clearCA'),
+		clearRCPC = document.querySelector('#clearRCPC'),
+		clearSite = document.querySelector('#clearSite');
 		const uploadMORLoadData = document.querySelector('#uploadMORLoadData'),
 		morType = document.querySelector('#morType');
 		let siteTable = [], caTable = [], rcpcTable = [];
@@ -5403,6 +5406,13 @@ window.addEventListener('DOMContentLoaded', () => {
 			uploadMORLoadData.requestSubmit();
 		});
 	});
+	[clearSite, clearCA, clearRCPC].forEach(element => {
+		element.addEventListener('click', function(e) {
+			const target = e.target;
+			e.preventDefault();
+			clearMORTable(target.id);
+		});
+	});
 
 	morSelector.addEventListener('change', function(e) {
 		console.log('morSelector');
@@ -6285,7 +6295,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			env: 'mor',
 		}).then((data) => {
 			for (const group of data.success.answer.groups) {
-				const groupName = (addParams.groupName === undefined) ? false : addParams.groupName.toLowerCase();
+				const groupName = (addParams.groupName === undefined || addParams.groupName === false) ? 'sde' : addParams.groupName.toLowerCase();
 				if (groupName === group.group.toLowerCase().replaceAll(' ', '')) {
 					// selMorGroup.insertAdjacentHTML('beforeend', `
 					// 	<OPTION value="${group.id}" data-group-id="${group.id}" selected>${group.group}</OPTION>
@@ -6339,6 +6349,20 @@ window.addEventListener('DOMContentLoaded', () => {
 			if(table_type == 'rcpc') {
 				rcpcTable = data.success.answer.slice();
 			}
+		});
+	}
+
+	/**
+	 * * @param {string} elementName - elementName
+	 */
+	function clearMORTable(elementName) {
+		const body = {
+			method: 'clearMORTable',
+			env: 'mor',
+			value: elementName
+		};
+		sendRequest('POST', requestURLMOR, body).then((data) => {
+			console.log(data);
 		});
 	}
 

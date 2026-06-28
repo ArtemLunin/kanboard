@@ -71,14 +71,23 @@ class MORUtils extends \helperUtils\helperUtils {
         }
         return $accessType;
     }
-    function loadDataSite($rows, $refreshTable = true) {
+    function loadDataSite($rows, $refreshTable = false) {
         return $this->db_object_project->runInsertBulk($this->tSite["tableName"], array_slice($this->tSite["fields"], 1), $rows, $refreshTable);
     }
-    function loadDataRCPC($rows, $refreshTable = true) {
+    function loadDataRCPC($rows, $refreshTable = false) {
         return $this->db_object_project->runInsertBulk($this->tRCPC["tableName"], array_slice($this->tRCPC["fields"], 1), $rows, $refreshTable);
     }
-    function loadDataCA($rows, $refreshTable = true) {
+    function loadDataCA($rows, $refreshTable = false) {
         return $this->db_object_project->runInsertBulk($this->tCA["tableName"], array_slice($this->tCA["fields"], 1), $rows, $refreshTable);
+    }
+    function clearDataCA() {
+        return $this->db_object_project->clearTable($this->tCA["tableName"]);
+    }
+    function clearDataSite() {
+        return $this->db_object_project->clearTable($this->tSite["tableName"]);
+    }
+    function clearDataRCPC() {
+        return $this->db_object_project->clearTable($this->tRCPC["tableName"]);
     }
     function getMORData($mor_entity, $groupID = 0) {
         $tableName = '';

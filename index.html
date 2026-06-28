@@ -14,12 +14,10 @@
 	<script src="js/popper.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="css/datatables.min.css">
 	<link rel="stylesheet" href="css/bootstrap.min.css">
-	<link rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/css/bootstrap-datepicker.min.css">
+	<link rel="stylesheet" href="css/bootstrap-datepicker.min.css">
 	<script src="js/bootstrap.min.js"></script>
 	<script type="text/javascript" charset="utf8" src="js/datatables.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/js/bootstrap-datepicker.min.js"></script>
-	<!-- <link rel="stylesheet" href="css/style.css"> -->
+	<script src="js/bootstrap-datepicker.min.js"></script>
 	<script>
 		let script = document.createElement("script");
 		let datePageRefresh = new Date();
@@ -585,7 +583,7 @@
 									<!-- <th>DDP</th> -->
 									<th>Inventory</th>
 									<th>Projects</th>
-									<!-- <th>MOR</th> -->
+									<th>MOR</th>
 									<th>SDE</th>
 									<th>IP Core</th>
 									<th>Transport</th>
@@ -743,12 +741,12 @@
 										<option value=""></option>
 										<option value="admin">admin</option>
 									</select>
-									<!-- <label class="input-group-text-sm mr-1" for="morPage">MOR</label>
+									<label class="input-group-text-sm mr-1" for="morPage">MOR</label>
 									<select class="custom-select-sm mr-2" name="mor" id="morPage" data-selectname="mor">
 										<option value=""></option>
 										<option value="admin">admin</option>
 										<option value="user">user</option>
-									</select> -->
+									</select>
 									<label class="input-group-text-sm mr-1" for="sdePage">SDE</label>
 									<select class="custom-select-sm mr-2" name="sde" id="sdePage" data-selectname="sde">
 										<option value=""></option>
@@ -2200,9 +2198,16 @@
 							<input type="file" class="file-input-hidden" id="loadExcelCA" name="file" accept=".xlsx" data-mor-type="ca">
 							<input type="file" class="file-input-hidden" id="loadExcelRCPC" name="file" accept=".xlsx" data-mor-type="rcpc">
 							<input type="file" class="file-input-hidden" id="loadExcelSite" name="file" accept=".xlsx" data-mor-type="site">
-							<label for="loadExcelCA" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">CA</label>
-							<label for="loadExcelRCPC" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">RCPC</label>
-							<label for="loadExcelSite" class="btn btn-sm btn-primary my-1 mr-2 upload-mor">Site</label>
+							<div>
+								<label for="loadExcelCA" class="btn btn-sm btn-primary my-1 mr-3 upload-mor">CA</label>
+								<label for="loadExcelRCPC" class="btn btn-sm btn-primary my-1 mr-3 upload-mor">RCPC</label>
+								<label for="loadExcelSite" class="btn btn-sm btn-primary my-1 mr-3 upload-mor">Site</label>
+							</div>
+							<div>
+								<a href="#" class="btn btn-sm btn-primary p-1 my-1 mr-3 upload-mor" id="clearCA">Clear CA</a>
+								<a href="#" class="btn btn-sm btn-primary p-1 my-1 mr-3 upload-mor" id="clearRCPC">Clear RCPC</a>
+								<a href="#" class="btn btn-sm btn-primary p-1 my-1 mr-3 upload-mor" id="clearSite">Clear Site</a>
+							</div>
 						</form>
 						<div class="mor-uploads-status"></div>
 					</div>
