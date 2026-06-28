@@ -7607,7 +7607,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					if (selectedItem) {
 						morTRDyn.querySelector('.js-mor-rcpc').value = selectedItem.rcpc;
 						morTRDyn.querySelector('.js-mor-vendor-name').value = selectedItem.supplier;
-						morTRDyn.querySelector('.js-mor-part-descr').value = selectedItem.descr;      
+						morTRDyn.querySelector('.js-mor-part-descr').value = selectedItem.descr;
 					}
 					morPartList.classList.add('d-none'); 
 				});
@@ -7640,32 +7640,72 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
+	// morCA.addEventListener('input', (e) => {
+	// 	const target = e.target;
+	// 	const caValue = target.value.trim().toUpperCase();
+	// 	if (caValue !== '') {
+	// 		let caList = caTable.filter(ca => ca.ca.includes(caValue));
+	// 		morCAList.textContent = '';
+	// 		caList.forEach(item => {
+	// 			const li = document.createElement('li');
+	// 			li.textContent = item.ca;
+	// 			li.dataset.id = item.id;
+	// 			li.addEventListener('click', (e) => {
+	// 				target.value = e.target.textContent;
+	// 				const id = parseInt(e.target.dataset.id, 10);
+	// 				const caIdx = caTable.findIndex(ca => parseInt(ca.id, 10) === id);
+	// 				mor_ProjectName.value = caTable[caIdx].project_name;
+	// 				morApprovingMgr.value = caTable[caIdx].project_owner;
+	// 				morProjectNum.value = caTable[caIdx].project_num;
+	// 				morCAList.classList.add('d-none');
+	// 			});
+	// 			morCAList.append(li);
+	// 		});
+	// 		morCAList.classList.remove('d-none');
+	// 	} else {
+	// 		morCAList.classList.add('d-none');
+	// 	}
+	// });
+	morCAList.addEventListener('click', (e) => {
+		const li = e.target.closest('li');
+		if (!li) return;
+		morCA.value = li.textContent;
+		const id = Number(li.dataset.id);
+		const selectedCA = caTable.find(ca => Number(ca.id) === id);
+
+		if (selectedCA) {
+			mor_ProjectName.value = selectedCA.project_name;
+			morApprovingMgr.value = selectedCA.project_owner;
+			morProjectNum.value = selectedCA.project_num;
+		}
+		morCAList.classList.add('d-none');
+	});
+
 	morCA.addEventListener('input', (e) => {
 		const target = e.target;
 		const caValue = target.value.trim().toUpperCase();
-		if (caValue !== '') {
-			let caList = caTable.filter(ca => ca.ca.includes(caValue));
+		if (caValue === '') {
 			morCAList.textContent = '';
-			caList.forEach(item => {
-				const li = document.createElement('li');
-				li.textContent = item.ca;
-				li.dataset.id = item.id;
-				li.addEventListener('click', (e) => {
-					target.value = e.target.textContent;
-					const id = parseInt(e.target.dataset.id, 10);
-					const caIdx = caTable.findIndex(ca => parseInt(ca.id, 10) === id);
-					mor_ProjectName.value = caTable[caIdx].project_name;
-					morApprovingMgr.value = caTable[caIdx].project_owner;
-					// gProjectNumber = caTable[caIdx].project_num;
-					morProjectNum.value = caTable[caIdx].project_num;
-					morCAList.classList.add('d-none');
-				});
-				morCAList.append(li);
-			});
-			morCAList.classList.remove('d-none');
-		} else {
 			morCAList.classList.add('d-none');
+			return;
 		}
+		const caList = caTable.filter(ca => ca.ca.includes(caValue));
+		if (caList.length === 0) {
+			morCAList.textContent = '';
+			morCAList.classList.add('d-none');
+			return;
+		}
+		const fragment = document.createDocumentFragment();
+
+		caList.forEach(item => {
+			const li = document.createElement('li');
+			li.textContent = item.ca;
+			li.dataset.id = item.id;
+			fragment.append(li);
+		});
+		morCAList.textContent = '';
+		morCAList.append(fragment);
+		morCAList.classList.remove('d-none');
 	});
 
 	morTable.addEventListener('click', (e) => {

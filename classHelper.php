@@ -533,6 +533,7 @@ class DocxProcessor {
      * Normalizes $_FILES into a flat array.
      */
     public function prepareUploads($filesInput) {
+        $this->db_object->errorLogObj($filesInput);
         $prepared = [];
         if (!isset($filesInput['name']) || !is_array($filesInput['name'])) {
             return $prepared;
@@ -561,7 +562,6 @@ class DocxProcessor {
         $documentBody = $targetParagraph->parentNode;
         $iconPath = 'img/' . $iconFileName;
         $expectedExt = strtolower(trim($fileType, '. '));
-
         if (!empty($files)) {
             foreach ($files as $i => $file) {
                 $tempFilePath = $file['tmp_name'];
