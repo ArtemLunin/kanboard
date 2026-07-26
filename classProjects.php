@@ -61,19 +61,19 @@ class ProjectUtils extends \helperUtils\helperUtils {
     function setRootAccess($value) {
         $this->root_access = (bool) $value;
     }
-    function getProjectFilesPath() {
-        return self::PATHPROJECTFILES;
+    function getProjectFilesPath(string $file_name = '') {
+        return self::PATHPROJECTFILES . '/' . $file_name;
     }
-    function getOwnerProjectID($projectID) {
+    function getOwnerProjectID(int $projectID) {
         return $this->db_object_project->getOwnerProjectID($projectID);
     }
-    function userCanEditProject($projectID) {
+    function userCanEditProject(int $projectID) {
         return ($this->getOwnerProjectID($projectID) === $this->userID || $this->getRootAccess());
     }
-    function userCanEditActivity($projectID, $groupID) {
+    function userCanEditActivity(int $projectID, int $groupID) {
         return ($this->userInGroup($groupID) || $this->getRootAccess());
     }
-    function userInGroup($groupID) {
+    function userInGroup(int $groupID) {
         $users_list = json_decode($this->db_object_project->selectFieldFromTable($this->tGroups["tableName"], ["id" => $groupID], "users"), true);
         if ($users_list !== null && count($users_list) > 0) {
             if (in_array($this->userName, $users_list)) {
@@ -192,7 +192,8 @@ class ProjectUtils extends \helperUtils\helperUtils {
             if ($this->db_object_project->removeObjectFromTableFilter($this->tProjectsFiles["tableName"], ["activity_id" => $activityID])) {
                 foreach ($files_list as $key => $file_) {
                     try {
-                        unlink($this->getProjectFilesPath() . '/' . $file_['name']);
+                        // unlink($this->getProjectFilesPath() . '/' . $file_['name']);
+                        unlink($this->getProjectFilesPath($file_['name']));
                     } catch  (\Throwable $e) {
                         $this->errorLog($e->getMessage());
                     }
@@ -223,7 +224,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
         }
         return $files_list;
     }
-    function addFileToProjectActivity($projectID, $activityID, $fileName, $activityTarget) {
+    function addFileToProjectActivity(int $projectID, int $activityID, string $fileName, $activityTarget) {
         if ($this->userCanEditProject($projectID)) {
             $this->removeFileFromProjectActivity($activityID, $activityTarget);
             $uploadedFileName = bin2hex(random_bytes(5));
@@ -233,18 +234,18 @@ class ProjectUtils extends \helperUtils\helperUtils {
                 "file_name" => $uploadedFileName,
             ];
             if ($this->db_object_project->addObjectToTable($this->tProjectsFiles["tableName"], $fields_obj) != false){
-                copy($fileName, $this->getProjectFilesPath() . '/' .  $uploadedFileName);
+                copy($fileName, $this->getProjectFilesPath($uploadedFileName));
                 return true;
             }
         }
         return false;
     }
-    function getUserID($userName) {
+    function getUserID(string $userName) {
         $this->userID = $this->db_object_project->getUserID($userName);
         $this->userName = $userName;
         return $this->userID;
     }
-    function addGroups($groups_list) {
+    function addGroups(array $groups_list) {
         if ($this->getRootAccess()) {
             foreach ($groups_list as $group) {
                 $fields_obj = [

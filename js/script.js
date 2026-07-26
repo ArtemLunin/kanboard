@@ -3793,6 +3793,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		//clear projectActivity
 		projectActivitiesList.length = 0;
 		if (projectActivity && projectActivity.dataset.activity_id !== '0' && activityInProjects !== projectActivity.dataset.activity_id) {
+			if (projectActivity.dataset.activity_id == '-1') {
+				return;
+			}
 			//get projectActivity
 			activityInProjects = projectActivity.dataset.activity_id;
 			const currentProject = projectActivity.closest('.project-band');
@@ -3846,7 +3849,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				let finishedActivities = 0;
 				let totalActivities = 0;
 				currentProject.querySelectorAll('.project-activity').forEach(activityElem => {
-					if (activityElem.dataset.activity_id != '0') {
+					if (activityElem.dataset.activity_id != '0' && activityElem.dataset.activity_id != '-1') {
 						totalActivities++;
 						if (activityElem.dataset.activity_finished == '2') {
 							finishedActivities++;
@@ -3854,7 +3857,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						}
 					}
 				});
-				if (finishedActivities == totalActivities) {
+				if (totalActivities > 0 && finishedActivities == totalActivities) {
 					const itemsInProject = [];
 					for (const activity of projectActivitiesList) 
 					{
@@ -4932,7 +4935,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				let last_activity_ready = "&nbsp;";
 				let start_date = project.info.start_date ? datetimeToUSDate(project.info.start_date) : "&nbsp;";
 				projectActivities += projectActivityGenerate({
-						activity_id: 0,
+						activity_id: -1,
 						activity_date: start_date,
 						activity_status: "ready",
 						activity_ready: visualActivityReady,
@@ -4979,7 +4982,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				projectActivities += projectActivityGenerate({
 					activity_id: 0,
 					project_id: project.info.id,
-					activity_status: (finishedActivities ==  totalActivities) ? "ready" : "waiting",
+					activity_status: (totalActivities > 0 && finishedActivities ==  totalActivities) ? "ready" : "waiting",
 					activity_ready: last_activity_ready,
 					group_name: 'Master ZTM',
 					dnone: 'invisible',
@@ -5119,13 +5122,28 @@ window.addEventListener('DOMContentLoaded', () => {
 			fillMORFields(JSON.parse(data.success.answer.detail.field_json_props));
 		}
 		if (data && data.success && data.success.answer && data.success.answer.detail.status === 2) {
+			// morSubmit.dataset.projectDownload = '1';			
+			// morSubmit.innerText = 'Download';
+			// morSave.classList.add('d-none');
+			swapProjectReady('ready');
+		} else {
+			// morSubmit.dataset.projectDownload = '0';
+			// morSubmit.innerText = 'Create';
+			// morSave.classList.remove('d-none');
+			swapProjectReady('not-ready');
+		}
+		toggleProjectsActivityArea('show', renderMorDiv);
+	}
+	function swapProjectReady(action) {
+		if (action === 'ready') {
 			morSubmit.dataset.projectDownload = '1';			
 			morSubmit.innerText = 'Download';
 			morSave.classList.add('d-none');
 		} else {
 			morSubmit.dataset.projectDownload = '0';
+			morSubmit.innerText = 'Create';
+			morSave.classList.remove('d-none');
 		}
-		toggleProjectsActivityArea('show', renderMorDiv);
 	}
 	function fillMORFields(fieldProps) {
 			const simpleParams = {};
@@ -6908,8 +6926,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 			sendRequest('POST', requestURLProject, body).then((data) => {
 			});
-			morSubmit.innerText = 'Create';
-			morSave.classList.remove('d-none');
+			// morSubmit.innerText = 'Create';
+			// morSave.classList.remove('d-none');
+			swapProjectReady('not-ready');
 		}
 	});
 
@@ -6939,7 +6958,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		e.preventDefault();
 		const workForm = e.target.closest('form');
 		if (e.target.innerText == 'Create' && projectsMode == 1 && morSubmit.dataset.projectDownload === '0') {
-			console.log('project');
 			saveMORData(workForm, e.target);
 			return;
 		} else if (projectsMode == 1 && morSubmit.dataset.projectDownload === '1') {
@@ -6947,7 +6965,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		else if (workForm && workForm.reportValidity()) {
 			if (e.target.innerText == 'Create') {
-				// saveMORData(workForm, e.target);
 				formMor.requestSubmit();				
 			} else {
 			}

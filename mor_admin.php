@@ -44,7 +44,7 @@ $mor_object = new myMORUtils\MORUtils();
 if (!isset($_SESSION['logged_user'])) {
     $param_error_msg['answer'] = 'Unauthorized';
     $out_res = ['error' => $param_error_msg];
-    header('Content-type: application/json');
+    header(CONTENT_TYPE_JSON);
     echo json_encode($out_res);
     exit;
 } else {
@@ -59,7 +59,7 @@ if (!isset($_SESSION['logged_user'])) {
 if ($userID === 0) {
     $param_error_msg['answer'] = 'Unauthorized';
     $out_res = ['error' => $param_error_msg];
-    header('Content-type: application/json');
+    header(CONTENT_TYPE_JSON);
     echo json_encode($out_res);
     exit;
 }
@@ -111,7 +111,7 @@ if ($method !== 0)
         $param_error_msg['answer'] = $mor_object->resetMORData($id);
     }
     $out_res = ['success' => $param_error_msg];
-    header('Content-type: application/json');
+    header(CONTENT_TYPE_JSON);
     echo json_encode($out_res);
 } elseif ($submitMOR) {
     $filename = tempnam(sys_get_temp_dir(), 'xlsx');
@@ -123,7 +123,7 @@ if ($method !== 0)
     $writer = new XlsxWriter($spreadsheetObj);
     $writer->save($filename);
 
-    header("Content-Type: application/vnd.ms-excel; charset=utf-8");
+    header(CONTENT_TYPE_EXCEL);
     header("Content-Disposition: attachment; filename=MOR_final.xlsx");
     header("Expires: 0");
     header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
@@ -133,7 +133,7 @@ if ($method !== 0)
     echo $contents;
 } else {
     $out_res = ['success' => false];
-    header('Content-type: application/json');
+    header(CONTENT_TYPE_JSON);
     echo json_encode($out_res);
 }
 

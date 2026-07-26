@@ -37,7 +37,7 @@ $project_object = new myProjectUtils\ProjectUtils();
 if (!isset($_SESSION['logged_user'])) {
     $param_error_msg['answer'] = 'Unauthorized';
     $out_res = ['error' => $param_error_msg];
-    header('Content-type: application/json');
+    header(CONTENT_TYPE_JSON);
     echo json_encode($out_res);
     exit;
 } else {
@@ -52,7 +52,7 @@ if (!isset($_SESSION['logged_user'])) {
 if ($userID === 0) {
     $param_error_msg['answer'] = 'Unauthorized';
     $out_res = ['error' => $param_error_msg];
-    header('Content-type: application/json');
+    header(CONTENT_TYPE_JSON);
     echo json_encode($out_res);
     exit;
 }
@@ -165,6 +165,7 @@ if ($method !== 0 && $method !== 'getProjectDocs')
                         'tmp_name' => $filename, 
                         'activityType' => $group['activityType'],
                         'group_name'    => $group_name,
+                        'content_type' => CONTENT_TYPE_EXCEL,
                         'file_type' => 'xlsx'
                     ];
                 } elseif ($group['activityType'] === 'DIP') {
@@ -177,18 +178,22 @@ if ($method !== 0 && $method !== 'getProjectDocs')
                         'tmp_name' => $filename, 
                         'activityType' => $group['activityType'], 
                         'group_name'    => $group_name,
+                        'content_type' => CONTENT_TYPE_WORD,
                         'file_type' => 'docx'
                     ];
                 } elseif ($group['activityType'] === 'DDP') {
+                    $targetTypesDOCX = ["rack_layout", "floor_plan", "edsFile", "basicMopFile"];
                     $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/ddp_template.docx');
                     $filename = tempnam(sys_get_temp_dir(), 'docx');
                     $templateProcessor = $project_object->writeDOCX($field_json_props, $project_activity["detail"]["files"], $templateProcessor, $project_object, $group['activityType']);
                     $templateProcessor->saveAs($filename);
+                    $project_object->addInnerDocs($filename, $project_activity["detail"]["files"], $targetTypesDOCX, $project_object);
                     // helperUtils\DocxProcessor::removeIncludedObjFromDocx($filename);
                     $filesOut[] = [
                         'tmp_name' => $filename, 
                         'activityType' => $group['activityType'], 
                         'group_name'    => $group_name,
+                        'content_type' => CONTENT_TYPE_WORD,
                         'file_type' => 'docx'
                     ];
                 }
@@ -198,8 +203,8 @@ if ($method !== 0 && $method !== 'getProjectDocs')
     }
     if (count($filesOut) > 0) {
         if (count($filesOut) == 1) {
-            $contentType = "Content-Type: application/vnd.ms-word; charset=utf-8";
-            $fileExt = ".docx";
+            $contentType = $filesOut[0]['content_type'];
+            $fileExt = '.' . $filesOut[0]['file_type'];
             $handle = fopen($filesOut[0]['tmp_name'], "r");
             $contents = fread($handle, filesize($filesOut[0]['tmp_name']));
         } else {
@@ -231,6 +236,6 @@ if ($method !== 0 && $method !== 'getProjectDocs')
     $out_res = ['success' => $param_error_msg];
     
 }
-header('Content-type: application/json');
+header(CONTENT_TYPE_JSON);
 echo json_encode($out_res);
 

@@ -1,6 +1,16 @@
 <?php
 namespace helperUtils;
 
+// function exceptions_error_handler($severity, $message, $filename, $lineno) {
+//     error_log(date("Y-m-d H:i:s") . " ". $message);
+//     throw new \ErrorException($message, 0, $severity, $filename, $lineno);
+// }
+// set_exception_handler(function (\ErrorException $exception) {
+//     throw new \ErrorException($exception->getMessage(), 0, $exception->getSeverity(),  $exception->getFile(), $exception->getLine());
+// });
+
+// set_error_handler('exceptions_error_handler');
+
 class helperUtils {
 	protected $superRights = [
 	[
@@ -111,7 +121,7 @@ class helperUtils {
 		'sectionAttr'	=> 'settings',
 		'accessType'	=> 'admin',
 	]];
-    function errorLog($error_message, $debug_mode = 1)
+    function errorLog(string $error_message, $debug_mode = 1)
 	{
 		if ($debug_mode === 1)
 		{
@@ -128,17 +138,16 @@ class helperUtils {
 		return true;
 	}
 	function writeErrorMessage($errorObject) {
-
 		$error_txt_info = $errorObject->getMessage().', file: '.$errorObject->getFile().', line: '.$errorObject->getLine();
 		$this->errorLog($error_txt_info, 1);
 	}
-    function totalTrim($str) {
+    function totalTrim(string $str) {
 		$string = htmlentities($str, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401, 'utf-8');
 		$string = str_replace("&nbsp;", " ", $string);
 		return trim(html_entity_decode($string));
 	}
 
-	function backquoteForTables($objTables) {
+	function backquoteForTables(array $objTables) {
 		$backquoted_fields = [];
 		foreach ($objTables as $tableName => $tableFields) {
 			$arr = array_map(function($field) use ($tableName) {
@@ -153,7 +162,7 @@ class helperUtils {
 		return filter_var($val, FILTER_VALIDATE_INT, ["flags" => FILTER_NULL_ON_FAILURE, "options" => ["min_range" => 1]]) ?? 0;
 	}
 
-	function getUploadedFileExt($uploadedFile) {
+	function getUploadedFileExt(string $uploadedFile) {
 		return strtolower(pathinfo($uploadedFile, PATHINFO_EXTENSION));
 	}
 
@@ -192,35 +201,32 @@ class helperUtils {
 	}
 
     static function addImageToProjectFile($extTemplateProcessor, $fieldImage) {
-		// if (is_uploaded_file($fieldImage['file_name'])) {
-			try {
-				$maxWidth = 600; 
-				$maxHeight = 700;
-				$size = getimagesize($fieldImage['path']);
-				
-				$sourceWidth = $size[0];
-				$sourceHeight = $size[1];
-				$ratioW = $maxWidth / $sourceWidth;
-				$ratioH = $maxHeight / $sourceHeight;
-				$scale = min($ratioW, $ratioH);
-				if ($scale > 1) {
-					$scale = 1;
-				}
-				$targetWidth = (int)round($sourceWidth * $scale); 
-				$targetHeight = (int)round($sourceHeight * $scale);
-				$extTemplateProcessor->setImageValue($fieldImage['target'], [
-					'path' => $fieldImage['path'],
-					'width' => $targetWidth, 
-					'height' => $targetHeight,
-					'ratio'  => true
-				]);
-			}
-			catch (Exception $e) {
-				$extTemplateProcessor->setValue($fieldImage['target'], $fieldImage['noFileMsg']);
-			}
-		// } else {
-		// 	$extTemplateProcessor->setValue($fieldImage['field_name'], $fieldImage['noFileMsg']);
-		// }
+        try {
+            error_log(date("Y-m-d H:i:s") . " ". print_r($fieldImage, true));
+            $maxWidth = 600; 
+            $maxHeight = 700;
+            $size = getimagesize($fieldImage['path']);
+            
+            $sourceWidth = $size[0];
+            $sourceHeight = $size[1];
+            $ratioW = $maxWidth / $sourceWidth;
+            $ratioH = $maxHeight / $sourceHeight;
+            $scale = min($ratioW, $ratioH);
+            if ($scale > 1) {
+                $scale = 1;
+            }
+            $targetWidth = (int)round($sourceWidth * $scale); 
+            $targetHeight = (int)round($sourceHeight * $scale);
+            $extTemplateProcessor->setImageValue($fieldImage['target'], [
+                'path' => $fieldImage['path'],
+                'width' => $targetWidth, 
+                'height' => $targetHeight,
+                'ratio'  => true
+            ]);
+        }
+        catch (\Exception $e) {
+            $extTemplateProcessor->setValue($fieldImage['target'], $fieldImage['noFileMsg']);
+        }
 	}
 
 	static function setSimpleValueToDoc($extTemplateProcessor, $param, $value) {
@@ -319,7 +325,7 @@ class helperUtils {
             }
         }
     } 
-    function writeDOCX($requestArr, $files_arr, $templateProcessor, $db_object, $activityType = '') {
+    function writeDOCX(array $requestArr, array $files_arr, object $templateProcessor, object $db_object, string $activityType = '') {
         $nodes_list = [];
         $efcrFieldsArr = [];
         $efcrFile = file('template/eFCR.txt');
@@ -451,7 +457,7 @@ class helperUtils {
                 if ($activityType == '') { //images for DIP
                     try {
                         $templateProcessor->setImageValue($file_['target'], array(
-                            'path' => $db_object->getProjectFilesPath() . '/' . $file_['name'],
+                            'path' => $db_object->getProjectFilesPath($file_['name']),
                             'width' => 400, 'height' => 200,
                         ));
                     }
@@ -459,16 +465,16 @@ class helperUtils {
                         $templateProcessor->setValue($file_['target'], '');
                     } 
                 } elseif ($activityType == 'DDP') {
-                    // try {
+                    $targetTypesIMG = ["diagram_hl", "diagram_sl", "diagram_hw"];
+                    if (in_array($file_['target'], $targetTypesIMG)) {
                         \helperUtils\helperUtils::addImageToProjectFile($templateProcessor, [
                             'target' => $file_['target'],
-                            'path' => $db_object->getProjectFilesPath() . '/' . $file_['name'],
+                            'path' => $db_object->getProjectFilesPath($file_['name']),
                             'width' => 600,
                             'height' => 200,
-                            'noFileMsg' => 'N/A']);
-                    // } catch (Throwable $e) {
-                    //     $templateProcessor->setValue($file_['target'], '');
-                    // } 
+                            'noFileMsg' => 'N/A'
+                        ]);
+                    }
                 }
             } 
             $templateProcessor->setValue($file_['target'], '');
@@ -486,23 +492,61 @@ class helperUtils {
 
         $checkedBox = '☒';
 
-    $templateProcessor->setValues([
-        'cb1_2' => $checkedBox,
-        'cb2_2' => $checkedBox,
-        'cb3_2' => $checkedBox,
-        'cb4_2' => $checkedBox,
-        'cb5_2' => $checkedBox,
-        'cb6_2' => $checkedBox,
-        'cb7_2' => $checkedBox,
-        'cb8_2' => $checkedBox,
-        'cb9_2' => $checkedBox,
-        'cb10_2' => $checkedBox,
-        'cb11_2' => $checkedBox,
-        'cb12_2' => $checkedBox,
-        'cb13_2' => $checkedBox,
-        'cb14_2' => $checkedBox,
+        $templateProcessor->setValues([
+            'cb1_2' => $checkedBox,
+            'cb2_2' => $checkedBox,
+            'cb3_2' => $checkedBox,
+            'cb4_2' => $checkedBox,
+            'cb5_2' => $checkedBox,
+            'cb6_2' => $checkedBox,
+            'cb7_2' => $checkedBox,
+            'cb8_2' => $checkedBox,
+            'cb9_2' => $checkedBox,
+            'cb10_2' => $checkedBox,
+            'cb11_2' => $checkedBox,
+            'cb12_2' => $checkedBox,
+            'cb13_2' => $checkedBox,
+            'cb14_2' => $checkedBox,
         ]);
         return $templateProcessor;
+    }
+    function addInnerDocs(string $filename, array $filesArr, array $listDOCX, $db_object) {
+        $zip = new \ZipArchive();
+        if ($zip->open($filename) !== true) {
+            $this->errorLog("Error to open file: " . $filename);
+            die;
+        }
+        $docXml = $zip->getFromName('word/document.xml');
+        $dom = new \DOMDocument();
+        $dom->loadXML($docXml);
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace("w", "http://schemas.openxmlformats.org/wordprocessingml/2006/main");
+        $xpath->registerNamespace("v", "urn:schemas-microsoft-com:vml");
+        $xpath->registerNamespace("o", "urn:schemas-microsoft-com:office:office");
+        $xpath->registerNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+        $rackLayoutPreview = $xpath->query("//w:bookmarkStart[@w:name='RACK_LAYOUT_PREVIEW']")->item(0)->parentNode;
+        $floorPlan = $xpath->query("//w:bookmarkStart[@w:name='FLOOR_PLAN']")->item(0)->parentNode;
+        $edsFile = $xpath->query("//w:bookmarkStart[@w:name='EDS_FILE']")->item(0)->parentNode;
+        $basicMopFile = $xpath->query("//w:bookmarkStart[@w:name='BASIC_MOP_FILE']")->item(0)->parentNode;
+        $relsXml = $zip->getFromName('word/_rels/document.xml.rels');
+        $relsDom = new \DOMDocument();
+
+        $this->errorLogObj($filesArr);
+        $docx_object = new \helperUtils\DocxProcessor($dom, $relsDom, $xpath, $zip, $this);
+        $filesFloor = [];
+        $filesFloor[] = [
+            'tmp_name'  => $db_object->getProjectFilesPath($filesArr[0]['name']),
+            'name'      => $filesArr[0]['target'] . '.docx',
+        ];
+        // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['rack_layout']), 'word-48.png', 'docx', $rackLayoutPreview);
+        // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['floor_plan']), 'word-48.png', 'docx', $floorPlan);
+        $docx_object->embedOleAttachments($filesFloor, 'word-48.png', 'docx', $floorPlan);
+        // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['edsFile']), 'word-48.png', 'docx', $edsFile);
+        // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['basicMopFile']), 'word-48.png', 'docx', $basicMopFile);
+        $docx_object->saveToZip();
+
+        $relsDom->loadXML($relsXml);
+        $zip->close();
     }
 }
 
@@ -533,7 +577,6 @@ class DocxProcessor {
      * Normalizes $_FILES into a flat array.
      */
     public function prepareUploads($filesInput) {
-        $this->db_object->errorLogObj($filesInput);
         $prepared = [];
         if (!isset($filesInput['name']) || !is_array($filesInput['name'])) {
             return $prepared;
@@ -554,11 +597,12 @@ class DocxProcessor {
      * Strict OLE Embedding for MS Word 2016.
      * Fixes activation issue where objects appear as static images.
      */
-    public function embedOleAttachments($files, $iconFileName, $fileType, $targetParagraph) {
+    public function embedOleAttachments(array $files, string $iconFileName, string $fileType, $targetParagraph) {
         if (!$targetParagraph || !$targetParagraph->parentNode) {
             return;
         }
-
+        error_log('embedOleAttachments');
+        error_log(print_r($files, true));
         $documentBody = $targetParagraph->parentNode;
         $iconPath = 'img/' . $iconFileName;
         $expectedExt = strtolower(trim($fileType, '. '));
@@ -667,6 +711,8 @@ class DocxProcessor {
      * Strictly formatted relationships for Word 2016.
      */
     protected function addRel($relsDom, $id, $type, $target) {
+        error_log('Type: ' . print_r($type, true));
+        error_log('Target: ' . print_r($target, true));
         $root = $relsDom->documentElement;
         $rel = $relsDom->createElement('Relationship');
         $rel->setAttribute('Id', $id);
@@ -734,7 +780,7 @@ class DocxProcessor {
                 $sourceZip->deleteName('word/media/image1.bmp');
             }
             $sourceZip->close();
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             return 'failed.' . $e->getMessage();
         }
         return true;
@@ -756,208 +802,7 @@ class DocxProcessor {
 	// 	return true;
 	// }
 }
-// class DocxProcessor {
-//     /** @var DOMDocument */
-//     protected $dom;
-//     /** @var DOMDocument */
-//     protected $relsDom;
-//     /** @var DOMXPath */
-//     protected $xpath;
-//     /** @var ZipArchive */
-//     protected $zip;
-//     /** @var object Database/Utility object */
-//     protected $db_object;
 
-//     /**
-//      * DocxProcessor constructor.
-//      */
-//     public function __construct($dom, $relsDom, $xpath, $zip, $db_object) {
-//         $this->dom = $dom;
-//         $this->relsDom = $relsDom;
-//         $this->xpath = $xpath;
-//         $this->zip = $zip;
-//         $this->db_object = $db_object;
-//     }
-
-//     /**
-//      * Normalizes $_FILES array into a flat list of successful uploads.
-//      * * @param array $filesInput The raw $_FILES['input_name'] array.
-//      * @return array List of files: [['tmp_name' => '...', 'name' => '...'], ...]
-//      */
-//     public function prepareUploads($filesInput) {
-//         $prepared = [];
-//         if (!isset($filesInput['name']) || !is_array($filesInput['name'])) {
-//             return $prepared;
-//         }
-
-//         foreach ($filesInput['name'] as $i => $name) {
-//             if ($filesInput['error'][$i] === UPLOAD_ERR_OK) {
-//                 $prepared[] = [
-//                     'tmp_name' => $filesInput['tmp_name'][$i],
-//                     'name'     => $name
-//                 ];
-//             }
-//         }
-//         return $prepared;
-//     }
-
-//     /**
-//      * Strict OLE Embedding for MS Word 2016.
-//      * Fixes activation issue where objects appear as static images.
-//      */
-//     public function embedOleAttachments($files, $iconFileName, $fileType, $targetParagraph) {
-//         if (!$targetParagraph || !$targetParagraph->parentNode) {
-//             return;
-//         }
-
-//         $documentBody = $targetParagraph->parentNode;
-//         $iconPath = 'img/' . $iconFileName;
-//         $expectedExt = strtolower(trim($fileType, '. '));
-
-//         if (!empty($files)) {
-//             foreach ($files as $i => $file) {
-//                 $tempFilePath = $file['tmp_name'];
-//                 $originalFileName = $file['name'];
-//                 $actualExt = strtolower(trim($this->db_object->getUploadedFileExt($originalFileName), '. '));
-
-//                 if ($actualExt !== $expectedExt) continue;
-
-//                 // Unique IDs for Word 2016 internal tracking
-//                 $uniqueId = time() . $i . mt_rand(100, 999);
-//                 $internalOlePath = "word/embeddings/oleObject{$uniqueId}.{$actualExt}";
-//                 $internalImagePath = "word/media/image_ole_{$uniqueId}.png";
-                
-//                 // Activation ID must match exactly between Shape and OLEObject
-//                 $shapeId = "_x0000_i" . $uniqueId;
-//                 $objId = "_OLE_" . $uniqueId;
-
-//                 // 1. Add files to ZIP
-//                 $this->zip->addFile($tempFilePath, $internalOlePath);
-//                 if (file_exists($iconPath)) {
-//                     $this->zip->addFile($iconPath, $internalImagePath);
-//                 }
-
-//                 // 2. Register relationships (Relative paths)
-//                 $relIdOle = "rIdOle{$uniqueId}";
-//                 $relIdImg = "rIdImg{$uniqueId}";
-//                 $this->addRel($this->relsDom, $relIdOle, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject', $internalOlePath);
-//                 $this->addRel($this->relsDom, $relIdImg, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image', $internalImagePath);
-
-//                 // 3. XML Structure
-//                 $newParagraph = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:p");
-                
-//                 // Inherit formatting from template
-//                 $pPr = $this->xpath->query("w:pPr", $targetParagraph)->item(0);
-//                 if ($pPr) $newParagraph->appendChild($pPr->cloneNode(true));
-
-//                 $run = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
-//                 $object = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:object");
-                
-//                 // VML Shape: The "Clickable" container
-//                 $vmlShape = $this->dom->createElementNS("urn:schemas-microsoft-com:vml", "v:shape");
-//                 $vmlShape->setAttribute('id', $shapeId);
-//                 $vmlShape->setAttribute('style', "width:72pt;height:72pt"); 
-//                 $vmlShape->setAttribute('o:ole', ""); // Critical for Word 2016 activation
-//                 $vmlShape->setAttribute('alt', $originalFileName); 
-
-//                 $vmlImg = $this->dom->createElementNS("urn:schemas-microsoft-com:vml", "v:imagedata");
-//                 $vmlImg->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdImg);
-//                 $vmlImg->setAttribute('o:title', $originalFileName);
-                
-//                 $vmlShape->appendChild($vmlImg);
-//                 $object->appendChild($vmlShape);
-                
-//                 // Determine correct ProgID
-//                 switch ($actualExt) {
-//                     case 'xlsx': case 'xls': $progId = 'Excel.Sheet.12'; break;
-//                     case 'docx': case 'doc': $progId = 'Word.Document.12'; break;
-//                     default: $progId = 'Package';
-//                 }
-
-//                 // OLEObject: The link to binary data
-//                 $oleObject = $this->dom->createElementNS("urn:schemas-microsoft-com:office:office", "o:OLEObject");
-//                 $oleObject->setAttribute('Type', 'Embed');
-//                 $oleObject->setAttribute('ProgID', $progId);
-//                 $oleObject->setAttribute('ShapeID', $shapeId); // Must match v:shape id
-//                 $oleObject->setAttribute('DrawAspect', 'Icon');
-//                 $oleObject->setAttribute('ObjectID', $objId);
-//                 $oleObject->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdOle);
-                
-//                 $object->appendChild($oleObject);
-//                 $run->appendChild($object);
-//                 $newParagraph->appendChild($run);
-
-//                 // Add Caption (Filename)
-//                 $capRun = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
-//                 $capRun->appendChild($this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:br"));
-//                 $text = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:t");
-//                 $text->nodeValue = $originalFileName;
-//                 $capRun->appendChild($text);
-//                 $newParagraph->appendChild($capRun);
-                
-//                 $documentBody->insertBefore($newParagraph, $targetParagraph);
-
-//                 // 4. Update Content_Types
-//                 $this->ensureContentType($actualExt);
-//             }
-//         }
-
-//         $documentBody->removeChild($targetParagraph);
-//     }
-
-//     /**
-//      * Strictly formatted relationships for Word 2016.
-//      */
-//     protected function addRel($relsDom, $id, $type, $target) {
-//         $root = $relsDom->documentElement;
-//         $rel = $relsDom->createElement('Relationship');
-//         $rel->setAttribute('Id', $id);
-//         $rel->setAttribute('Type', $type);
-//         $rel->setAttribute('Target', str_replace('word/', '', $target));
-//         $root->appendChild($rel);
-//     }
-
-//     /**
-//      * Registers binary extensions in [Content_Types].xml using global DOM namespace.
-//      */
-//     protected function ensureContentType($extension) {
-//         $contentTypesXml = $this->zip->getFromName('[Content_Types].xml');
-//         if (!$contentTypesXml) return;
-
-//         $map = [
-//             'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-//             'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-//             'png'  => 'image/png'
-//         ];
-
-//         $contentType = isset($map[$extension]) ? $map[$extension] : 'application/vnd.openxmlformats-officedocument.oleObject';
-
-//         if (strpos($contentTypesXml, 'Extension="' . $extension . '"') === false) {
-//             $ctDom = new \DOMDocument();
-//             $ctDom->loadXML($contentTypesXml);
-            
-//             $newNode = $ctDom->createElement('Default');
-//             $newNode->setAttribute('Extension', $extension);
-//             $newNode->setAttribute('ContentType', $contentType);
-            
-//             $ctDom->documentElement->appendChild($newNode);
-//             $this->zip->addFromString('[Content_Types].xml', $ctDom->saveXML());
-//         }
-//     }
-// 	public function saveToZip() {
-// 		$this->zip->addFromString('word/document.xml', $this->dom->saveXML());
-// 		$this->zip->addFromString('word/_rels/document.xml.rels', $this->relsDom->saveXML());
-// 	}
-
-//     /**
-//      * Helper method to add a relationship to the .rels DOM.
-//      */
-//     // protected function addRel($relsDom, $id, $type, $target) {
-//     //     $root = $relsDom->documentElement;
-//     //     $rel = $relsDom->createElement('Relationship');
-//     //     $rel->setAttribute('Id', $id);
-//     //     $rel->setAttribute('Type', $type);
-//     //     $rel->setAttribute('Target', str_replace('word/', '', $target));
-//     //     $root->appendChild($rel);
-//     // }
-// }
+define('CONTENT_TYPE_WORD', "Content-Type: application/vnd.ms-word; charset=utf-8");
+define('CONTENT_TYPE_EXCEL', "Content-Type: application/vnd.ms-excel; charset=utf-8");
+define('CONTENT_TYPE_JSON', "Content-type: application/json");

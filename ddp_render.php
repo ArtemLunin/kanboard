@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $xpath->registerNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
 
     $bookmarkDoc = $xpath->query("//w:bookmarkStart[@w:name='RACK_LAYOUT_PREVIEW']")->item(0)->parentNode;
-    $flooPlan = $xpath->query("//w:bookmarkStart[@w:name='FLOOR_PLAN']")->item(0)->parentNode;
+    $floorPlan = $xpath->query("//w:bookmarkStart[@w:name='FLOOR_PLAN']")->item(0)->parentNode;
     $edsFile = $xpath->query("//w:bookmarkStart[@w:name='EDS_FILE']")->item(0)->parentNode;
     $basicMopFile = $xpath->query("//w:bookmarkStart[@w:name='BASIC_MOP_FILE']")->item(0)->parentNode;
 
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $docx_object = new helperUtils\DocxProcessor($dom, $relsDom, $xpath, $zip, $db_object);
     $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['rack_layout']), 'word-48.png', 'docx', $bookmarkDoc);
-    $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['floor_plan']), 'word-48.png', 'docx', $flooPlan);
+    $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['floor_plan']), 'word-48.png', 'docx', $floorPlan);
     $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['edsFile']), 'word-48.png', 'docx', $edsFile);
     $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['basicMopFile']), 'word-48.png', 'docx', $basicMopFile);
     $docx_object->saveToZip();
