@@ -1739,7 +1739,7 @@
 									<div class="param param-50">
 										<input type="text" name="actField101" class="mop renderData text" data-value_name="actField101" id="actField101" value="Group" readonly>
 										<div class="group-activity">
-											<select class="mop select-btns renderData ogpa-new" name="groupDDP" id="groupsDDP" data-value_name="actField102">
+											<select class="mop select-btns renderData ogpa-new" name="groupDDP" id="groupsDDP" data-value_name="actField102" disabled>
 												<option value="DDP_ipcore">IP Core</option>
 												<option value="DDP_transport">Transport Operations</option>
 												<option value="DDP_sde">RHSI and Service Delivery Environment</option>
@@ -1903,7 +1903,7 @@
 									<label for="diagram_hw">Diagram Hardware (png/jpeg)</label>
 									<input type="file" class="mop renderOnly" id="diagram_hw" name="diagram_hw" accept="image/png, image/jpeg" />
 									<span class="mop bg-success js-project-files" data-file-id="diagram_hw"></span>
-									<label for="hardwareCaption">Hardware caption</label>
+									<br><label for="hardwareCaption">Hardware caption</label>
 									<input type="text" class="mop" name="hardwareCaption" id="hardwareCaption" value="">
 								</div>
 								<div class="param param-full">
@@ -1913,6 +1913,7 @@
 								<div class="param param-full renderOnly">
 									<label for="rack_layout">Rack Layout (docx++)</label>
 									<input type="file" class="mop renderOnly" id="rack_layout" name="rack_layout[]" multiple accept=".docx" />
+									<span class="mop bg-success js-project-files" data-file-id="rack_layout"></span>
 								</div>
 								<div class="param param-full renderOnly">
 									<label for="floor_plan">Floor Plan (docx)</label>
@@ -1939,8 +1940,12 @@
 									Supporting Documentation<br>
 									<label for="edsFile">EDS (docx)</label>
 									<input type="file" class="mop renderOnly" id="edsFile" name="edsFile[]" accept=".docx" />
+									<span class="mop bg-success js-project-files" data-file-id="edsFile"></span>
+									</div>
+								<div class="param param-full renderOnly">
 									<label for="basicMopFile">Basic MOP (docx)</label>
 									<input type="file" class="mop renderOnly" id="basicMopFile" name="basicMopFile[]" accept=".docx" />
+									<span class="mop bg-success js-project-files" data-file-id="basicMopFile"></span>
 								</div>
 							</fieldset>
 							<!-- <fieldset id="group106" class="hidden">							
@@ -2386,8 +2391,11 @@
 							<div class="buttons">
 								<button class="mop" type="submit" id="morSubmit">Create</button>
 								<button class="mop" type="button" id="morSend">Send</button>
-								<button class="mop btn-info" type="button" id="morSave">Save</button>
+								<button class="mop btn-info js-calendar-trigger" type="button" id="morSave" data-target="#morCalendarWrapper">Save</button>
 								<button class="mop" type="reset" id="morReset">Reset</button>
+ 								<div id="morCalendarWrapper" class="js-calendar-wrapper" style="display:none;">
+									<div class="js-datepicker" data-form-fields="formMor"></div>
+								</div>
 							</div>
 						</fieldset>
 					</form>

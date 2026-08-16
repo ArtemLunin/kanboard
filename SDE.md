@@ -32,6 +32,7 @@
 * `datetimeToUSDate` \- возвращает текстовую дату в формате \`May 16, 2026\`  
 * setOGPADDP \- “хак” для создания списка groupsDDP в новой таблице (при переходе с лаб на прод)  
 * `showProjectActivityForm` \- вызывает заполнение полей MOP для группы из проекта  
+* `showProjectDDPForm` \- вызывает заполнение формы DDP
 * `resetMorForm()` \- очищает форму MOR  
 * `saveMORData` упаковывает форму MOR для отправки в виде JSON в базу, либо в одиночный MOR, либо в activity проекта  
 * `showProjectMORForm` показывает форму MOR для проекта  

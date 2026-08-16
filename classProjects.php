@@ -39,7 +39,7 @@ class ProjectUtils extends \helperUtils\helperUtils {
     private $tProjectsFiles = [
         "tableName" => "projects_files",
         "fields" => [
-            "id", "activity_id", "activity_target", "file_name"
+            "id", "activity_id", "activity_target", "file_name", "orig_file_name"
         ]
     ];
     private $subGroups = [
@@ -192,7 +192,6 @@ class ProjectUtils extends \helperUtils\helperUtils {
             if ($this->db_object_project->removeObjectFromTableFilter($this->tProjectsFiles["tableName"], ["activity_id" => $activityID])) {
                 foreach ($files_list as $key => $file_) {
                     try {
-                        // unlink($this->getProjectFilesPath() . '/' . $file_['name']);
                         unlink($this->getProjectFilesPath($file_['name']));
                     } catch  (\Throwable $e) {
                         $this->errorLog($e->getMessage());
@@ -218,20 +217,24 @@ class ProjectUtils extends \helperUtils\helperUtils {
             foreach ($table_res as $table_row) {
                 $files_list[] = [
                     'target'   => $table_row['activity_target'],
-                    'name'   => $table_row['file_name']
+                    'name'   => $table_row['file_name'],
+                    'orig_name' => $table_row['orig_file_name']
                 ];
             }
         }
         return $files_list;
     }
-    function addFileToProjectActivity(int $projectID, int $activityID, string $fileName, $activityTarget) {
+    function addFileToProjectActivity(int $projectID, int $activityID, string $fileName, string $activityTarget, string $originalFileName, int $sequence) {
         if ($this->userCanEditProject($projectID)) {
-            $this->removeFileFromProjectActivity($activityID, $activityTarget);
+            if ($sequence == 0) {
+                $this->removeFileFromProjectActivity($activityID, $activityTarget);
+            }
             $uploadedFileName = bin2hex(random_bytes(5));
             $fields_obj = [
                 "activity_id" => $activityID,
                 "activity_target" => $activityTarget,
                 "file_name" => $uploadedFileName,
+                "orig_file_name" => $originalFileName
             ];
             if ($this->db_object_project->addObjectToTable($this->tProjectsFiles["tableName"], $fields_obj) != false){
                 copy($fileName, $this->getProjectFilesPath($uploadedFileName));

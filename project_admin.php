@@ -61,24 +61,25 @@ $number = '';
 $text_field  = '';
 $contentType = isset($_SERVER['CONTENT_TYPE']) ? trim($_SERVER['CONTENT_TYPE']) : '';
 if (stripos($contentType, 'application/json') === 0) {
-$paramJSON = json_decode(file_get_contents("php://input"), TRUE);
-$method = $paramJSON['method'] ?? 0;
-$value = trim($paramJSON['value'] ?? '');
-$number = trim($paramJSON['number'] ?? '');
-$groups = $paramJSON['groups'] ?? 0;
-$id = isInt($paramJSON['id'] ?? 0);
-$group_id = isInt($paramJSON['group_id'] ?? 0);
-$element = $paramJSON['element'] ?? '';
-$activity = $paramJSON['activity'] ?? '';
-$group_ids = $paramJSON['group_ids'] ?? 0;
-$user_name = $paramJSON['user_name'] ?? 0;
-$group_fields = $paramJSON['group_fields'] ?? 0;
-// $group_idx = isInt($paramJSON['group_idx'] ?? 0);
-$text_field = trim($paramJSON['text_field'] ?? '');
+    $paramJSON = json_decode(file_get_contents("php://input"), TRUE);
+    $method = $paramJSON['method'] ?? 0;
+    $value = trim($paramJSON['value'] ?? '');
+    $number = trim($paramJSON['number'] ?? '');
+    $groups = $paramJSON['groups'] ?? 0;
+    $id = isInt($paramJSON['id'] ?? 0);
+    $group_id = isInt($paramJSON['group_id'] ?? 0);
+    $element = $paramJSON['element'] ?? '';
+    $activity = $paramJSON['activity'] ?? '';
+    $group_ids = $paramJSON['group_ids'] ?? 0;
+    $user_name = $paramJSON['user_name'] ?? 0;
+    $group_fields = $paramJSON['group_fields'] ?? 0;
+    // $group_idx = isInt($paramJSON['group_idx'] ?? 0);
+    $text_field = trim($paramJSON['text_field'] ?? '');
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $method = $_POST['method'];
     $id = isInt($_POST['id'] ?? 0);
     $activity_id = isInt($_POST['activity_id'] ?? 0);
+    $fileSequence = isInt($_POST['sequence'] ?? 0);
     $target = $_POST['target'] ?? '';
     $groups = [];
     if (isset($_POST['groups']) && count($_POST['groups']) > 0) {
@@ -90,10 +91,13 @@ $text_field = trim($paramJSON['text_field'] ?? '');
 
 $fileUploadedName = '';
 $fileUploadedType = '';
+$fileUploadedOrigName  = '';
+
 if (isset($_FILES) && count($_FILES) > 0) {
     $keys = array_keys($_FILES);
     $fileUploadedName = $_FILES[$keys[0]]['tmp_name'];
     $fileUploadedType = strtolower(pathinfo($_FILES[$keys[0]]['name'], PATHINFO_EXTENSION));
+    $fileUploadedOrigName = $_FILES[$keys[0]]['name'];
 }
 
 
@@ -136,7 +140,7 @@ if ($method !== 0 && $method !== 'getProjectDocs')
     } elseif ($method === 'removeGroup' && $id) {
         $param_error_msg['answer'] = $project_object->removeGroup($id);
     } elseif ($method === 'addFileToActivity' && $id && $activity_id && ($file_upload = $fileUploadedName) != '' && is_uploaded_file($file_upload) && (in_array($fileUploadedType, $availImgTypes))) {
-        $param_error_msg['answer'] = $project_object->addFileToProjectActivity($id, $activity_id, $file_upload, $target);
+        $param_error_msg['answer'] = $project_object->addFileToProjectActivity($id, $activity_id, $file_upload, $target, $fileUploadedOrigName, $fileSequence);
     }
     $out_res = ['success' => $param_error_msg];
 } elseif ($method === 'getProjectDocs' && $groups && count($groups) > 0) {
@@ -183,11 +187,82 @@ if ($method !== 0 && $method !== 'getProjectDocs')
                     ];
                 } elseif ($group['activityType'] === 'DDP') {
                     $targetTypesDOCX = ["rack_layout", "floor_plan", "edsFile", "basicMopFile"];
+                    $rack_layout_file = [];
+                    $floor_plan_file = [];
+                    $eds_file = [];
+                    $basic_mop_file = [];
+
                     $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor('template/ddp_template.docx');
                     $filename = tempnam(sys_get_temp_dir(), 'docx');
                     $templateProcessor = $project_object->writeDOCX($field_json_props, $project_activity["detail"]["files"], $templateProcessor, $project_object, $group['activityType']);
                     $templateProcessor->saveAs($filename);
-                    $project_object->addInnerDocs($filename, $project_activity["detail"]["files"], $targetTypesDOCX, $project_object);
+                    $project_object->errorLogObj(($project_activity["detail"]["files"]));
+                    // $project_object->addInnerDocs($filename, $project_activity["detail"]["files"], $targetTypesDOCX, $project_object);
+                    foreach ($project_activity["detail"]["files"] as $file_bookmark) {
+                        switch ($file_bookmark['target']) {
+                            case 'rack_layout':
+                                $rack_layout_file[] = [
+                                    'filepath' => $project_object->getProjectFilesPath($file_bookmark['name']),
+                                    'filename' => $file_bookmark['orig_name']
+                                ];
+                                break;
+                            case 'floor_plan':
+                                $floor_plan_file[] = [
+                                    'filepath' => $project_object->getProjectFilesPath($file_bookmark['name']),
+                                    'filename' => $file_bookmark['orig_name']
+                                ];
+                                break;
+                            case 'edsFile':
+                                $eds_file[] = [
+                                    'filepath' => $project_object->getProjectFilesPath($file_bookmark['name']),
+                                    'filename' => $file_bookmark['orig_name']
+                                ];
+                                break;
+                            case 'basicMopFile':
+                                $basic_mop_file[] = [
+                                    'filepath' => $project_object->getProjectFilesPath($file_bookmark['name']),
+                                    'filename' => $file_bookmark['orig_name']
+                                ];
+                                break;
+                        }
+                    }
+                    // $dbFilesForFloor = [
+                    //     [
+                    //         'filepath' => 'pfiles/40f0077082', 
+                    //         // 'filepath' => $project_object->getProjectFilesPath($filesArr[0]['name']), 
+                    //         'filename' => 'floor_plan.docx'
+                    //     ]
+                    // ];
+                    $attachmentsConfigFromDB = [
+                        'RACK_LAYOUT_PREVIEW' => [
+                            'files' => $rack_layout_file,
+                            'icon'  => 'word-48.png',
+                            'type'  => 'docx'
+                        ],
+                        'FLOOR_PLAN' => [
+                            'files' => $floor_plan_file,
+                            'icon'  => 'word-48.png',
+                            'type'  => 'docx'
+                        ],
+                        'EDS_FILE' => [
+                            'files' => $eds_file,
+                            'icon'  => 'word-48.png',
+                            'type'  => 'docx'
+                        ],
+                        'BASIC_MOP_FILE' => [
+                            'files' => $basic_mop_file,
+                            'icon'  => 'word-48.png',
+                            'type'  => 'docx'
+                        ],
+                        // // Также можно просто передать путь к файлу строкой:
+                        // 'BASIC_MOP_FILE' => '/var/storage/uploads/mop_document.docx'
+                    ];
+                    try {
+                        \helperUtils\DocxProcessor::processDocument($filename, $attachmentsConfigFromDB, $project_object);
+                        // echo "Файл успешно обновлен!";
+                    } catch (\Exception $e) {
+                        echo "Ошибка обработки: " . $e->getMessage();
+                    }
                     // helperUtils\DocxProcessor::removeIncludedObjFromDocx($filename);
                     $filesOut[] = [
                         'tmp_name' => $filename, 

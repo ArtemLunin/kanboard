@@ -100,50 +100,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $uploadedFiles = $_FILES['rack_layout'];
     $count = isset($uploadedFiles['name']) ? count($uploadedFiles['name']) : 0;
 
-    $zip = new \ZipArchive();
-    if ($zip->open($filename) !== TRUE) {
-        die("Не удалось открыть файл.");
-    }
+    // $zip = new \ZipArchive();
+    // if ($zip->open($filename) !== TRUE) {
+    //     die("Не удалось открыть файл.");
+    // }
 
-    $docXml = $zip->getFromName('word/document.xml');
-    $dom = new DOMDocument();
-    $dom->loadXML($docXml);
-    $xpath = new DOMXPath($dom);
+    // $docXml = $zip->getFromName('word/document.xml');
+    // $dom = new DOMDocument();
+    // $dom->loadXML($docXml);
+    // $xpath = new DOMXPath($dom);
 
-    $xpath->registerNamespace("w", "http://schemas.openxmlformats.org/wordprocessingml/2006/main");
-    $xpath->registerNamespace("v", "urn:schemas-microsoft-com:vml");
-    $xpath->registerNamespace("o", "urn:schemas-microsoft-com:office:office");
-    $xpath->registerNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+    // $xpath->registerNamespace("w", "http://schemas.openxmlformats.org/wordprocessingml/2006/main");
+    // $xpath->registerNamespace("v", "urn:schemas-microsoft-com:vml");
+    // $xpath->registerNamespace("o", "urn:schemas-microsoft-com:office:office");
+    // $xpath->registerNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
 
-    $bookmarkDoc = $xpath->query("//w:bookmarkStart[@w:name='RACK_LAYOUT_PREVIEW']")->item(0)->parentNode;
-    $floorPlan = $xpath->query("//w:bookmarkStart[@w:name='FLOOR_PLAN']")->item(0)->parentNode;
-    $edsFile = $xpath->query("//w:bookmarkStart[@w:name='EDS_FILE']")->item(0)->parentNode;
-    $basicMopFile = $xpath->query("//w:bookmarkStart[@w:name='BASIC_MOP_FILE']")->item(0)->parentNode;
+    // $bookmarkDoc = $xpath->query("//w:bookmarkStart[@w:name='RACK_LAYOUT_PREVIEW']")->item(0)->parentNode;
+    // $floorPlan = $xpath->query("//w:bookmarkStart[@w:name='FLOOR_PLAN']")->item(0)->parentNode;
+    // $edsFile = $xpath->query("//w:bookmarkStart[@w:name='EDS_FILE']")->item(0)->parentNode;
+    // $basicMopFile = $xpath->query("//w:bookmarkStart[@w:name='BASIC_MOP_FILE']")->item(0)->parentNode;
 
-    $relsXml = $zip->getFromName('word/_rels/document.xml.rels');
-    $relsDom = new DOMDocument();
-    $relsDom->loadXML($relsXml);
+    // $relsXml = $zip->getFromName('word/_rels/document.xml.rels');
+    // $relsDom = new DOMDocument();
+    // $relsDom->loadXML($relsXml);
 
-    $docx_object = new helperUtils\DocxProcessor($dom, $relsDom, $xpath, $zip, $db_object);
-    $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['rack_layout']), 'word-48.png', 'docx', $bookmarkDoc);
-    $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['floor_plan']), 'word-48.png', 'docx', $floorPlan);
-    $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['edsFile']), 'word-48.png', 'docx', $edsFile);
-    $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['basicMopFile']), 'word-48.png', 'docx', $basicMopFile);
-    $docx_object->saveToZip();
+    // $docx_object = new helperUtils\DocxProcessor($dom, $relsDom, $xpath, $zip, $db_object);
+    // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['rack_layout']), 'word-48.png', 'docx', $bookmarkDoc);
+    // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['floor_plan']), 'word-48.png', 'docx', $floorPlan);
+    // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['edsFile']), 'word-48.png', 'docx', $edsFile);
+    // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['basicMopFile']), 'word-48.png', 'docx', $basicMopFile);
+    // $docx_object->saveToZip();
 
-    $zip->close();
+    // $zip->close();
 
-    // if ($groupID !== 0 && $projectID !== 0) { //save file to base
-    //     $project_object->changeProjectActivity($projectID, $groupID, [
-    //         'field_json_props' => $fieldGroups,
-    //         'target_date'       => $ddpProjectDate,
-    //         ], '', '');
-    //     $out_res = [];
-    //     $param_error_msg['answer'] = ['OK'];
-    //     $out_res = ['success' => $param_error_msg];
-    //     header('Content-type: application/json');
-    //     echo json_encode($out_res);
-    // } else { // download file
+    // $filename = '/path/to/template.docx';
+
+    $attachmentsConfig = [
+        'RACK_LAYOUT_PREVIEW' => [
+            'files' => $_FILES['rack_layout'] ?? [],
+            'icon'  => 'word-48.png',
+            'type'  => 'docx'
+        ],
+        'FLOOR_PLAN' => [
+            'files' => $_FILES['floor_plan'] ?? [],
+            'icon'  => 'word-48.png',
+            'type'  => 'docx'
+        ],
+        'EDS_FILE' => [
+            'files' => $_FILES['edsFile'] ?? [],
+            'icon'  => 'word-48.png',
+            'type'  => 'docx'
+        ],
+        'BASIC_MOP_FILE' => [
+            'files' => $_FILES['basicMopFile'] ?? [],
+            'icon'  => 'word-48.png',
+            'type'  => 'docx'
+        ],
+    ];
+
+        // Вызов единого метода:
+        try {
+            \helperUtils\DocxProcessor::processDocument($filename, $attachmentsConfig, $db_object);
+            // echo "Файл успешно обновлен!";
+        } catch (\Exception $e) {
+            echo "Ошибка обработки: " . $e->getMessage();
+        }
         header("Content-Type: application/vnd.ms-word; charset=utf-8");
         header("Content-Disposition: attachment; filename=".$resultFileName);
         header("Expires: 0");

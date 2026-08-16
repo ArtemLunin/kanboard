@@ -29,6 +29,12 @@ const groupsDDP = {
 	"transport": "DDP_transport"
 };
 
+const groupsName = {
+	"DDP_ipcore": "IP Core",
+	"DDP_transport": "Transport Operations",
+	"DDP_sde": "RHSI and Service Delivery Environment"
+}
+
 /** 
 * @typedef {Object} subGroups
 * @property {string} 'tPre-DDP' - group
@@ -107,7 +113,7 @@ const subGroups = {
 	},
 }
 
-const filesDDP = ["diagram_hl", "diagram_sl", "diagram_hw", "floor_plan"];
+const filesDDP = ["diagram_hl", "diagram_sl", "diagram_hw", "floor_plan", "edsFile", "basicMopFile", "rack_layout"];
 const filesDIP = ["diagram"];
 
 const hardCodeDesign = {
@@ -2097,7 +2103,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		projectsMode = 0;
 		formSave.classList.add('d-none');
 		ddpFormSave.classList.add('d-none');
-		// console.log(showSection);
 		switch (showSection) {
 			case 'main':
 				if (!section[idx].dataset['showned']) {
@@ -3905,7 +3910,7 @@ window.addEventListener('DOMContentLoaded', () => {
 									}
 								};
 								cTemplate = getOGPANum();
-								projectGroupName = data.success.answer.detail.group_name;
+								projectGroupName = data.success.answer.detafillSelectFieldil.group_name;
 								showActivityFields(dataObject);
 								fillCTemplateFields(formAdmin);
 								fillSelectField(selPrimeElement, data.success.answer.detail.element, true);
@@ -5067,7 +5072,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function showProjectDDPForm(data, ogpaGroup = 0) {
-		console.log(data);
 		formNewProject.classList.add('d-none');
 		activeProjects.querySelector('legend').textContent = 'Selected project';
 		projectGroupName = '';
@@ -5095,7 +5099,7 @@ window.addEventListener('DOMContentLoaded', () => {
 					}
 				};
 				showActivityFields(dataObject);
-				fillSelectField(selGroupsDDP, data.success.answer.detail.element, true);
+				selGroupsDDP.value = data.success.answer.detail.element;
 				fillSelectField(selActivityDDP, data.success.answer.detail.activity, true);
 				fillUploadedFiles(data.success.answer.detail.files);
 				fillMultirows();
@@ -5110,6 +5114,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 		}
+		showAllDDP.checked = true;
+		showAllDDP.dispatchEvent(new Event('click'));
 		toggleProjectsActivityArea('show', renderDDPDiv);
 	}
 
@@ -5122,14 +5128,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			fillMORFields(JSON.parse(data.success.answer.detail.field_json_props));
 		}
 		if (data && data.success && data.success.answer && data.success.answer.detail.status === 2) {
-			// morSubmit.dataset.projectDownload = '1';			
-			// morSubmit.innerText = 'Download';
-			// morSave.classList.add('d-none');
 			swapProjectReady('ready');
 		} else {
-			// morSubmit.dataset.projectDownload = '0';
-			// morSubmit.innerText = 'Create';
-			// morSave.classList.remove('d-none');
 			swapProjectReady('not-ready');
 		}
 		toggleProjectsActivityArea('show', renderMorDiv);
@@ -5924,7 +5924,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	};
 
 	const showOGPA = (data, extends_data) => {
-		// console.log(data, extends_data);
 		selPrimeElement.textContent = '';
 		if (data && data.success && data.success.answer) {
 			data.success.answer.forEach(item => {
@@ -6192,6 +6191,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (needToClear) {
 			selectElement.textContent = '';
 		}
+		// groupsName
 		selectElement.insertAdjacentHTML('beforeend', `
 			<option value="${selectValue}" selected>${selectValue}</option>
 		`);
@@ -6203,7 +6203,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			if (file_input) {
 				const file_span = file_input.closest('fieldset').querySelector(`[data-file-id='${file_.target}']`);
 				if (file_span) {
-					file_span.textContent = 'File uploaded';
+					file_span.textContent = file_span.textContent + 'File uploaded: ' + file_.orig_name + ' ';
 				}
 			}
 		});
@@ -6246,7 +6246,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	};
 	const iniOGPAActivity = (primeElemID, extends_data = '') => {
-		// console.log(primeElemID);
 		const body = {
 			method: 'getOGPAActivity',
 			value: primeElemID
@@ -6397,16 +6396,9 @@ window.addEventListener('DOMContentLoaded', () => {
 			value: Object.values(groupsDDP)		
 		};
 		sendRequest('POST', requestURLTemplate, body).then((data) => {
-			// console.log(data);
 			showOGPA(data, addParams);
 		});
 	};
-
-	// const showActivityFieldsDDP = ()  => {
-	// 	formFieldsDDP.reset();
-	// 	showRenderOnlyElements();
-	// 	showAllDDP.dispatchEvent(new Event('click'));
-	// };
 
 	const switchMORTables = (mor_id, raiseMorSiteEvent = true) => {
 		while (morInnerBody.firstChild) {
@@ -6575,6 +6567,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				activity: selActivity.value,
 				fieldGroups: fieldGroups
 			});
+			if (ddpTemplate == 1) {
+				body.element = selGroupsDDP.value;
+				body.activity = selActivityDDP.value;
+			}
 			if (!!projects_obj['target_date']) {
 				body.group_fields.target_date = projects_obj['target_date'];
 				// body.group_fields.save = 1;
@@ -6595,14 +6591,20 @@ window.addEventListener('DOMContentLoaded', () => {
 					}
 					files_upload_list.forEach(element => {
 						const fileInput = document.querySelector(`#${element}`);
+						let sequence = 0;
 						if (projectActId && fileInput && fileInput.files.length > 0) {
-							const formData = new FormData();
-							formData.append(element, fileInput.files[0]);
-							formData.append('id', data.success.answer.detail.project_id);
-							formData.append('activity_id', projectActId);
-							formData.append('method', 'addFileToActivity');
-							formData.append('target', element);
-							sendFile('POST', requestURLProject, formData);
+							Array.from(fileInput.files).forEach(file => {
+								const formData = new FormData();
+								formData.append(element, file);
+								formData.append('id', data.success.answer.detail.project_id);
+								formData.append('activity_id', projectActId);
+								formData.append('method', 'addFileToActivity');
+								formData.append('target', element);
+								formData.append('target', element);
+								formData.append('sequence', sequence);
+								sendFile('POST', requestURLProject, formData);
+								sequence++;
+							});
 						}
 					});
 
@@ -6926,8 +6928,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 			sendRequest('POST', requestURLProject, body).then((data) => {
 			});
-			// morSubmit.innerText = 'Create';
-			// morSave.classList.remove('d-none');
 			swapProjectReady('not-ready');
 		}
 	});
@@ -6950,7 +6950,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	morSave.addEventListener('click', async (e) => {
 		const workForm = e.target.closest('form');
 		morSubmit.dataset.projectDownload = 0;
-		if (workForm && workForm.reportValidity()) {
+		if (workForm && workForm.reportValidity() && projectsMode != 1) {
 			saveMORData(workForm, null);
 		}
 	});
@@ -6980,7 +6980,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 		downloadFileWithDynamicForm(requestURLProject, body, 'POST');
 	}
-	function saveMORData(formFilled, createBtn = null) {
+	function saveMORData(formFilled, createBtn = null, targetDate = null) {
 		if (formFilled.reportValidity()) {
 			try {
 				const formData = new FormData(formFilled);
@@ -7007,7 +7007,7 @@ window.addEventListener('DOMContentLoaded', () => {
 						fieldGroups: data
 					});
 					if (createBtn == null) {
-						body.group_fields.target_date = datetimeToCaDate();
+						body.group_fields.target_date = targetDate;
 					}
 					sendRequest('POST', requestURLProject, body).then((data) => {
 						if (createBtn !== null) {
@@ -7015,6 +7015,7 @@ window.addEventListener('DOMContentLoaded', () => {
 							createBtn.dataset.projectDownload = 1;
 							morSave.classList.add('d-none');
 						}
+						iniProjectsInfo();
 					});	
 				} else {
 					sendRequest('POST', requestURLMOR, {
@@ -7434,7 +7435,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		format: 'yyyy-mm-dd',
 		todayHighlight: true,
 		title: 'Target Date'
-		// autoclose: true
 	});
 	$ddpCalendar.datepicker({
 		format: 'yyyy-mm-dd',
@@ -7461,19 +7461,52 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	function onDateSelected(date, formFields_) {
-		// if (formFields_.id == 'formFieldsDDP') {
-		// 	ddpGroupID.value = activityGroupID;
-		// 	ddpProjectID.value = activityProjectID;
-		// 	ddpProjectDate.value = date;
-		// 	submitRenderForm(target, gActivityID);
-		// } else {
-			submitAdminForm(formFields_, gActivityID, {
-				'mode': 1,
-				'target_date': date,
-				'project_id': activityProjectID,
-				'group_id': activityGroupID
-			});
-		// }
+		submitAdminForm(formFields_, gActivityID, {
+			'mode': 1,
+			'target_date': date,
+			'project_id': activityProjectID,
+			'group_id': activityGroupID
+		});
+	}
+
+	function initDynamicCalendars() {
+		// 1. Инициализируем ВСЕ календари на странице с общим классом .js-datepicker
+		$('.js-datepicker').datepicker({
+			format: 'yyyy-mm-dd',
+			todayHighlight: true,
+			title: 'Target Date'
+		});
+
+		// 2. Единый обработчик клика для всех кнопок переключения
+		$(document).on('click', '.js-calendar-trigger', function () {
+			if (projectsMode != 1) {
+				return false;
+			}
+			const targetSelector = $(this).data('target');
+			$(targetSelector).toggle();
+		});
+
+		// 3. Единый обработчик выбора даты для всех календарей
+		$(document).on('changeDate', '.js-datepicker', function (e) {
+			const $this = $(this);
+			const date = e.format('yyyy-mm-dd');
+			
+			// Получаем имя переменной полей из data-form-fields
+			const fieldsVarName = $this.data('form-fields');
+			
+			// Безопасно получаем значение переменной из глобальной области (window)
+			const currentFormFields = window[fieldsVarName];
+
+			if (currentFormFields) {
+				// onDateSelected(date, currentFormFields);
+				if (currentFormFields.elements['saveMOR']) {
+					saveMORData(currentFormFields, null, date);
+				}
+			}
+
+			// Находим родительский wrapper и скрываем его
+			$this.closest('.js-calendar-wrapper').hide();
+		});
 	}
 
 	function genRowParts(trId, arrParts = []) {
@@ -7654,8 +7687,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				});
 				const query = target.value.trim().toUpperCase();
 				const partList = rcpcTable.filter(rcpc => rcpc.supplier_part.includes(query));
-				console.log('Total rcpc: ' + rcpcTable.length);
-				console.log('Match: ' + partList.length);
 				const fragment = document.createDocumentFragment();
 				partList.forEach(item => {
 					const li = document.createElement('li');
@@ -7670,9 +7701,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				} else {
 					morPartList.classList.add('d-none');
 				}
-				console.log('Shown: ' + morPartList.childNodes.length);
 			} else if (target.classList.contains('js-mor-oracle') && target.value.trim() != '') {
-				// gProjectNumber = target.value.trim();
 				morProjectNum.value = target.value.trim();
 			} else {
 				morPartList.textContent = '';
@@ -7776,5 +7805,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	clearInputsForms();
 	iniInterface();
+    initDynamicCalendars();
 	holdStatus.click();
 });

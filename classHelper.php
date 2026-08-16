@@ -1,15 +1,10 @@
 <?php
 namespace helperUtils;
 
-// function exceptions_error_handler($severity, $message, $filename, $lineno) {
-//     error_log(date("Y-m-d H:i:s") . " ". $message);
-//     throw new \ErrorException($message, 0, $severity, $filename, $lineno);
-// }
-// set_exception_handler(function (\ErrorException $exception) {
-//     throw new \ErrorException($exception->getMessage(), 0, $exception->getSeverity(),  $exception->getFile(), $exception->getLine());
-// });
-
-// set_error_handler('exceptions_error_handler');
+use DOMDocument;
+use DOMXPath;
+use ZipArchive;
+use Exception;
 
 class helperUtils {
 	protected $superRights = [
@@ -415,8 +410,6 @@ class helperUtils {
                     $pingtest_cgw_ver = $arr_dgw_cgw['cgw_verification'];
                     $nodes_list = $arr_dgw_cgw['nodes_list'];
                 } else {
-                    // $this->errorLog($param);
-                    // $this->errorLogObj($values);
                     self::setArrayValuesToDoc($templateProcessor, $param, $values);
                 }
             } elseif (!isset($arrayBlocks[$param])) {
@@ -531,18 +524,14 @@ class helperUtils {
         $relsXml = $zip->getFromName('word/_rels/document.xml.rels');
         $relsDom = new \DOMDocument();
 
-        $this->errorLogObj($filesArr);
+        // $this->errorLogObj($filesArr);
         $docx_object = new \helperUtils\DocxProcessor($dom, $relsDom, $xpath, $zip, $this);
         $filesFloor = [];
         $filesFloor[] = [
             'tmp_name'  => $db_object->getProjectFilesPath($filesArr[0]['name']),
             'name'      => $filesArr[0]['target'] . '.docx',
         ];
-        // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['rack_layout']), 'word-48.png', 'docx', $rackLayoutPreview);
-        // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['floor_plan']), 'word-48.png', 'docx', $floorPlan);
         $docx_object->embedOleAttachments($filesFloor, 'word-48.png', 'docx', $floorPlan);
-        // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['edsFile']), 'word-48.png', 'docx', $edsFile);
-        // $docx_object->embedOleAttachments($docx_object->prepareUploads($_FILES['basicMopFile']), 'word-48.png', 'docx', $basicMopFile);
         $docx_object->saveToZip();
 
         $relsDom->loadXML($relsXml);
@@ -550,22 +539,269 @@ class helperUtils {
     }
 }
 
+// class DocxProcessor {
+//     /** @var DOMDocument */
+//     protected $dom;
+//     /** @var DOMDocument */
+//     protected $relsDom;
+//     /** @var DOMXPath */
+//     protected $xpath;
+//     /** @var ZipArchive */
+//     protected $zip;
+//     /** @var object Utility object for extensions */
+//     protected $db_object;
+
+//     /**
+//      * Constructor using global namespaces for DOM classes.
+//      */
+//     public function __construct($dom, $relsDom, $xpath, $zip, $db_object) {
+//         $this->dom = $dom;
+//         $this->relsDom = $relsDom;
+//         $this->xpath = $xpath;
+//         $this->zip = $zip;
+//         $this->db_object = $db_object;
+//     }
+
+//     /**
+//      * Normalizes $_FILES into a flat array.
+//      */
+//     public function prepareUploads($filesInput) {
+//         $prepared = [];
+//         if (!isset($filesInput['name']) || !is_array($filesInput['name'])) {
+//             return $prepared;
+//         }
+
+//         foreach ($filesInput['name'] as $i => $name) {
+//             if ($filesInput['error'][$i] === UPLOAD_ERR_OK) {
+//                 $prepared[] = [
+//                     'tmp_name' => $filesInput['tmp_name'][$i],
+//                     'name'     => $name
+//                 ];
+//             }
+//         }
+//         return $prepared;
+//     }
+
+//     /**
+//      * Strict OLE Embedding for MS Word 2016.
+//      * Fixes activation issue where objects appear as static images.
+//      */
+//     public function embedOleAttachments(array $files, string $iconFileName, string $fileType, $targetParagraph) {
+//         if (!$targetParagraph || !$targetParagraph->parentNode) {
+//             return;
+//         }
+//         error_log('embedOleAttachments');
+//         error_log(print_r($files, true));
+//         $documentBody = $targetParagraph->parentNode;
+//         $iconPath = 'img/' . $iconFileName;
+//         $expectedExt = strtolower(trim($fileType, '. '));
+//         if (!empty($files)) {
+//             foreach ($files as $i => $file) {
+//                 $tempFilePath = $file['tmp_name'];
+//                 $originalFileName = $file['name'];
+//                 $actualExt = strtolower(trim($this->db_object->getUploadedFileExt($originalFileName), '. '));
+
+//                 if ($actualExt !== $expectedExt) continue;
+
+//                 // Unique IDs for Word 2016 internal tracking
+//                 $uniqueId = time() . $i . mt_rand(100, 999);
+//                 $internalOlePath = "word/embeddings/oleObject{$uniqueId}.{$actualExt}";
+//                 $internalImagePath = "word/media/image_ole_{$uniqueId}.png";
+                
+//                 // Activation ID must match exactly between Shape and OLEObject
+//                 $shapeId = "_x0000_i" . $uniqueId;
+//                 $objId = "_OLE_" . $uniqueId;
+
+//                 // 1. Add files to ZIP
+//                 $this->zip->addFile($tempFilePath, $internalOlePath);
+//                 if (file_exists($iconPath)) {
+//                     $this->zip->addFile($iconPath, $internalImagePath);
+//                 }
+
+//                 // 2. Register relationships (Relative paths)
+//                 /** 
+//                  * CRITICAL FIX FOR WORD 2016:
+//                  * Use 'package' relationship type for Office documents (docx, xlsx)
+//                  * Use 'oleObject' for others (pdf, etc.)
+//                  */
+//                 $relType = ($actualExt === 'docx' || $actualExt === 'xlsx') 
+//                     ? 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/package'
+//                     : 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject';
+
+//                 $relIdOle = "rIdOle{$uniqueId}";
+//                 $relIdImg = "rIdImg{$uniqueId}";
+                
+//                 $this->addRel($this->relsDom, $relIdOle, $relType, $internalOlePath);
+//                 $this->addRel($this->relsDom, $relIdImg, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image', $internalImagePath);
+
+//                 // 3. XML Structure
+//                 $newParagraph = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:p");
+                
+//                 // Inherit formatting from template
+//                 $pPr = $this->xpath->query("w:pPr", $targetParagraph)->item(0);
+//                 if ($pPr) $newParagraph->appendChild($pPr->cloneNode(true));
+
+//                 $run = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
+//                 $object = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:object");
+                
+//                 // VML Shape: The "Clickable" container
+//                 $vmlShape = $this->dom->createElementNS("urn:schemas-microsoft-com:vml", "v:shape");
+//                 $vmlShape->setAttribute('id', $shapeId);
+//                 $vmlShape->setAttribute('style', "width:72pt;height:72pt"); 
+//                 $vmlShape->setAttribute('o:ole', ""); // Critical for Word 2016 activation
+//                 $vmlShape->setAttribute('alt', $originalFileName); 
+
+//                 $vmlImg = $this->dom->createElementNS("urn:schemas-microsoft-com:vml", "v:imagedata");
+//                 $vmlImg->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdImg);
+//                 $vmlImg->setAttribute('o:title', $originalFileName);
+                
+//                 $vmlShape->appendChild($vmlImg);
+//                 $object->appendChild($vmlShape);
+                
+//                 // Determine correct ProgID
+//                 switch ($actualExt) {
+//                     case 'xlsx': case 'xls': $progId = 'Excel.Sheet.12'; break;
+//                     case 'docx': case 'doc': $progId = 'Word.Document.12'; break;
+//                     default: $progId = 'Package';
+//                 }
+
+//                 // OLEObject: The link to binary data
+//                 $oleObject = $this->dom->createElementNS("urn:schemas-microsoft-com:office:office", "o:OLEObject");
+//                 $oleObject->setAttribute('Type', 'Embed');
+//                 $oleObject->setAttribute('ProgID', $progId);
+//                 $oleObject->setAttribute('ShapeID', $shapeId); // Must match v:shape id
+//                 $oleObject->setAttribute('DrawAspect', 'Icon');
+//                 $oleObject->setAttribute('ObjectID', $objId);
+//                 $oleObject->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdOle);
+                
+//                 $object->appendChild($oleObject);
+//                 $run->appendChild($object);
+//                 $newParagraph->appendChild($run);
+
+//                 // Add Caption (Filename)
+//                 $capRun = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
+//                 $capRun->appendChild($this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:br"));
+//                 $text = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:t");
+//                 $text->nodeValue = $originalFileName;
+//                 $capRun->appendChild($text);
+//                 $newParagraph->appendChild($capRun);
+                
+//                 $documentBody->insertBefore($newParagraph, $targetParagraph);
+
+//                 // 4. Update Content_Types
+//                 $this->ensureContentType($actualExt);
+//             }
+//         }
+
+//         $documentBody->removeChild($targetParagraph);
+//     }
+
+//     /**
+//      * Strictly formatted relationships for Word 2016.
+//      */
+//     protected function addRel($relsDom, $id, $type, $target) {
+//         error_log('Type: ' . print_r($type, true));
+//         error_log('Target: ' . print_r($target, true));
+//         $root = $relsDom->documentElement;
+//         $rel = $relsDom->createElement('Relationship');
+//         $rel->setAttribute('Id', $id);
+//         $rel->setAttribute('Type', $type);
+//         $rel->setAttribute('Target', str_replace('word/', '', $target));
+//         $root->appendChild($rel);
+//     }
+
+//     /**
+//      * Registers binary extensions in [Content_Types].xml using global DOM namespace.
+//      */
+//     protected function ensureContentType($extension) {
+//         $contentTypesXml = $this->zip->getFromName('[Content_Types].xml');
+//         if (!$contentTypesXml) return;
+
+//         $map = [
+//             'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+//             'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+//             'png'  => 'image/png'
+//         ];
+
+//         $contentType = isset($map[$extension]) ? $map[$extension] : 'application/vnd.openxmlformats-officedocument.oleObject';
+
+//         if (strpos($contentTypesXml, 'Extension="' . $extension . '"') === false) {
+//             $ctDom = new \DOMDocument();
+//             $ctDom->loadXML($contentTypesXml);
+            
+//             $newNode = $ctDom->createElement('Default');
+//             $newNode->setAttribute('Extension', $extension);
+//             $newNode->setAttribute('ContentType', $contentType);
+            
+//             $ctDom->documentElement->appendChild($newNode);
+//             $this->zip->addFromString('[Content_Types].xml', $ctDom->saveXML());
+//         }
+//     }
+
+// 	public function saveToZip() {
+// 		$this->zip->addFromString('word/document.xml', $this->dom->saveXML());
+// 		$this->zip->addFromString('word/_rels/document.xml.rels', $this->relsDom->saveXML());
+// 	}
+
+//     static function removeIncludedObjFromDocx($filename) {
+//         $sourceZip = new \ZipArchive();
+//         $sourceZip->open($filename);
+//         $sourceDocument = $sourceZip->getFromName('word/document.xml');
+//         $sourceDom = new \DOMDocument();
+//         $sourceDom->loadXML($sourceDocument);
+//         $sourceXPath = new \DOMXPath($sourceDom);
+
+//         $sourceXPath->registerNamespace("w", "http://schemas.openxmlformats.org/wordprocessingml/2006/main");
+//         try {
+//             $oleNodes = $sourceXPath->query('//o:OLEObject');
+//             $shapeNodes = $sourceXPath->query('//v:shape[v:imagedata]');
+            
+//             $shapeID = $oleNodes[0]->getAttribute("ShapeID");
+//             $shape_id = $shapeNodes[0]->getAttribute("id");
+            
+//             if ($shapeID == $shape_id) {
+//                 $oleNodes[0]->parentNode->removeChild($oleNodes[0]);
+//                 $shapeNodes[0]->parentNode->removeChild($shapeNodes[0]);
+//                 $sourceZip->addFromString('word/document.xml', $sourceDom->saveXML());
+//                 $sourceZip->deleteName('word/embeddings/_________Microsoft_Word.docx');
+//                 $sourceZip->deleteName('word/embeddings/oleObject1.docx');
+//                 $sourceZip->deleteName('word/media/image2.emf');
+//                 $sourceZip->deleteName('word/media/image1.bmp');
+//             }
+//             $sourceZip->close();
+//         } catch (\Throwable $e) {
+//             return 'failed.' . $e->getMessage();
+//         }
+//         return true;
+//     }
+// }
+
 class DocxProcessor {
-    /** @var \DOMDocument */
+    /** @var DOMDocument */
     protected $dom;
-    /** @var \DOMDocument */
+
+    /** @var DOMDocument */
     protected $relsDom;
-    /** @var \DOMXPath */
+
+    /** @var DOMXPath */
     protected $xpath;
-    /** @var \ZipArchive */
+
+    /** @var ZipArchive */
     protected $zip;
-    /** @var object Utility object for extensions */
+
+    /** @var object|null Utility object for extensions and helper functions */
     protected $db_object;
 
     /**
-     * Constructor using global namespaces for DOM classes.
+     * Constructor for DocxProcessor.
+     *
+     * @param DOMDocument $dom
+     * @param DOMDocument $relsDom
+     * @param DOMXPath $xpath
+     * @param ZipArchive $zip
+     * @param object|null $db_object
      */
-    public function __construct($dom, $relsDom, $xpath, $zip, $db_object) {
+    public function __construct($dom, $relsDom, $xpath, $zip, $db_object = null) {
         $this->dom = $dom;
         $this->relsDom = $relsDom;
         $this->xpath = $xpath;
@@ -574,52 +810,196 @@ class DocxProcessor {
     }
 
     /**
-     * Normalizes $_FILES into a flat array.
+     * Main entry point to process a DOCX file and inject attachments into specified bookmarks.
+     *
+     * @param string $filename Path to the source .docx file
+     * @param array $bookmarkConfig Array of bookmarks and attachment configurations
+     * @param object|null $db_object Optional utility database object
+     * @return bool True on success
+     * @throws Exception If file cannot be opened or XML structure is invalid
      */
-    public function prepareUploads($filesInput) {
+    public static function processDocument(string $filename, array $bookmarkConfig, $db_object = null): bool {
+        if (!file_exists($filename)) {
+            throw new Exception("File not found: {$filename}");
+        }
+
+        $zip = new ZipArchive();
+        if ($zip->open($filename) !== true) {
+            throw new Exception("Failed to open ZIP archive: {$filename}");
+        }
+
+        $docXml = $zip->getFromName('word/document.xml');
+        $relsXml = $zip->getFromName('word/_rels/document.xml.rels');
+
+        if (!$docXml || !$relsXml) {
+            $zip->close();
+            throw new Exception("Invalid DOCX structure: missing word/document.xml or relationships file.");
+        }
+
+        // Initialize DOM for main document
+        $dom = new DOMDocument();
+        $dom->preserveWhiteSpace = false;
+        $dom->loadXML($docXml);
+
+        // Initialize DOM for relationships
+        $relsDom = new DOMDocument();
+        $relsDom->preserveWhiteSpace = false;
+        $relsDom->loadXML($relsXml);
+
+        // Register namespaces for XPath querying
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace("w", "http://schemas.openxmlformats.org/wordprocessingml/2006/main");
+        $xpath->registerNamespace("v", "urn:schemas-microsoft-com:vml");
+        $xpath->registerNamespace("o", "urn:schemas-microsoft-com:office:office");
+        $xpath->registerNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+
+        $processor = new self($dom, $relsDom, $xpath, $zip, $db_object);
+
+        foreach ($bookmarkConfig as $bookmarkName => $config) {
+            // Extract configuration parameters
+            $rawFiles = $config['files'] ?? $config;
+            $iconFileName = $config['icon'] ?? 'word-48.png';
+            $fileType = $config['type'] ?? 'docx';
+
+            // Find target paragraph by bookmark name
+            $bookmarkNodes = $xpath->query("//w:bookmarkStart[@w:name='{$bookmarkName}']");
+            if ($bookmarkNodes->length === 0) {
+                continue; // Bookmark not found, skip
+            }
+
+            $targetParagraph = $bookmarkNodes->item(0)->parentNode;
+
+            // Prepare normalized file list
+            $preparedFiles = $processor->prepareUploads($rawFiles);
+
+            if (!empty($preparedFiles)) {
+                $processor->embedOleAttachments($preparedFiles, $iconFileName, $fileType, $targetParagraph);
+            }
+        }
+
+        // Save modifications into the ZIP archive and close
+        $processor->saveToZip();
+        $zip->close();
+
+        return true;
+    }
+
+    /**
+     * Universal file visualizer/normalizer.
+     * Standardizes $_FILES (single/multiple) and DB/server file arrays into uniform format:
+     * [
+     *   ['tmp_name' => '/path/to/file', 'name' => 'display_name.docx'],
+     *   ...
+     * ]
+     *
+     * @param mixed $filesInput
+     * @return array Standardized array of file descriptors
+     */
+    public function prepareUploads($filesInput): array {
         $prepared = [];
-        if (!isset($filesInput['name']) || !is_array($filesInput['name'])) {
+        // error_log("prepareUploads: " . print_r($filesInput, true));
+        if (empty($filesInput)) {
             return $prepared;
         }
 
-        foreach ($filesInput['name'] as $i => $name) {
-            if ($filesInput['error'][$i] === UPLOAD_ERR_OK) {
+        // 1. Standard $_FILES structure for multiple files: $_FILES['key']['name'] is an array
+        if (isset($filesInput['name']) && is_array($filesInput['name'])) {
+            foreach ($filesInput['name'] as $i => $name) {
+                $error = $filesInput['error'][$i] ?? UPLOAD_ERR_OK;
+                $tmpName = $filesInput['tmp_name'][$i] ?? '';
+
+                if ($error === UPLOAD_ERR_OK && !empty($tmpName) && file_exists($tmpName)) {
+                    $prepared[] = [
+                        'tmp_name' => $tmpName,
+                        'name'     => $name ?: basename($tmpName)
+                    ];
+                }
+            }
+            return $prepared;
+        }
+
+        // 2. Standard $_FILES structure for a single file: $_FILES['key']['name'] is a string
+        if (isset($filesInput['name']) && is_string($filesInput['name'])) {
+            $error = $filesInput['error'] ?? UPLOAD_ERR_OK;
+            $tmpName = $filesInput['tmp_name'] ?? '';
+
+            if ($error === UPLOAD_ERR_OK && !empty($tmpName) && file_exists($tmpName)) {
                 $prepared[] = [
-                    'tmp_name' => $filesInput['tmp_name'][$i],
-                    'name'     => $name
+                    'tmp_name' => $tmpName,
+                    'name'     => $filesInput['name'] ?: basename($tmpName)
                 ];
             }
+            return $prepared;
         }
+
+        // 3. Files from DB / Server filesystem
+        if (is_array($filesInput)) {
+            // Check if single associative array representing one file: ['path' => '...', 'name' => '...']
+            if (isset($filesInput['tmp_name']) || isset($filesInput['path']) || isset($filesInput['filepath'])) {
+                $filesInput = [$filesInput];
+            }
+
+            foreach ($filesInput as $item) {
+                if (is_string($item) && file_exists($item)) {
+                    // Item is a direct string path
+                    $prepared[] = [
+                        'tmp_name' => $item,
+                        'name'     => basename($item)
+                    ];
+                } elseif (is_array($item)) {
+                    // Item is an array from DB with flexible keys
+                    $filePath = $item['tmp_name'] ?? $item['path'] ?? $item['filepath'] ?? $item['file'] ?? '';
+                    $fileName = $item['name'] ?? $item['filename'] ?? basename($filePath);
+
+                    if (!empty($filePath) && file_exists($filePath)) {
+                        $prepared[] = [
+                            'tmp_name' => $filePath,
+                            'name'     => $fileName
+                        ];
+                    }
+                }
+            }
+        }
+
         return $prepared;
     }
 
     /**
      * Strict OLE Embedding for MS Word 2016.
      * Fixes activation issue where objects appear as static images.
+     *
+     * @param array $files Normalized list of files
+     * @param string $iconFileName Icon filename in img/ directory
+     * @param string $fileType Expected file extension (docx, xlsx, etc.)
+     * @param \DOMElement $targetParagraph Target paragraph containing bookmark
      */
     public function embedOleAttachments(array $files, string $iconFileName, string $fileType, $targetParagraph) {
         if (!$targetParagraph || !$targetParagraph->parentNode) {
             return;
         }
-        error_log('embedOleAttachments');
-        error_log(print_r($files, true));
+
         $documentBody = $targetParagraph->parentNode;
         $iconPath = 'img/' . $iconFileName;
         $expectedExt = strtolower(trim($fileType, '. '));
+
         if (!empty($files)) {
             foreach ($files as $i => $file) {
                 $tempFilePath = $file['tmp_name'];
                 $originalFileName = $file['name'];
-                $actualExt = strtolower(trim($this->db_object->getUploadedFileExt($originalFileName), '. '));
 
-                if ($actualExt !== $expectedExt) continue;
+                // Get extension safely using DB helper or native fallback
+                $actualExt = $this->getFileExtension($originalFileName);
 
-                // Unique IDs for Word 2016 internal tracking
+                if (!empty($expectedExt) && $actualExt !== $expectedExt) {
+                    continue;
+                }
+
+                // Unique IDs for Word internal tracking
                 $uniqueId = time() . $i . mt_rand(100, 999);
                 $internalOlePath = "word/embeddings/oleObject{$uniqueId}.{$actualExt}";
                 $internalImagePath = "word/media/image_ole_{$uniqueId}.png";
-                
-                // Activation ID must match exactly between Shape and OLEObject
+
+                // Activation IDs matching Shape and OLEObject
                 $shapeId = "_x0000_i" . $uniqueId;
                 $objId = "_OLE_" . $uniqueId;
 
@@ -629,62 +1009,66 @@ class DocxProcessor {
                     $this->zip->addFile($iconPath, $internalImagePath);
                 }
 
-                // 2. Register relationships (Relative paths)
-                /** 
-                 * CRITICAL FIX FOR WORD 2016:
-                 * Use 'package' relationship type for Office documents (docx, xlsx)
-                 * Use 'oleObject' for others (pdf, etc.)
-                 */
-                $relType = ($actualExt === 'docx' || $actualExt === 'xlsx') 
+                // 2. Register relationships
+                $relType = ($actualExt === 'docx' || $actualExt === 'xlsx')
                     ? 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/package'
                     : 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject';
 
                 $relIdOle = "rIdOle{$uniqueId}";
                 $relIdImg = "rIdImg{$uniqueId}";
-                
+
                 $this->addRel($this->relsDom, $relIdOle, $relType, $internalOlePath);
                 $this->addRel($this->relsDom, $relIdImg, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image', $internalImagePath);
 
-                // 3. XML Structure
+                // 3. Build XML Structure
                 $newParagraph = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:p");
-                
+
                 // Inherit formatting from template
                 $pPr = $this->xpath->query("w:pPr", $targetParagraph)->item(0);
-                if ($pPr) $newParagraph->appendChild($pPr->cloneNode(true));
+                if ($pPr) {
+                    $newParagraph->appendChild($pPr->cloneNode(true));
+                }
 
                 $run = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
                 $object = $this->dom->createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:object");
-                
-                // VML Shape: The "Clickable" container
+
+                // VML Shape
                 $vmlShape = $this->dom->createElementNS("urn:schemas-microsoft-com:vml", "v:shape");
                 $vmlShape->setAttribute('id', $shapeId);
-                $vmlShape->setAttribute('style', "width:72pt;height:72pt"); 
-                $vmlShape->setAttribute('o:ole', ""); // Critical for Word 2016 activation
-                $vmlShape->setAttribute('alt', $originalFileName); 
+                $vmlShape->setAttribute('style', "width:72pt;height:72pt");
+                $vmlShape->setAttribute('o:ole', "");
+                $vmlShape->setAttribute('alt', $originalFileName);
 
                 $vmlImg = $this->dom->createElementNS("urn:schemas-microsoft-com:vml", "v:imagedata");
                 $vmlImg->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdImg);
                 $vmlImg->setAttribute('o:title', $originalFileName);
-                
+
                 $vmlShape->appendChild($vmlImg);
                 $object->appendChild($vmlShape);
-                
-                // Determine correct ProgID
+
+                // ProgID lookup
                 switch ($actualExt) {
-                    case 'xlsx': case 'xls': $progId = 'Excel.Sheet.12'; break;
-                    case 'docx': case 'doc': $progId = 'Word.Document.12'; break;
-                    default: $progId = 'Package';
+                    case 'xlsx':
+                    case 'xls':
+                        $progId = 'Excel.Sheet.12';
+                        break;
+                    case 'docx':
+                    case 'doc':
+                        $progId = 'Word.Document.12';
+                        break;
+                    default:
+                        $progId = 'Package';
                 }
 
-                // OLEObject: The link to binary data
+                // OLEObject
                 $oleObject = $this->dom->createElementNS("urn:schemas-microsoft-com:office:office", "o:OLEObject");
                 $oleObject->setAttribute('Type', 'Embed');
                 $oleObject->setAttribute('ProgID', $progId);
-                $oleObject->setAttribute('ShapeID', $shapeId); // Must match v:shape id
+                $oleObject->setAttribute('ShapeID', $shapeId);
                 $oleObject->setAttribute('DrawAspect', 'Icon');
                 $oleObject->setAttribute('ObjectID', $objId);
                 $oleObject->setAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", $relIdOle);
-                
+
                 $object->appendChild($oleObject);
                 $run->appendChild($object);
                 $newParagraph->appendChild($run);
@@ -696,7 +1080,7 @@ class DocxProcessor {
                 $text->nodeValue = $originalFileName;
                 $capRun->appendChild($text);
                 $newParagraph->appendChild($capRun);
-                
+
                 $documentBody->insertBefore($newParagraph, $targetParagraph);
 
                 // 4. Update Content_Types
@@ -711,8 +1095,6 @@ class DocxProcessor {
      * Strictly formatted relationships for Word 2016.
      */
     protected function addRel($relsDom, $id, $type, $target) {
-        error_log('Type: ' . print_r($type, true));
-        error_log('Target: ' . print_r($target, true));
         $root = $relsDom->documentElement;
         $rel = $relsDom->createElement('Relationship');
         $rel->setAttribute('Id', $id);
@@ -722,7 +1104,7 @@ class DocxProcessor {
     }
 
     /**
-     * Registers binary extensions in [Content_Types].xml using global DOM namespace.
+     * Registers binary extensions in [Content_Types].xml.
      */
     protected function ensureContentType($extension) {
         $contentTypesXml = $this->zip->getFromName('[Content_Types].xml');
@@ -734,25 +1116,38 @@ class DocxProcessor {
             'png'  => 'image/png'
         ];
 
-        $contentType = isset($map[$extension]) ? $map[$extension] : 'application/vnd.openxmlformats-officedocument.oleObject';
+        $contentType = $map[$extension] ?? 'application/vnd.openxmlformats-officedocument.oleObject';
 
         if (strpos($contentTypesXml, 'Extension="' . $extension . '"') === false) {
-            $ctDom = new \DOMDocument();
+            $ctDom = new DOMDocument();
             $ctDom->loadXML($contentTypesXml);
-            
+
             $newNode = $ctDom->createElement('Default');
             $newNode->setAttribute('Extension', $extension);
             $newNode->setAttribute('ContentType', $contentType);
-            
+
             $ctDom->documentElement->appendChild($newNode);
             $this->zip->addFromString('[Content_Types].xml', $ctDom->saveXML());
         }
     }
 
-	public function saveToZip() {
-		$this->zip->addFromString('word/document.xml', $this->dom->saveXML());
-		$this->zip->addFromString('word/_rels/document.xml.rels', $this->relsDom->saveXML());
-	}
+    /**
+     * Helper to safely extract file extension.
+     */
+    protected function getFileExtension(string $filename): string {
+        if ($this->db_object && method_exists($this->db_object, 'getUploadedFileExt')) {
+            return strtolower(trim($this->db_object->getUploadedFileExt($filename), '. '));
+        }
+        return strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    }
+
+    /**
+     * Saves DOM updates back into the active ZIP archive.
+     */
+    public function saveToZip() {
+        $this->zip->addFromString('word/document.xml', $this->dom->saveXML());
+        $this->zip->addFromString('word/_rels/document.xml.rels', $this->relsDom->saveXML());
+    }
 
     static function removeIncludedObjFromDocx($filename) {
         $sourceZip = new \ZipArchive();
@@ -785,23 +1180,84 @@ class DocxProcessor {
         }
         return true;
     }
-	// public function getZipContent($extZip = null) {
-	// 	$zip_files = [];
-	// 	$local_zip = ($extZip) ?? $this->zip;
-	// 	for ($i = 0; $i < $local_zip->numFiles; $i++) {
-	// 		$zip_files[] = $local_zip->getNameIndex($i);
-	// 	}
-	// 	return $zip_files;
-	// }
-	// function errorLog($error_message, $debug_mode = 1)
-	// {
-	// 	if ($debug_mode === 1)
-	// 	{
-	// 		error_log(date("Y-m-d H:i:s") . " ". $error_message);
-	// 	}
-	// 	return true;
-	// }
 }
+
+
+/* ============================================================================
+   ПРИМЕРЫ ИСПОЛЬЗОВАНИЯ (USAGE EXAMPLES)
+   ============================================================================ */
+
+
+/*
+// --- СЦЕНАРИЙ 1: Загрузка через форму от браузера ($_FILES) ---
+
+$filename = '/path/to/template.docx';
+
+$attachmentsConfig = [
+    'RACK_LAYOUT_PREVIEW' => [
+        'files' => $_FILES['rack_layout'] ?? [],
+        'icon'  => 'word-48.png',
+        'type'  => 'docx'
+    ],
+    'FLOOR_PLAN' => [
+        'files' => $_FILES['floor_plan'] ?? [],
+        'icon'  => 'word-48.png',
+        'type'  => 'docx'
+    ],
+    'EDS_FILE' => [
+        'files' => $_FILES['edsFile'] ?? [],
+        'icon'  => 'word-48.png',
+        'type'  => 'docx'
+    ],
+    'BASIC_MOP_FILE' => [
+        'files' => $_FILES['basicMopFile'] ?? [],
+        'icon'  => 'word-48.png',
+        'type'  => 'docx'
+    ],
+];
+
+// Вызов единого метода:
+try {
+    \helperUtils\DocxProcessor::processDocument($filename, $attachmentsConfig, $db_object);
+    echo "Файл успешно обновлен!";
+} catch (\Exception $e) {
+    echo "Ошибка обработки: " . $e->getMessage();
+}
+
+
+// --- СЦЕНАРИЙ 2: Загрузка файлов из Базы Данных / Диска Сервера ---
+
+$dbFilesForRack = [
+    ['path' => '/var/storage/uploads/rack_102.docx', 'name' => 'Rack_Layout_Main.docx'],
+    ['path' => '/var/storage/uploads/rack_103.docx', 'name' => 'Rack_Layout_Backup.docx']
+];
+
+$dbFilesForFloor = [
+    ['filepath' => '/var/storage/uploads/floor_1.docx', 'filename' => 'FloorPlan_1st_Floor.docx']
+];
+
+$attachmentsConfigFromDB = [
+    'RACK_LAYOUT_PREVIEW' => [
+        'files' => $dbFilesForRack,
+        'icon'  => 'word-48.png',
+        'type'  => 'docx'
+    ],
+    'FLOOR_PLAN' => [
+        'files' => $dbFilesForFloor,
+        'icon'  => 'word-48.png',
+        'type'  => 'docx'
+    ],
+    // Также можно просто передать путь к файлу строкой:
+    'BASIC_MOP_FILE' => '/var/storage/uploads/mop_document.docx'
+];
+
+try {
+    \helperUtils\DocxProcessor::processDocument($filename, $attachmentsConfigFromDB, $db_object);
+    echo "Файл из базы данных успешно внедрен!";
+} catch (\Exception $e) {
+    echo "Ошибка обработки: " . $e->getMessage();
+}
+*/
 
 define('CONTENT_TYPE_WORD', "Content-Type: application/vnd.ms-word; charset=utf-8");
 define('CONTENT_TYPE_EXCEL', "Content-Type: application/vnd.ms-excel; charset=utf-8");
